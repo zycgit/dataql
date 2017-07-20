@@ -14,13 +14,33 @@
  * limitations under the License.
  */
 package net.hasor.dataql.runtime;
-import net.hasor.dataql.domain.compiler.Instruction;
 /**
- * 用于圈定执行序列，当isExit返回 true 之后。表示圈定结束。
+ * DataQL 异常
  * @author 赵永春(zyc@hasor.net)
  * @version : 2017-07-14
  */
-public interface InstFilter {
-    /**测试该指令是否作为圈定的结束位置。*/
-    public boolean isExit(Instruction inst);
+public class InvokerProcessException extends ProcessException {
+    private int    instOpcodes;
+    private int    errorCode;
+    private Object errorMsg;
+    //
+    public InvokerProcessException(int instOpcodes, int errorCode, Object errorMsg) {
+        super("errorCode is " + errorCode);
+        this.instOpcodes = instOpcodes;
+        this.errorCode = errorCode;
+        this.errorMsg = errorMsg;
+    }
+    //
+    /**运行出错的指令*/
+    public int getInstOpcodes() {
+        return this.instOpcodes;
+    }
+    /**错误码*/
+    public int getErrorCode() {
+        return this.errorCode;
+    }
+    /**错误信息*/
+    public Object getErrorMsg() {
+        return this.errorMsg;
+    }
 }
