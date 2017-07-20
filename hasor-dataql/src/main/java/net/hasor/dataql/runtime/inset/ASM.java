@@ -17,9 +17,13 @@ package net.hasor.dataql.runtime.inset;
 import net.hasor.core.utils.StringUtils;
 import net.hasor.dataql.domain.compiler.Instruction;
 import net.hasor.dataql.result.ObjectModel;
-import net.hasor.dataql.runtime.*;
+import net.hasor.dataql.runtime.ProcessException;
 import net.hasor.dataql.runtime.mem.LocalData;
 import net.hasor.dataql.runtime.mem.MemStack;
+import net.hasor.dataql.runtime.process.InsetProcess;
+import net.hasor.dataql.runtime.process.InstFilter;
+import net.hasor.dataql.runtime.process.InstSequence;
+import net.hasor.dataql.runtime.process.ProcessContet;
 import net.hasor.dataql.runtime.struts.ObjectResultStruts;
 
 import java.util.concurrent.atomic.AtomicInteger;
