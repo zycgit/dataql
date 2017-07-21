@@ -17,9 +17,9 @@ package net.hasor.dataql.runtime.inset;
 import net.hasor.dataql.ProcessException;
 import net.hasor.dataql.runtime.mem.LocalData;
 import net.hasor.dataql.runtime.mem.MemStack;
-import net.hasor.dataql.runtime.process.InsetProcess;
-import net.hasor.dataql.runtime.process.InstSequence;
-import net.hasor.dataql.runtime.process.ProcessContet;
+import net.hasor.dataql.runtime.InsetProcess;
+import net.hasor.dataql.runtime.InstSequence;
+import net.hasor.dataql.runtime.ProcessContet;
 /**
  * OPT，更新选项参数。
  * @author 赵永春(zyc@hasor.net)
@@ -34,6 +34,22 @@ class OPT implements InsetProcess {
     public void doWork(InstSequence sequence, MemStack memStack, LocalData local, ProcessContet context) throws ProcessException {
         Object value = memStack.pop();
         String key = (String) memStack.pop();
-        context.setOption(key, value);
+        //
+        if (value == null) {
+            context.removeOption(key);
+            return;
+        }
+        if (value instanceof Boolean) {
+            context.setOption(key, (Boolean) value);
+            return;
+        }
+        if (value instanceof Number) {
+            context.setOption(key, (Number) value);
+            return;
+        }
+        if (value instanceof String) {
+            context.setOption(key, (String) value);
+            return;
+        }
     }
 }

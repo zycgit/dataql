@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.runtime.process;
+package net.hasor.dataql.runtime;
 import net.hasor.core.utils.StringUtils;
+import net.hasor.dataql.ProcessException;
 import net.hasor.dataql.domain.compiler.Instruction;
-import net.hasor.dataql.runtime.ProcessException;
 
 import java.util.concurrent.atomic.AtomicInteger;
 /**
@@ -32,14 +32,14 @@ public class InstSequence {
     private final AtomicInteger   sequenceIndex;// 当前指令指针指向的序列位置
     private boolean jumpMark = false;
     //
-    public InstSequence(int name, Instruction[][] queueSet) {
+    InstSequence(int name, Instruction[][] queueSet) {
         this.name = name;
         this.queueSet = queueSet;
         this.startPosition = 0;
         this.endPosition = this.queueSet[name].length;
         this.sequenceIndex = new AtomicInteger(this.startPosition);
     }
-    private InstSequence(int name, Instruction[][] queueSet, int startPosition, int endPosition) {
+    InstSequence(int name, Instruction[][] queueSet, int startPosition, int endPosition) {
         this.name = name;
         this.queueSet = queueSet;
         this.startPosition = startPosition;
