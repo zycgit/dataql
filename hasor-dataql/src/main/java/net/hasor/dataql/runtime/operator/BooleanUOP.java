@@ -15,14 +15,15 @@
  */
 package net.hasor.dataql.runtime.operator;
 import net.hasor.dataql.InvokerProcessException;
+import net.hasor.dataql.Option;
 /**
  * 一元运算，boolean类型的只处理：取反
  * @author 赵永春(zyc@hasor.net)
  * @version : 2017-03-23
  */
-public class BooleanUnaryOP extends UnaryOperatorProcess {
+public class BooleanUOP extends UnaryOperatorProcess {
     @Override
-    public Object doUnaryProcess(int opcode, String operator, Object object) throws InvokerProcessException {
+    public Object doUnaryProcess(int opcode, String operator, Object object, Option option) throws InvokerProcessException {
         if ("!".equals(operator) && OperatorUtils.isBoolean(object)) {
             return !((Boolean) object);
         }
