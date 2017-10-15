@@ -4,7 +4,7 @@
 
     <groupId>net.hasor</groupId>
     <artifactId>hasor-parent</artifactId>
-    <version>0.0.11-SNAPSHOT</version>
+    <version>3.2.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <!-- 配置属性 -->
@@ -16,8 +16,7 @@
         <gpg.passphrase>fubing220106</gpg.passphrase>
         <maven.test.skip>true</maven.test.skip>
 
-        <hasor.version>3.2.0-SNAPSHOT</hasor.version>
-        <project.shortname></project.shortname>
+        <project.shortname>Hasor-</project.shortname>
         <project.website>http://www.hasor.net/</project.website>
         <project.inceptionYear>2017</project.inceptionYear>
         <javadocs.bottom><![CDATA[
@@ -72,10 +71,12 @@
 
     <!-- SCM -->
     <scm>
-        <connection>scm:git@git.oschina.net:zycgit/hasor-configuration.git</connection>
-        <developerConnection>scm:git@git.oschina.net:zycgit/hasor-configuration.git</developerConnection>
-        <url>git@git.oschina.net:zycgit/hasor-configuration.git</url>
+        <connection>scm:git:git@git.oschina.net:zycgit/hasor.git</connection>
+        <developerConnection>scm:git:git@git.oschina.net:zycgit/hasor.git</developerConnection>
+        <url>git@git.oschina.net:zycgit/hasor.git</url>
+        <tag>HEAD</tag>
     </scm>
+
 
     <!-- 开发者 -->
     <developers>
