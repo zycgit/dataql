@@ -1,9 +1,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>net.hasor</groupId>
     <artifactId>hasor-parent</artifactId>
-    <version>3.2.3-SNAPSHOT</version>
+    <version>3.3.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <!-- 配置属性 -->
@@ -13,7 +12,10 @@
         <downloadJavadocs>true</downloadJavadocs>
         <gpg.executable>gpg2</gpg.executable>
         <gpg.passphrase>fubing220106</gpg.passphrase>
-        <maven.test.skip>true</maven.test.skip>
+        <!--<maven.test.skip>true</maven.test.skip>-->
+        <!--<skipTests>true</skipTests>-->
+        <jacoco.version>0.8.2</jacoco.version>
+        <powermock.version>1.6.5</powermock.version>
 
         <project.shortname>Hasor-</project.shortname>
         <project.website>http://www.hasor.net/</project.website>
@@ -92,12 +94,12 @@
         <module>hasor-web</module>
         <module>hasor-dataql</module>
         <module>hasor-tconsole</module>
-        <module>hasor-rsf</module>
-        <module>hasor-registry</module>
+        <module>hasor-rsf/rsf-framework</module>
+        <module>hasor-rsf/rsf-registry</module>
         <module>hasor-plugins</module>
         <module>hasor-land</module>
-        <module>hasor-boot</module>
-        <module>hasor-mavenplugin</module>
+        <module>hasor-boot/hasor-boot-starter</module>
+        <module>hasor-boot/hasor-boot-maven</module>
     </modules>
 
     <!-- 构建描述 -->
@@ -109,8 +111,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.5.1</version>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                     <encoding>UTF8</encoding>
                 </configuration>
             </plugin>
@@ -135,7 +137,7 @@
                 <version>2.9.1</version>
                 <configuration>
                     <aggregate>true</aggregate>
-                    <additionalparam>${java_doc_additionalparam}</additionalparam>
+                    <additionalparam>-Xdoclint:none</additionalparam>
                     <excludePackageNames>net.hasor.libs.*,org.*,</excludePackageNames>
                     <encoding>UTF-8</encoding>
                     <docencoding>UTF-8</docencoding>
@@ -170,6 +172,43 @@
                     <downloadJavadocs>${downloadJavadocs}</downloadJavadocs>
                 </configuration>
             </plugin>
+            <!-- 覆盖率 -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>post-unit-test</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <dataFile>target/jacoco.exec</dataFile>
+                            <outputDirectory>target/jacoco-ut</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <systemPropertyVariables>
+                        <jacoco-agent.destfile>target/jacoco.exec</jacoco-agent.destfile>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -198,14 +237,6 @@
     <!-- 使用“-P release”启用下面配置 -->
     <profiles>
         <profile>
-            <activation>
-                <jdk>1.8</jdk>
-            </activation>
-            <properties>
-                <java_doc_additionalparam>-Xdoclint:none</java_doc_additionalparam>
-            </properties>
-        </profile>
-        <profile>
             <id>release</id>
             <properties>
                 <inner.javadocs_bottom>${javadocs.bottom}</inner.javadocs_bottom>
@@ -230,7 +261,7 @@
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
                         <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.6.2</version>
+                        <version>1.6.8</version>
                         <extensions>true</extensions>
                         <configuration>
                             <serverId>ossrh</serverId>
@@ -241,7 +272,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-release-plugin</artifactId>
-                        <version>2.5</version>
+                        <version>2.5.3</version>
                         <configuration>
                             <autoVersionSubmodules>true</autoVersionSubmodules>
                             <useReleaseProfile>false</useReleaseProfile>
@@ -260,16 +291,32 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <version>4.8.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-module-junit4</artifactId>
+            <version>${powermock.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-api-mockito</artifactId>
+            <version>${powermock.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
+            <version>1.1.7</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
+            <version>1.2.23</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -277,26 +324,73 @@
     <!-- 需要统一管理的依赖 -->
     <dependencyManagement>
         <dependencies>
+            <!-- self -->
+            <dependency>
+                <groupId>net.hasor</groupId>
+                <artifactId>hasor-commons</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.hasor</groupId>
+                <artifactId>hasor-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.hasor</groupId>
+                <artifactId>hasor-db</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.hasor</groupId>
+                <artifactId>hasor-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.hasor</groupId>
+                <artifactId>hasor-dataql</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.hasor</groupId>
+                <artifactId>hasor-tconsole</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.hasor</groupId>
+                <artifactId>hasor-rsf</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.hasor</groupId>
+                <artifactId>hasor-registry</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.hasor</groupId>
+                <artifactId>hasor-plugins</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.hasor</groupId>
+                <artifactId>hasor-land</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.hasor</groupId>
+                <artifactId>hasor-boot-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.hasor</groupId>
+                <artifactId>hasor-boot-maven</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <!-- Log依赖 -->
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>1.7.21</version>
-            </dependency>
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>4.8.2</version>
-            </dependency>
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-                <version>1.1.7</version>
-            </dependency>
-            <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>fastjson</artifactId>
-                <version>1.2.23</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
