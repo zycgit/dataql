@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.hasor</groupId>
     <artifactId>hasor-parent</artifactId>
-    <version>4.0.7-SNAPSHOT</version>
+    <version>4.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <!-- 配置属性 -->
@@ -59,7 +59,7 @@
         <module>hasor-db</module>
         <module>hasor-web</module>
         <module>hasor-tconsole</module>
-        <module>hasor-dataql</module>
+        <module>hasor-dataql/dataql-runtime</module>
         <module>hasor-rsf/rsf-framework</module>
         <!--        <module>hasor-rsf/rsf-registry</module>-->
         <!--        <module>hasor-plugins</module>-->

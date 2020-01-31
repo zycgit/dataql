@@ -27,4 +27,5 @@ target
 *.ntvs*
 *.njsproj
 *.sln
+pom.xml.versionsBackup
 hasor-work
