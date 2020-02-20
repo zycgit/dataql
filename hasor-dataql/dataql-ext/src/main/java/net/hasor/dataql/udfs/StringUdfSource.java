@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sdk;
+package net.hasor.dataql.udfs;
+import net.hasor.dataql.UdfSourceAssembly;
+import net.hasor.utils.StringUtils;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 字符串函数 <code>import 'net.hasor.dataql.sdk.StringUdfSource' as string;</code>
+ * 字符串函数 <code>import 'net.hasor.dataql.udfs.StringUdfSource' as string;</code>
  * @version : 2019-12-12
  */
-public class StringUdfSource implements UdfSourceAssembly {
+public class StringUdfSource extends StringUtils implements UdfSourceAssembly {
     private static Pattern linePattern = Pattern.compile("_(\\w)");
 
     /** 下划线转驼峰 */

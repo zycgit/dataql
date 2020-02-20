@@ -1,9 +1,9 @@
-package net.hasor.dataql.sdk;
+package net.hasor.dataql.functions.foos;
 import net.hasor.core.Hasor;
-import net.hasor.dataql.AbstractTestResource;
 import net.hasor.dataql.DataQL;
 import net.hasor.dataql.domain.DataModel;
 import net.hasor.dataql.domain.ValueModel;
+import net.hasor.dataql.functions.AbstractTestResource;
 import net.hasor.dataql.runtime.InstructRuntimeException;
 import org.junit.Test;
 
@@ -14,7 +14,7 @@ public class IdentifierTest extends AbstractTestResource {
     @Test
     public void uuid() throws IOException, InstructRuntimeException {
         String qlString = "";
-        qlString = qlString + "import 'net.hasor.dataql.sdk.IdentifierUdfSource' as ids;";
+        qlString = qlString + "import 'net.hasor.dataql.udfs.IdentifierUdfSource' as ids;";
         qlString = qlString + "return ids.uuid()";
         //
         DataQL dataQL = Hasor.create().build().getInstance(DataQL.class);
@@ -27,7 +27,7 @@ public class IdentifierTest extends AbstractTestResource {
     @Test
     public void uuid2() throws IOException, InstructRuntimeException {
         String qlString = "";
-        qlString = qlString + "import 'net.hasor.dataql.sdk.IdentifierUdfSource' as ids;";
+        qlString = qlString + "import 'net.hasor.dataql.udfs.IdentifierUdfSource' as ids;";
         qlString = qlString + "return ids.uuid2()";
         //
         DataQL dataQL = Hasor.create().build().getInstance(DataQL.class);

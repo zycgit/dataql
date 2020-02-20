@@ -13,19 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sdk;
+package net.hasor.dataql.udfs;
 import net.hasor.dataql.Finder;
+import net.hasor.dataql.UdfSourceAssembly;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
 /**
- * 带有状态的集合。函数库引入 <code>import 'net.hasor.dataql.sdk.CollectionUdfSource' as collect; var arr = collect.new</code>
+ * 带有状态的集合。函数库引入 <code>import 'net.hasor.dataql.udfs.CollectionUdfSource' as collect; var arr = collect.new</code>
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2019-12-12
  */
-class InnerCollectionStateUdfSource implements UdfSourceAssembly {
+public class InnerCollectionStateUdfSource implements UdfSourceAssembly {
     private List<Object> objectArrayList;
 
     public InnerCollectionStateUdfSource(List<Object> initData) {

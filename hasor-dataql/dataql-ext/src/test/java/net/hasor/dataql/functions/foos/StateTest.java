@@ -1,9 +1,9 @@
-package net.hasor.dataql.sdk;
+package net.hasor.dataql.functions.foos;
 import net.hasor.core.Hasor;
-import net.hasor.dataql.AbstractTestResource;
 import net.hasor.dataql.DataQL;
 import net.hasor.dataql.domain.DataModel;
 import net.hasor.dataql.domain.ListModel;
+import net.hasor.dataql.functions.AbstractTestResource;
 import net.hasor.dataql.runtime.InstructRuntimeException;
 import org.junit.Test;
 
@@ -13,7 +13,7 @@ public class StateTest extends AbstractTestResource {
     @Test
     public void decInt() throws IOException, InstructRuntimeException {
         String qlString = "";
-        qlString = qlString + "import 'net.hasor.dataql.sdk.StateUdfSource' as state;";
+        qlString = qlString + "import 'net.hasor.dataql.udfs.StateUdfSource' as state;";
         qlString = qlString + "var decNum = state.decInt(0); return [ decNum(),decNum(),decNum() ]";
         //
         DataQL dataQL = Hasor.create().build().getInstance(DataQL.class);
@@ -27,7 +27,7 @@ public class StateTest extends AbstractTestResource {
     @Test
     public void decLong() throws IOException, InstructRuntimeException {
         String qlString = "";
-        qlString = qlString + "import 'net.hasor.dataql.sdk.StateUdfSource' as state;";
+        qlString = qlString + "import 'net.hasor.dataql.udfs.StateUdfSource' as state;";
         qlString = qlString + "var decNum = state.decLong(0); return [ decNum(),decNum(),decNum() ]";
         //
         DataQL dataQL = Hasor.create().build().getInstance(DataQL.class);
@@ -41,7 +41,7 @@ public class StateTest extends AbstractTestResource {
     @Test
     public void incInt() throws IOException, InstructRuntimeException {
         String qlString = "";
-        qlString = qlString + "import 'net.hasor.dataql.sdk.StateUdfSource' as state;";
+        qlString = qlString + "import 'net.hasor.dataql.udfs.StateUdfSource' as state;";
         qlString = qlString + "var decNum = state.incInt(0); return [ decNum(),decNum(),decNum() ]";
         //
         DataQL dataQL = Hasor.create().build().getInstance(DataQL.class);
@@ -55,7 +55,7 @@ public class StateTest extends AbstractTestResource {
     @Test
     public void incLong() throws IOException, InstructRuntimeException {
         String qlString = "";
-        qlString = qlString + "import 'net.hasor.dataql.sdk.StateUdfSource' as state;";
+        qlString = qlString + "import 'net.hasor.dataql.udfs.StateUdfSource' as state;";
         qlString = qlString + "var decNum = state.incLong(0); return [ decNum(),decNum(),decNum() ]";
         //
         DataQL dataQL = Hasor.create().build().getInstance(DataQL.class);

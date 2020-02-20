@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sdk;
+package net.hasor.dataql.udfs;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.Udf;
 import net.hasor.dataql.UdfSource;
+import net.hasor.dataql.UdfSourceAssembly;
 import net.hasor.dataql.domain.DataModel;
 import net.hasor.dataql.domain.DomainHelper;
 import net.hasor.dataql.domain.ListModel;
@@ -29,12 +30,12 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
- * 集合函数。函数库引入 <code>import 'net.hasor.dataql.sdk.CollectionUdfSource' as collect;</code>
+ * 集合函数。函数库引入 <code>import 'net.hasor.dataql.udfs.CollectionUdfSource' as collect;</code>
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2019-12-12
  */
 public class CollectionUdfSource implements UdfSourceAssembly {
-    /**循环遍历函数*/
+    /** 循环遍历函数 */
     protected static Collection<Object> foreach(Object collection) {
         Collection<Object> listData = null;
         if (collection == null) {
