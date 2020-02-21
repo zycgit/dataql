@@ -25,12 +25,12 @@ import java.util.UUID;
  */
 public class IdentifierUdfSource implements UdfSourceAssembly {
     /** 返回一个完整格式的 UUID 字符串。  */
-    public String uuid() {
+    public static String uuid() {
         return UUID.randomUUID().toString();
     }
 
     /** 返回一个不含"-" 符号的 UUID 字符串 */
-    public String uuid2() {
+    public static String uuid2() {
         return UUID.randomUUID().toString().replace("-", "");
     }
 }
