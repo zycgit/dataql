@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.udfs;
+package net.hasor.dataql.fx;
 import net.hasor.dataql.UdfSourceAssembly;
 
 import java.text.ParseException;

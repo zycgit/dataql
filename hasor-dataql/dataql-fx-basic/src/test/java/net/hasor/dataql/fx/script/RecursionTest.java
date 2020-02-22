@@ -1,9 +1,9 @@
-package net.hasor.dataql.functions.script;
+package net.hasor.dataql.fx.script;
 import com.alibaba.fastjson.JSON;
 import net.hasor.core.Hasor;
 import net.hasor.dataql.DataQL;
 import net.hasor.dataql.Query;
-import net.hasor.dataql.functions.AbstractTestResource;
+import net.hasor.dataql.fx.AbstractTestResource;
 import org.junit.Test;
 
 import java.io.IOException;

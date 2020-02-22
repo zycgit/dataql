@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.functions;
+package net.hasor.dataql.fx;
 import net.hasor.core.Settings;
 import net.hasor.dataql.Finder;
 import net.hasor.dataql.Query;
