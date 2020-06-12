@@ -15,7 +15,12 @@
  */
 package net.hasor.dataql.compiler.ast.inst;
 import net.hasor.dataql.Hints;
-import net.hasor.dataql.compiler.ast.*;
+import net.hasor.dataql.compiler.ast.AstVisitor;
+import net.hasor.dataql.compiler.ast.CodeLocation.CodeLocationInfo;
+import net.hasor.dataql.compiler.ast.FormatWriter;
+import net.hasor.dataql.compiler.ast.Inst;
+import net.hasor.dataql.compiler.ast.InstVisitorContext;
+import net.hasor.dataql.compiler.ast.token.StringToken;
 
 import java.io.IOException;
 
@@ -24,16 +29,16 @@ import java.io.IOException;
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-03-23
  */
-public class ImportInst extends AstBasic implements Inst {
+public class ImportInst extends CodeLocationInfo implements Inst {
     public enum ImportType {
         Resource, ClassType
     }
 
-    private ImportType importType = null;
-    private String     importName = null;
-    private String     asName     = null;
+    private ImportType  importType = null;
+    private StringToken importName = null;
+    private StringToken asName     = null;
 
-    public ImportInst(ImportType importType, String importName, String asName) {
+    public ImportInst(ImportType importType, StringToken importName, StringToken asName) {
         this.importType = importType;
         this.importName = importName;
         this.asName = asName;
@@ -43,11 +48,11 @@ public class ImportInst extends AstBasic implements Inst {
         return importType;
     }
 
-    public String getImportName() {
+    public StringToken getImportName() {
         return importName;
     }
 
-    public String getAsName() {
+    public StringToken getAsName() {
         return asName;
     }
 
@@ -68,7 +73,7 @@ public class ImportInst extends AstBasic implements Inst {
         } else if (this.importType == ImportType.ClassType) {
             //
         }
-        writer.write('"' + this.importName + '"');
-        writer.write(" as " + this.asName + ";\n");
+        writer.write('"' + this.importName.getValue() + '"');
+        writer.write(" as " + this.asName.getValue() + ";\n");
     }
 }

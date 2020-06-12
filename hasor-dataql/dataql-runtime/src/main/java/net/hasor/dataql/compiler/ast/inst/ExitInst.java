@@ -16,6 +16,8 @@
 package net.hasor.dataql.compiler.ast.inst;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.compiler.ast.*;
+import net.hasor.dataql.compiler.ast.CodeLocation.CodeLocationInfo;
+import net.hasor.dataql.compiler.ast.token.IntegerToken;
 import net.hasor.dataql.compiler.ast.value.LambdaVariable;
 import net.hasor.utils.StringUtils;
 
@@ -26,16 +28,16 @@ import java.io.IOException;
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-03-23
  */
-public class ExitInst extends AstBasic implements Inst {
-    private final int      exitCode;
-    private final Variable exitData;
+public class ExitInst extends CodeLocationInfo implements Inst {
+    private final IntegerToken exitCode;
+    private final Variable     exitData;
 
-    public ExitInst(int exitCode, Variable exitData) {
+    public ExitInst(IntegerToken exitCode, Variable exitData) {
         this.exitCode = exitCode;
         this.exitData = exitData;
     }
 
-    public int getExitCode() {
+    public IntegerToken getExitCode() {
         return exitCode;
     }
 
@@ -57,8 +59,8 @@ public class ExitInst extends AstBasic implements Inst {
     public void doFormat(int depth, Hints formatOption, FormatWriter writer) throws IOException {
         String fixedString = StringUtils.fixedString(' ', depth * fixedLength);
         //
-        if (this.exitCode != 0) {
-            writer.write(fixedString + String.format("exit %s, ", this.exitCode));
+        if (this.exitCode.getValue() != 0) {
+            writer.write(fixedString + String.format("exit %s, ", this.exitCode.getValue()));
         } else {
             writer.write(fixedString + "exit ");
         }

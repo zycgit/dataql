@@ -15,6 +15,7 @@
  */
 package net.hasor.dataql.compiler.qil.cc;
 import net.hasor.dataql.compiler.ast.Expression;
+import net.hasor.dataql.compiler.ast.token.StringToken;
 import net.hasor.dataql.compiler.ast.value.SubscriptRouteVariable;
 import net.hasor.dataql.compiler.ast.value.SubscriptRouteVariable.SubType;
 import net.hasor.dataql.compiler.qil.CompilerContext;
@@ -33,12 +34,15 @@ public class SubscriptRouteVariableInstCompiler implements InstCompiler<Subscrip
         compilerContext.findInstCompilerByInst(astInst.getParent()).doCompiler(queue);
         //
         SubType subType = astInst.getSubType();
-        String subValue = astInst.getSubValue();
         if (subType == SubType.String) {
-            queue.inst(GET, subValue);
+            StringToken subValue = astInst.getSubValue();
+            instLocation(queue, subValue);
+            queue.inst(GET, subValue.getValue());
         }
         if (subType == SubType.Integer) {
-            queue.inst(PULL, Integer.parseInt(subValue));
+            StringToken subValue = astInst.getSubValue();
+            instLocation(queue, subValue);
+            queue.inst(PULL, Integer.parseInt(subValue.getValue()));
         }
         if (subType == SubType.Expr) {
             Label nextLabel = null;
@@ -46,6 +50,7 @@ public class SubscriptRouteVariableInstCompiler implements InstCompiler<Subscrip
             //
             Expression exprValue = astInst.getExprValue();
             compilerContext.findInstCompilerByInst(exprValue).doCompiler(queue);
+            instLocation(queue, exprValue);
             queue.inst(COPY);   // 表达式值Copy 一份用来计算 typeof
             queue.inst(TYPEOF);
             queue.inst(COPY);   // typeof 的值Copy 一份用来做两次 if 判断

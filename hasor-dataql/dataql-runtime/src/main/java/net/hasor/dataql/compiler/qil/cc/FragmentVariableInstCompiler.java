@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.compiler.qil.cc;
+import net.hasor.dataql.compiler.ast.token.StringToken;
 import net.hasor.dataql.compiler.ast.value.FragmentVariable;
 import net.hasor.dataql.compiler.qil.CompilerContext;
 import net.hasor.dataql.compiler.qil.InstCompiler;
@@ -32,33 +33,42 @@ public class FragmentVariableInstCompiler implements InstCompiler<FragmentVariab
     @Override
     public void doCompiler(FragmentVariable astInst, InstQueue queue, CompilerContext compilerContext) {
         InstQueue newMethodInst = queue.newMethodInst();
-        List<String> paramList = astInst.getParamList();
+        List<StringToken> paramList = astInst.getParamList();
         boolean isBatch = astInst.isBatchMode();
         compilerContext.newFrame();
         // .LOCAL 变量表
         for (int i = 0; i < paramList.size(); i++) {
-            String name = paramList.get(i);
+            StringToken paramToken = paramList.get(i);
+            String name = paramToken.getValue();
             int index = compilerContext.push(name);     //将变量名压栈，并返回栈中的位置
+            instLocation(newMethodInst, paramToken);
             newMethodInst.inst(LOCAL, i, index, name);  //为栈中某个位置的变量命名
         }
         // .声明片段入口
-        newMethodInst.inst(M_FRAG, isBatch, astInst.getFragmentName());
+        StringToken fragmentName = astInst.getFragmentName();
+        instLocation(newMethodInst, fragmentName);
+        newMethodInst.inst(M_FRAG, isBatch, fragmentName.getValue());
         //  .加载入参变量
         newMethodInst.inst(NEW_O);
-        for (int i = 0; i < paramList.size(); i++) {
-            String name = paramList.get(i);
+        for (StringToken stringToken : paramList) {
+            String name = stringToken.getValue();
             ContainsIndex index = compilerContext.containsWithTree(name);
+            instLocation(newMethodInst, stringToken);
             newMethodInst.inst(LOAD, index.depth, index.index);
             newMethodInst.inst(PUT, name);
         }
         // .最后一个参数是的片段内容
-        newMethodInst.inst(LDC_S, astInst.getFragmentString());
+        StringToken fragmentToken = astInst.getFragmentString();
+        instLocation(newMethodInst, fragmentToken);
+        newMethodInst.inst(LDC_S, fragmentToken.getValue());
         // .执行函数调用
+        instLocation(newMethodInst, astInst);
         newMethodInst.inst(CALL, 2);
         newMethodInst.inst(RETURN, 0);
         compilerContext.dropFrame();
         //
         // .指向函数的指针
+        instLocation(queue, astInst);
         queue.inst(M_REF, newMethodInst.getName());
     }
 }

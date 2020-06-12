@@ -19,7 +19,7 @@ package net.hasor.dataql.compiler.ast;
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2020-06-11
  */
-public interface location {
+public interface Location {
     public int getLineNumber();
 
     public int getColumnNumber();
