@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 /**
- * 数据库存储层访问 ApiDataAccessLayer 接口实现。
+ * 接口配置服务。
  */
 @IgnoreProxy
-package net.hasor.dataway.dal.providers.db;
+package net.hasor.dataway;
 import net.hasor.core.IgnoreProxy;
