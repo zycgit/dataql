@@ -54,10 +54,12 @@ public class InterfaceApiFilter implements InvokerFilter {
     private          SpiTrigger         spiTrigger;
     @Inject
     private          ApiDataAccessLayer dataAccessLayer;
-    private          String             apiBaseUri;
+    private final    String             apiBaseUri;
+    private final    String             adminBaseUri;
 
-    public InterfaceApiFilter(String apiBaseUri) {
+    public InterfaceApiFilter(String apiBaseUri, String adminBaseUri) {
         this.apiBaseUri = apiBaseUri;
+        this.adminBaseUri = adminBaseUri;
     }
 
     @Override
@@ -73,6 +75,13 @@ public class InterfaceApiFilter implements InvokerFilter {
         String httpMethod = httpRequest.getMethod().toUpperCase().trim();
         if (!requestURI.startsWith(this.apiBaseUri)) {
             return chain.doNext(invoker);
+        }
+        //
+        // .Skip ui url
+        if (StringUtils.isNotBlank(this.adminBaseUri)) {
+            if (requestURI.startsWith(this.adminBaseUri)) {
+                return chain.doNext(invoker);
+            }
         }
         //
         DatawayUtils.resetLocalTime();
