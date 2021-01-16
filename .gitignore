@@ -1,6 +1,7 @@
 .cache
 test-work
 bin
+/out/
 .DS_Store
 _book
 dependency-reduced-pom.xml
