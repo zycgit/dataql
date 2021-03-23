@@ -14,32 +14,24 @@
  * limitations under the License.
  */
 package net.hasor.dataql.fx.basic;
-import com.alibaba.fastjson.JSON;
 import net.hasor.core.Singleton;
 import net.hasor.dataql.UdfSourceAssembly;
 
+
 /**
- * Json函数。函数库引入 <code>import 'net.hasor.dataql.fx.basic.JsonUdfSource' as json;</code>
+ * 数学函数。函数库引入 <code>import 'net.hasor.dataql.fx.basic.NumberUdfSource' as number;</code>
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2019-12-12
  */
 @Singleton
-public class JsonUdfSource implements UdfSourceAssembly {
-    /** 把对象 JSON 序列化 */
-    public String toJson(Object data) {
-        return JSON.toJSONString(data);
-    }
-
-    /** 把对象 JSON 序列化（带格式） */
-    public String toFmtJson(Object data) {
-        return JSON.toJSONString(data, true);
-    }
-
-    /** 解析 JSON */
-    public Object fromJson(String data) {
-        if (data == null) {
-            return null;
+public class NumberUdfSource implements UdfSourceAssembly {
+    public static int inRange(int value, int min, int max) {
+        if (Math.min(value, min) == value) {
+            return min;
+        } else if (Math.max(value, max) == value) {
+            return max;
+        } else {
+            return value;
         }
-        return JSON.parse(data);
     }
 }
