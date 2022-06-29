@@ -2,30 +2,27 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.hasor</groupId>
-    <artifactId>hasor-parent</artifactId>
-    <version>4.2.6-SNAPSHOT</version>
+    <artifactId>dataql-parent</artifactId>
+    <version>4.3.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <!-- 配置属性 -->
     <properties>
-        <wtpversion>2.0</wtpversion>
         <downloadSources>true</downloadSources>
         <downloadJavadocs>true</downloadJavadocs>
         <jacoco.version>0.8.5</jacoco.version>
+        <hasor.version>4.2.5</hasor.version>
+        <cobble.version>4.4.0</cobble.version>
+        <dbvisitor.version>5.0.1</dbvisitor.version>
         <!--<maven.test.skip>true</maven.test.skip>-->
         <!--<skipTests>true</skipTests>-->
-        <powermock.version>2.0.6</powermock.version>
-        <project.shortname>Hasor-</project.shortname>
-        <project.website>http://www.hasor.net/</project.website>
-        <project.inceptionYear>2020</project.inceptionYear>
-        <javadocs.bottom><![CDATA[  ]]></javadocs.bottom>
     </properties>
 
-    <!-- 项目信息 -->
-    <name>Root</name>
-    <description>master POM</description>
-    <url>${project.website}</url>
-    <inceptionYear>${project.inceptionYear}</inceptionYear>
+    <!-- Project Info -->
+    <name>DataQL POM</name>
+    <description>the DataBase visitor ORM Tools.</description>
+    <url>http://www.dbvisitor.net/</url>
+    <inceptionYear>2022</inceptionYear>
 
     <!-- 授权协议 -->
     <licenses>
@@ -43,7 +40,6 @@
         <tag>HEAD</tag>
     </scm>
 
-    <!-- 开发者 -->
     <developers>
         <developer>
             <name>赵永春(Mr.Zhao)</name>
@@ -52,17 +48,10 @@
     </developers>
 
     <modules>
-        <module>hasor-all</module>
-        <module>hasor-commons</module>
-        <module>hasor-core</module>
-        <module>hasor-db</module>
-        <module>hasor-web</module>
-        <module>hasor-tconsole</module>
-        <module>hasor-dataql/dataql-runtime</module>
-        <module>hasor-dataql/dataql-maven-plugin</module>
-        <module>hasor-dataql/dataql-fx</module>
-        <module>hasor-dataql/dataql-dataway</module>
-        <module>hasor-rsf/rsf-framework</module>
+        <module>dataql-engine</module>
+        <module>dataql-dataway</module>
+        <module>dataql-integration/dataql-functions</module>
+        <module>dataql-integration/dataql-maven-plugin</module>
     </modules>
 
     <!-- 构建描述 -->
@@ -103,11 +92,8 @@
                     <failOnWarnings>false</failOnWarnings>
                     <doclint>none</doclint>
                     <additionalJOption>--allow-script-in-comments</additionalJOption>
-                    <excludePackageNames>net.hasor.utils.*,net.hasor.libs.*</excludePackageNames>
                     <encoding>UTF-8</encoding>
                     <docencoding>UTF-8</docencoding>
-                    <header><![CDATA[ [<a target="_blank" href="http://www.hasor.net">Web Site</a>] ]]></header>
-                    <bottom>${javadocs.bottom}</bottom>
                 </configuration>
                 <executions>
                     <execution>
@@ -173,18 +159,6 @@
         </plugins>
     </build>
 
-    <!-- 发布使用的版本库 -->
-    <distributionManagement>
-        <snapshotRepository>
-            <id>rdc-snapshots</id>
-            <url>https://packages.aliyun.com/maven/repository/2012878-snapshot-wXHWRP</url>
-        </snapshotRepository>
-        <!--        <snapshotRepository>-->
-        <!--            <id>ossrh</id>-->
-        <!--            <url>https://oss.sonatype.org/content/repositories/snapshots</url>-->
-        <!--        </snapshotRepository>-->
-    </distributionManagement>
-
     <!-- 使用“-P release”启用下面配置 -->
     <profiles>
         <profile>
@@ -229,7 +203,7 @@
                             <autoVersionSubmodules>true</autoVersionSubmodules>
                             <useReleaseProfile>false</useReleaseProfile>
                             <releaseProfiles>release</releaseProfiles>
-                            <tagNameFormat>Release.${project.shortname}@{project.version}</tagNameFormat>
+                            <tagNameFormat>v@{project.version}</tagNameFormat>
                             <goals>deploy</goals>
                         </configuration>
                     </plugin>
@@ -241,69 +215,17 @@
     <!-- 公共依赖 -->
     <dependencies>
         <dependency>
-            <groupId>javax.inject</groupId>
-            <artifactId>javax.inject</artifactId>
-            <version>1</version>
-            <scope>compile</scope>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-module-junit4</artifactId>
-            <version>${powermock.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-api-mockito2</artifactId>
-            <version>${powermock.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.2.3</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
-    <!-- 需要统一管理的依赖 -->
+    <!-- 引用依赖 -->
     <dependencyManagement>
         <dependencies>
             <!-- self -->
-            <dependency>
-                <groupId>net.hasor</groupId>
-                <artifactId>hasor-commons</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.hasor</groupId>
-                <artifactId>hasor-core</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.hasor</groupId>
-                <artifactId>hasor-db</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.hasor</groupId>
-                <artifactId>hasor-web</artifactId>
-                <version>${project.version}</version>
-            </dependency>
             <dependency>
                 <groupId>net.hasor</groupId>
                 <artifactId>hasor-dataql</artifactId>
@@ -319,68 +241,43 @@
                 <artifactId>hasor-dataway</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>net.hasor</groupId>
-                <artifactId>hasor-tconsole</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.hasor</groupId>
-                <artifactId>hasor-rsf</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.hasor</groupId>
-                <artifactId>hasor-all</artifactId>
-                <version>${project.version}</version>
-            </dependency>
 
-            <!-- Log依赖 -->
+            <!-- tools -->
+            <dependency>
+                <groupId>net.hasor</groupId>
+                <artifactId>cobble-all</artifactId>
+                <version>${cobble.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.hasor</groupId>
+                <artifactId>dbvisitor</artifactId>
+                <version>${dbvisitor.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.hasor</groupId>
+                <artifactId>hasor-core</artifactId>
+                <version>${hasor.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.hasor</groupId>
+                <artifactId>hasor-web</artifactId>
+                <version>${hasor.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>1.7.30</version>
             </dependency>
-
-            <!-- network -->
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-all</artifactId>
-                <version>4.1.45.Final</version>
-            </dependency>
-
-            <!-- antlr4 & script -->
-            <dependency>
-                <groupId>org.antlr</groupId>
-                <artifactId>antlr4-runtime</artifactId>
-                <version>4.9.2</version>
-            </dependency>
-            <dependency>
-                <groupId>org.codehaus.groovy</groupId>
-                <artifactId>groovy</artifactId>
-                <version>2.5.8</version>
-            </dependency>
-
-            <!-- JSON 序列化 -->
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>fastjson</artifactId>
                 <version>1.2.67</version>
             </dependency>
-
-            <!-- dbs -->
             <dependency>
                 <groupId>com.h2database</groupId>
                 <artifactId>h2</artifactId>
                 <version>1.4.200</version>
             </dependency>
-            <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>druid</artifactId>
-                <version>1.1.23</version>
-            </dependency>
-
-            <!-- webs -->
             <dependency>
                 <groupId>javax.servlet</groupId>
                 <artifactId>javax.servlet-api</artifactId>
@@ -390,6 +287,14 @@
                 <groupId>javax.servlet.jsp</groupId>
                 <artifactId>jsp-api</artifactId>
                 <version>2.2</version>
+            </dependency>
+
+            <!-- test -->
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>4.12</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
