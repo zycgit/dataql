@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 package net.hasor.dataql.fx.db;
-import java.sql.Connection;
-
 /**
  * 当 DataQL 执行过程中用来获取对应的动态数据源，指定数据源的名字需要通过 HINT：FRAGMENT_SQL_DATA_SOURCE
  *
@@ -24,11 +22,6 @@ import java.sql.Connection;
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2020-06-03
  */
-public interface LookupConnectionListener extends java.util.EventListener {
-    /**
-     * 当 DataQL 执行过程中用来获取对应的动态数据源。
-     * @param lookupName 要查找的数据源
-     * @return 返回最终需要的数据源。
-     */
-    public Connection lookUp(String lookupName);
+@Deprecated
+public interface LookupConnectionListener extends net.hasor.dataql.sqlproc.spi.LookupConnectionListener {
 }

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.hasor.net/sechma/dataql-sqlproc">
+    <hasor>
+        <loadPackages>net.hasor.dataql.sqlproc.*</loadPackages>
+        <modules.module>net.hasor.dataql.sqlproc.SqlProcModule</modules.module>
+        <autoLoadSpi>
+            <spi>net.hasor.dataql.sqlproc.spi.FxSqlCheckChainSpi</spi>
+            <spi>net.hasor.dataql.sqlproc.spi.LookupConnectionListener</spi>
+            <spi>net.hasor.dataql.sqlproc.spi.LookupDataSourceListener</spi>
+        </autoLoadSpi>
+    </hasor>
+</config>

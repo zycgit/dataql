@@ -13,15 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.fx.db;
+package net.hasor.dataql.sqlproc;
+
+import net.hasor.dataql.binder.QueryApiBinder;
+import net.hasor.dataql.binder.QueryModule;
+import net.hasor.dataql.sqlproc.fragment.SqlFragment;
+
 /**
- * 当 DataQL 执行过程中用来获取对应的动态数据源，指定数据源的名字需要通过 HINT：FRAGMENT_SQL_DATA_SOURCE
- *
- * 该 SPI 允许应用程序在任意时候更换某个名字的数据库连接。
- * ps ：只有当初始化没有注册的数据源才会利用 LookupDataSourceListener 进行查找发现。
  * @author 赵永春 (zyc@hasor.net)
- * @version : 2020-06-03
+ * @version : 2017-03-23
  */
-@Deprecated
-public interface LookupDataSourceListener extends net.hasor.dataql.sqlproc.spi.LookupDataSourceListener {
+public class SqlProcModule implements QueryModule {
+    @Override
+    public void loadModule(QueryApiBinder apiBinder) {
+        apiBinder.bindFragment("sql", new SqlFragment());
+        apiBinder.bindFragment("mybatis", new SqlFragment());
+    }
 }

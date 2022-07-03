@@ -19,43 +19,6 @@ package net.hasor.dataql.fx.db;
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2020-09-18
  */
-public interface FxSqlCheckChainSpi extends java.util.EventListener {
-    public static final int NEXT = 1;// 执行下一个 Spi
-    public static final int EXIT = 2;// 退出执行
-
-    public int doCheck(FxSqlInfo infoObject) throws Throwable;
-
-    public final class FxSqlInfo {
-        private boolean  batch;
-        private String   sourceName;
-        private String   queryString;
-        private Object[] queryParams;
-
-        public FxSqlInfo(boolean batch, String sourceName, String queryString, Object[] queryParams) {
-            this.batch = batch;
-            this.sourceName = sourceName;
-            this.queryString = queryString;
-            this.queryParams = queryParams;
-        }
-
-        /** 是否为批量操作 */
-        public boolean isBatch() {
-            return this.batch;
-        }
-
-        /** 使用的数据源 */
-        public String getSourceName() {
-            return this.sourceName;
-        }
-
-        /** 计划执行的 SQL */
-        public String getQueryString() {
-            return this.queryString;
-        }
-
-        /** 执行 SQL 用到的参数 */
-        public Object[] getQueryParams() {
-            return this.queryParams.clone();
-        }
-    }
+@Deprecated
+public interface FxSqlCheckChainSpi extends net.hasor.dataql.sqlproc.spi.FxSqlCheckChainSpi {
 }

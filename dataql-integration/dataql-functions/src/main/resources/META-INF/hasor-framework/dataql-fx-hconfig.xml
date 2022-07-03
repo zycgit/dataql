@@ -6,16 +6,6 @@
         <!-- 入口 -->
         <modules.module>net.hasor.dataql.fx.FxModule</modules.module>
 
-        <!-- 内置 Fragment -->
-        <dataqlFx>
-            <bindFragmentSet>
-                <!-- @@sql -->
-                <bindFragment name="sql">net.hasor.dataql.fx.db.runsql.SqlFragment</bindFragment>
-                <!-- 2021-07-23 @@sql 支持 mybatis 模式 -->
-                <bindFragment name="mybatis">net.hasor.dataql.fx.db.runsql.SqlFragment</bindFragment>
-            </bindFragmentSet>
-        </dataqlFx>
-
         <autoLoadSpi>
             <spi>net.hasor.dataql.fx.db.FxSqlCheckChainSpi</spi>
             <spi>net.hasor.dataql.fx.db.LookupConnectionListener</spi>
