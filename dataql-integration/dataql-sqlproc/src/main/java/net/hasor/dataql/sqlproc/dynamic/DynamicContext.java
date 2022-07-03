@@ -35,7 +35,10 @@ public interface DynamicContext {
 
     TypeHandler<?> findTypeHandler(Class<?> javaType, Integer jdbcType);
 
+    TypeHandler<?> defaultTypeHandler();
+
     Class<?> loadClass(String className) throws ClassNotFoundException;
 
     SqlBuildRule findRule(String ruleName);
+
 }

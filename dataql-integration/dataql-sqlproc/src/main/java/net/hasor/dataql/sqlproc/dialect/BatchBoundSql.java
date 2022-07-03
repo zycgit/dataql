@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dialect;
-import net.hasor.dbvisitor.dialect.BoundSql;
 
 import java.util.Arrays;
 
@@ -28,7 +27,7 @@ public interface BatchBoundSql extends BoundSql {
 
     Object[][] getArgs();
 
-    class BatchBoundSqlObj extends BoundSqlObj implements BatchBoundSql {
+    public class BatchBoundSqlObj extends BoundSqlObj implements BatchBoundSql {
         public BatchBoundSqlObj(String sqlString, Object[][] paramArray) {
             super(sqlString, paramArray);
         }

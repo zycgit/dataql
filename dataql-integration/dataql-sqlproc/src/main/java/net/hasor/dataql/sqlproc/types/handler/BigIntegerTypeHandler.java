@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types.handler;
- 
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.CallableStatement;

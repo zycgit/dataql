@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.fx;
-import static net.hasor.dataql.fx.FxHintValue.*;
+package net.hasor.dataql.sqlproc;
+
+import static net.hasor.dataql.sqlproc.SqlHintValue.*;
 
 /**
  * Hint 的 keys 定义。
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-03-23
  */
-public enum FxHintNames {
+public enum SqlHintNames {
     /** SqlFragment 返回值，拆开方式 */
     FRAGMENT_SQL_OPEN_PACKAGE(FRAGMENT_SQL_OPEN_PACKAGE_COLUMN),
     /** SqlFragment 返回的列信息大小写模式：default、upper、lower、hump */
@@ -47,7 +48,7 @@ public enum FxHintNames {
         return this.defaultVal;
     }
 
-    FxHintNames(String defaultVal) {
+    SqlHintNames(String defaultVal) {
         this.defaultVal = defaultVal;
     }
 }

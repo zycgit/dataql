@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types.handler;
- 
+
 import java.io.ByteArrayInputStream;
 import java.sql.*;
 

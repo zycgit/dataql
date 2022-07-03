@@ -26,7 +26,7 @@ public interface BoundSql {
 
     Object[] getArgs();
 
-    class BoundSqlObj implements BoundSql {
+    public class BoundSqlObj implements BoundSql {
         /** SQL */
         private final String   sqlString;
         private final Object[] paramArray;

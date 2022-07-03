@@ -18,8 +18,8 @@ import net.hasor.cobble.ResourcesUtils;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.ref.LinkedCaseInsensitiveMap;
 import net.hasor.cobble.supplier.TypeSupplier;
-import net.hasor.dataql.sqlproc.JdbcUtils;
 import net.hasor.dataql.sqlproc.dialect.provider.*;
+import net.hasor.dataql.sqlproc.execute.JdbcUtils;
 
 import java.util.Map;
 

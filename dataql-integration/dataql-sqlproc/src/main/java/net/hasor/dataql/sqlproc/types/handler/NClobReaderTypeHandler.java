@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types.handler;
-import net.hasor.dbvisitor.types.TypeHandler;
+
+import net.hasor.dataql.sqlproc.types.TypeHandler;
 
 import java.io.Reader;
 import java.sql.*;
