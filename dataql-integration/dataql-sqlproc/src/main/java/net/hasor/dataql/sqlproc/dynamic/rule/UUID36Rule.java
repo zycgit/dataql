@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic.rule;
-import net.hasor.dataql.sqlproc.dialect.SqlBuilder;
+import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.dataql.sqlproc.dynamic.DynamicContext;
 import net.hasor.dataql.sqlproc.dynamic.SqlArg;
 import net.hasor.dataql.sqlproc.dynamic.SqlMode;
@@ -35,7 +35,7 @@ public class UUID36Rule implements SqlBuildRule {
     private static final TypeHandler<?> typeHandler = TypeHandlerRegistry.DEFAULT.getTypeHandler(String.class);
 
     @Override
-    public void executeRule(Map<String, Object> data, DynamicContext context, SqlBuilder sqlBuilder, String activeExpr, String ruleValue) {
+    public void executeRule(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder, String activeExpr, String ruleValue) {
         String uuidValue = UUID.randomUUID().toString().replace("-", "");
         SqlArg sqlArg = new SqlArg(ruleValue, uuidValue, SqlMode.In, Types.VARCHAR, String.class, typeHandler);
         sqlBuilder.appendSql("?", sqlArg);

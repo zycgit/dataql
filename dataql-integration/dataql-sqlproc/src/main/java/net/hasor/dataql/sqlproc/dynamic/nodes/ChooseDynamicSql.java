@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic.nodes;
-import net.hasor.dataql.sqlproc.dialect.SqlBuilder;
+import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.dataql.sqlproc.dynamic.DynamicContext;
 import net.hasor.dataql.sqlproc.dynamic.DynamicSql;
 
@@ -42,7 +42,7 @@ public class ChooseDynamicSql extends ArrayDynamicSql {
     }
 
     @Override
-    public void buildQuery(Map<String, Object> data, DynamicContext context, SqlBuilder sqlBuilder) throws SQLException {
+    public void buildQuery(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException {
         boolean useDefault = true;
         try {
             for (DynamicSql dynamicSql : this.subNodes) {

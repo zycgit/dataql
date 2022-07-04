@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.execute.sequence;
-import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.sqlproc.execute.AbstractStatementExecute;
 import net.hasor.dataql.sqlproc.execute.KeySequenceHolder;
 import net.hasor.dataql.sqlproc.execute.KeySequenceHolderFactory;
-import net.hasor.dataql.sqlproc.fragment.config.SelectKeySqlConfig;
+import net.hasor.dataql.sqlproc.execute.config.SelectKeyProcSql;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -32,15 +31,15 @@ import java.util.Map;
  */
 public class SelectKeySequenceHolderFactory implements KeySequenceHolderFactory {
     @Override
-    public KeySequenceHolder createHolder(SelectKeySqlConfig keySqlConfig, AbstractStatementExecute<?> selectKeyExecute) {
+    public KeySequenceHolder createHolder(SelectKeyProcSql keySqlConfig, AbstractStatementExecute<?> selectKeyExecute) {
         return new SelectKeySequenceHolder(keySqlConfig, selectKeyExecute);
     }
 
     private static class SelectKeySequenceHolder implements KeySequenceHolder {
-        private final SelectKeySqlConfig          keySqlConfig;
+        private final SelectKeyProcSql            keySqlConfig;
         private final AbstractStatementExecute<?> selectKeyExecute;
 
-        public SelectKeySequenceHolder(SelectKeySqlConfig keySqlConfig, AbstractStatementExecute<?> selectKeyExecute) {
+        public SelectKeySequenceHolder(SelectKeyProcSql keySqlConfig, AbstractStatementExecute<?> selectKeyExecute) {
             this.keySqlConfig = keySqlConfig;
             this.selectKeyExecute = selectKeyExecute;
         }
@@ -49,18 +48,18 @@ public class SelectKeySequenceHolderFactory implements KeySequenceHolderFactory 
             String keyColumn = this.keySqlConfig.getKeyColumn();
             Object resultValue = null;
 
-            if (StringUtils.isBlank(keyColumn)) {
-                // maybe is single value.
-                resultValue = this.selectKeyExecute.execute(conn, this.keySqlConfig, parameter, null, false, null);
-            } else {
-                resultValue = this.selectKeyExecute.execute(conn, this.keySqlConfig, parameter, null, false, null, true);
-            }
+            //            if (StringUtils.isBlank(keyColumn)) {
+            //                // maybe is single value.
+            //                resultValue = this.selectKeyExecute.execute(conn, this.keySqlConfig, parameter, null, false, null);
+            //            } else {
+            //                resultValue = this.selectKeyExecute.execute(conn, this.keySqlConfig, parameter, null, false, null, true);
+            //            }
 
             if (resultValue instanceof List) {
                 resultValue = ((List<?>) resultValue).get(0);
             }
 
-            return resultValue;
+            return resultValue.getClass();
         }
     }
 }

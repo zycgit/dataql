@@ -15,7 +15,7 @@
  */
 package net.hasor.dataql.sqlproc.dynamic.rule;
 
-import net.hasor.dataql.sqlproc.dialect.SqlBuilder;
+import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.dataql.sqlproc.dynamic.DynamicContext;
 
 import java.sql.SQLException;
@@ -33,5 +33,5 @@ public interface SqlBuildRule {
         return Boolean.TRUE.equals(evalOgnl(activeExpr, data));
     }
 
-    void executeRule(Map<String, Object> data, DynamicContext context, SqlBuilder sqlBuilder, String activeExpr, String ruleValue) throws SQLException;
+    void executeRule(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder, String activeExpr, String ruleValue) throws SQLException;
 }

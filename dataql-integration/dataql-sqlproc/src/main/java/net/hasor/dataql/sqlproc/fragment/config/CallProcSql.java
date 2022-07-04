@@ -13,23 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.execute.sequence;
-
-import net.hasor.dataql.sqlproc.execute.AbstractStatementExecute;
-import net.hasor.dataql.sqlproc.execute.KeySequenceHolder;
-import net.hasor.dataql.sqlproc.execute.KeySequenceHolderFactory;
-import net.hasor.dataql.sqlproc.execute.config.SelectKeyProcSql;
-
-import java.util.UUID;
+package net.hasor.dataql.sqlproc.fragment.config;
+import net.hasor.cobble.setting.SettingNode;
+import net.hasor.dataql.sqlproc.dynamic.DynamicSql;
+import net.hasor.dataql.sqlproc.fragment.QueryType;
+import net.hasor.dataql.sqlproc.fragment.StatementType;
 
 /**
- * 使用 UUID 作为默认 Key 值
- * @version : 2022-04-29
+ * Query SqlConfig
+ * @version : 2021-06-19
  * @author 赵永春 (zyc@hasor.net)
  */
-public class UUIDSequenceHolderFactory implements KeySequenceHolderFactory {
+public class CallProcSql extends QueryProcSql {
+
+    public CallProcSql(DynamicSql target, SettingNode options) {
+        super(target, options);
+        this.setStatementType(StatementType.Callable);
+    }
+
     @Override
-    public KeySequenceHolder createHolder(SelectKeyProcSql keySqlConfig, AbstractStatementExecute<?> selectKeyExecute) {
-        return (conn, parameter) -> UUID.randomUUID().toString();
+    public QueryType getDynamicType() {
+        return QueryType.Call;
     }
 }

@@ -19,17 +19,13 @@ import net.hasor.cobble.io.IOUtils;
 import net.hasor.cobble.logging.Logger;
 import net.hasor.cobble.logging.LoggerFactory;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
-import net.hasor.dataql.sqlproc.dialect.PageSqlDialect;
-import net.hasor.dataql.sqlproc.dialect.SqlBuilder;
+import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
+import net.hasor.dataql.sqlproc.dialect.PageDialect;
 import net.hasor.dataql.sqlproc.dynamic.DynamicContext;
-import net.hasor.dataql.sqlproc.dynamic.DynamicSql;
 import net.hasor.dataql.sqlproc.dynamic.SqlArg;
 import net.hasor.dataql.sqlproc.dynamic.SqlMode;
+import net.hasor.dataql.sqlproc.execute.config.AbstractProcSql;
 import net.hasor.dataql.sqlproc.execute.extractor.TableReader;
-import net.hasor.dataql.sqlproc.fragment.MultipleResultsType;
-import net.hasor.dataql.sqlproc.fragment.ResultSetType;
-import net.hasor.dataql.sqlproc.fragment.config.DmlSqlConfig;
-import net.hasor.dataql.sqlproc.fragment.config.QuerySqlConfig;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 
 import java.io.StringReader;
@@ -48,10 +44,12 @@ import java.util.stream.Collectors;
  * @author 赵永春 (zyc@hasor.net)
  */
 public abstract class AbstractStatementExecute<T> {
-    protected static final Logger         logger = LoggerFactory.getLogger(AbstractStatementExecute.class);
-    private final          DynamicContext context;
+    protected static final Logger          logger = LoggerFactory.getLogger(AbstractStatementExecute.class);
+    private final          AbstractProcSql procSql;
+    private final          DynamicContext  context;
 
-    public AbstractStatementExecute(DynamicContext context) {
+    public AbstractStatementExecute(AbstractProcSql procSql, DynamicContext context) {
+        this.procSql = procSql;
         this.context = context;
     }
 
@@ -59,41 +57,24 @@ public abstract class AbstractStatementExecute<T> {
         return this.context;
     }
 
-    public final T execute(Connection conn, DynamicSql dynamicSql, Map<String, Object> data) throws SQLException {
-        return this.execute(conn, dynamicSql, data, null, false, null, false);
+    public final T execute(Connection conn, Map<String, Object> data) throws SQLException {
+        return this.execute(conn, data, null, false, null);
     }
 
-    public final T execute(Connection conn, DynamicSql dynamicSql, Map<String, Object> data, Page pageInfo, boolean pageResult, PageSqlDialect dialect) throws SQLException {
-        return this.execute(conn, dynamicSql, data, pageInfo, pageResult, dialect, false);
-    }
-
-    public final T execute(Connection conn, DynamicSql dynamicSql, Map<String, Object> data, Page pageInfo, boolean pageResult, PageSqlDialect dialect, boolean resultAsMap) throws SQLException {
-        SqlBuilder queryBuilder = dynamicSql.buildQuery(data, this.context);
+    public final T execute(Connection conn, Map<String, Object> data, Page pageInfo, boolean totalInfo, PageDialect dialect) throws SQLException {
+        BoundSqlBuilder queryBuilder = new BoundSqlBuilder();
+        this.procSql.buildQuery(data, this.context, queryBuilder);
         ExecuteInfo executeInfo = new ExecuteInfo();
 
         executeInfo.pageInfo = pageInfo;
-        executeInfo.timeout = -1;
-        executeInfo.resultMap = "";
-        executeInfo.fetchSize = 256;
-        executeInfo.resultSetType = ResultSetType.DEFAULT;
-        executeInfo.multipleResultType = MultipleResultsType.LAST;
+        executeInfo.timeout = this.procSql.getTimeout();
+        executeInfo.resultMap = this.procSql.getResultMap();
+        executeInfo.fetchSize = this.procSql.getFetchSize();
+        executeInfo.resultSetType = this.procSql.getResultSetType();
+        executeInfo.multipleResultType = this.procSql.getMultipleResultType();
         executeInfo.pageDialect = dialect;
-        executeInfo.pageResult = pageResult;
+        executeInfo.totalInfo = totalInfo;
         executeInfo.data = data;
-
-        if (dynamicSql instanceof DmlSqlConfig) {
-            executeInfo.timeout = ((DmlSqlConfig) dynamicSql).getTimeout();
-        }
-        if (dynamicSql instanceof QuerySqlConfig) {
-            executeInfo.resultMap = ((QuerySqlConfig) dynamicSql).getResultMap();
-            executeInfo.fetchSize = ((QuerySqlConfig) dynamicSql).getFetchSize();
-            executeInfo.resultSetType = ((QuerySqlConfig) dynamicSql).getResultSetType();
-            executeInfo.multipleResultType = ((QuerySqlConfig) dynamicSql).getMultipleResultType();
-        }
-
-        if (resultAsMap) {
-            executeInfo.resultMap = "";
-        }
 
         return executeQuery(conn, executeInfo, queryBuilder);
     }
@@ -102,7 +83,7 @@ public abstract class AbstractStatementExecute<T> {
         return executeInfo.pageInfo != null && executeInfo.pageInfo.getPageSize() > 0;
     }
 
-    protected abstract T executeQuery(Connection con, ExecuteInfo executeInfo, SqlBuilder sqlBuilder) throws SQLException;
+    protected abstract T executeQuery(Connection con, ExecuteInfo executeInfo, BoundSqlBuilder sqlBuilder) throws SQLException;
 
     protected void configStatement(ExecuteInfo executeInfo, Statement statement) throws SQLException {
         if (executeInfo.timeout > 0) {
@@ -240,8 +221,8 @@ public abstract class AbstractStatementExecute<T> {
         public MultipleResultsType multipleResultType = MultipleResultsType.LAST;
         // page
         public Page                pageInfo;
-        public PageSqlDialect      pageDialect;
-        public boolean             pageResult;
+        public PageDialect         pageDialect;
+        public boolean             totalInfo;
         // data
         public Map<String, Object> data;
     }

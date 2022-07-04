@@ -15,7 +15,7 @@
  */
 package net.hasor.dataql.sqlproc.dynamic;
 
-import net.hasor.dataql.sqlproc.dialect.SqlBuilder;
+import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 
 import java.sql.SQLException;
 import java.util.Map;
@@ -29,10 +29,10 @@ public interface DynamicSql {
     /** 是否包含替换占位符，如果包含替换占位符那么不能使用批量模式 */
     boolean isHavePlaceholder();
 
-    void buildQuery(Map<String, Object> data, DynamicContext context, SqlBuilder sqlBuilder) throws SQLException;
+    void buildQuery(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException;
 
-    default SqlBuilder buildQuery(Map<String, Object> data, DynamicContext context) throws SQLException {
-        SqlBuilder fxBuilder = new SqlBuilder();
+    default BoundSqlBuilder buildQuery(Map<String, Object> data, DynamicContext context) throws SQLException {
+        BoundSqlBuilder fxBuilder = new BoundSqlBuilder();
         this.buildQuery(data, context, fxBuilder);
         return fxBuilder;
     }

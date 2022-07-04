@@ -15,7 +15,8 @@
  */
 package net.hasor.dataql.sqlproc.dialect.provider;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
-import net.hasor.dataql.sqlproc.dialect.PageSqlDialect;
+import net.hasor.dataql.sqlproc.dialect.BoundSqlObject;
+import net.hasor.dataql.sqlproc.dialect.PageDialect;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,16 +27,7 @@ import java.util.List;
  * @version : 2020-10-31
  * @author 赵永春 (zyc@hasor.net)
  */
-public class PostgreSqlDialect extends AbstractDialect implements PageSqlDialect {
-    @Override
-    protected String keyWordsResource() {
-        return "/META-INF/db-keywords/postgresql.keywords";
-    }
-
-    @Override
-    protected String defaultQualifier() {
-        return "\"";
-    }
+public class PostgreSqlDialect extends AbstractDialect implements PageDialect {
 
     @Override
     public BoundSql pageSql(BoundSql boundSql, int start, int limit) {
@@ -51,6 +43,6 @@ public class PostgreSqlDialect extends AbstractDialect implements PageSqlDialect
             paramArrays.add(start);
         }
 
-        return new BoundSql.BoundSqlObj(sqlBuilder.toString(), paramArrays.toArray());
+        return new BoundSqlObject(sqlBuilder.toString(), paramArrays.toArray());
     }
 }

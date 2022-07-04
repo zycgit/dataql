@@ -15,9 +15,9 @@
  */
 package net.hasor.dataql.sqlproc.execute;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
-import net.hasor.dataql.sqlproc.dialect.SqlBuilder;
+import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.dataql.sqlproc.dynamic.DynamicContext;
-import net.hasor.dataql.sqlproc.fragment.ResultSetType;
+import net.hasor.dataql.sqlproc.execute.config.AbstractProcSql;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -32,8 +32,8 @@ import java.util.List;
  */
 public class StatementExecute extends AbstractStatementExecute<Object> {
 
-    public StatementExecute(DynamicContext context) {
-        super(context);
+    public StatementExecute(AbstractProcSql procSql, DynamicContext context) {
+        super(procSql, context);
     }
 
     protected Statement createStatement(Connection conn, ResultSetType resultSetType) throws SQLException {
@@ -46,7 +46,7 @@ public class StatementExecute extends AbstractStatementExecute<Object> {
     }
 
     @Override
-    protected Object executeQuery(Connection con, ExecuteInfo executeInfo, SqlBuilder sqlBuilder) throws SQLException {
+    protected Object executeQuery(Connection con, ExecuteInfo executeInfo, BoundSqlBuilder sqlBuilder) throws SQLException {
         if (usingPage(executeInfo)) {
             throw new UnsupportedOperationException("Statement does not support page query, please using PreparedStatement.");
         }

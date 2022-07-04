@@ -1,0 +1,359 @@
+/*
+ * Copyright 2008-2009 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package net.hasor.dataql.sqlproc.fragment;
+import net.hasor.cobble.StringUtils;
+import net.hasor.cobble.codec.MD5;
+import net.hasor.cobble.function.ESupplier;
+import net.hasor.cobble.io.IOUtils;
+import net.hasor.cobble.setting.SettingNode;
+import net.hasor.cobble.setting.data.TreeNode;
+import net.hasor.core.AppContext;
+import net.hasor.core.BindInfo;
+import net.hasor.core.Inject;
+import net.hasor.core.Singleton;
+import net.hasor.core.spi.SpiTrigger;
+import net.hasor.dataql.FragmentProcess;
+import net.hasor.dataql.Hints;
+import net.hasor.dataql.sqlproc.SqlHintNames;
+import net.hasor.dataql.sqlproc.dialect.PageDialect;
+import net.hasor.dataql.sqlproc.dialect.SqlDialectRegister;
+import net.hasor.dataql.sqlproc.dynamic.DynamicParser;
+import net.hasor.dataql.sqlproc.dynamic.DynamicSql;
+import net.hasor.dataql.sqlproc.execute.JdbcUtils;
+import net.hasor.dataql.sqlproc.execute.Page;
+import net.hasor.dataql.sqlproc.execute.PageObject;
+import net.hasor.dataql.sqlproc.fragment.config.*;
+import net.hasor.dataql.sqlproc.spi.FxSqlCheckChainSpi;
+import net.hasor.dataql.sqlproc.spi.LookupConnectionListener;
+import net.hasor.dataql.sqlproc.spi.LookupDataSourceListener;
+
+import javax.annotation.PostConstruct;
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.io.StringReader;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static net.hasor.dataql.sqlproc.SqlHintNames.*;
+import static net.hasor.dataql.sqlproc.SqlHintValue.FRAGMENT_SQL_QUERY_BY_PAGE_ENABLE;
+
+/**
+ * 支持 SQL 的代码片段执行器。整合了分页、批处理能力。
+ *  已支持的语句有：insert、update、delete、replace、select、create、drop、alter
+ *  已经提供原生：insert、update、delete、replace 语句的批量能力。
+ * @author 赵永春 (zyc@hasor.net)
+ * @version : 2020-03-28
+ */
+@Singleton
+public class SqlFragment implements FragmentProcess {
+    @Inject
+    protected AppContext              appContext;
+    @Inject
+    protected SpiTrigger              spiTrigger;
+    private   DataSource              defaultDataSource;
+    private   Map<String, DataSource> dataSourceMap;
+    private   Map<String, ProcSql>    procDynamicCache;
+
+    @PostConstruct
+    public void init() {
+        this.dataSourceMap = new ConcurrentHashMap<>();
+        this.procDynamicCache = new ConcurrentHashMap<>();
+        List<BindInfo<DataSource>> bindInfos = this.appContext.findBindingRegister(DataSource.class);
+        for (BindInfo<DataSource> bindInfo : bindInfos) {
+            if (StringUtils.isBlank(bindInfo.getBindName())) {
+                if (this.defaultDataSource == null) {
+                    this.defaultDataSource = this.appContext.getInstance(bindInfo);
+                }
+            } else {
+                DataSource dataSource = this.appContext.getInstance(bindInfo);
+                if (dataSource != null) {
+                    this.dataSourceMap.put(bindInfo.getBindName(), dataSource);
+                }
+            }
+        }
+    }
+
+    /**
+     * 尝试推断SQL语句类型
+     *  - Query 可以执行分页，其它类型语句会退化。
+     *  - Insert/Update/Delete 语句之外的：退化为 非批量
+     */
+    private static QueryType evalSqlMode(String fragmentString) throws IOException {
+        List<String> readLines = IOUtils.readLines(new StringReader(fragmentString));
+        boolean multipleLines = false;
+        for (String lineStr : readLines) {
+            String tempLine = lineStr.trim();
+            if (!multipleLines) {
+                // 空行
+                if (StringUtils.isBlank(tempLine)) {
+                    continue;
+                }
+                // 单行注释
+                if (tempLine.startsWith("--") || tempLine.startsWith("//")) {
+                    continue;
+                }
+                // 多行注释
+                if (tempLine.startsWith("/*")) {
+                    if (tempLine.contains("*/")) {
+                        tempLine = tempLine.substring(tempLine.indexOf("*/") + 2).trim();// 使用多行注释定义了一个单行注释
+                    }
+                    if (StringUtils.isBlank(tempLine)) {
+                        continue;
+                    }
+                    multipleLines = true;
+                }
+            }
+            if (multipleLines) {
+                if (tempLine.contains("*/")) {
+                    tempLine = tempLine.substring(tempLine.indexOf("*/")).trim();
+                    multipleLines = false;
+                } else {
+                    continue;
+                }
+            }
+
+            tempLine = tempLine.toLowerCase();
+            if (tempLine.startsWith("insert") || tempLine.startsWith("replace")) {
+                return QueryType.Insert;
+            } else if (tempLine.startsWith("update")) {
+                return QueryType.Update;
+            } else if (tempLine.startsWith("delete")) {
+                return QueryType.Delete;
+            } else if (tempLine.startsWith("exec")) {
+                return QueryType.Call;
+            } else if (tempLine.startsWith("select")) {
+                return QueryType.Query;
+            } else if (tempLine.startsWith("create")) {
+                return QueryType.Create;
+            } else if (tempLine.startsWith("drop")) {
+                return QueryType.Drop;
+            } else if (tempLine.startsWith("alter")) {
+                return QueryType.Alter;
+            }
+        }
+        return QueryType.Other;
+    }
+
+    protected Connection fetchConnection(Hints hint) throws SQLException {
+        String sourceName = hint.getOrDefault(FRAGMENT_SQL_DATA_SOURCE.name(), "").toString();
+
+        // .首先尝试 Connection
+        if (this.spiTrigger.hasSpi(LookupConnectionListener.class)) {
+            // .通过 SPI 查找数据源
+            Connection jdbcConnection = this.spiTrigger.notifySpi(LookupConnectionListener.class, (listener, lastResult) -> {
+                return listener.lookUp(sourceName);
+            }, null);
+            // .构造JdbcTemplate
+            if (jdbcConnection != null) {
+                return jdbcConnection;
+            }
+        }
+
+        // .其次在通过数据源获取
+        DataSource useDataSource = null;
+        if (StringUtils.isBlank(sourceName)) {
+            useDataSource = this.defaultDataSource;
+        } else {
+            useDataSource = this.dataSourceMap.get(sourceName);
+        }
+        if (useDataSource == null) {
+            if (this.spiTrigger.hasSpi(LookupDataSourceListener.class)) {
+                // .通过 SPI 查找数据源
+                DataSource dataSource = this.spiTrigger.notifySpi(LookupDataSourceListener.class, (listener, lastResult) -> {
+                    return listener.lookUp(sourceName);
+                }, null);
+                // .构造JdbcTemplate
+                if (dataSource != null) {
+                    return dataSource.getConnection();
+                }
+            }
+            throw new NullPointerException("DataSource " + sourceName + " is undefined.");
+        }
+
+        return useDataSource.getConnection();
+    }
+
+    protected ProcSql buildOrGetProc(String fragmentString, Hints hint) throws Exception {
+        StringBuffer evalMd5Key = new StringBuffer(fragmentString);
+        hint.forEach((key, value) -> evalMd5Key.append(key).append("=").append(value));
+        String dynamicId = MD5.getMD5(evalMd5Key.toString());
+
+        ProcSql execute = this.procDynamicCache.get(dynamicId);
+        if (execute == null) {
+            synchronized (this) {
+                execute = this.procDynamicCache.get(dynamicId);
+                if (execute == null) {
+                    execute = initProc(dynamicId, fragmentString, hint);
+                    this.procDynamicCache.put(dynamicId, execute);
+                }
+            }
+        }
+
+        return execute;
+    }
+
+    private ProcSql initProc(String dynamicId, String fragmentString, Hints hint) throws Exception {
+        SettingNode options = new TreeNode();
+        hint.forEach((key, value) -> options.addValue(key, value.toString()));
+
+        String multipleResultStr = hint.getOrDefault(FRAGMENT_SQL_MULTIPLE_QUERIES.name(), MultipleResultsType.LAST.getTypeName()).toString();
+        MultipleResultsType multipleResult = MultipleResultsType.valueOfCode(multipleResultStr, MultipleResultsType.LAST);
+        options.setValue("multipleResult", multipleResult.getTypeName());
+
+        String wrapQueryBody = "<script id='" + dynamicId + "'>" + fragmentString + "</script>";
+        DynamicSql dynamic = new DynamicParser().parseDynamicSql(wrapQueryBody);
+
+        QueryType queryType = evalSqlMode(fragmentString);
+        switch (queryType) {
+            case Insert:
+                return new InsertProcSql(dynamic, options);
+            case Update:
+                return new UpdateProcSql(dynamic, options);
+            case Delete:
+                return new DeleteProcSql(dynamic, options);
+            case Query:
+                return new QueryProcSql(dynamic, options);
+            case Call:
+                return new CallProcSql(dynamic, options);
+            default:
+                return new OtherProcSql(dynamic, options);
+        }
+    }
+
+    public List<Object> batchRunFragment(Hints hint, List<Map<String, Object>> params, String fragmentString) throws Throwable {
+        // 如果批量参数为空退：退化为 非批量
+        if (params == null || params.size() == 0) {
+            return Collections.singletonList(this.runFragment(hint, Collections.emptyMap(), fragmentString));
+        }
+
+        // 批量参数只有一组：退化为 非批量
+        if (params.size() == 1) {
+            return Collections.singletonList(this.runFragment(hint, params.get(0), fragmentString));
+        }
+
+        // 确定是否支持批量模式
+        ProcSql procSql = buildOrGetProc(fragmentString, hint);
+        boolean useBatch = procSql.supportBatch();
+
+        // 不支持批模式：一条一条的执行
+        if (!useBatch) {
+            List<Object> resultList = new ArrayList<>(params.size());
+            for (Map<String, Object> paramItem : params) {
+                Object result = this.runFragment(hint, paramItem, fragmentString);
+                resultList.add(result);
+            }
+            return resultList;
+        }
+
+        // 批量执行
+        return doRunByBatch(hint, procSql, params);
+    }
+
+    @Override
+    public Object runFragment(Hints hint, Map<String, Object> paramMap, String fragmentString) throws Throwable {
+        ProcSql procSql = buildOrGetProc(fragmentString, hint);
+        return doRunByOne(hint, procSql, paramMap);
+    }
+
+    // --------------------------------------------------------------------------------------------
+
+    protected Object doRunByOne(Hints hint, ProcSql procSql, Map<String, Object> params) throws Throwable {
+        Page pageInfo = null;
+        if (usePage(hint, procSql)) {
+            pageInfo = new PageObject(1, new ESupplier<Integer, SQLException>() {
+                @Override
+                public Integer eGet() throws SQLException {
+                    return null;
+                }
+            });
+
+            Object pageOffset = hint.getOrDefault(FRAGMENT_SQL_QUERY_BY_PAGE_NUMBER_OFFSET.name(), FRAGMENT_SQL_QUERY_BY_PAGE_NUMBER_OFFSET.getDefaultVal());
+            pageInfo.setPageNumberOffset(Integer.parseInt(pageOffset.toString()));
+        }
+
+        return new SqlPageObject(hint, procSql, params, pageInfo, getDialect(hint), this);
+    }
+
+    protected List<Object> doRunByBatch(Hints hint, ProcSql procSql, List<Map<String, Object>> params) throws Throwable {
+        if (usePage(hint, procSql)) {
+            throw new UnsupportedOperationException("batch not support page.");
+        }
+
+        return null;
+    }
+
+    private boolean usePage(Hints hint, ProcSql procSql) {
+        if (procSql.supportPage() && !procSql.supportBatch()) {
+            SqlHintNames queryByPage = SqlHintNames.FRAGMENT_SQL_QUERY_BY_PAGE;
+            Object hintOrDefault = hint.getOrDefault(queryByPage.name(), queryByPage.getDefaultVal());
+            return FRAGMENT_SQL_QUERY_BY_PAGE_ENABLE.equalsIgnoreCase(hintOrDefault.toString());
+        } else {
+            return false;
+        }
+    }
+
+    private PageDialect getDialect(Hints hint) throws SQLException {
+        // .优先从 hint 中取方言，取不到在自动推断
+        String dialectType = hint.getOrDefault(FRAGMENT_SQL_PAGE_DIALECT.name(), "").toString();
+        if (StringUtils.isBlank(dialectType)) {
+            try (Connection con = fetchConnection(hint)) {
+                String jdbcUrl = con.getMetaData().getURL();
+                String jdbcDriverName = con.getMetaData().getDriverName();
+                dialectType = JdbcUtils.getDbType(jdbcUrl, jdbcDriverName);
+
+                if (StringUtils.isBlank(dialectType)) {
+                    throw new IllegalArgumentException("Query dialect missing.");
+                }
+            }
+        }
+
+        return SqlDialectRegister.findOrCreate(dialectType, this.appContext.getClassLoader());
+    }
+
+    //
+    //
+    //
+    //
+    //
+
+    /** 执行 SQL */
+    protected <T> T executeSQL(boolean batch, String sourceName, String sqlString, Object[] paramArrays, SqlQuery<T> sqlQuery) throws SQLException {
+        if (this.spiTrigger.hasSpi(FxSqlCheckChainSpi.class)) {
+            final FxSqlInfo fxSqlInfo = new FxSqlInfo(batch, sourceName, sqlString, paramArrays);
+            final AtomicBoolean doExit = new AtomicBoolean(false);
+            this.spiTrigger.chainSpi(FxSqlCheckChainSpi.class, (listener, lastResult) -> {
+                if (doExit.get()) {
+                    return lastResult;
+                }
+                int doCheck = listener.doCheck(fxSqlInfo);
+                if (doCheck == FxSqlCheckChainSpi.EXIT) {
+                    doExit.set(true);
+                }
+                return lastResult;
+            }, fxSqlInfo);
+            //
+            return sqlQuery.doQuery(fxSqlInfo.getQueryString(), fxSqlInfo.getQueryParams(), this.getJdbcTemplate(sourceName));
+        } else {
+            return sqlQuery.doQuery(sqlString, paramArrays, this.getJdbcTemplate(sourceName));
+        }
+    }
+}

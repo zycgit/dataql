@@ -17,7 +17,7 @@ package net.hasor.dataql.sqlproc.execute;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.convert.ConverterBean;
 import net.hasor.cobble.ref.BeanMap;
-import net.hasor.dataql.sqlproc.fragment.config.SelectKeySqlConfig;
+import net.hasor.dataql.sqlproc.execute.config.SelectKeyProcSql;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -30,10 +30,10 @@ import java.util.Map;
  * @author 赵永春 (zyc@hasor.net)
  */
 public class KeySequenceExecute {
-    private final SelectKeySqlConfig keySqlConfig;
-    private final KeySequenceHolder  sequenceHolder;
+    private final SelectKeyProcSql  keySqlConfig;
+    private final KeySequenceHolder sequenceHolder;
 
-    public KeySequenceExecute(SelectKeySqlConfig keySqlConfig, KeySequenceHolder sequenceHolder) {
+    public KeySequenceExecute(SelectKeyProcSql keySqlConfig, KeySequenceHolder sequenceHolder) {
         this.keySqlConfig = keySqlConfig;
         this.sequenceHolder = sequenceHolder;
     }

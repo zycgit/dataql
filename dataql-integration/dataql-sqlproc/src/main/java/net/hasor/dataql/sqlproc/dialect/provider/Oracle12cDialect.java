@@ -15,6 +15,7 @@
  */
 package net.hasor.dataql.sqlproc.dialect.provider;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
+import net.hasor.dataql.sqlproc.dialect.BoundSqlObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,7 +31,7 @@ public class Oracle12cDialect extends OracleDialect {
     @Override
     public BoundSql countSql(BoundSql boundSql) {
         String sqlBuilder = "SELECT COUNT(*) FROM (" + boundSql.getSqlString() + ") TEMP_T";
-        return new BoundSql.BoundSqlObj(sqlBuilder, boundSql.getArgs());
+        return new BoundSqlObject(sqlBuilder, boundSql.getArgs());
     }
 
     @Override
@@ -42,6 +43,6 @@ public class Oracle12cDialect extends OracleDialect {
 
         paramArrays.add(start);
         paramArrays.add(limit);
-        return new BoundSql.BoundSqlObj(sqlBuilder.toString(), paramArrays.toArray());
+        return new BoundSqlObject(sqlBuilder.toString(), paramArrays.toArray());
     }
 }

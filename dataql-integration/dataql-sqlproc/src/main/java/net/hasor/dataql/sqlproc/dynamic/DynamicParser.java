@@ -37,16 +37,17 @@ import java.io.StringReader;
 public class DynamicParser {
     private static final DocumentBuilderFactory FACTORY = DocumentBuilderFactory.newInstance();
 
-    public DynamicSql parseDynamicSql(String sqlString) throws IOException, SAXException, ParserConfigurationException {
-        DocumentBuilder documentBuilder = FACTORY.newDocumentBuilder();
-        Document document = documentBuilder.parse(new InputSource(new StringReader(sqlString)));
-        Element root = document.getDocumentElement();
-        return parseDynamicSql(root);
-    }
+    public DynamicSql parseDynamicSql(String queryBody) throws IOException, SAXException, ParserConfigurationException {
+        if (StringUtils.isBlank(queryBody)) {
+            throw new IllegalArgumentException("the queryBody cannot be empty");
+        }
 
-    public DynamicSql parseDynamicSql(Node configNode) {
+        DocumentBuilder documentBuilder = FACTORY.newDocumentBuilder();
+        Document document = documentBuilder.parse(new InputSource(new StringReader(queryBody)));
+        Element root = document.getDocumentElement();
+
         ArrayDynamicSql arraySqlNode = new ArrayDynamicSql();
-        parseNodeList(arraySqlNode, configNode.getChildNodes());
+        parseNodeList(arraySqlNode, root.getChildNodes());
         return arraySqlNode;
     }
 

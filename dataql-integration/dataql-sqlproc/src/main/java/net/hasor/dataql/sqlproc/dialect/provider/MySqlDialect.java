@@ -15,8 +15,8 @@
  */
 package net.hasor.dataql.sqlproc.dialect.provider;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
-import net.hasor.dataql.sqlproc.dialect.InsertSqlDialect;
-import net.hasor.dataql.sqlproc.dialect.PageSqlDialect;
+import net.hasor.dataql.sqlproc.dialect.BoundSqlObject;
+import net.hasor.dataql.sqlproc.dialect.PageDialect;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,16 +27,7 @@ import java.util.List;
  * @version : 2020-10-31
  * @author 赵永春 (zyc@hasor.net)
  */
-public class MySqlDialect extends AbstractDialect implements PageSqlDialect, InsertSqlDialect {
-    @Override
-    protected String keyWordsResource() {
-        return "/META-INF/db-keywords/mysql.keywords";
-    }
-
-    @Override
-    protected String defaultQualifier() {
-        return "`";
-    }
+public class MySqlDialect extends AbstractDialect implements PageDialect {
 
     @Override
     public BoundSql pageSql(BoundSql boundSql, int start, int limit) {
@@ -51,62 +42,6 @@ public class MySqlDialect extends AbstractDialect implements PageSqlDialect, Ins
             paramArrays.add(start);
             paramArrays.add(limit);
         }
-
-        return new BoundSql.BoundSqlObj(sqlBuilder.toString(), paramArrays.toArray());
+        return new BoundSqlObject(sqlBuilder.toString(), paramArrays.toArray());
     }
-
-    @Override
-    public boolean supportInsertInto(List<String> primaryKey, List<String> columns) {
-        return true;
-    }
-
-    @Override
-    public String insertWithInto(boolean useQualifier, String schema, String table, List<String> primaryKey, List<String> columns) {
-        return buildSql("INSERT INTO ", useQualifier, schema, table, columns, "");
-    }
-
-    @Override
-    public boolean supportInsertIgnore(List<String> primaryKey, List<String> columns) {
-        return true;
-    }
-
-    @Override
-    public String insertWithIgnore(boolean useQualifier, String schema, String table, List<String> primaryKey, List<String> columns) {
-        return buildSql("INSERT IGNORE ", useQualifier, schema, table, columns, "");
-    }
-
-    @Override
-    public boolean supportUpsert(List<String> primaryKey, List<String> columns) {
-        return true;
-    }
-
-    @Override
-    public String insertWithUpsert(boolean useQualifier, String schema, String table, List<String> primaryKey, List<String> columns) {
-        return buildSql("INSERT INTO ", useQualifier, schema, table, columns, " ON DUPLICATE KEY UPDATE");
-    }
-
-    protected String buildSql(String markString, boolean useQualifier, String schema, String table, List<String> columns, String appendSql) {
-        StringBuilder strBuilder = new StringBuilder();
-        strBuilder.append(markString);
-        strBuilder.append(tableName(useQualifier, schema, table));
-        strBuilder.append(" ");
-        strBuilder.append("(");
-
-        StringBuilder argBuilder = new StringBuilder();
-        for (int i = 0; i < columns.size(); i++) {
-            if (i > 0) {
-                strBuilder.append(", ");
-                argBuilder.append(", ");
-            }
-            strBuilder.append(columnName(useQualifier, schema, table, columns.get(i)));
-            argBuilder.append("?");
-        }
-
-        strBuilder.append(") VALUES (");
-        strBuilder.append(argBuilder);
-        strBuilder.append(")");
-        strBuilder.append(appendSql);
-        return strBuilder.toString();
-    }
-
 }

@@ -15,7 +15,7 @@
  */
 package net.hasor.dataql.sqlproc.dynamic.nodes;
 
-import net.hasor.dataql.sqlproc.dialect.SqlBuilder;
+import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.dataql.sqlproc.dynamic.DynamicContext;
 import net.hasor.dataql.sqlproc.dynamic.ognl.OgnlUtils;
 
@@ -35,13 +35,13 @@ public class IfDynamicSql extends ArrayDynamicSql {
     }
 
     @Override
-    public void buildQuery(Map<String, Object> data, DynamicContext context, SqlBuilder sqlBuilder) throws SQLException {
+    public void buildQuery(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException {
         if (test(data)) {
             this.buildBody(data, context, sqlBuilder);
         }
     }
 
-    public void buildBody(Map<String, Object> data, DynamicContext context, SqlBuilder sqlBuilder) throws SQLException {
+    public void buildBody(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException {
         super.buildQuery(data, context, sqlBuilder);
     }
 

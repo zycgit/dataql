@@ -17,7 +17,6 @@ package net.hasor.dataql.sqlproc.dialect;
 import net.hasor.cobble.ResourcesUtils;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.ref.LinkedCaseInsensitiveMap;
-import net.hasor.cobble.supplier.TypeSupplier;
 import net.hasor.dataql.sqlproc.dialect.provider.*;
 import net.hasor.dataql.sqlproc.execute.JdbcUtils;
 
@@ -29,15 +28,15 @@ import java.util.Map;
  * @author 赵永春 (zyc@hasor.net)
  */
 public class SqlDialectRegister {
-    private static final Map<String, Class<?>>   dialectAliasMap = new LinkedCaseInsensitiveMap<>();
-    private static final Map<String, SqlDialect> dialectCache    = new LinkedCaseInsensitiveMap<>();
+    private static final Map<String, Class<?>>    dialectAliasMap = new LinkedCaseInsensitiveMap<>();
+    private static final Map<String, PageDialect> dialectCache    = new LinkedCaseInsensitiveMap<>();
 
     static {
         registerDialectAlias(JdbcUtils.DB2, Db2Dialect.class);
         registerDialectAlias(JdbcUtils.DERBY, DerbyDialect.class);// Apache Derby
         registerDialectAlias(JdbcUtils.DM, DmDialect.class);
         registerDialectAlias(JdbcUtils.H2, H2Dialect.class);
-        registerDialectAlias(JdbcUtils.HIVE, HiveDialect.class);
+        //registerDialectAlias(JdbcUtils.HIVE, HiveDialect.class);
         registerDialectAlias(JdbcUtils.HSQL, HSQLDialect.class);
         registerDialectAlias(JdbcUtils.IMPALA, ImpalaDialect.class);
         registerDialectAlias(JdbcUtils.INFORMIX, InformixDialect.class);
@@ -57,23 +56,15 @@ public class SqlDialectRegister {
         dialectCache.clear();
     }
 
-    public static void registerDialectAlias(String dialectName, Class<? extends SqlDialect> dialectClass) {
+    public static void registerDialectAlias(String dialectName, Class<? extends PageDialect> dialectClass) {
         dialectAliasMap.put(dialectName, dialectClass);
     }
 
-    public static SqlDialect findOrCreate(String dialectName) {
-        return findOrCreate(dialectName, null, null);
-    }
-
-    public static SqlDialect findOrCreate(String dialectName, TypeSupplier typeSupplier) {
-        return findOrCreate(dialectName, null, typeSupplier);
-    }
-
-    public static SqlDialect findOrCreate(final String dialectName, ClassLoader loader, TypeSupplier typeSupplier) {
+    public static PageDialect findOrCreate(final String dialectName, ClassLoader loader) {
         if (StringUtils.isBlank(dialectName)) {
-            return DefaultSqlDialect.DEFAULT;
+            return null;
         }
-        SqlDialect dialect = dialectCache.get(dialectName);
+        PageDialect dialect = dialectCache.get(dialectName);
         if (dialect != null) {
             return dialect;
         }
@@ -90,18 +81,10 @@ public class SqlDialectRegister {
         }
         //
         if (aClass != null) {
-            if (typeSupplier != null) {
-                try {
-                    dialect = (SqlDialect) typeSupplier.get(aClass);
-                } catch (Exception e) {
-                    throw new IllegalStateException(e);
-                }
-            } else {
-                try {
-                    dialect = (SqlDialect) aClass.newInstance();
-                } catch (Exception e) {
-                    throw new IllegalStateException("load dialect '" + aClass.getName() + "' failed, " + e.getMessage(), e);
-                }
+            try {
+                dialect = (PageDialect) aClass.newInstance();
+            } catch (Exception e) {
+                throw new IllegalStateException("load dialect '" + aClass.getName() + "' failed, " + e.getMessage(), e);
             }
         } else {
             if (StringUtils.isNotBlank(lastMessage)) {

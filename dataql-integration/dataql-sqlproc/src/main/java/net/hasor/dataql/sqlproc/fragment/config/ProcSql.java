@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2010 the original author or authors.
+ * Copyright 2008-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.dialect.provider;
-import net.hasor.dataql.sqlproc.dialect.BoundSql;
-import net.hasor.dataql.sqlproc.dialect.BoundSqlObject;
-import net.hasor.dataql.sqlproc.dialect.PageDialect;
+package net.hasor.dataql.sqlproc.fragment.config;
+
+import net.hasor.dataql.sqlproc.dynamic.DynamicSql;
 
 /**
- * 公共 PageDialect 实现
- * @version : 2020-10-31
  * @author 赵永春 (zyc@hasor.net)
+ * @version : 2022-07-04
  */
-public abstract class AbstractDialect implements PageDialect {
-    /** 生成 count 查询 SQL */
-    public BoundSql countSql(BoundSql boundSql) {
-        return new BoundSqlObject("SELECT COUNT(*) FROM (" + boundSql.getSqlString() + ") as TEMP_T", boundSql.getArgs());
-    }
+public interface ProcSql extends DynamicSql {
+    /** 是否支持批量操作 */
+    boolean supportBatch();
+
+    /** 是否支持分页 */
+    boolean supportPage();
 }

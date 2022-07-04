@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2010 the original author or authors.
+ * Copyright 2002-2005 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.dialect.provider;
-import net.hasor.dataql.sqlproc.dialect.BoundSql;
-import net.hasor.dataql.sqlproc.dialect.BoundSqlObject;
-import net.hasor.dataql.sqlproc.dialect.PageDialect;
-
+package net.hasor.dataql.sqlproc.fragment;
 /**
- * 公共 PageDialect 实现
- * @version : 2020-10-31
+ * 查询类型
+ * @version : 2021-06-19
  * @author 赵永春 (zyc@hasor.net)
  */
-public abstract class AbstractDialect implements PageDialect {
-    /** 生成 count 查询 SQL */
-    public BoundSql countSql(BoundSql boundSql) {
-        return new BoundSqlObject("SELECT COUNT(*) FROM (" + boundSql.getSqlString() + ") as TEMP_T", boundSql.getArgs());
-    }
+public enum QueryType {
+
+    // DML
+    /** Insert 类型 */
+    Insert,
+    /** Delete 类型 */
+    Delete,
+    /** Update 类型 */
+    Update,
+    /** 查询类型 类型 */
+    Query,
+    /** 执行存储过程 */
+    Call,
+
+    // DDL
+    Alter,
+    Create,
+    Drop,
+    Other
 }

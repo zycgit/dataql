@@ -13,47 +13,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.dynamic.nodes;
-import net.hasor.cobble.StringUtils;
+package net.hasor.dataql.sqlproc.fragment.config;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.dataql.sqlproc.dynamic.DynamicContext;
 import net.hasor.dataql.sqlproc.dynamic.DynamicSql;
-import net.hasor.dataql.sqlproc.dynamic.segment.SqlSegmentParser;
+import net.hasor.dataql.sqlproc.fragment.QueryType;
 
 import java.sql.SQLException;
 import java.util.Map;
 
 /**
- * 文本块
+ * Segment SqlConfig
+ * @version : 2021-06-19
  * @author 赵永春 (zyc@hasor.net)
- * @version : 2021-05-24
  */
-public class TextDynamicSql implements DynamicSql {
-    private final StringBuilder textBuilder = new StringBuilder();
-    private       DynamicSql    dynamicSql;
+public abstract class AbstractProcSql implements ProcSql {
+    protected final DynamicSql target;
 
-    public TextDynamicSql(String text) {
-        this.appendText(StringUtils.isBlank(text) ? "" : text);
+    public AbstractProcSql(DynamicSql target) {
+        this.target = target;
     }
 
-    public void appendText(String text) {
-        if (StringUtils.isNotBlank(text)) {
-            this.textBuilder.append(text);
-        }
-        this.dynamicSql = parserQuery(this.textBuilder.toString());
-    }
+    public abstract QueryType getDynamicType();
 
     @Override
     public boolean isHavePlaceholder() {
-        return this.dynamicSql.isHavePlaceholder();
+        return this.target.isHavePlaceholder();
     }
 
     @Override
     public void buildQuery(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException {
-        this.dynamicSql.buildQuery(data, context, sqlBuilder);
+        this.target.buildQuery(data, context, sqlBuilder);
     }
 
-    protected DynamicSql parserQuery(String fragmentString) {
-        return SqlSegmentParser.analysisSQL(fragmentString);
+    public boolean supportBatch() {
+        if (this.isHavePlaceholder()) {
+            // 分析SQL后如果含有占位符：退化为 非批量（占位符会导致每次执行的SQL语句可能不一样）
+            return false;
+        } else {
+            // 只有 Insert/Update/Delete 支持批量
+            QueryType queryType = getDynamicType();
+            return (QueryType.Insert == queryType || QueryType.Update == queryType || QueryType.Delete == queryType);
+        }
+    }
+
+    public boolean supportPage() {
+        return getDynamicType() == QueryType.Query;
     }
 }

@@ -17,7 +17,7 @@ package net.hasor.dataql.sqlproc.dynamic.rule;
 import net.hasor.cobble.NumberUtils;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.ref.LinkedCaseInsensitiveMap;
-import net.hasor.dataql.sqlproc.dialect.SqlBuilder;
+import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.dataql.sqlproc.dynamic.DynamicContext;
 import net.hasor.dataql.sqlproc.dynamic.SqlArg;
 import net.hasor.dataql.sqlproc.dynamic.SqlMode;
@@ -111,7 +111,7 @@ public class ArgRule implements SqlBuildRule {
     }
 
     @Override
-    public void executeRule(Map<String, Object> data, DynamicContext context, SqlBuilder sqlBuilder, String activeExpr, String ruleValue) {
+    public void executeRule(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder, String activeExpr, String ruleValue) {
         String[] testSplit = ruleValue.split(",");
         if (testSplit.length > 6 || testSplit.length == 0) {
             throw new IllegalArgumentException("analysisSQL failed, format error -> '#{valueExpr [,mode= IN|OUT|INOUT] [,jdbcType=INT] [,javaType=java.lang.String] [,typeHandler=YouTypeHandlerClassName]}'");
@@ -124,7 +124,7 @@ public class ArgRule implements SqlBuildRule {
         executeRule(data, context, sqlBuilder, expr, config);
     }
 
-    public void executeRule(Map<String, Object> data, DynamicContext context, SqlBuilder sqlBuilder, String expr, Map<String, String> config) {
+    public void executeRule(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder, String expr, Map<String, String> config) {
         SqlMode sqlMode = convertSqlMode((config != null) ? config.get(CFG_KEY_MODE) : null);
         Integer jdbcType = convertJdbcType((config != null) ? config.get(CFG_KEY_JDBC_TYPE) : null);
         Class<?> javaType = convertJavaType(context, (config != null) ? config.get(CFG_KEY_JAVA_TYPE) : null);

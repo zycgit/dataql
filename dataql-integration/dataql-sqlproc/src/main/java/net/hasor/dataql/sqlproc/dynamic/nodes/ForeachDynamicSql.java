@@ -15,7 +15,7 @@
  */
 package net.hasor.dataql.sqlproc.dynamic.nodes;
 import net.hasor.cobble.StringUtils;
-import net.hasor.dataql.sqlproc.dialect.SqlBuilder;
+import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.dataql.sqlproc.dynamic.DynamicContext;
 import net.hasor.dataql.sqlproc.dynamic.ognl.OgnlUtils;
 
@@ -51,7 +51,7 @@ public class ForeachDynamicSql extends ArrayDynamicSql {
     }
 
     @Override
-    public void buildQuery(Map<String, Object> data, DynamicContext context, SqlBuilder sqlBuilder) throws SQLException {
+    public void buildQuery(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException {
         // 获取集合数据对象，数组形态
         Object collectionData = OgnlUtils.evalOgnl(this.collection, data);
         if (collectionData == null) {

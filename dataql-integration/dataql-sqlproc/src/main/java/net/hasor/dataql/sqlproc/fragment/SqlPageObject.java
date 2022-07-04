@@ -13,21 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.fx.db.runsql;
+package net.hasor.dataql.sqlproc.fragment;
+import net.hasor.cobble.convert.ConverterUtils;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.UdfSourceAssembly;
-import net.hasor.dbvisitor.dialect.BoundSql;
-import net.hasor.dbvisitor.dialect.PageSqlDialect;
-import net.hasor.dbvisitor.dialect.SqlDialect;
-import net.hasor.utils.convert.ConverterUtils;
+import net.hasor.dataql.sqlproc.SqlHintNames;
+import net.hasor.dataql.sqlproc.SqlHintValue;
+import net.hasor.dataql.sqlproc.dialect.BoundSql;
+import net.hasor.dataql.sqlproc.dialect.PageDialect;
+import net.hasor.dataql.sqlproc.dialect.SqlDialect;
+import net.hasor.dataql.sqlproc.execute.Page;
+import net.hasor.dataql.sqlproc.fragment.config.ProcSql;
 
 import java.sql.SQLException;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import static net.hasor.dataql.fx.FxHintNames.FRAGMENT_SQL_DATA_SOURCE;
-import static net.hasor.dataql.fx.FxHintNames.FRAGMENT_SQL_QUERY_BY_PAGE_NUMBER_OFFSET;
+import static net.hasor.dataql.sqlproc.SqlHintNames.FRAGMENT_SQL_DATA_SOURCE;
+import static net.hasor.dataql.sqlproc.SqlHintValue.*;
 
 /**
  * 翻页数据，同时负责调用分页的SQL执行分页查询
@@ -56,17 +60,15 @@ class SqlPageObject implements UdfSourceAssembly {
             SqlDialect pageDialect,         // 分页方言服务
             SqlFragment sourceSqlFragment   // 用于执行分页查询的服务
     ) {
-        this.pageNumberOffset = (int) ConverterUtils.convert(String.valueOf(hints.getOrDefault(//
-                FRAGMENT_SQL_QUERY_BY_PAGE_NUMBER_OFFSET.name(),//
-                FRAGMENT_SQL_QUERY_BY_PAGE_NUMBER_OFFSET.getDefaultVal())//
-        ), Integer.TYPE);
-        //
         this.useDataSource = hints.getOrDefault(FRAGMENT_SQL_DATA_SOURCE.name(), "").toString();
         this.hints = hints;
         this.originalBoundSql = originalBoundSql;
         this.pageDialect = pageDialect;
         this.sourceSqlFragment = sourceSqlFragment;
         this.totalCountInited = false;
+    }
+
+    public SqlPageObject(Hints hint, ProcSql procSql, Map<String, Object> params, Page pageInfo, PageDialect dialect, SqlFragment sqlFragment) {
     }
 
     private int pageSize() {
@@ -86,7 +88,7 @@ class SqlPageObject implements UdfSourceAssembly {
     private int totalCount() throws SQLException {
         if (!this.totalCountInited) {
             // 准备SQL和执行的参数
-            BoundSql countBoundSql = ((PageSqlDialect) this.pageDialect).countSql(this.originalBoundSql);
+            BoundSql countBoundSql = ((PageDialect) this.pageDialect).countSql(this.originalBoundSql);
             String countFxSql = countBoundSql.getSqlString();
             Object[] countParams = countBoundSql.getArgs();
             // 通过 doQuery 方法来执行SQL。
@@ -201,7 +203,7 @@ class SqlPageObject implements UdfSourceAssembly {
             boundSql = this.originalBoundSql;// 如果分页的页码小于0  -> 那么查询所有数据
         } else {
             // 如果分页的页码不等于0  -> 那么执行分页查询
-            boundSql = ((PageSqlDialect) this.pageDialect).pageSql(this.originalBoundSql, firstRecordPosition(), pageSize());
+            boundSql = ((PageDialect) this.pageDialect).pageSql(this.originalBoundSql, firstRecordPosition(), pageSize());
         }
         // 通过 doQuery 方法来执行SQL。
         return this.sourceSqlFragment.executeSQL(//
@@ -211,7 +213,78 @@ class SqlPageObject implements UdfSourceAssembly {
                 (querySQL, params, useJdbcTemplate) -> {
                     // 不直接使用 countFxSql, paramArrays 的原因是 doQuery 被调用的时会执行 FxSqlInterceptorChainSpi 拦截器。
                     List<Map<String, Object>> resultData = useJdbcTemplate.queryForList(querySQL, params);
-                    return sourceSqlFragment.convertResult(hints, resultData);
+                    return convertResult(hints, resultData);
                 });
+    }
+
+    /** 结果转换 */
+    protected Object convertResult(Hints hint, List<Map<String, Object>> mapList) {
+        String openPackage = hint.getOrDefault(SqlHintNames.FRAGMENT_SQL_OPEN_PACKAGE.name(), SqlHintNames.FRAGMENT_SQL_OPEN_PACKAGE.getDefaultVal()).toString();
+        String caseModule = hint.getOrDefault(SqlHintNames.FRAGMENT_SQL_COLUMN_CASE.name(), SqlHintNames.FRAGMENT_SQL_COLUMN_CASE.getDefaultVal()).toString();
+        if (!FRAGMENT_SQL_COLUMN_CASE_DEFAULT.equalsIgnoreCase(caseModule)) {
+            final boolean toUpper = FRAGMENT_SQL_COLUMN_CASE_UPPER.equalsIgnoreCase(caseModule);
+            final boolean toLower = FRAGMENT_SQL_COLUMN_CASE_LOWER.equalsIgnoreCase(caseModule);
+            final boolean toHump = FRAGMENT_SQL_COLUMN_CASE_HUMP.equalsIgnoreCase(caseModule);
+            //
+            for (int i = 0; i < mapList.size(); i++) {
+                Map<String, Object> newMap = new LinkedHashMap<>();
+                mapList.get(i).forEach((key, value) -> {
+                    if (toUpper) {
+                        newMap.put(key.toUpperCase(), value);
+                    } else if (toLower) {
+                        newMap.put(key.toLowerCase(), value);
+                    } else if (toHump) {
+                        newMap.put(lineToHump(key.toLowerCase()), value);
+                    } else {
+                        newMap.put(key, value);
+                    }
+                });
+                mapList.set(i, newMap);
+            }
+        }
+        //
+        // .结果有多条记录,或者模式为 off，那么直接返回List
+        boolean packageOff = SqlHintValue.FRAGMENT_SQL_OPEN_PACKAGE_OFF.equalsIgnoreCase(openPackage);
+        if (packageOff || (mapList != null && mapList.size() > 1)) {
+            return mapList;
+        }
+        // .为空或者结果为空，那么看看是返回 null 或者 空对象
+        if (mapList == null || mapList.isEmpty()) {
+            if (SqlHintValue.FRAGMENT_SQL_OPEN_PACKAGE_COLUMN.equalsIgnoreCase(openPackage)) {
+                return null;
+            } else {
+                return Collections.emptyMap();
+            }
+        }
+        // .只有1条记录
+        Map<String, Object> rowObject = mapList.get(0);
+        if (SqlHintValue.FRAGMENT_SQL_OPEN_PACKAGE_COLUMN.equalsIgnoreCase(openPackage)) {
+            if (rowObject == null) {
+                return null;
+            }
+            if (rowObject.size() == 1) {
+                Set<Map.Entry<String, Object>> entrySet = rowObject.entrySet();
+                Map.Entry<String, Object> objectEntry = entrySet.iterator().next();
+                return objectEntry.getValue();
+            }
+        }
+        return rowObject;
+    }
+
+    private static final Pattern linePattern = Pattern.compile("_(\\w)");
+
+    /** 下划线转驼峰 */
+    private static String lineToHump(String str) {
+        if (str == null) {
+            return null;
+        }
+        str = str.toLowerCase();
+        Matcher matcher = linePattern.matcher(str);
+        StringBuffer sb = new StringBuffer();
+        while (matcher.find()) {
+            matcher.appendReplacement(sb, matcher.group(1).toUpperCase());
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
     }
 }

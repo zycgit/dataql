@@ -15,18 +15,15 @@
  */
 package net.hasor.dataql.sqlproc.dialect.provider;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
-import net.hasor.dataql.sqlproc.dialect.PageSqlDialect;
+import net.hasor.dataql.sqlproc.dialect.BoundSqlObject;
+import net.hasor.dataql.sqlproc.dialect.PageDialect;
 
 /**
  * DB2 的 SqlDialect 实现
  * @version : 2020-10-31
  * @author 赵永春 (zyc@hasor.net)
  */
-public class Db2Dialect extends AbstractDialect implements PageSqlDialect {
-    @Override
-    protected String defaultQualifier() {
-        return "\"";
-    }
+public class Db2Dialect extends AbstractDialect implements PageDialect {
 
     @Override
     public BoundSql pageSql(BoundSql boundSql, int start, int limit) {
@@ -40,6 +37,6 @@ public class Db2Dialect extends AbstractDialect implements PageSqlDialect {
         System.arraycopy(paramArray, 0, destArgs, 0, paramArray.length);
         destArgs[paramArray.length] = start;
         destArgs[paramArray.length + 1] = limit;
-        return new BoundSql.BoundSqlObj(sqlBuilder.toString(), destArgs);
+        return new BoundSqlObject(sqlBuilder.toString(), destArgs);
     }
 }

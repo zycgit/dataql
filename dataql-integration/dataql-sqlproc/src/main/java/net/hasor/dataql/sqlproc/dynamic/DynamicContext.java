@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic;
-import net.hasor.dataql.sqlproc.dialect.PageSqlDialect;
+import net.hasor.dataql.sqlproc.dialect.PageDialect;
 import net.hasor.dataql.sqlproc.dynamic.rule.SqlBuildRule;
 import net.hasor.dataql.sqlproc.types.TypeHandler;
 
@@ -25,7 +25,7 @@ import net.hasor.dataql.sqlproc.types.TypeHandler;
  */
 public interface DynamicContext {
 
-    PageSqlDialect findDialect(String dbType);
+    PageDialect findDialect(String dbType);
 
     DynamicSql findDynamic(String dynamicId);
 

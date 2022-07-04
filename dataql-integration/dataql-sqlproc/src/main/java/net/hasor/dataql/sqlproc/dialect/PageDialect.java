@@ -13,27 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.dialect.provider;
-import net.hasor.dataql.sqlproc.dialect.BoundSql;
-import net.hasor.dataql.sqlproc.dialect.PageSqlDialect;
+package net.hasor.dataql.sqlproc.dialect;
 
 /**
- * Hive 的 SqlDialect 实现
+ * SQL 分页方言
  * @version : 2020-10-31
  * @author 赵永春 (zyc@hasor.net)
  */
-public class HiveDialect extends AbstractDialect implements PageSqlDialect {
-    @Override
-    protected String defaultQualifier() {
-        return "\"";
-    }
+public interface PageDialect {
+    /** 生成 count 查询 SQL */
+    BoundSql countSql(BoundSql boundSql);
 
-    public BoundSql countSql(BoundSql boundSql) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public BoundSql pageSql(BoundSql boundSql, int start, int limit) {
-        throw new UnsupportedOperationException();
-    }
+    /** 生成分页查询 SQL */
+    BoundSql pageSql(BoundSql boundSql, int start, int limit);
 }

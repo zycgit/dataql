@@ -16,11 +16,11 @@
 package net.hasor.dataql.sqlproc.execute;
 import net.hasor.cobble.ExceptionUtils;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
-import net.hasor.dataql.sqlproc.dialect.PageSqlDialect;
-import net.hasor.dataql.sqlproc.dialect.SqlBuilder;
+import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
+import net.hasor.dataql.sqlproc.dialect.PageDialect;
 import net.hasor.dataql.sqlproc.dynamic.DynamicContext;
 import net.hasor.dataql.sqlproc.dynamic.SqlArg;
-import net.hasor.dataql.sqlproc.fragment.ResultSetType;
+import net.hasor.dataql.sqlproc.execute.config.AbstractProcSql;
 import net.hasor.dataql.sqlproc.types.TypeHandler;
 
 import java.sql.Connection;
@@ -36,8 +36,8 @@ import java.util.List;
  * @author 赵永春 (zyc@hasor.net)
  */
 public class PreparedStatementExecute extends AbstractStatementExecute<Object> {
-    public PreparedStatementExecute(DynamicContext context) {
-        super(context);
+    public PreparedStatementExecute(AbstractProcSql procSql, DynamicContext context) {
+        super(procSql, context);
     }
 
     protected PreparedStatement createPreparedStatement(Connection conn, String queryString, ResultSetType resultSetType) throws SQLException {
@@ -50,16 +50,16 @@ public class PreparedStatementExecute extends AbstractStatementExecute<Object> {
     }
 
     @Override
-    protected Object executeQuery(Connection con, ExecuteInfo executeInfo, SqlBuilder sqlBuilder) throws SQLException {
+    protected Object executeQuery(Connection con, ExecuteInfo executeInfo, BoundSqlBuilder sqlBuilder) throws SQLException {
         BoundSql boundSql = sqlBuilder;
         BoundSql countSql = null;
 
         if (usingPage(executeInfo)) {
-            PageSqlDialect dialect = executeInfo.pageDialect;
+            PageDialect dialect = executeInfo.pageDialect;
             int position = executeInfo.pageInfo.getFirstRecordPosition();
             int pageSize = executeInfo.pageInfo.getPageSize();
             boundSql = dialect.pageSql(sqlBuilder, position, pageSize);
-            if (executeInfo.pageResult) {
+            if (executeInfo.totalInfo) {
                 countSql = dialect.countSql(sqlBuilder);
             }
         }

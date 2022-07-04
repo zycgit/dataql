@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2010 the original author or authors.
+ * Copyright 2008-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.dialect;
-
 /**
- * SQL 分页方言
- * @version : 2020-10-31
+ * 负责解析配置文件并构建和管路 dynamicSql，同时提供注解 @RefMapper 的解析。
  * @author 赵永春 (zyc@hasor.net)
+ * @version : 2017-03-23
  */
-public interface PageSqlDialect extends SqlDialect {
-    /** 生成 count 查询 SQL */
-    default BoundSql countSql(BoundSql boundSql) {
-        return new BoundSql.BoundSqlObj("SELECT COUNT(*) FROM (" + boundSql.getSqlString() + ") as TEMP_T", boundSql.getArgs());
-    }
-
-    /** 生成分页查询 SQL */
-    BoundSql pageSql(BoundSql boundSql, int start, int limit);
-}
+package net.hasor.dataql.sqlproc.fragment;

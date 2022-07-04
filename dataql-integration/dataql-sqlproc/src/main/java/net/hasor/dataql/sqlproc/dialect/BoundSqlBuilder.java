@@ -24,7 +24,7 @@ import java.util.List;
  * @version : 2021-06-05
  * @author 赵永春 (zyc@hasor.net)
  */
-public class SqlBuilder implements BoundSql {
+public class BoundSqlBuilder implements BoundSql {
     protected final StringBuilder queryString = new StringBuilder();
     protected final List<Object>  argList     = new ArrayList<>();
 
@@ -51,9 +51,9 @@ public class SqlBuilder implements BoundSql {
     }
 
     public void appendBuilder(BoundSql boundSql) {
-        if (boundSql instanceof SqlBuilder) {
-            this.queryString.append(((SqlBuilder) boundSql).queryString);
-            this.argList.addAll(((SqlBuilder) boundSql).argList);
+        if (boundSql instanceof BoundSqlBuilder) {
+            this.queryString.append(((BoundSqlBuilder) boundSql).queryString);
+            this.argList.addAll(((BoundSqlBuilder) boundSql).argList);
         } else {
             this.queryString.append(boundSql.getSqlString());
             this.argList.addAll(Arrays.asList(boundSql.getArgs()));

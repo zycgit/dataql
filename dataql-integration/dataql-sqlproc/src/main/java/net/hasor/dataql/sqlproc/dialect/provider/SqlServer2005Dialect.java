@@ -16,7 +16,8 @@
 package net.hasor.dataql.sqlproc.dialect.provider;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
-import net.hasor.dataql.sqlproc.dialect.PageSqlDialect;
+import net.hasor.dataql.sqlproc.dialect.BoundSqlObject;
+import net.hasor.dataql.sqlproc.dialect.PageDialect;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,14 +29,7 @@ import java.util.List;
  * @author 赵永春 (zyc@hasor.net)
  * @since 2016-11-10
  */
-public class SqlServer2005Dialect extends AbstractDialect implements PageSqlDialect {
-    public String leftQualifier() {
-        return "[";
-    }
-
-    public String rightQualifier() {
-        return "]";
-    }
+public class SqlServer2005Dialect extends AbstractDialect implements PageDialect {
 
     private static String getOrderByPart(String sql) {
         String loweredString = sql.toLowerCase();
@@ -79,6 +73,6 @@ public class SqlServer2005Dialect extends AbstractDialect implements PageSqlDial
         //
         paramArrays.add(firstParam);
         paramArrays.add(secondParam);
-        return new BoundSql.BoundSqlObj(sqlString, paramArrays.toArray());
+        return new BoundSqlObject(sqlString, paramArrays.toArray());
     }
 }

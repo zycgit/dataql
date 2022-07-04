@@ -50,6 +50,7 @@
     <modules>
         <module>dataql-engine</module>
         <module>dataql-dataway</module>
+        <module>dataql-integration/dataql-sqlproc</module>
         <module>dataql-integration/dataql-functions</module>
         <module>dataql-integration/dataql-maven-plugin</module>
     </modules>
@@ -238,7 +239,7 @@
             </dependency>
             <dependency>
                 <groupId>net.hasor</groupId>
-                <artifactId>hasor-dataway</artifactId>
+                <artifactId>dataql-sqlproc</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

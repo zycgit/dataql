@@ -15,12 +15,12 @@
  */
 package net.hasor.dataql.sqlproc.execute;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
-import net.hasor.dataql.sqlproc.dialect.SqlBuilder;
+import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.dataql.sqlproc.dynamic.DynamicContext;
 import net.hasor.dataql.sqlproc.dynamic.SqlArg;
 import net.hasor.dataql.sqlproc.dynamic.SqlMode;
 import net.hasor.dataql.sqlproc.dynamic.ognl.OgnlUtils;
-import net.hasor.dataql.sqlproc.fragment.ResultSetType;
+import net.hasor.dataql.sqlproc.execute.config.AbstractProcSql;
 import net.hasor.dataql.sqlproc.types.TypeHandler;
 
 import java.sql.*;
@@ -32,8 +32,8 @@ import java.util.List;
  * @author 赵永春 (zyc@hasor.net)
  */
 public class CallableStatementExecute extends AbstractStatementExecute<Object> {
-    public CallableStatementExecute(DynamicContext context) {
-        super(context);
+    public CallableStatementExecute(AbstractProcSql procSql, DynamicContext context) {
+        super(procSql, context);
     }
 
     protected CallableStatement createCallableStatement(Connection conn, String queryString, ResultSetType resultSetType) throws SQLException {
@@ -46,7 +46,7 @@ public class CallableStatementExecute extends AbstractStatementExecute<Object> {
     }
 
     @Override
-    protected Object executeQuery(Connection con, ExecuteInfo executeInfo, SqlBuilder boundSql) throws SQLException {
+    protected Object executeQuery(Connection con, ExecuteInfo executeInfo, BoundSqlBuilder boundSql) throws SQLException {
         if (!con.getMetaData().supportsStoredProcedures()) {
             throw new UnsupportedOperationException("procedure DataSource Unsupported.");
         }

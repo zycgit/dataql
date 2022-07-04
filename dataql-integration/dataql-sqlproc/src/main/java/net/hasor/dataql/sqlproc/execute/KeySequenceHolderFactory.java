@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.execute;
-import net.hasor.dataql.sqlproc.fragment.config.SelectKeySqlConfig;
+import net.hasor.dataql.sqlproc.execute.config.SelectKeyProcSql;
 
 /**
  * 主键生成器
@@ -23,5 +23,5 @@ import net.hasor.dataql.sqlproc.fragment.config.SelectKeySqlConfig;
  */
 public interface KeySequenceHolderFactory {
 
-    KeySequenceHolder createHolder(SelectKeySqlConfig keySqlConfig, AbstractStatementExecute<?> execute);
+    KeySequenceHolder createHolder(SelectKeyProcSql keySqlConfig, AbstractStatementExecute<?> execute);
 }
