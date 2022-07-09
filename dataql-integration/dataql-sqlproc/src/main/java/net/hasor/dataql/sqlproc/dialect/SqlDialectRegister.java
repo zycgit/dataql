@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dialect;
-import net.hasor.cobble.ResourcesUtils;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.ref.LinkedCaseInsensitiveMap;
 import net.hasor.dataql.sqlproc.dialect.provider.*;
@@ -60,7 +59,7 @@ public class SqlDialectRegister {
         dialectAliasMap.put(dialectName, dialectClass);
     }
 
-    public static PageDialect findOrCreate(final String dialectName, ClassLoader loader) {
+    public static PageDialect findOrCreate(final String dialectName, ClassLoaderProvider loader) {
         if (StringUtils.isBlank(dialectName)) {
             return null;
         }
@@ -68,18 +67,18 @@ public class SqlDialectRegister {
         if (dialect != null) {
             return dialect;
         }
-        //
-        loader = (loader == null) ? Thread.currentThread().getContextClassLoader() : loader;
+
+        loader = (loader == null) ? name -> Thread.currentThread().getContextClassLoader().loadClass(name) : loader;
         String lastMessage = null;
         Class<?> aClass = dialectAliasMap.get(dialectName);
         if (aClass == null) {
             try {
-                aClass = ResourcesUtils.classForName(loader, dialectName);
+                aClass = loader.loadClass(dialectName);
             } catch (ClassNotFoundException e) {
                 lastMessage = "load dialect '" + dialectName + "' class not found";
             }
         }
-        //
+
         if (aClass != null) {
             try {
                 dialect = (PageDialect) aClass.newInstance();
@@ -93,7 +92,7 @@ public class SqlDialectRegister {
                 throw new IllegalStateException("no dialect '" + dialectName + "' found.");
             }
         }
-        //
+
         dialectCache.put(dialectName, dialect);
         return dialect;
     }

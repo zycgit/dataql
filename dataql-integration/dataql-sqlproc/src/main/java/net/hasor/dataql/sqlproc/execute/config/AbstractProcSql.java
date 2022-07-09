@@ -39,7 +39,6 @@ public abstract class AbstractProcSql {
     private final   ResultSetType       resultSetType;
     private final   MultipleResultsType multipleResultType;
     protected final DynamicSql          target;
-    private         String              pageDialectHint;
 
     public AbstractProcSql(DynamicSql target, SettingNode options) {
         String statementType = options != null ? options.findValue("statementType") : null;

@@ -36,7 +36,6 @@ public class RuleRegistry {
         DEFAULT.register("uuid32", UUID32Rule.INSTANCE);
         DEFAULT.register("uuid36", UUID36Rule.INSTANCE);
 
-        DEFAULT.register("include", IncludeRule.INSTANCE);
         DEFAULT.register("text", TextRule.INSTANCE);
         DEFAULT.register("arg", ArgRule.INSTANCE);
     }

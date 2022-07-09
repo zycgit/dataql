@@ -16,6 +16,7 @@
 package net.hasor.dataql.sqlproc.dialect.provider;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlObject;
+import net.hasor.dataql.sqlproc.dynamic.SqlArg;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,12 +38,12 @@ public class Oracle12cDialect extends OracleDialect {
     @Override
     public BoundSql pageSql(BoundSql boundSql, int start, int limit) {
         StringBuilder sqlBuilder = new StringBuilder(boundSql.getSqlString());
-        List<Object> paramArrays = new ArrayList<>(Arrays.asList(boundSql.getArgs()));
+        List<SqlArg> paramArrays = new ArrayList<>(Arrays.asList(boundSql.getArgs()));
 
         sqlBuilder.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
 
-        paramArrays.add(start);
-        paramArrays.add(limit);
-        return new BoundSqlObject(sqlBuilder.toString(), paramArrays.toArray());
+        paramArrays.add(buildNumber(start));
+        paramArrays.add(buildNumber(limit));
+        return new BoundSqlObject(sqlBuilder.toString(), paramArrays.toArray(new SqlArg[0]));
     }
 }

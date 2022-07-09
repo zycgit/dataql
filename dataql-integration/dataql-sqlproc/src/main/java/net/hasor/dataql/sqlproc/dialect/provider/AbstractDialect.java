@@ -17,6 +17,12 @@ package net.hasor.dataql.sqlproc.dialect.provider;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlObject;
 import net.hasor.dataql.sqlproc.dialect.PageDialect;
+import net.hasor.dataql.sqlproc.dynamic.SqlArg;
+import net.hasor.dataql.sqlproc.dynamic.SqlMode;
+import net.hasor.dataql.sqlproc.types.TypeHandler;
+import net.hasor.dataql.sqlproc.types.handler.IntegerTypeHandler;
+
+import java.sql.Types;
 
 /**
  * 公共 PageDialect 实现
@@ -24,6 +30,12 @@ import net.hasor.dataql.sqlproc.dialect.PageDialect;
  * @author 赵永春 (zyc@hasor.net)
  */
 public abstract class AbstractDialect implements PageDialect {
+    private static final TypeHandler<?> typeHandler = new IntegerTypeHandler();
+
+    protected SqlArg buildNumber(int number) {
+        return new SqlArg(String.valueOf(number), number, SqlMode.In, Types.INTEGER, Integer.TYPE, typeHandler);
+    }
+
     /** 生成 count 查询 SQL */
     public BoundSql countSql(BoundSql boundSql) {
         return new BoundSqlObject("SELECT COUNT(*) FROM (" + boundSql.getSqlString() + ") as TEMP_T", boundSql.getArgs());

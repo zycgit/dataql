@@ -90,7 +90,7 @@ public class SelectKeyDynamicSql extends ArrayDynamicSql {
         // ignore
     }
 
-    public void buildSqlQuery(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException {
+    public void buildSelectKeyQuery(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException {
         super.buildQuery(data, context, sqlBuilder);
     }
 }

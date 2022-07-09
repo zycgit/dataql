@@ -18,6 +18,7 @@ import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlObject;
 import net.hasor.dataql.sqlproc.dialect.PageDialect;
+import net.hasor.dataql.sqlproc.dynamic.SqlArg;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,7 +45,7 @@ public class SqlServer2005Dialect extends AbstractDialect implements PageDialect
     @Override
     public BoundSql pageSql(BoundSql boundSql, int start, int limit) {
         String sqlString = boundSql.getSqlString();
-        List<Object> paramArrays = new ArrayList<>(Arrays.asList(boundSql.getArgs()));
+        List<SqlArg> paramArrays = new ArrayList<>(Arrays.asList(boundSql.getArgs()));
         //
         StringBuilder pagingBuilder = new StringBuilder();
         String orderby = getOrderByPart(sqlString);
@@ -64,15 +65,15 @@ public class SqlServer2005Dialect extends AbstractDialect implements PageDialect
         if (StringUtils.isBlank(orderby)) {
             orderby = "ORDER BY CURRENT_TIMESTAMP";
         }
-        long firstParam = start + 1;
-        long secondParam = start + limit;
+        int firstParam = start + 1;
+        int secondParam = start + limit;
         sqlString = "WITH selectTemp AS (SELECT " + distinctStr + "TOP 100 PERCENT " + //
                 " ROW_NUMBER() OVER (" + orderby + ") as __row_number__, " + pagingBuilder + ") SELECT * FROM selectTemp WHERE __row_number__ BETWEEN " +
                 //FIX#299：原因：mysql 中 limit 10(offset,size) 是从第10开始（不包含10）,；而这里用的BETWEEN是两边都包含，所以改为offset+1
                 firstParam + " AND " + secondParam + " ORDER BY __row_number__";
         //
-        paramArrays.add(firstParam);
-        paramArrays.add(secondParam);
-        return new BoundSqlObject(sqlString, paramArrays.toArray());
+        paramArrays.add(buildNumber(firstParam));
+        paramArrays.add(buildNumber(secondParam));
+        return new BoundSqlObject(sqlString, paramArrays.toArray(new SqlArg[0]));
     }
 }

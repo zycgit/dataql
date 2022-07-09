@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dialect;
+import net.hasor.dataql.sqlproc.dynamic.SqlArg;
+
 /**
  * SQL
  * @version : 2020-10-31
@@ -22,6 +24,6 @@ package net.hasor.dataql.sqlproc.dialect;
 public interface BoundSql {
     String getSqlString();
 
-    Object[] getArgs();
+    SqlArg[] getArgs();
 
 }

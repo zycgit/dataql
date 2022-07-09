@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic;
-import net.hasor.dataql.sqlproc.dialect.PageDialect;
+import net.hasor.dataql.sqlproc.dialect.ClassLoaderProvider;
 import net.hasor.dataql.sqlproc.dynamic.rule.SqlBuildRule;
 import net.hasor.dataql.sqlproc.types.TypeHandler;
 
@@ -23,11 +23,7 @@ import net.hasor.dataql.sqlproc.types.TypeHandler;
  * @version : 2021-06-05
  * @author 赵永春 (zyc@hasor.net)
  */
-public interface DynamicContext {
-
-    PageDialect findDialect(String dbType);
-
-    DynamicSql findDynamic(String dynamicId);
+public interface DynamicContext extends ClassLoaderProvider {
 
     TypeHandler<?> findTypeHandler(Integer jdbcType);
 
@@ -37,8 +33,5 @@ public interface DynamicContext {
 
     TypeHandler<?> defaultTypeHandler();
 
-    Class<?> loadClass(String className) throws ClassNotFoundException;
-
     SqlBuildRule findRule(String ruleName);
-
 }

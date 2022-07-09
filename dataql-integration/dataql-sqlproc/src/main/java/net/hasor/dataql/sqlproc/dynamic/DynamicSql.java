@@ -30,10 +30,4 @@ public interface DynamicSql {
     boolean isHavePlaceholder();
 
     void buildQuery(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException;
-
-    default BoundSqlBuilder buildQuery(Map<String, Object> data, DynamicContext context) throws SQLException {
-        BoundSqlBuilder fxBuilder = new BoundSqlBuilder();
-        this.buildQuery(data, context, fxBuilder);
-        return fxBuilder;
-    }
 }

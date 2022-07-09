@@ -17,6 +17,7 @@ package net.hasor.dataql.sqlproc.dialect.provider;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlObject;
 import net.hasor.dataql.sqlproc.dialect.PageDialect;
+import net.hasor.dataql.sqlproc.dynamic.SqlArg;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,7 +28,7 @@ import java.util.List;
  * @version : 2020-10-31
  * @author 赵永春 (zyc@hasor.net)
  */
-public class DmDialect extends AbstractDialect implements PageDialect/* , InsertSqlDialect */ {
+public class DmDialect extends AbstractDialect implements PageDialect {
 
     @Override
     public BoundSql countSql(BoundSql boundSql) {
@@ -38,17 +39,17 @@ public class DmDialect extends AbstractDialect implements PageDialect/* , Insert
     @Override
     public BoundSql pageSql(BoundSql boundSql, int start, int limit) {
         StringBuilder sqlBuilder = new StringBuilder(boundSql.getSqlString());
-        List<Object> paramArrays = new ArrayList<>(Arrays.asList(boundSql.getArgs()));
-        // DM7/
+        List<SqlArg> paramArrays = new ArrayList<>(Arrays.asList(boundSql.getArgs()));
+        // DM7
         if (start <= 0) {
             sqlBuilder.append(" LIMIT ?");
-            paramArrays.add(limit);
+            paramArrays.add(buildNumber(limit));
         } else {
             sqlBuilder.append(" LIMIT ?, ?");
-            paramArrays.add(start);
-            paramArrays.add(limit);
+            paramArrays.add(buildNumber(start));
+            paramArrays.add(buildNumber(limit));
         }
         //
-        return new BoundSqlObject(sqlBuilder.toString(), paramArrays.toArray());
+        return new BoundSqlObject(sqlBuilder.toString(), paramArrays.toArray(new SqlArg[0]));
     }
 }

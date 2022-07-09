@@ -72,12 +72,12 @@ public abstract class ConditionRule implements SqlBuildRule {
         String sql = sqlBuilder.getSqlString().toLowerCase();
         if (sql.contains("where")) {
             if (sql.trim().endsWith("where") || sql.trim().endsWith("and") || sql.trim().endsWith("or")) {
-                sqlBuilder.appendSql(buildSql, argList.toArray());
+                sqlBuilder.appendSql(buildSql, argList.toArray(new SqlArg[0]));
             } else {
-                sqlBuilder.appendSql(this.prefix + " " + buildSql, argList.toArray());
+                sqlBuilder.appendSql(this.prefix + " " + buildSql, argList.toArray(new SqlArg[0]));
             }
         } else {
-            sqlBuilder.appendSql("where " + buildSql, argList.toArray());
+            sqlBuilder.appendSql("where " + buildSql, argList.toArray(new SqlArg[0]));
         }
     }
 

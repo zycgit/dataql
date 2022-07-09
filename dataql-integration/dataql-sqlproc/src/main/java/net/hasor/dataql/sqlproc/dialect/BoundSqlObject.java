@@ -1,4 +1,6 @@
 package net.hasor.dataql.sqlproc.dialect;
+import net.hasor.dataql.sqlproc.dynamic.SqlArg;
+
 import java.util.Arrays;
 
 /**
@@ -9,14 +11,14 @@ import java.util.Arrays;
 public class BoundSqlObject implements BoundSql {
     /** SQL */
     private final String   sqlString;
-    private final Object[] paramArray;
+    private final SqlArg[] paramArray;
 
     public BoundSqlObject(String sqlString) {
         this.sqlString = sqlString;
-        this.paramArray = new Object[0];
+        this.paramArray = new SqlArg[0];
     }
 
-    public BoundSqlObject(String sqlString, Object[] paramArray) {
+    public BoundSqlObject(String sqlString, SqlArg[] paramArray) {
         this.sqlString = sqlString;
         this.paramArray = paramArray;
     }
@@ -26,7 +28,7 @@ public class BoundSqlObject implements BoundSql {
     }
 
     @Override
-    public Object[] getArgs() {
+    public SqlArg[] getArgs() {
         return this.paramArray;
     }
 
