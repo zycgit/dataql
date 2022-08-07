@@ -16,7 +16,7 @@
 package net.hasor.dataql.sqlproc.dynamic;
 import net.hasor.cobble.ResourcesUtils;
 import net.hasor.cobble.io.IOUtils;
-import net.hasor.dbvisitor.dialect.SqlBuilder;
+import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.test.dataql.sqlproc.dto.CharacterSensitiveEnum;
 import net.hasor.test.dataql.sqlproc.dto.LicenseOfCodeEnum;
 import org.junit.Test;
@@ -42,13 +42,13 @@ public class CaseXmlTest {
         data1.put("label", new ArrayList<>(Arrays.asList(LicenseOfCodeEnum.Private, LicenseOfCodeEnum.GPLv3)));
         data1.put("state", new ArrayList<>(Collections.singletonList(CharacterSensitiveEnum.A)));
         data1.put("consoleJobId", "123");
-        SqlBuilder builder1 = parseXml.buildQuery(data1, null, new TextBuilderContext());
+        BoundSqlBuilder builder1 = parseXml.buildQuery(data1, null);
         assert builder1.getSqlString().trim().equals(querySql1.trim());
-        assert ((SqlArg) builder1.getArgs()[0]).getValue().equals("33322");
-        assert ((SqlArg) builder1.getArgs()[1]).getValue().equals(LicenseOfCodeEnum.Private);
-        assert ((SqlArg) builder1.getArgs()[2]).getValue().equals(LicenseOfCodeEnum.GPLv3);
-        assert ((SqlArg) builder1.getArgs()[3]).getValue().equals(CharacterSensitiveEnum.A);
-        assert ((SqlArg) builder1.getArgs()[4]).getValue().equals("123");
-        assert ((SqlArg) builder1.getArgs()[5]).getValue() == null;
+        assert builder1.getArgs()[0].getValue().equals("33322");
+        assert builder1.getArgs()[1].getValue().equals(LicenseOfCodeEnum.Private);
+        assert builder1.getArgs()[2].getValue().equals(LicenseOfCodeEnum.GPLv3);
+        assert builder1.getArgs()[3].getValue().equals(CharacterSensitiveEnum.A);
+        assert builder1.getArgs()[4].getValue().equals("123");
+        assert builder1.getArgs()[5].getValue() == null;
     }
 }

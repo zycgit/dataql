@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 package net.hasor.dataway;
-import net.hasor.utils.ExceptionUtils;
+
+import net.hasor.cobble.ExceptionUtils;
 
 import java.util.Map;
 

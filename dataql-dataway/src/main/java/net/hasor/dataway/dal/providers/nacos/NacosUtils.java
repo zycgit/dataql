@@ -16,8 +16,8 @@
 package net.hasor.dataway.dal.providers.nacos;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.exception.NacosException;
+import net.hasor.cobble.ExceptionUtils;
 import net.hasor.dataway.dal.FieldDef;
-import net.hasor.utils.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

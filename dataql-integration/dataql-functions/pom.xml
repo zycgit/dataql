@@ -43,7 +43,6 @@
             <artifactId>dataql-sqlproc</artifactId>
         </dependency>
 
-
         <!-- database -->
         <dependency>
             <groupId>net.hasor</groupId>

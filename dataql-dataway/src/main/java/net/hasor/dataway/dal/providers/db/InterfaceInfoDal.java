@@ -16,12 +16,12 @@
 package net.hasor.dataway.dal.providers.db;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import net.hasor.cobble.StringUtils;
 import net.hasor.dataway.config.DatawayUtils;
 import net.hasor.dataway.dal.ApiTypeEnum;
 import net.hasor.dataway.dal.FieldDef;
 import net.hasor.dataway.dal.QueryCondition;
-import net.hasor.db.jdbc.core.JdbcTemplate;
-import net.hasor.utils.StringUtils;
+import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -186,7 +186,7 @@ public class InterfaceInfoDal extends AbstractDal {
         }
         //
         String sqlQuery = "select * from " + infoTableName + " where " + indexField + " = ?";
-        Map<String, Object> data = this.jdbcTemplate.queryForMap(sqlQuery, indexValue);
+        Map<String, Object> data = this.jdbcTemplate.queryForMap(sqlQuery, new Object[] { indexValue });
         return (data != null) ? mapToDef(data) : null;
     }
 
@@ -202,7 +202,7 @@ public class InterfaceInfoDal extends AbstractDal {
 
     public boolean deleteObject(String id) throws SQLException {
         String sqlQuery = "delete from " + this.infoTableName + " where api_id = ?";// TODO 需要在加上一个 乐观锁，用以处理并发导致数据丢失的风险
-        return this.jdbcTemplate.executeUpdate(sqlQuery, id) > 0;
+        return this.jdbcTemplate.executeUpdate(sqlQuery, new Object[] { id }) > 0;
     }
 
     public boolean updateObject(String id, Map<FieldDef, String> newData) throws SQLException {

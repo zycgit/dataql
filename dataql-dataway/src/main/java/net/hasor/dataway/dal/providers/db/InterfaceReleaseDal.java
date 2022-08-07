@@ -20,7 +20,7 @@ import net.hasor.core.Singleton;
 import net.hasor.dataway.dal.ApiStatusEnum;
 import net.hasor.dataway.dal.FieldDef;
 import net.hasor.dataway.dal.QueryCondition;
-import net.hasor.db.jdbc.core.JdbcTemplate;
+import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
 import net.hasor.utils.StringUtils;
 
 import java.sql.SQLException;

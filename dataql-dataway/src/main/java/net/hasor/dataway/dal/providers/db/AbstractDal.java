@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 package net.hasor.dataway.dal.providers.db;
-import net.hasor.db.JdbcUtils;
-import net.hasor.db.jdbc.core.JdbcTemplate;
+import net.hasor.dbvisitor.JdbcUtils;
+import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
 import net.hasor.utils.StringUtils;
 
 import java.util.HashSet;

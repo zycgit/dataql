@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 package net.hasor.dataway.dal.providers.db;
+import net.hasor.cobble.ExceptionUtils;
+import net.hasor.cobble.StringUtils;
 import net.hasor.core.*;
 import net.hasor.dataway.config.DatawayUtils;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.dal.EntityDef;
 import net.hasor.dataway.dal.FieldDef;
 import net.hasor.dataway.dal.QueryCondition;
-import net.hasor.db.JdbcUtils;
-import net.hasor.db.jdbc.ConnectionCallback;
-import net.hasor.db.jdbc.core.JdbcTemplate;
-import net.hasor.utils.ExceptionUtils;
-import net.hasor.utils.StringUtils;
+import net.hasor.dbvisitor.JdbcUtils;
+import net.hasor.dbvisitor.jdbc.ConnectionCallback;
+import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

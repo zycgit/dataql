@@ -16,7 +16,10 @@
 package net.hasor.dataql.sqlproc.dynamic;
 import net.hasor.cobble.ResourcesUtils;
 import net.hasor.cobble.io.IOUtils;
-import net.hasor.dbvisitor.dialect.SqlBuilder;
+import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
+import net.hasor.dataql.sqlproc.types.UnknownTypeHandler;
+import net.hasor.dataql.sqlproc.types.handler.StringTypeHandler;
+import net.hasor.test.dataql.sqlproc.dto.TB_User;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -40,16 +43,17 @@ public class DynamicXmlTest {
         Map<String, Object> data1 = new HashMap<>();
         data1.put("ownerID", "123");
         data1.put("ownerType", "SYSTEM");
-        SqlBuilder builder1 = parseXml.buildQuery(data1, new TextBuilderContext());
+
+        BoundSqlBuilder builder1 = parseXml.buildQuery(data1, new TextBuilderContext());
         assert builder1.getSqlString().trim().equals(querySql1.trim());
-        assert ((SqlArg) builder1.getArgs()[0]).getValue().equals("123");
-        assert ((SqlArg) builder1.getArgs()[1]).getValue().equals("SYSTEM");
+        assert builder1.getArgs()[0].getValue().equals("123");
+        assert builder1.getArgs()[1].getValue().equals("SYSTEM");
         //
         String querySql2 = loadString("/dataql_dynamic/if_01.xml.sql_2");
         Map<String, Object> data2 = new HashMap<>();
         data1.put("ownerID", "123");
         data1.put("ownerType", null);
-        SqlBuilder builder2 = parseXml.buildQuery(data2, new TextBuilderContext());
+        BoundSqlBuilder builder2 = parseXml.buildQuery(data2, new TextBuilderContext());
         assert builder2.getSqlString().trim().equals(querySql2.trim());
         assert builder2.getArgs().length == 0;
     }
@@ -62,9 +66,9 @@ public class DynamicXmlTest {
         String querySql1 = loadString("/dataql_dynamic/include_01.xml.sql_1");
         Map<String, Object> data1 = new HashMap<>();
         data1.put("eventType", "123");
-        SqlBuilder builder1 = parseXml.buildQuery(data1, new TextBuilderContext());
+        BoundSqlBuilder builder1 = parseXml.buildQuery(data1, new TextBuilderContext());
         assert builder1.getSqlString().trim().equals(querySql1.trim());
-        assert ((SqlArg) builder1.getArgs()[0]).getValue().equals("123");
+        assert builder1.getArgs()[0].getValue().equals("123");
     }
 
     @Test
@@ -75,13 +79,13 @@ public class DynamicXmlTest {
         String querySql1 = loadString("/dataql_dynamic/foreach_03.xml.sql_1");
         Map<String, Object> data1 = new HashMap<>();
         data1.put("eventTypes", Arrays.asList("a", "b", "c", "d", "e"));
-        SqlBuilder builder1 = parseXml.buildQuery(data1, new TextBuilderContext());
+        BoundSqlBuilder builder1 = parseXml.buildQuery(data1, new TextBuilderContext());
         assert builder1.getSqlString().trim().equals(querySql1.trim());
-        assert ((SqlArg) builder1.getArgs()[0]).getValue().equals("a");
-        assert ((SqlArg) builder1.getArgs()[1]).getValue().equals("b");
-        assert ((SqlArg) builder1.getArgs()[2]).getValue().equals("c");
-        assert ((SqlArg) builder1.getArgs()[3]).getValue().equals("d");
-        assert ((SqlArg) builder1.getArgs()[4]).getValue().equals("e");
+        assert builder1.getArgs()[0].getValue().equals("a");
+        assert builder1.getArgs()[1].getValue().equals("b");
+        assert builder1.getArgs()[2].getValue().equals("c");
+        assert builder1.getArgs()[3].getValue().equals("d");
+        assert builder1.getArgs()[4].getValue().equals("e");
     }
 
     @Test
@@ -96,22 +100,22 @@ public class DynamicXmlTest {
         data1.put("expression", "ddd");
         data1.put("id", "~~~");
         data1.put("uid", "1111");
-        SqlBuilder builder1 = parseXml.buildQuery(data1, new TextBuilderContext());
+        BoundSqlBuilder builder1 = parseXml.buildQuery(data1, new TextBuilderContext());
         assert builder1.getSqlString().trim().equals(querySql1.trim());
-        assert ((SqlArg) builder1.getArgs()[0]).getValue().equals("1234");
-        assert ((SqlArg) builder1.getArgs()[1]).getValue().equals("zyc@zyc");
-        assert ((SqlArg) builder1.getArgs()[2]).getValue().equals("ddd");
-        assert ((SqlArg) builder1.getArgs()[3]).getValue().equals("~~~");
-        assert ((SqlArg) builder1.getArgs()[4]).getValue().equals("1111");
+        assert builder1.getArgs()[0].getValue().equals("1234");
+        assert builder1.getArgs()[1].getValue().equals("zyc@zyc");
+        assert builder1.getArgs()[2].getValue().equals("ddd");
+        assert builder1.getArgs()[3].getValue().equals("~~~");
+        assert builder1.getArgs()[4].getValue().equals("1111");
         //
         String querySql2 = loadString("/dataql_dynamic/set_04.xml.sql_2");
         Map<String, Object> data2 = new HashMap<>();
         data2.put("id", "~~~");
         data2.put("uid", "1111");
-        SqlBuilder builder2 = parseXml.buildQuery(data2, new TextBuilderContext());
+        BoundSqlBuilder builder2 = parseXml.buildQuery(data2, new TextBuilderContext());
         assert builder2.getSqlString().trim().equals(querySql2.trim());
-        assert ((SqlArg) builder2.getArgs()[0]).getValue().equals("~~~");
-        assert ((SqlArg) builder2.getArgs()[1]).getValue().equals("1111");
+        assert builder2.getArgs()[0].getValue().equals("~~~");
+        assert builder2.getArgs()[1].getValue().equals("1111");
     }
 
     @Test
@@ -122,9 +126,9 @@ public class DynamicXmlTest {
         String querySql1 = loadString("/dataql_dynamic/bind_01.xml.sql_1");
         Map<String, Object> data1 = new HashMap<>();
         data1.put("sellerId", "123");
-        SqlBuilder builder1 = parseXml.buildQuery(data1, new TextBuilderContext());
+        BoundSqlBuilder builder1 = parseXml.buildQuery(data1, new TextBuilderContext());
         assert builder1.getSqlString().trim().equals(querySql1.trim());
-        assert ((SqlArg) builder1.getArgs()[0]).getValue().equals("123abc");
+        assert builder1.getArgs()[0].getValue().equals("123abc");
     }
 
     @Test
@@ -135,17 +139,17 @@ public class DynamicXmlTest {
         String querySql1 = loadString("/dataql_dynamic/where_01.xml.sql_1");
         Map<String, Object> data1 = new HashMap<>();
         data1.put("sellerId", "123");
-        SqlBuilder builder1 = parseXml.buildQuery(data1, new TextBuilderContext());
+        BoundSqlBuilder builder1 = parseXml.buildQuery(data1, new TextBuilderContext());
         assert builder1.getSqlString().trim().equals(querySql1.trim());
         //
         String querySql2 = loadString("/dataql_dynamic/where_01.xml.sql_2");
         Map<String, Object> data2 = new HashMap<>();
         data2.put("state", "123");
         data2.put("title", "aaa");
-        SqlBuilder builder2 = parseXml.buildQuery(data2, new TextBuilderContext());
+        BoundSqlBuilder builder2 = parseXml.buildQuery(data2, new TextBuilderContext());
         assert builder2.getSqlString().trim().equals(querySql2.trim());
-        assert ((SqlArg) builder2.getArgs()[0]).getValue().equals("123");
-        assert ((SqlArg) builder2.getArgs()[1]).getValue().equals("aaa");
+        assert builder2.getArgs()[0].getValue().equals("123");
+        assert builder2.getArgs()[1].getValue().equals("aaa");
     }
 
     @Test
@@ -157,9 +161,9 @@ public class DynamicXmlTest {
         Map<String, Object> data1 = new HashMap<>();
         data1.put("title", "123");
         data1.put("content", "aaa");
-        SqlBuilder builder1 = parseXml.buildQuery(data1, new TextBuilderContext());
+        BoundSqlBuilder builder1 = parseXml.buildQuery(data1, new TextBuilderContext());
         assert builder1.getSqlString().trim().equals(querySql1.trim());
-        assert ((SqlArg) builder1.getArgs()[0]).getValue().equals("123");
+        assert builder1.getArgs()[0].getValue().equals("123");
     }
 
     @Test
@@ -169,7 +173,7 @@ public class DynamicXmlTest {
         //
         String querySql1 = loadString("/dataql_dynamic/choose_01.xml.sql_2");
         Map<String, Object> data1 = new HashMap<>();
-        SqlBuilder builder1 = parseXml.buildQuery(data1, new TextBuilderContext());
+        BoundSqlBuilder builder1 = parseXml.buildQuery(data1, new TextBuilderContext());
         assert builder1.getSqlString().trim().equals(querySql1.trim());
     }
 
@@ -186,35 +190,16 @@ public class DynamicXmlTest {
         data1.put("info", new HashMap<String, Object>() {{
             put("status", true);
         }});
-        SqlBuilder builder1 = parseXml.buildQuery(data1, new TextBuilderContext());
+        BoundSqlBuilder builder1 = parseXml.buildQuery(data1, new TextBuilderContext());
         assert builder1.getSqlString().trim().equals(querySql1.trim());
-        assert ((SqlArg) builder1.getArgs()[0]).getValue().equals("123");
-        assert ((SqlArg) builder1.getArgs()[1]).getValue() == null;// mode = out not eval value.
-        assert ((SqlArg) builder1.getArgs()[0]).getJavaType() == String.class;
-        assert ((SqlArg) builder1.getArgs()[1]).getJavaType() == net.hasor.test.db.dto.TB_User.class;
-        assert ((SqlArg) builder1.getArgs()[0]).getTypeHandler() instanceof StringTypeHandler;
-        assert ((SqlArg) builder1.getArgs()[1]).getTypeHandler() instanceof UnknownTypeHandler;
-        assert ((SqlArg) builder1.getArgs()[0]).getSqlMode() == SqlMode.In;
-        assert ((SqlArg) builder1.getArgs()[1]).getSqlMode() == SqlMode.Out;
+        assert builder1.getArgs()[0].getValue().equals("123");
+        assert builder1.getArgs()[1].getValue() == null;// mode = out not eval value.
+        assert builder1.getArgs()[0].getJavaType() == String.class;
+        assert builder1.getArgs()[1].getJavaType() == TB_User.class;
+        assert builder1.getArgs()[0].getTypeHandler() instanceof StringTypeHandler;
+        assert builder1.getArgs()[1].getTypeHandler() instanceof UnknownTypeHandler;
+        assert builder1.getArgs()[0].getSqlMode() == SqlMode.In;
+        assert builder1.getArgs()[1].getSqlMode() == SqlMode.Out;
     }
 
-    @Test
-    public void selectKeyTest_01() throws Throwable {
-        String queryConfig = loadString("/dataql_dynamic/selectkey_01.xml");
-        DynamicSql parseXml = xmlParser.parseDynamicSql(queryConfig);
-
-        String querySql1 = loadString("/dataql_dynamic/selectkey_01.xml.sql_1");
-        Map<String, Object> data1 = new HashMap<>();
-        data1.put("uid", "zyc_uid");
-        data1.put("name", "zyc_name");
-        SqlBuilder builder1 = parseXml.buildQuery(data1, new TextBuilderContext());
-        assert builder1.getSqlString().trim().equals(querySql1.trim());
-
-        InsertSqlConfig insertSqlConfig = new InsertSqlConfig(parseXml);
-        assert insertSqlConfig.getSelectKey() != null;
-
-        String querySql2 = loadString("/dataql_dynamic/selectkey_01.xml.sql_2");
-        SqlBuilder builder2 = insertSqlConfig.getSelectKey().buildQuery(data1, new TextBuilderContext());
-        assert builder2.getSqlString().trim().equals(querySql2.trim());
-    }
 }

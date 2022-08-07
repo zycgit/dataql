@@ -25,7 +25,7 @@ import net.hasor.dataql.sqlproc.types.TypeHandler;
  */
 public interface DynamicContext extends ClassLoaderProvider {
 
-    TypeHandler<?> findTypeHandler(Integer jdbcType);
+    TypeHandler<?> findTypeHandler(int jdbcType);
 
     TypeHandler<?> findTypeHandler(Class<?> handlerType);
 
