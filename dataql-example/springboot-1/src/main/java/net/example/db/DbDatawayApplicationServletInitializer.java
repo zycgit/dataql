@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc;
-
-import net.hasor.dataql.binder.QueryApiBinder;
-import net.hasor.dataql.binder.QueryModule;
+package net.example.db;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 
 /**
  * @author 赵永春 (zyc@hasor.net)
- * @version : 2017-03-23
+ * @version : 2021-01-02
  */
-public class SqlProcModule implements QueryModule {
+public class DbDatawayApplicationServletInitializer extends SpringBootServletInitializer {
     @Override
-    public void loadModule(QueryApiBinder apiBinder) {
-        //        apiBinder.bindFragment("sql", new SqlFragment());
-        //        apiBinder.bindFragment("mybatis", new SqlFragment());
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
+        return application.sources(DbDatawayApplication.class);
     }
 }

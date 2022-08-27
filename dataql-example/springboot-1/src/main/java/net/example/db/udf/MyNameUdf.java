@@ -13,19 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc;
+package net.example.db.udf;
+import net.example.db.service.MyService;
+import net.hasor.dataql.DimUdf;
+import net.hasor.dataql.Hints;
+import net.hasor.dataql.Udf;
+import org.springframework.stereotype.Service;
 
-import net.hasor.dataql.binder.QueryApiBinder;
-import net.hasor.dataql.binder.QueryModule;
+import javax.annotation.Resource;
 
 /**
  * @author 赵永春 (zyc@hasor.net)
- * @version : 2017-03-23
+ * @version : 2021-01-02
  */
-public class SqlProcModule implements QueryModule {
+@DimUdf("myName")
+@Service
+public class MyNameUdf implements Udf {
+    @Resource
+    private MyService myService;
+
     @Override
-    public void loadModule(QueryApiBinder apiBinder) {
-        //        apiBinder.bindFragment("sql", new SqlFragment());
-        //        apiBinder.bindFragment("mybatis", new SqlFragment());
+    public Object call(Hints readOnly, Object... params) throws Throwable {
+        return myService.myName();
     }
 }

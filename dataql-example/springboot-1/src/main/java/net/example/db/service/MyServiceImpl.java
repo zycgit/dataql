@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc;
-
-import net.hasor.dataql.binder.QueryApiBinder;
-import net.hasor.dataql.binder.QueryModule;
+package net.example.db.service;
+import org.springframework.stereotype.Service;
 
 /**
  * @author 赵永春 (zyc@hasor.net)
- * @version : 2017-03-23
+ * @version : 2021-01-02
  */
-public class SqlProcModule implements QueryModule {
+@Service
+public class MyServiceImpl implements MyService {
     @Override
-    public void loadModule(QueryApiBinder apiBinder) {
-        //        apiBinder.bindFragment("sql", new SqlFragment());
-        //        apiBinder.bindFragment("mybatis", new SqlFragment());
+    public String myName() {
+        return "zyc";
     }
 }
