@@ -1,6 +1,4 @@
 package net.hasor.dataql.sqlproc.dialect;
-import net.hasor.dataql.sqlproc.dynamic.SqlArg;
-
 import java.util.Arrays;
 
 /**

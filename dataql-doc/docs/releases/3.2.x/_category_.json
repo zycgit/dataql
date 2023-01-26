@@ -1,0 +1,9 @@
+{
+  "label": "v3.2.x",
+  "position": 999,
+  "className": "red",
+  "link": {
+    "type": "generated-index",
+    "title": "v3.2.x"
+  }
+}

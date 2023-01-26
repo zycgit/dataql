@@ -25,7 +25,7 @@ import net.hasor.dataql.binder.QueryModule;
 public class SqlProcModule implements QueryModule {
     @Override
     public void loadModule(QueryApiBinder apiBinder) {
-        //        apiBinder.bindFragment("sql", new SqlFragment());
-        //        apiBinder.bindFragment("mybatis", new SqlFragment());
+        apiBinder.bindFragment("sql", new SqlFragment());
+        apiBinder.bindFragment("mybatis", new SqlFragment());
     }
 }

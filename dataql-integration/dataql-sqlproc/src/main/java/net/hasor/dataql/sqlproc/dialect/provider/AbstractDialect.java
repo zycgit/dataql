@@ -14,25 +14,21 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dialect.provider;
-import net.hasor.dataql.sqlproc.dialect.BoundSql;
-import net.hasor.dataql.sqlproc.dialect.BoundSqlObject;
-import net.hasor.dataql.sqlproc.dialect.PageDialect;
-import net.hasor.dataql.sqlproc.dynamic.SqlArg;
-import net.hasor.dataql.sqlproc.dynamic.SqlMode;
+import net.hasor.dataql.sqlproc.dialect.*;
 import net.hasor.dataql.sqlproc.types.TypeHandler;
 import net.hasor.dataql.sqlproc.types.handler.IntegerTypeHandler;
 
 import java.sql.Types;
 
 /**
- * 公共 PageDialect 实现
+ * 公共 SqlDialect 实现
  * @version : 2020-10-31
  * @author 赵永春 (zyc@hasor.net)
  */
 public abstract class AbstractDialect implements PageDialect {
     private static final TypeHandler<?> typeHandler = new IntegerTypeHandler();
 
-    protected SqlArg buildNumber(int number) {
+    protected SqlArg buildNumber(long number) {
         return new SqlArg(String.valueOf(number), number, SqlMode.In, Types.INTEGER, Integer.TYPE, typeHandler);
     }
 

@@ -17,7 +17,7 @@ package net.hasor.dataql.sqlproc.dialect.provider;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlObject;
 import net.hasor.dataql.sqlproc.dialect.PageDialect;
-import net.hasor.dataql.sqlproc.dynamic.SqlArg;
+import net.hasor.dataql.sqlproc.dialect.SqlArg;
 
 /**
  * DB2 的 SqlDialect 实现
@@ -27,7 +27,7 @@ import net.hasor.dataql.sqlproc.dynamic.SqlArg;
 public class Db2Dialect extends AbstractDialect implements PageDialect {
 
     @Override
-    public BoundSql pageSql(BoundSql boundSql, int start, int limit) {
+    public BoundSql pageSql(BoundSql boundSql, long start, long limit) {
         StringBuilder sqlBuilder = new StringBuilder();
         sqlBuilder.append("SELECT * FROM (SELECT TMP_PAGE.*,ROWNUMBER() OVER() AS ROW_ID FROM ( ");
         sqlBuilder.append(boundSql.getSqlString());
@@ -40,4 +40,5 @@ public class Db2Dialect extends AbstractDialect implements PageDialect {
         destArgs[paramArray.length + 1] = buildNumber(limit);
         return new BoundSqlObject(sqlBuilder.toString(), destArgs);
     }
+
 }

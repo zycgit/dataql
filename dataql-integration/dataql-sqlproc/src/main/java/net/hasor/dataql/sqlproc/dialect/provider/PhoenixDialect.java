@@ -17,7 +17,7 @@ package net.hasor.dataql.sqlproc.dialect.provider;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlObject;
 import net.hasor.dataql.sqlproc.dialect.PageDialect;
-import net.hasor.dataql.sqlproc.dynamic.SqlArg;
+import net.hasor.dataql.sqlproc.dialect.SqlArg;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,7 +31,7 @@ import java.util.List;
 public class PhoenixDialect extends AbstractDialect implements PageDialect {
 
     @Override
-    public BoundSql pageSql(BoundSql boundSql, int start, int limit) {
+    public BoundSql pageSql(BoundSql boundSql, long start, long limit) {
         StringBuilder sqlBuilder = new StringBuilder(boundSql.getSqlString());
         List<SqlArg> paramArrays = new ArrayList<>(Arrays.asList(boundSql.getArgs()));
 

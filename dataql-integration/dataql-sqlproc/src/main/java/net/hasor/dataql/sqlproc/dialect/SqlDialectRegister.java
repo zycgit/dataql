@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2010 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 package net.hasor.dataql.sqlproc.dialect;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.ref.LinkedCaseInsensitiveMap;
+import net.hasor.dataql.sqlproc.JdbcUtils;
 import net.hasor.dataql.sqlproc.dialect.provider.*;
-import net.hasor.dataql.sqlproc.execute.JdbcUtils;
 
 import java.util.Map;
 
@@ -42,12 +42,12 @@ public class SqlDialectRegister {
         registerDialectAlias(JdbcUtils.KINGBASE, KingbaseDialect.class);
         registerDialectAlias(JdbcUtils.MARIADB, MariaDBDialect.class);
         registerDialectAlias(JdbcUtils.MYSQL, MySqlDialect.class);
-        registerDialectAlias("oracle12c", Oracle12cDialect.class);
         registerDialectAlias(JdbcUtils.ORACLE, OracleDialect.class);
         registerDialectAlias(JdbcUtils.PHOENIX, PhoenixDialect.class);
         registerDialectAlias(JdbcUtils.POSTGRESQL, PostgreSqlDialect.class);
         registerDialectAlias(JdbcUtils.SQLITE, SqlLiteDialect.class);
-        registerDialectAlias(JdbcUtils.SQL_SERVER, SqlServer2005Dialect.class);
+        registerDialectAlias(JdbcUtils.SQL_SERVER, SqlServerDialect.class);
+        registerDialectAlias(JdbcUtils.JTDS, SqlServerDialect.class);
         registerDialectAlias(JdbcUtils.XUGU, XuGuDialect.class);
     }
 

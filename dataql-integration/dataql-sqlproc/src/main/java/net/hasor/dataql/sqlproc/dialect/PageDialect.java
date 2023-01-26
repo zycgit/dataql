@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2010 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,6 @@ public interface PageDialect {
     /** 生成 count 查询 SQL */
     BoundSql countSql(BoundSql boundSql);
 
-    /** 生成分页查询 SQL */
-    BoundSql pageSql(BoundSql boundSql, int start, int limit);
+    /** 生成分页查询 SQL（基于 count 的） */
+    BoundSql pageSql(BoundSql boundSql, long start, long limit);
 }
