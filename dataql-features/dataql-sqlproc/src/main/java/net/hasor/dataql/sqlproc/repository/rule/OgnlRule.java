@@ -15,9 +15,9 @@
  */
 package net.hasor.dataql.sqlproc.repository.rule;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
-import net.hasor.dataql.sqlproc.repository.DynamicContext;
 import net.hasor.dataql.sqlproc.dialect.SqlArg;
 import net.hasor.dataql.sqlproc.dialect.SqlMode;
+import net.hasor.dataql.sqlproc.repository.DynamicContext;
 import net.hasor.dataql.sqlproc.repository.ognl.OgnlUtils;
 import net.hasor.dataql.sqlproc.types.TypeHandler;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;

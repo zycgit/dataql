@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.execute;
+package net.hasor.dataql.sqlproc.execute.page;
 import net.hasor.cobble.function.ESupplier;
 
 import java.sql.SQLException;
@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class PageObject implements Page {
     /** 满足条件的总记录数 */
     private       ESupplier<Integer, SQLException> totalCountSupplier = () -> 0;
-    private       int                              totalCount         = 0;
+    private       long                             totalCount         = 0;
     private final AtomicBoolean                    totalCountInited   = new AtomicBoolean(false);
     /** 每页记录数（-1表示无限大）*/
     private       int                              pageSize           = 0;
@@ -41,7 +41,7 @@ public class PageObject implements Page {
         this.totalCountSupplier = () -> 0;
     }
 
-    public PageObject(int pageSize, int totalCount) {
+    public PageObject(int pageSize, long totalCount) {
         this.pageSize = pageSize;
         this.totalCount = totalCount;
         this.totalCountInited.set(true);

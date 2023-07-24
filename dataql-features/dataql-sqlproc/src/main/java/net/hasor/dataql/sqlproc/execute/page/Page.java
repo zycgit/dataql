@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.execute;
+package net.hasor.dataql.sqlproc.execute.page;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -51,6 +51,9 @@ public interface Page {
     /** 获取记录总数 */
     int getTotalCount() throws SQLException;
 
+    /** 设置记录总数（用于避免 count 查询） */
+    void setTotalCount(long totalCount);
+
     /** 移动到第一页 */
     default void firstPage() {
         setCurrentPage(0);
@@ -82,4 +85,5 @@ public interface Page {
             put("recordPosition", getFirstRecordPosition());
         }};
     }
+
 }

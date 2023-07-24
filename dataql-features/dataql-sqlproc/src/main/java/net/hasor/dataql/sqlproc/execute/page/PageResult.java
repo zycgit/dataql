@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.execute;
+package net.hasor.dataql.sqlproc.execute.page;
 
 import java.util.List;
 
@@ -25,13 +25,18 @@ import java.util.List;
 public class PageResult<T> extends PageObject {
     private List<T> data;
 
-    public PageResult(Page pageInfo, int totalCount) {
+    public PageResult(int pageSize, long totalCount, List<T> data) {
+        super(pageSize, totalCount);
+        this.data = data;
+    }
+
+    public PageResult(Page pageInfo, long totalCount) {
         super(pageInfo.getPageSize(), totalCount);
         this.setCurrentPage(pageInfo.getCurrentPage());
         this.setPageNumberOffset(pageInfo.getPageNumberOffset());
     }
 
-    public PageResult(Page pageInfo, int totalCount, List<T> data) {
+    public PageResult(Page pageInfo, long totalCount, List<T> data) {
         this(pageInfo, totalCount);
         this.data = data;
     }

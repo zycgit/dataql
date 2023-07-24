@@ -17,6 +17,7 @@ package net.hasor.dataql.sqlproc.repository.config;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.sqlproc.repository.DynamicSql;
 import net.hasor.dataql.sqlproc.repository.MultipleResultsType;
+import net.hasor.dataql.sqlproc.repository.ResultSetType;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
@@ -32,6 +33,7 @@ public class QueryProcSql extends AbstractProcSql {
     // query
     private int                 fetchSize;
     private MultipleResultsType multipleResultType;
+    private ResultSetType       resultSetType;
 
     public QueryProcSql(DynamicSql target) {
         super(target);
@@ -41,11 +43,14 @@ public class QueryProcSql extends AbstractProcSql {
         super(target, operationNode);
         NamedNodeMap nodeAttributes = operationNode.getAttributes();
         Node fetchSizeNode = nodeAttributes.getNamedItem("fetchSize");
+        Node resultSetTypeNode = nodeAttributes.getNamedItem("resultSetType");
         Node multipleResultNode = nodeAttributes.getNamedItem("multipleResult");
         String fetchSize = (fetchSizeNode != null) ? fetchSizeNode.getNodeValue() : null;
+        String resultSetType = (resultSetTypeNode != null) ? resultSetTypeNode.getNodeValue() : null;
         String multipleResult = (multipleResultNode != null) ? multipleResultNode.getNodeValue() : null;
 
         this.fetchSize = StringUtils.isBlank(fetchSize) ? 256 : Integer.parseInt(fetchSize);
+        this.resultSetType = ResultSetType.valueOfCode(resultSetType, ResultSetType.DEFAULT);
         this.multipleResultType = MultipleResultsType.valueOfCode(multipleResult, defaultMultipleResultsType());
 
         // 1st: SelectKey
@@ -87,6 +92,14 @@ public class QueryProcSql extends AbstractProcSql {
 
     public void setFetchSize(int fetchSize) {
         this.fetchSize = fetchSize;
+    }
+
+    public ResultSetType getResultSetType() {
+        return this.resultSetType;
+    }
+
+    public void setResultSetType(ResultSetType resultSetType) {
+        this.resultSetType = resultSetType;
     }
 
     public MultipleResultsType getMultipleResultType() {
