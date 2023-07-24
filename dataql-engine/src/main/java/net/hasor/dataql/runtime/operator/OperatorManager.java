@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.runtime.operator;
-import net.hasor.cobble.supplier.SingleProvider;
+import net.hasor.cobble.provider.SingleProvider;
 import net.hasor.dataql.runtime.operator.ops.*;
 
 import java.util.ArrayList;
