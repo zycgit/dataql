@@ -66,6 +66,8 @@ public abstract class AbstractStatementExecute<T> {
         info.resultSetType = ResultSetType.DEFAULT;
         info.multipleResultType = MultipleResultsType.LAST;
         info.pageDialect = dialect;
+        info.pageResult = pageResult;
+        info.pageCount = pageCount;
         info.packageType = resultType;
         info.columnCaseType = columnCaseType;
         info.data = data;
@@ -76,6 +78,10 @@ public abstract class AbstractStatementExecute<T> {
         info.keyProperty = dynamicSql.getKeyProperty();
 
         return executeQuery(conn, info, queryBuilder);
+    }
+
+    protected boolean usingPage(ExecuteInfo executeInfo) {
+        return executeInfo.pageInfo != null && executeInfo.pageResult && executeInfo.pageInfo.getPageSize() > 0;
     }
 
     protected abstract T executeQuery(Connection con, ExecuteInfo info, BoundSqlBuilder sqlBuilder) throws SQLException;

@@ -102,19 +102,19 @@ public class ExecuteProxy {
             OpenPackageType resultType, ColumnCaseType columnCaseType) throws SQLException {
 
         if (this.selectKeyExecute != null) {
-            this.selectKeyExecute.processBefore(conn, data);
+            this.selectKeyExecute.processBefore(conn, data, resultType, columnCaseType);
         }
 
         Object result = this.execute.execute(conn, this.dynamicSql, data, pageResult, pageCount, pageInfo, dialect, resultType, columnCaseType);
 
         if (this.selectKeyExecute != null) {
-            this.selectKeyExecute.processAfter(conn, data);
+            this.selectKeyExecute.processAfter(conn, data, resultType, columnCaseType);
         }
 
         return result;
     }
 
-    class SelectKeySequenceHolder implements SelectKeyHandler {
+    private static class SelectKeySequenceHolder implements SelectKeyHandler {
         private final SelectKeyProcSql            keySqlConfig;
         private final AbstractStatementExecute<?> selectKeyExecute;
 
@@ -123,17 +123,8 @@ public class ExecuteProxy {
             this.selectKeyExecute = selectKeyExecute;
         }
 
-        public Object processSelectKey(Connection conn, Map<String, Object> parameter) throws SQLException {
-            String keyColumn = this.keySqlConfig.getKeyColumn();
-            Object resultValue = null;
-
-            if (StringUtils.isBlank(keyColumn)) {
-                // maybe is single value.
-                //conn, this.dynamicSql, data, pageResult, pageCount, pageInfo, dialect, resultType, columnCaseType
-                resultValue = this.selectKeyExecute.execute(conn, this.keySqlConfig, parameter, false, false);
-            } else {
-                resultValue = this.selectKeyExecute.execute(conn, this.keySqlConfig, parameter);
-            }
+        public Object processSelectKey(Connection conn, Map<String, Object> parameter, OpenPackageType resultType, ColumnCaseType columnCaseType) throws SQLException {
+            Object resultValue = this.selectKeyExecute.execute(conn, this.keySqlConfig, parameter, false, false, null, null, resultType, columnCaseType);
 
             if (resultValue instanceof List) {
                 resultValue = ((List<?>) resultValue).get(0);

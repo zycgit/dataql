@@ -38,22 +38,22 @@ class SelectKeyExecute {
         this.selectKeyHandler = selectKeyHandler;
     }
 
-    public void processBefore(Connection conn, Map<String, Object> parameter) throws SQLException {
+    public void processBefore(Connection conn, Map<String, Object> parameter, OpenPackageType resultType, ColumnCaseType columnCaseType) throws SQLException {
         if (StringUtils.equalsIgnoreCase("BEFORE", this.keySqlConfig.getOrder())) {
-            this.processSelectKey(conn, parameter, true);
+            this.processSelectKey(conn, parameter, true, resultType, columnCaseType);
         }
     }
 
-    public void processAfter(Connection conn, Map<String, Object> parameter) throws SQLException {
+    public void processAfter(Connection conn, Map<String, Object> parameter, OpenPackageType resultType, ColumnCaseType columnCaseType) throws SQLException {
         if (StringUtils.equalsIgnoreCase("AFTER", this.keySqlConfig.getOrder())) {
-            this.processSelectKey(conn, parameter, false);
+            this.processSelectKey(conn, parameter, false, resultType, columnCaseType);
         }
     }
 
-    private void processSelectKey(Connection conn, Map<String, Object> parameter, boolean isBefore) throws SQLException {
+    private void processSelectKey(Connection conn, Map<String, Object> parameter, boolean isBefore, OpenPackageType resultType, ColumnCaseType columnCaseType) throws SQLException {
         String keyColumn = this.keySqlConfig.getKeyColumn();
         String keyProperty = this.keySqlConfig.getKeyProperty();
-        Object resultValue = this.selectKeyHandler.processSelectKey(conn, parameter);
+        Object resultValue = this.selectKeyHandler.processSelectKey(conn, parameter, resultType, columnCaseType);
 
         if (resultValue instanceof List) {
             resultValue = ((List<?>) resultValue).get(0);

@@ -328,7 +328,7 @@ public class SqlFragment implements FragmentProcess, DynamicContext {
             PageDialect dialect = fetchDialect(hints, con);
             OpenPackageType resultType = OpenPackageType.valueOfCode(hints.getOrDefault(SqlHintNames.FRAGMENT_SQL_OPEN_PACKAGE.name(), SqlHintNames.FRAGMENT_SQL_OPEN_PACKAGE.getDefaultVal()).toString());
             ColumnCaseType columnCaseType = ColumnCaseType.valueOfCode(hints.getOrDefault(SqlHintNames.FRAGMENT_SQL_COLUMN_CASE.name(), SqlHintNames.FRAGMENT_SQL_COLUMN_CASE.getDefaultVal()).toString());
-            return execute.execute(con, params, null, false, dialect, resultType, columnCaseType);
+            return execute.execute(con, params, false, false, null, dialect, resultType, columnCaseType);
         }
     }
 }
