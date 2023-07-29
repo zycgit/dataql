@@ -27,16 +27,16 @@ import java.util.function.Function;
  */
 public interface Hints extends HintValue {
     /** 获取选项参数 */
-    public String[] getHints();
+    String[] getHints();
 
     /** 获取选项参数 */
-    public Object getHint(String optionKey);
+    Object getHint(String optionKey);
 
     /** 删除选项参数 */
-    public void removeHint(String optionKey);
+    void removeHint(String optionKey);
 
     /** 设置选项参数 */
-    public default void setHints(Hints hints) {
+    default void setHints(Hints hints) {
         if (hints != null) {
             hints.forEach((optKey, value) -> {
                 /**  */if (OperatorUtils.isNumber(value)) {
@@ -51,13 +51,13 @@ public interface Hints extends HintValue {
     }
 
     /** 设置选项参数 */
-    public void setHint(String hintName, String value);
+    void setHint(String hintName, String value);
 
     /** 设置选项参数 */
-    public void setHint(String hintName, Number value);
+    void setHint(String hintName, Number value);
 
     /** 设置选项参数 */
-    public void setHint(String hintName, boolean value);
+    void setHint(String hintName, boolean value);
 
     /**
      * Performs the given action for each entry in this map until all entries
@@ -70,7 +70,7 @@ public interface Hints extends HintValue {
      * @throws NullPointerException if the specified action is null
      * @since 1.8
      */
-    public default void forEach(BiConsumer<String, Object> action) {
+    default void forEach(BiConsumer<String, Object> action) {
         Objects.requireNonNull(action);
         for (String hintName : getHints()) {
             Object optionValue = getHint(hintName);
@@ -88,7 +88,7 @@ public interface Hints extends HintValue {
      * @throws UnsupportedOperationException if the {@code put} operation is not supported by this map
      * @since 1.8
      */
-    public default void putIfAbsent(String hintName, Object value) {
+    default void putIfAbsent(String hintName, Object value) {
         if (getHint(hintName) == null) {
             /**  */if (OperatorUtils.isNumber(value)) {
                 this.setHint(hintName, (Number) value);
@@ -114,7 +114,7 @@ public interface Hints extends HintValue {
      * @return the value to which the specified key is mapped, or {@code defaultValue} if this map contains no mapping for the key
      * @since 1.8
      */
-    public default Object getOrDefault(String hintName, Object defaultValue) {
+    default Object getOrDefault(String hintName, Object defaultValue) {
         Object v = null;
         return (((v = getHint(hintName)) != null)) ? v : defaultValue;
     }
@@ -133,7 +133,7 @@ public interface Hints extends HintValue {
      * @return the value to which the specified key is mapped, or {@code defaultValue} if this map contains no mapping for the key
      * @since 1.8
      */
-    public default <V> V getOrMap(String hintName, Function<Object, V> defaultValue) {
+    default <V> V getOrMap(String hintName, Function<Object, V> defaultValue) {
         return defaultValue.apply(getHint(hintName));
     }
 
@@ -153,7 +153,7 @@ public interface Hints extends HintValue {
      * @throws UnsupportedOperationException if the {@code put} operation is not supported by this map
      * @since 1.8
      */
-    public default void computeIfAbsent(String hintName, Function<String, Object> mappingFunction) {
+    default void computeIfAbsent(String hintName, Function<String, Object> mappingFunction) {
         Objects.requireNonNull(mappingFunction);
         if (getHint(hintName) == null) {
             Object newValue;

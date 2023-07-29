@@ -25,7 +25,7 @@ import java.util.Map;
  */
 public interface FragmentProcess {
     /** 批量执行 */
-    public default List<Object> batchRunFragment(Hints hint, List<Map<String, Object>> params, String fragmentString) throws Throwable {
+    default List<Object> batchRunFragment(Hints hint, List<Map<String, Object>> params, String fragmentString) throws Throwable {
         List<Object> resultList = new ArrayList<>(params.size());
         for (Map<String, Object> paramItem : params) {
             resultList.add(this.runFragment(hint, paramItem, fragmentString));
@@ -34,5 +34,5 @@ public interface FragmentProcess {
     }
 
     /** 常规执行 */
-    public Object runFragment(Hints hint, Map<String, Object> params, String fragmentString) throws Throwable;
+    Object runFragment(Hints hint, Map<String, Object> params, String fragmentString) throws Throwable;
 }

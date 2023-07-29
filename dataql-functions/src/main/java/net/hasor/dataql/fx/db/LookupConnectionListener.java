@@ -13,23 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataway.spi;
-import net.hasor.dataql.DataQL;
-import net.hasor.dataql.compiler.qil.QIL;
-
-import java.io.IOException;
-import java.util.EventListener;
+package net.hasor.dataql.fx.db;
+import java.sql.Connection;
 
 /**
- * DataQL 编译，默认实现了编译。（is notifySpi）
+ * 当 DataQL 执行过程中用来获取对应的动态数据源，指定数据源的名字需要通过 HINT：FRAGMENT_SQL_DATA_SOURCE
+ *
+ * 该 SPI 允许应用程序在任意时候更换某个名字的数据库连接。
+ * ps ：只有当初始化没有注册的数据源才会利用 LookupDataSourceListener 进行查找发现。
  * @author 赵永春 (zyc@hasor.net)
- * @version : 2020-04-19
+ * @version : 2020-06-03
+ * @see net.hasor.dataql.sqlproc.spi.LookupConnectionListener
  */
-public interface CompilerSpiListener extends EventListener {
-    CompilerSpiListener DEFAULT = new CompilerSpiListener() {
-    };
-
-    default QIL compiler(ApiInfo apiInfo, String query, DataQL dataQL) throws IOException {
-        return dataQL.compilerQuery(query);
-    }
+@Deprecated
+public interface LookupConnectionListener extends net.hasor.dataql.sqlproc.spi.LookupConnectionListener {
+    @Override
+    Connection lookUp(String lookupName);
 }

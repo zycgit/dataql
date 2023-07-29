@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>net.hasor</groupId>
+        <artifactId>dataql-parent</artifactId>
+        <version>4.3.0-SNAPSHOT</version>
+    </parent>
+
+    <!-- Maven Info -->
+    <artifactId>dataql-functions</artifactId>
+    <packaging>jar</packaging>
+
+    <!-- Project Info -->
+    <name>DataQL FunctionX</name>
+    <description>the hasor DataQL project.</description>
+
+    <developers>
+        <developer>
+            <name>赵永春(Mr.Zhao)</name>
+            <email>zyc@hasor.net</email>
+        </developer>
+    </developers>
+
+    <properties>
+        <antlr4.visitor>true</antlr4.visitor>
+    </properties>
+
+    <!-- 引用依赖 -->
+    <dependencies>
+        <!-- basic -->
+        <dependency>
+            <groupId>net.hasor</groupId>
+            <artifactId>hasor-dataql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.hasor</groupId>
+            <artifactId>dataql-sqlproc</artifactId>
+        </dependency>
+
+        <!-- database -->
+        <dependency>
+            <groupId>net.hasor</groupId>
+            <artifactId>dbvisitor</artifactId>
+        </dependency>
+
+        <!-- web -->
+        <dependency>
+            <groupId>net.hasor</groupId>
+            <artifactId>hasor-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- python -->
+        <!-- <dependency>-->
+        <!--   <groupId>org.python</groupId>-->
+        <!--   <artifactId>jython</artifactId>-->
+        <!--   <version>2.7.2</version>-->
+        <!--   <scope>provided</scope>-->
+        <!-- </dependency>-->
+    </dependencies>
+</project>
