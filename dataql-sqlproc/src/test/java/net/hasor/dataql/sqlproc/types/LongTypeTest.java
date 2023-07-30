@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2009 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
-import com.alibaba.druid.pool.DruidDataSource;
-import net.hasor.dataql.sqlproc.types.handler.LongTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
-import net.hasor.dataql.sqlproc.utils.TypeHandlerWrap;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
+import net.hasor.dbvisitor.types.handler.LongTypeHandler;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -32,11 +30,11 @@ import java.util.Map;
 public class LongTypeTest {
     @Test
     public void testLongTypeHandler_1() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_bigint) values (123);");
-            List<Long> dat = jdbcTemplate.query("select c_bigint from tb_h2_types where c_bigint is not null limit 1;", (rs, rowNum) -> {
+            List<Long> dat = jdbcTemplate.queryForList("select c_bigint from tb_h2_types where c_bigint is not null limit 1;", (rs, rowNum) -> {
                 return new LongTypeHandler().getResult(rs, 1);
             });
             assert dat.get(0) == 123l;
@@ -45,11 +43,11 @@ public class LongTypeTest {
 
     @Test
     public void testLongTypeHandler_2() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_bigint) values (123);");
-            List<Long> dat = jdbcTemplate.query("select c_bigint from tb_h2_types where c_bigint is not null limit 1;", (rs, rowNum) -> {
+            List<Long> dat = jdbcTemplate.queryForList("select c_bigint from tb_h2_types where c_bigint is not null limit 1;", (rs, rowNum) -> {
                 return new LongTypeHandler().getResult(rs, "c_bigint");
             });
             assert dat.get(0) == 123l;
@@ -58,15 +56,15 @@ public class LongTypeTest {
 
     @Test
     public void testLongTypeHandler_3() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             long dat1 = jdbcTemplate.queryForObject("select ?", new Object[] { 123l }, long.class);
             Long dat2 = jdbcTemplate.queryForObject("select ?", new Object[] { 123l }, Long.class);
             assert dat1 == 123l;
             assert dat2 == 123l;
 
-            List<Long> dat = jdbcTemplate.query("select ?", ps -> {
+            List<Long> dat = jdbcTemplate.queryForList("select ?", ps -> {
                 new LongTypeHandler().setParameter(ps, 1, 123l, JDBCType.BIGINT.getVendorTypeNumber());
             }, (rs, rowNum) -> {
                 return new LongTypeHandler().getNullableResult(rs, 1);
@@ -77,13 +75,13 @@ public class LongTypeTest {
 
     @Test
     public void testLongTypeHandler_4() throws SQLException {
-        try (Connection conn = DsUtils.mysqlConnection()) {
+        try (Connection conn = DsUtils.mysqlConn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(conn);
             jdbcTemplate.execute("drop procedure if exists proc_bigint;");
             jdbcTemplate.execute("create procedure proc_bigint(out p_out bigint) begin set p_out=123123; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_bigint(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.BIGINT.getVendorTypeNumber(), new TypeHandlerWrap<>(new LongTypeHandler()))));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.BIGINT.getVendorTypeNumber(), new LongTypeHandler())));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Long;

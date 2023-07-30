@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2009 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
-import com.alibaba.druid.pool.DruidDataSource;
-import net.hasor.dataql.sqlproc.types.handler.IntegerTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
-import net.hasor.dataql.sqlproc.utils.TypeHandlerWrap;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
+import net.hasor.dbvisitor.types.handler.IntegerTypeHandler;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -32,11 +30,11 @@ import java.util.Map;
 public class IntegerTypeTest {
     @Test
     public void testIntegerTypeHandler_1() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_integer) values (123);");
-            List<Integer> dat = jdbcTemplate.query("select c_integer from tb_h2_types where c_integer is not null limit 1;", (rs, rowNum) -> {
+            List<Integer> dat = jdbcTemplate.queryForList("select c_integer from tb_h2_types where c_integer is not null limit 1;", (rs, rowNum) -> {
                 return new IntegerTypeHandler().getResult(rs, 1);
             });
             assert dat.get(0) == 123;
@@ -45,11 +43,11 @@ public class IntegerTypeTest {
 
     @Test
     public void testIntegerTypeHandler_2() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_integer) values (123);");
-            List<Integer> dat = jdbcTemplate.query("select c_integer from tb_h2_types where c_integer is not null limit 1;", (rs, rowNum) -> {
+            List<Integer> dat = jdbcTemplate.queryForList("select c_integer from tb_h2_types where c_integer is not null limit 1;", (rs, rowNum) -> {
                 return new IntegerTypeHandler().getResult(rs, "c_integer");
             });
             assert dat.get(0) == 123;
@@ -58,15 +56,15 @@ public class IntegerTypeTest {
 
     @Test
     public void testIntegerTypeHandler_3() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             int dat1 = jdbcTemplate.queryForObject("select ?", new Object[] { 123 }, int.class);
             Integer dat2 = jdbcTemplate.queryForObject("select ?", new Object[] { 123 }, Integer.class);
             assert dat1 == 123;
             assert dat2 == 123;
 
-            List<Integer> dat = jdbcTemplate.query("select ?", ps -> {
+            List<Integer> dat = jdbcTemplate.queryForList("select ?", ps -> {
                 new IntegerTypeHandler().setParameter(ps, 1, 123, JDBCType.INTEGER.getVendorTypeNumber());
             }, (rs, rowNum) -> {
                 return new IntegerTypeHandler().getNullableResult(rs, 1);
@@ -77,13 +75,13 @@ public class IntegerTypeTest {
 
     @Test
     public void testIntegerTypeHandler_4() throws SQLException {
-        try (Connection conn = DsUtils.mysqlConnection()) {
+        try (Connection conn = DsUtils.mysqlConn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(conn);
             jdbcTemplate.execute("drop procedure if exists proc_integer;");
             jdbcTemplate.execute("create procedure proc_integer(out p_out integer) begin set p_out=123123; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_integer(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.INTEGER.getVendorTypeNumber(), new TypeHandlerWrap<>(new IntegerTypeHandler()))));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.INTEGER.getVendorTypeNumber(), new IntegerTypeHandler())));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Integer;

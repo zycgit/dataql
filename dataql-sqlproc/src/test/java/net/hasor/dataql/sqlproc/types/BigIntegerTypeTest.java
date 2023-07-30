@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2009 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,30 +14,24 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
-import com.alibaba.druid.pool.DruidDataSource;
 import net.hasor.dataql.sqlproc.types.handler.BigIntegerTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
-import net.hasor.dataql.sqlproc.utils.TypeHandlerWrap;
-import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
 import org.junit.Test;
 
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.JDBCType;
-import java.sql.SQLException;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 public class BigIntegerTypeTest {
     @Test
     public void testBigIntegerTypeHandler_1() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_bigint) values (1234567890);");
-            List<BigInteger> dat = jdbcTemplate.query("select c_bigint from tb_h2_types where c_bigint is not null limit 1;", (rs, rowNum) -> {
+            List<BigInteger> dat = jdbcTemplate.queryForList("select c_bigint from tb_h2_types where c_bigint is not null limit 1;", (rs, rowNum) -> {
                 return new BigIntegerTypeHandler().getResult(rs, 1);
             });
             assert dat.get(0).toString().equals("1234567890");
@@ -46,11 +40,11 @@ public class BigIntegerTypeTest {
 
     @Test
     public void testBigIntegerTypeHandler_2() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_bigint) values (1234567890);");
-            List<BigInteger> dat = jdbcTemplate.query("select c_bigint from tb_h2_types where c_bigint is not null limit 1;", (rs, rowNum) -> {
+            List<BigInteger> dat = jdbcTemplate.queryForList("select c_bigint from tb_h2_types where c_bigint is not null limit 1;", (rs, rowNum) -> {
                 return new BigIntegerTypeHandler().getResult(rs, "c_bigint");
             });
             assert dat.get(0).toString().equals("1234567890");
@@ -59,10 +53,10 @@ public class BigIntegerTypeTest {
 
     @Test
     public void testBigIntegerTypeHandler_3() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
-            List<BigInteger> dat = jdbcTemplate.query("select ?", ps -> {
+            List<BigInteger> dat = jdbcTemplate.queryForList("select ?", ps -> {
                 new BigIntegerTypeHandler().setParameter(ps, 1, new BigInteger("1234567890"), JDBCType.BIGINT.getVendorTypeNumber());
             }, (rs, rowNum) -> {
                 return new BigIntegerTypeHandler().getNullableResult(rs, 1);
@@ -71,20 +65,20 @@ public class BigIntegerTypeTest {
         }
     }
 
-    @Test
-    public void testBigIntegerTypeHandler_4() throws SQLException {
-        try (Connection conn = DsUtils.mysqlConnection()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(conn);
-            jdbcTemplate.execute("drop procedure if exists proc_bigint;");
-            jdbcTemplate.execute("create procedure proc_bigint(out p_out bigint) begin set p_out=123123; end;");
-
-            Map<String, Object> objectMap = jdbcTemplate.call("{call proc_bigint(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.BIGINT.getVendorTypeNumber(), new TypeHandlerWrap<>(new BigIntegerTypeHandler()))));
-
-            assert objectMap.size() == 2;
-            assert objectMap.get("out") instanceof BigInteger;
-            assert objectMap.get("out").equals(new BigInteger("123123"));
-            assert objectMap.get("#update-count-1").equals(0);
-        }
-    }
+    //    @Test
+    //    public void testBigIntegerTypeHandler_4() throws SQLException {
+    //        try (Connection conn = DsUtils.mysqlConn()) {
+    //            JdbcTemplate jdbcTemplate = new JdbcTemplate(conn);
+    //            jdbcTemplate.execute("drop procedure if exists proc_bigint;");
+    //            jdbcTemplate.execute("create procedure proc_bigint(out p_out bigint) begin set p_out=123123; end;");
+    //
+    //            Map<String, Object> objectMap = jdbcTemplate.call("{call proc_bigint(?)}",//
+    //                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.BIGINT.getVendorTypeNumber(), new BigIntegerTypeHandler())));
+    //
+    //            assert objectMap.size() == 2;
+    //            assert objectMap.get("out") instanceof BigInteger;
+    //            assert objectMap.get("out").equals(new BigInteger("123123"));
+    //            assert objectMap.get("#update-count-1").equals(0);
+    //        }
+    //    }
 }

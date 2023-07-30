@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2009 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
-import com.alibaba.druid.pool.DruidDataSource;
-import net.hasor.dataql.sqlproc.types.handler.ArrayTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
+import net.hasor.dbvisitor.types.handler.ArrayTypeHandler;
 import org.junit.Test;
 
+import java.sql.Connection;
 import java.sql.JDBCType;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -30,14 +30,14 @@ import java.util.Set;
 public class ArrayTypeTest {
     @Test
     public void testArrayTypeHandler_1() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             Set<String> testSet = new HashSet<>(Arrays.asList("a", "b", "c"));
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_array) values (?);", ps -> {
                 new ArrayTypeHandler().setParameter(ps, 1, testSet.toArray(), JDBCType.ARRAY.getVendorTypeNumber());
             });
-            List<Object> dat = jdbcTemplate.query("select c_array from tb_h2_types where c_array is not null limit 1;", (rs, rowNum) -> {
+            List<Object> dat = jdbcTemplate.queryForList("select c_array from tb_h2_types where c_array is not null limit 1;", (rs, rowNum) -> {
                 return new ArrayTypeHandler().getResult(rs, 1);
             });
             assert dat.get(0) != testSet;
@@ -51,14 +51,14 @@ public class ArrayTypeTest {
 
     @Test
     public void testArrayTypeHandler_2() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             Set<String> testSet = new HashSet<>(Arrays.asList("a", "b", "c"));
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_array) values (?);", ps -> {
                 new ArrayTypeHandler().setParameter(ps, 1, testSet.toArray(), JDBCType.ARRAY.getVendorTypeNumber());
             });
-            List<Object> dat = jdbcTemplate.query("select c_array from tb_h2_types where c_array is not null limit 1;", (rs, rowNum) -> {
+            List<Object> dat = jdbcTemplate.queryForList("select c_array from tb_h2_types where c_array is not null limit 1;", (rs, rowNum) -> {
                 return new ArrayTypeHandler().getResult(rs, "c_array");
             });
             assert dat.get(0) != testSet;

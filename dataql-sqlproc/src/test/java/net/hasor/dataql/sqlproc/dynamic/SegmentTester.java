@@ -1,6 +1,6 @@
 package net.hasor.dataql.sqlproc.dynamic;
-import net.hasor.dataql.sqlproc.dynamic.segment.DefaultSqlSegment;
-import net.hasor.dataql.sqlproc.dynamic.segment.SqlSegmentParser;
+import net.hasor.dataql.sqlproc.repository.segment.DefaultSqlSegment;
+import net.hasor.dataql.sqlproc.repository.segment.SqlSegmentParser;
 import org.junit.Test;
 
 import java.util.HashMap;

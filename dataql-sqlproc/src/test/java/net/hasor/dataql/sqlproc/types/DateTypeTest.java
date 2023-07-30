@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2009 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
-import com.alibaba.druid.pool.DruidDataSource;
-import net.hasor.dataql.sqlproc.types.handler.DateOnlyTypeHandler;
-import net.hasor.dataql.sqlproc.types.handler.DateTypeHandler;
-import net.hasor.dataql.sqlproc.types.handler.TimeOnlyTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
-import net.hasor.dataql.sqlproc.utils.TypeHandlerWrap;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
+import net.hasor.dbvisitor.types.handler.SqlDateAsDateHandler;
+import net.hasor.dbvisitor.types.handler.SqlTimeAsDateTypeHandler;
+import net.hasor.dbvisitor.types.handler.SqlTimestampAsDateTypeHandler;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -40,13 +38,13 @@ import java.util.Map;
 public class DateTypeTest {
     @Test
     public void testDateTypeHandler_1() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             Date testData = new Date();
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_timestamp) values (?);", new Object[] { testData });
-            List<Date> dat = jdbcTemplate.query("select c_timestamp from tb_h2_types where c_timestamp is not null limit 1;", (rs, rowNum) -> {
-                return new DateTypeHandler().getResult(rs, 1);
+            List<Date> dat = jdbcTemplate.queryForList("select c_timestamp from tb_h2_types where c_timestamp is not null limit 1;", (rs, rowNum) -> {
+                return new SqlTimestampAsDateTypeHandler().getResult(rs, 1);
             });
 
             assert testData.getTime() == dat.get(0).getTime();
@@ -55,13 +53,13 @@ public class DateTypeTest {
 
     @Test
     public void testDateTypeHandler_2() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             Date testData = new Date();
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_timestamp) values (?);", new Object[] { testData });
-            List<Date> dat = jdbcTemplate.query("select c_timestamp from tb_h2_types where c_timestamp is not null limit 1;", (rs, rowNum) -> {
-                return new DateTypeHandler().getResult(rs, "c_timestamp");
+            List<Date> dat = jdbcTemplate.queryForList("select c_timestamp from tb_h2_types where c_timestamp is not null limit 1;", (rs, rowNum) -> {
+                return new SqlTimestampAsDateTypeHandler().getResult(rs, "c_timestamp");
             });
 
             assert testData.getTime() == dat.get(0).getTime();
@@ -70,14 +68,14 @@ public class DateTypeTest {
 
     @Test
     public void testDateTypeHandler_3() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             Date testData = new Date();
-            List<Date> dat = jdbcTemplate.query("select ?", ps -> {
-                new DateTypeHandler().setParameter(ps, 1, testData, JDBCType.TIMESTAMP.getVendorTypeNumber());
+            List<Date> dat = jdbcTemplate.queryForList("select ?", ps -> {
+                new SqlTimestampAsDateTypeHandler().setParameter(ps, 1, testData, JDBCType.TIMESTAMP.getVendorTypeNumber());
             }, (rs, rowNum) -> {
-                return new DateTypeHandler().getNullableResult(rs, 1);
+                return new SqlTimestampAsDateTypeHandler().getNullableResult(rs, 1);
             });
 
             Date dateTime = dat.get(0);
@@ -87,13 +85,13 @@ public class DateTypeTest {
 
     @Test
     public void testDateTypeHandler_4() throws SQLException {
-        try (Connection conn = DsUtils.mysqlConnection()) {
+        try (Connection conn = DsUtils.mysqlConn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(conn);
             jdbcTemplate.execute("drop procedure if exists proc_timestamp;");
             jdbcTemplate.execute("create procedure proc_timestamp(out p_out timestamp) begin set p_out= str_to_date('2008-08-09 08:09:30', '%Y-%m-%d %h:%i:%s'); end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_timestamp(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new TypeHandlerWrap<>(new DateTypeHandler()))));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new SqlTimestampAsDateTypeHandler())));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Date;
@@ -105,13 +103,13 @@ public class DateTypeTest {
 
     @Test
     public void testTimeOnlyTypeHandler_1() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             Date testData = new Date();
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_timestamp) values (?);", new Object[] { testData });
-            List<Date> dat = jdbcTemplate.query("select c_timestamp from tb_h2_types where c_timestamp is not null limit 1;", (rs, rowNum) -> {
-                return new TimeOnlyTypeHandler().getResult(rs, 1);
+            List<Date> dat = jdbcTemplate.queryForList("select c_timestamp from tb_h2_types where c_timestamp is not null limit 1;", (rs, rowNum) -> {
+                return new SqlTimeAsDateTypeHandler().getResult(rs, 1);
             });
 
             assert testData.getTime() != dat.get(0).getTime();
@@ -127,13 +125,13 @@ public class DateTypeTest {
 
     @Test
     public void testTimeOnlyTypeHandler_2() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             Date testData = new Date();
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_timestamp) values (?);", new Object[] { testData });
-            List<Date> dat = jdbcTemplate.query("select c_timestamp from tb_h2_types where c_timestamp is not null limit 1;", (rs, rowNum) -> {
-                return new TimeOnlyTypeHandler().getResult(rs, "c_timestamp");
+            List<Date> dat = jdbcTemplate.queryForList("select c_timestamp from tb_h2_types where c_timestamp is not null limit 1;", (rs, rowNum) -> {
+                return new SqlTimeAsDateTypeHandler().getResult(rs, "c_timestamp");
             });
 
             assert testData.getTime() != dat.get(0).getTime();
@@ -149,14 +147,14 @@ public class DateTypeTest {
 
     @Test
     public void testTimeOnlyTypeHandler_3() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             Date testData = new Date();
-            List<Date> dat = jdbcTemplate.query("select ?", ps -> {
-                new TimeOnlyTypeHandler().setParameter(ps, 1, testData, JDBCType.TIMESTAMP.getVendorTypeNumber());
+            List<Date> dat = jdbcTemplate.queryForList("select ?", ps -> {
+                new SqlTimeAsDateTypeHandler().setParameter(ps, 1, testData, JDBCType.TIMESTAMP.getVendorTypeNumber());
             }, (rs, rowNum) -> {
-                return new TimeOnlyTypeHandler().getNullableResult(rs, 1);
+                return new SqlTimeAsDateTypeHandler().getNullableResult(rs, 1);
             });
 
             assert testData.getTime() != dat.get(0).getTime();
@@ -172,13 +170,13 @@ public class DateTypeTest {
 
     @Test
     public void testTimeOnlyTypeHandler_4() throws SQLException {
-        try (Connection conn = DsUtils.mysqlConnection()) {
+        try (Connection conn = DsUtils.mysqlConn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(conn);
             jdbcTemplate.execute("drop procedure if exists proc_timestamp;");
             jdbcTemplate.execute("create procedure proc_timestamp(out p_out timestamp) begin set p_out= str_to_date('2008-08-09 08:09:30', '%Y-%m-%d %h:%i:%s'); end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_timestamp(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new TypeHandlerWrap<>(new TimeOnlyTypeHandler()))));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new SqlTimeAsDateTypeHandler())));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Date;
@@ -190,13 +188,13 @@ public class DateTypeTest {
 
     @Test
     public void testDateOnlyTypeHandler_1() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             Date testData = new Date();
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_timestamp) values (?);", new Object[] { testData });
-            List<Date> dat = jdbcTemplate.query("select c_timestamp from tb_h2_types where c_timestamp is not null limit 1;", (rs, rowNum) -> {
-                return new DateOnlyTypeHandler().getResult(rs, 1);
+            List<Date> dat = jdbcTemplate.queryForList("select c_timestamp from tb_h2_types where c_timestamp is not null limit 1;", (rs, rowNum) -> {
+                return new SqlDateAsDateHandler().getResult(rs, 1);
             });
 
             assert testData.getTime() != dat.get(0).getTime();
@@ -212,13 +210,13 @@ public class DateTypeTest {
 
     @Test
     public void testDateOnlyTypeHandler_2() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             Date testData = new Date();
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_timestamp) values (?);", new Object[] { testData });
-            List<Date> dat = jdbcTemplate.query("select c_timestamp from tb_h2_types where c_timestamp is not null limit 1;", (rs, rowNum) -> {
-                return new DateOnlyTypeHandler().getResult(rs, "c_timestamp");
+            List<Date> dat = jdbcTemplate.queryForList("select c_timestamp from tb_h2_types where c_timestamp is not null limit 1;", (rs, rowNum) -> {
+                return new SqlDateAsDateHandler().getResult(rs, "c_timestamp");
             });
 
             assert testData.getTime() != dat.get(0).getTime();
@@ -234,14 +232,14 @@ public class DateTypeTest {
 
     @Test
     public void testDateOnlyTypeHandler_3() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             Date testData = new Date();
-            List<Date> dat = jdbcTemplate.query("select ?", ps -> {
-                new DateOnlyTypeHandler().setParameter(ps, 1, testData, JDBCType.TIMESTAMP.getVendorTypeNumber());
+            List<Date> dat = jdbcTemplate.queryForList("select ?", ps -> {
+                new SqlDateAsDateHandler().setParameter(ps, 1, testData, JDBCType.TIMESTAMP.getVendorTypeNumber());
             }, (rs, rowNum) -> {
-                return new DateOnlyTypeHandler().getNullableResult(rs, 1);
+                return new SqlDateAsDateHandler().getNullableResult(rs, 1);
             });
 
             assert testData.getTime() != dat.get(0).getTime();
@@ -257,13 +255,13 @@ public class DateTypeTest {
 
     @Test
     public void testDateOnlyTypeHandler_4() throws SQLException {
-        try (Connection conn = DsUtils.mysqlConnection()) {
+        try (Connection conn = DsUtils.mysqlConn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(conn);
             jdbcTemplate.execute("drop procedure if exists proc_timestamp;");
             jdbcTemplate.execute("create procedure proc_timestamp(out p_out timestamp) begin set p_out= str_to_date('2008-08-09 08:09:30', '%Y-%m-%d %h:%i:%s'); end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_timestamp(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new TypeHandlerWrap<>(new DateOnlyTypeHandler()))));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new SqlDateAsDateHandler())));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Date;

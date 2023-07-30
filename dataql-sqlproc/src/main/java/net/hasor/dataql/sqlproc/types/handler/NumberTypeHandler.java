@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2009 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.io.StringWriter;
 import java.sql.*;
 
 /**
+ * 读写 Number 类型数据，由于 Number 类型是一个抽象类型。会根据 Object 具体类型来决定如何读写
  * @version : 2020-11-16
  * @author 赵永春 (zyc@hasor.net)
  */
@@ -106,14 +107,14 @@ public class NumberTypeHandler extends AbstractTypeHandler<Number> {
         });
     }
 
-    protected static interface NumberResultValue {
-        public String getColumnClassName() throws SQLException;
+    protected interface NumberResultValue {
+        String getColumnClassName() throws SQLException;
 
-        public Timestamp getTimestamp() throws SQLException;
+        Timestamp getTimestamp() throws SQLException;
 
-        public Date getDate() throws SQLException;
+        Date getDate() throws SQLException;
 
-        public Object getObject() throws SQLException;
+        Object getObject() throws SQLException;
     }
 
     /**获取列的值*/

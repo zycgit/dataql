@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2009 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types.handler;
-
 import net.hasor.dataql.sqlproc.types.EnumOfCode;
 import net.hasor.dataql.sqlproc.types.EnumOfValue;
 
@@ -24,6 +23,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
+ * 读写枚举类型，支持枚举实现 {@link EnumOfCode}、{@link EnumOfValue} 接口。
  * @version : 2020-11-29
  * @author 赵永春 (zyc@hasor.net)
  */

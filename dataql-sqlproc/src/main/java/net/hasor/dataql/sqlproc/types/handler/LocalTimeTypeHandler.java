@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2009 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,38 +14,34 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types.handler;
-
-import java.sql.*;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalTime;
 
 /**
- * @version : 2020-10-31
+ * 读写 {@link LocalTime}  类型数据
  * @author 赵永春 (zyc@hasor.net)
  */
 public class LocalTimeTypeHandler extends AbstractTypeHandler<LocalTime> {
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, LocalTime parameter, Integer jdbcType) throws SQLException {
-        LocalDateTime dateTime = LocalDateTime.of(LocalDate.now(), parameter);
-        ps.setTimestamp(i, Timestamp.valueOf(dateTime));
+        ps.setObject(i, parameter);
     }
 
     @Override
     public LocalTime getNullableResult(ResultSet rs, String columnName) throws SQLException {
-        Timestamp timestamp = rs.getTimestamp(columnName);
-        return (timestamp == null) ? null : timestamp.toLocalDateTime().toLocalTime();
+        return rs.getObject(columnName, LocalTime.class);
     }
 
     @Override
     public LocalTime getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
-        Timestamp timestamp = rs.getTimestamp(columnIndex);
-        return (timestamp == null) ? null : timestamp.toLocalDateTime().toLocalTime();
+        return rs.getObject(columnIndex, LocalTime.class);
     }
 
     @Override
     public LocalTime getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
-        Timestamp timestamp = cs.getTimestamp(columnIndex);
-        return (timestamp == null) ? null : timestamp.toLocalDateTime().toLocalTime();
+        return cs.getObject(columnIndex, LocalTime.class);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2009 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
-import com.alibaba.druid.pool.DruidDataSource;
-import net.hasor.dataql.sqlproc.types.handler.InstantTypeHandler;
-import net.hasor.dataql.sqlproc.types.handler.JapaneseDateTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
-import net.hasor.dataql.sqlproc.utils.TypeHandlerWrap;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
+import net.hasor.dbvisitor.types.handler.JapaneseDateAsSqlDateTypeHandler;
+import net.hasor.dbvisitor.types.handler.SqlTimestampAsInstantTypeHandler;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -38,13 +36,13 @@ import java.util.Map;
 public class OtherTimeTypeTest {
     @Test
     public void testInstantTypeHandler_1() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             Date testData = new Date();
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_timestamp) values (?);", new Object[] { testData });
-            List<Instant> dat = jdbcTemplate.query("select c_timestamp from tb_h2_types where c_timestamp is not null limit 1;", (rs, rowNum) -> {
-                return new InstantTypeHandler().getResult(rs, 1);
+            List<Instant> dat = jdbcTemplate.queryForList("select c_timestamp from tb_h2_types where c_timestamp is not null limit 1;", (rs, rowNum) -> {
+                return new SqlTimestampAsInstantTypeHandler().getResult(rs, 1);
             });
 
             assert testData.toInstant().toEpochMilli() == dat.get(0).toEpochMilli();
@@ -53,13 +51,13 @@ public class OtherTimeTypeTest {
 
     @Test
     public void testInstantTypeHandler_2() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             Date testData = new Date();
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_timestamp) values (?);", new Object[] { testData });
-            List<Instant> dat = jdbcTemplate.query("select c_timestamp from tb_h2_types where c_timestamp is not null limit 1;", (rs, rowNum) -> {
-                return new InstantTypeHandler().getResult(rs, "c_timestamp");
+            List<Instant> dat = jdbcTemplate.queryForList("select c_timestamp from tb_h2_types where c_timestamp is not null limit 1;", (rs, rowNum) -> {
+                return new SqlTimestampAsInstantTypeHandler().getResult(rs, "c_timestamp");
             });
 
             assert testData.toInstant().toEpochMilli() == dat.get(0).toEpochMilli();
@@ -68,14 +66,14 @@ public class OtherTimeTypeTest {
 
     @Test
     public void testInstantTypeHandler_3() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             Date testData = new Date();
-            List<Instant> dat = jdbcTemplate.query("select ?", ps -> {
-                new InstantTypeHandler().setParameter(ps, 1, testData.toInstant(), JDBCType.TIMESTAMP.getVendorTypeNumber());
+            List<Instant> dat = jdbcTemplate.queryForList("select ?", ps -> {
+                new SqlTimestampAsInstantTypeHandler().setParameter(ps, 1, testData.toInstant(), JDBCType.TIMESTAMP.getVendorTypeNumber());
             }, (rs, rowNum) -> {
-                return new InstantTypeHandler().getNullableResult(rs, 1);
+                return new SqlTimestampAsInstantTypeHandler().getNullableResult(rs, 1);
             });
 
             assert testData.toInstant().toEpochMilli() == dat.get(0).toEpochMilli();
@@ -84,13 +82,13 @@ public class OtherTimeTypeTest {
 
     @Test
     public void testInstantTypeHandler_4() throws Exception {
-        try (Connection conn = DsUtils.mysqlConnection()) {
+        try (Connection conn = DsUtils.mysqlConn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(conn);
             jdbcTemplate.execute("drop procedure if exists proc_timestamp;");
             jdbcTemplate.execute("create procedure proc_timestamp(out p_out timestamp) begin set p_out= str_to_date('2008-08-09 10:11:12', '%Y-%m-%d %h:%i:%s'); end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_timestamp(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new TypeHandlerWrap<>(new InstantTypeHandler()))));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new SqlTimestampAsInstantTypeHandler())));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Instant;
@@ -102,13 +100,13 @@ public class OtherTimeTypeTest {
 
     @Test
     public void testJapaneseDateTypeHandler_1() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             Date testData = new Date();
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_timestamp) values (?);", new Object[] { testData });
-            List<JapaneseDate> dat = jdbcTemplate.query("select c_timestamp from tb_h2_types where c_timestamp is not null limit 1;", (rs, rowNum) -> {
-                return new JapaneseDateTypeHandler().getResult(rs, 1);
+            List<JapaneseDate> dat = jdbcTemplate.queryForList("select c_timestamp from tb_h2_types where c_timestamp is not null limit 1;", (rs, rowNum) -> {
+                return new JapaneseDateAsSqlDateTypeHandler().getResult(rs, 1);
             });
 
             assert dat.get(0).toEpochDay() == LocalDate.now().toEpochDay();
@@ -117,13 +115,13 @@ public class OtherTimeTypeTest {
 
     @Test
     public void testJapaneseDateTypeHandler_2() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             Date testData = new Date();
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_timestamp) values (?);", new Object[] { testData });
-            List<JapaneseDate> dat = jdbcTemplate.query("select c_timestamp from tb_h2_types where c_timestamp is not null limit 1;", (rs, rowNum) -> {
-                return new JapaneseDateTypeHandler().getResult(rs, "c_timestamp");
+            List<JapaneseDate> dat = jdbcTemplate.queryForList("select c_timestamp from tb_h2_types where c_timestamp is not null limit 1;", (rs, rowNum) -> {
+                return new JapaneseDateAsSqlDateTypeHandler().getResult(rs, "c_timestamp");
             });
 
             assert dat.get(0).toEpochDay() == LocalDate.now().toEpochDay();
@@ -132,15 +130,15 @@ public class OtherTimeTypeTest {
 
     @Test
     public void testJapaneseDateTypeHandler_3() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             LocalDate testData = LocalDate.of(1998, Month.APRIL, 12);
             JapaneseDate jpData = JapaneseDate.from(testData);
-            List<JapaneseDate> dat = jdbcTemplate.query("select ?", ps -> {
-                new JapaneseDateTypeHandler().setParameter(ps, 1, jpData, JDBCType.TIMESTAMP.getVendorTypeNumber());
+            List<JapaneseDate> dat = jdbcTemplate.queryForList("select ?", ps -> {
+                new JapaneseDateAsSqlDateTypeHandler().setParameter(ps, 1, jpData, JDBCType.TIMESTAMP.getVendorTypeNumber());
             }, (rs, rowNum) -> {
-                return new JapaneseDateTypeHandler().getNullableResult(rs, 1);
+                return new JapaneseDateAsSqlDateTypeHandler().getNullableResult(rs, 1);
             });
 
             JapaneseDate dateTime = dat.get(0);
@@ -150,19 +148,19 @@ public class OtherTimeTypeTest {
 
     @Test
     public void testJapaneseDateTypeHandler_4() throws Exception {
-        try (Connection conn = DsUtils.mysqlConnection()) {
+        try (Connection conn = DsUtils.mysqlConn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(conn);
             jdbcTemplate.execute("drop procedure if exists proc_timestamp;");
             jdbcTemplate.execute("create procedure proc_timestamp(out p_out timestamp) begin set p_out= str_to_date('2008-08-09 10:11:12', '%Y-%m-%d %h:%i:%s'); end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_timestamp(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new TypeHandlerWrap<>(new JapaneseDateTypeHandler()))));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new JapaneseDateAsSqlDateTypeHandler())));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof JapaneseDate;
             Date testDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2008-08-09 10:11:12");
             JapaneseDate instant = (JapaneseDate) objectMap.get("out");
-            assert JapaneseDateTypeHandler.toJapaneseDate(testDate).equals(instant);
+            assert JapaneseDateAsSqlDateTypeHandler.toJapaneseDate(testDate).equals(instant);
         }
     }
 }

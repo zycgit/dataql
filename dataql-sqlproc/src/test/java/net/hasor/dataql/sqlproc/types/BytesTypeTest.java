@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2009 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
-import com.alibaba.druid.pool.DruidDataSource;
 import net.hasor.cobble.codec.MD5;
-import net.hasor.dataql.sqlproc.types.handler.BytesForWrapTypeHandler;
-import net.hasor.dataql.sqlproc.types.handler.BytesTypeHandler;
+import net.hasor.cobble.io.IOUtils;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
-import net.hasor.dataql.sqlproc.utils.TypeHandlerWrap;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
+import net.hasor.dbvisitor.types.handler.BytesAsBytesWrapTypeHandler;
+import net.hasor.dbvisitor.types.handler.BytesAsInputStreamTypeHandler;
+import net.hasor.dbvisitor.types.handler.BytesTypeHandler;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.JDBCType;
 import java.sql.SQLException;
@@ -50,13 +52,13 @@ public class BytesTypeTest {
 
     @Test
     public void testBytesForWrapTypeHandler_1() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             byte[] testData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_blob) values (?);", new Object[] { testData });
-            List<Byte[]> dat = jdbcTemplate.query("select c_blob from tb_h2_types where c_blob is not null limit 1;", (rs, rowNum) -> {
-                return new BytesForWrapTypeHandler().getResult(rs, 1);
+            List<Byte[]> dat = jdbcTemplate.queryForList("select c_blob from tb_h2_types where c_blob is not null limit 1;", (rs, rowNum) -> {
+                return new BytesAsBytesWrapTypeHandler().getResult(rs, 1);
             });
 
             String s1 = MD5.encodeMD5(testData);
@@ -67,13 +69,13 @@ public class BytesTypeTest {
 
     @Test
     public void testBytesForWrapTypeHandler_2() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             byte[] testData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_blob) values (?);", new Object[] { testData });
-            List<Byte[]> dat = jdbcTemplate.query("select c_blob from tb_h2_types where c_blob is not null limit 1;", (rs, rowNum) -> {
-                return new BytesForWrapTypeHandler().getResult(rs, "c_blob");
+            List<Byte[]> dat = jdbcTemplate.queryForList("select c_blob from tb_h2_types where c_blob is not null limit 1;", (rs, rowNum) -> {
+                return new BytesAsBytesWrapTypeHandler().getResult(rs, "c_blob");
             });
 
             String s1 = MD5.encodeMD5(testData);
@@ -84,14 +86,14 @@ public class BytesTypeTest {
 
     @Test
     public void testBytesForWrapTypeHandler_3() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             byte[] testData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-            List<Byte[]> dat = jdbcTemplate.query("select ?", ps -> {
-                new BytesForWrapTypeHandler().setParameter(ps, 1, toWrapped(testData), JDBCType.BLOB.getVendorTypeNumber());
+            List<Byte[]> dat = jdbcTemplate.queryForList("select ?", ps -> {
+                new BytesAsBytesWrapTypeHandler().setParameter(ps, 1, toWrapped(testData), JDBCType.BLOB.getVendorTypeNumber());
             }, (rs, rowNum) -> {
-                return new BytesForWrapTypeHandler().getNullableResult(rs, 1);
+                return new BytesAsBytesWrapTypeHandler().getNullableResult(rs, 1);
             });
 
             String s1 = MD5.encodeMD5(testData);
@@ -102,13 +104,13 @@ public class BytesTypeTest {
 
     @Test
     public void testBytesForWrapTypeHandler_4() throws SQLException {
-        try (Connection conn = DsUtils.mysqlConnection()) {
+        try (Connection conn = DsUtils.mysqlConn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(conn);
             jdbcTemplate.execute("drop procedure if exists proc_bytes;");
             jdbcTemplate.execute("create procedure proc_bytes(out p_out varbinary(10)) begin set p_out= b'0111111100001111'; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_bytes(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.VARBINARY.getVendorTypeNumber(), new TypeHandlerWrap<>(new BytesForWrapTypeHandler()))));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.VARBINARY.getVendorTypeNumber(), new BytesAsBytesWrapTypeHandler())));
 
             assert objectMap.size() == 2;
             assert !(objectMap.get("out") instanceof byte[]);
@@ -122,12 +124,12 @@ public class BytesTypeTest {
 
     @Test
     public void testBytesTypeHandler_1() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             byte[] testData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_blob) values (?);", new Object[] { testData });
-            List<byte[]> dat = jdbcTemplate.query("select c_blob from tb_h2_types where c_blob is not null limit 1;", (rs, rowNum) -> {
+            List<byte[]> dat = jdbcTemplate.queryForList("select c_blob from tb_h2_types where c_blob is not null limit 1;", (rs, rowNum) -> {
                 return new BytesTypeHandler().getResult(rs, 1);
             });
 
@@ -139,12 +141,12 @@ public class BytesTypeTest {
 
     @Test
     public void testBytesTypeHandler_2() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             byte[] testData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_blob) values (?);", new Object[] { testData });
-            List<byte[]> dat = jdbcTemplate.query("select c_blob from tb_h2_types where c_blob is not null limit 1;", (rs, rowNum) -> {
+            List<byte[]> dat = jdbcTemplate.queryForList("select c_blob from tb_h2_types where c_blob is not null limit 1;", (rs, rowNum) -> {
                 return new BytesTypeHandler().getResult(rs, "c_blob");
             });
 
@@ -156,11 +158,11 @@ public class BytesTypeTest {
 
     @Test
     public void testBytesTypeHandler_3() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             byte[] testData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-            List<byte[]> dat = jdbcTemplate.query("select ?", ps -> {
+            List<byte[]> dat = jdbcTemplate.queryForList("select ?", ps -> {
                 new BytesTypeHandler().setParameter(ps, 1, testData, JDBCType.BLOB.getVendorTypeNumber());
             }, (rs, rowNum) -> {
                 return new BytesTypeHandler().getNullableResult(rs, 1);
@@ -174,13 +176,13 @@ public class BytesTypeTest {
 
     @Test
     public void testBytesTypeHandler_4() throws SQLException {
-        try (Connection conn = DsUtils.mysqlConnection()) {
+        try (Connection conn = DsUtils.mysqlConn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(conn);
             jdbcTemplate.execute("drop procedure if exists proc_bytes;");
             jdbcTemplate.execute("create procedure proc_bytes(out p_out varbinary(10)) begin set p_out= b'0111111100001111'; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_bytes(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.VARBINARY.getVendorTypeNumber(), new TypeHandlerWrap<>(new BytesTypeHandler()))));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.VARBINARY.getVendorTypeNumber(), new BytesTypeHandler())));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof byte[];
@@ -189,6 +191,82 @@ public class BytesTypeTest {
             assert bytes[0] == 0b01111111;
             assert bytes[1] == 0b00001111;
             assert objectMap.get("#update-count-1").equals(0);
+        }
+    }
+
+    @Test
+    public void testBytesInputStreamTypeHandler_1() throws Throwable {
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
+
+            byte[] testData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_blob) values (?);", new Object[] { testData });
+            List<InputStream> dat = jdbcTemplate.queryForList("select c_blob from tb_h2_types where c_blob is not null limit 1;", (rs, rowNum) -> {
+                return new BytesAsInputStreamTypeHandler().getResult(rs, 1);
+            });
+
+            String s1 = MD5.encodeMD5(testData);
+            String s2 = MD5.encodeMD5(IOUtils.toByteArray(dat.get(0)));
+            assert s1.equals(s2);
+        }
+    }
+
+    @Test
+    public void testBytesInputStreamTypeHandler_2() throws Throwable {
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
+
+            byte[] testData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_blob) values (?);", new Object[] { testData });
+            List<InputStream> dat = jdbcTemplate.queryForList("select c_blob from tb_h2_types where c_blob is not null limit 1;", (rs, rowNum) -> {
+                return new BytesAsInputStreamTypeHandler().getResult(rs, "c_blob");
+            });
+
+            String s1 = MD5.encodeMD5(testData);
+            String s2 = MD5.encodeMD5(IOUtils.toByteArray(dat.get(0)));
+            assert s1.equals(s2);
+        }
+    }
+
+    @Test
+    public void testBytesInputStreamTypeHandler_3() throws Throwable {
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
+
+            byte[] testData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+            List<InputStream> dat = jdbcTemplate.queryForList("select ?", ps -> {
+                new BytesAsInputStreamTypeHandler().setParameter(ps, 1, new ByteArrayInputStream(testData), JDBCType.BLOB.getVendorTypeNumber());
+            }, (rs, rowNum) -> {
+                return new BytesAsInputStreamTypeHandler().getNullableResult(rs, 1);
+            });
+
+            String s1 = MD5.encodeMD5(testData);
+            String s2 = MD5.encodeMD5(IOUtils.toByteArray(dat.get(0)));
+            assert s1.equals(s2);
+        }
+    }
+
+    @Test
+    public void testBytesInputStreamTypeHandler_4() throws Exception {
+        try (Connection conn = DsUtils.mysqlConn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(conn);
+            jdbcTemplate.execute("drop procedure if exists proc_bytes;");
+            jdbcTemplate.execute("create procedure proc_bytes(out p_out varbinary(10)) begin set p_out= b'0111111100001111'; end;");
+
+            Map<String, Object> objectMap = jdbcTemplate.call("{call proc_bytes(?)}",//
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.VARBINARY.getVendorTypeNumber(), new BytesAsInputStreamTypeHandler())));
+
+            assert objectMap.size() == 2;
+            assert objectMap.get("out") instanceof InputStream;
+            assert objectMap.get("#update-count-1").equals(0);
+
+            byte[] bytes = new byte[2];
+            bytes[0] = 0b01111111;
+            bytes[1] = 0b00001111;
+
+            String s1 = MD5.encodeMD5(bytes);
+            String s2 = MD5.encodeMD5(IOUtils.toByteArray((InputStream) objectMap.get("out")));
+            assert s1.equals(s2);
         }
     }
 }

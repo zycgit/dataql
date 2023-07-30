@@ -16,7 +16,11 @@
 package net.hasor.dataql.sqlproc.dynamic;
 import net.hasor.cobble.ResourcesUtils;
 import net.hasor.cobble.io.IOUtils;
+import net.hasor.dataql.runtime.HintsSet;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
+import net.hasor.dataql.sqlproc.dialect.SqlMode;
+import net.hasor.dataql.sqlproc.repository.ProcSqlParser;
+import net.hasor.dataql.sqlproc.repository.config.QueryProcSql;
 import net.hasor.dataql.sqlproc.types.UnknownTypeHandler;
 import net.hasor.dataql.sqlproc.types.handler.StringTypeHandler;
 import net.hasor.test.dataql.sqlproc.dto.TB_User;
@@ -28,7 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DynamicXmlTest {
-    private final DynamicParser xmlParser = new DynamicParser();
+    private final ProcSqlParser xmlParser = new ProcSqlParser();
 
     private String loadString(String queryConfig) throws IOException {
         return IOUtils.readToString(ResourcesUtils.getResourceAsStream(queryConfig), "UTF-8");
@@ -37,7 +41,7 @@ public class DynamicXmlTest {
     @Test
     public void ifTest_01() throws Throwable {
         String queryConfig = loadString("/dataql_dynamic/if_01.xml");
-        DynamicSql parseXml = xmlParser.parseDynamicSql(queryConfig);
+        QueryProcSql parseXml = xmlParser.parseDynamicSql(queryConfig, new HintsSet());
         //
         String querySql1 = loadString("/dataql_dynamic/if_01.xml.sql_1");
         Map<String, Object> data1 = new HashMap<>();
@@ -61,7 +65,7 @@ public class DynamicXmlTest {
     @Test
     public void includeTest_01() throws Throwable {
         String queryConfig = loadString("/dataql_dynamic/include_01.xml");
-        DynamicSql parseXml = xmlParser.parseDynamicSql(queryConfig);
+        QueryProcSql parseXml = xmlParser.parseDynamicSql(queryConfig, new HintsSet());
         //
         String querySql1 = loadString("/dataql_dynamic/include_01.xml.sql_1");
         Map<String, Object> data1 = new HashMap<>();
@@ -74,7 +78,7 @@ public class DynamicXmlTest {
     @Test
     public void foreachTest_01() throws Throwable {
         String queryConfig = loadString("/dataql_dynamic/foreach_03.xml");
-        DynamicSql parseXml = xmlParser.parseDynamicSql(queryConfig);
+        QueryProcSql parseXml = xmlParser.parseDynamicSql(queryConfig, new HintsSet());
         //
         String querySql1 = loadString("/dataql_dynamic/foreach_03.xml.sql_1");
         Map<String, Object> data1 = new HashMap<>();
@@ -91,7 +95,7 @@ public class DynamicXmlTest {
     @Test
     public void setTest_01() throws Throwable {
         String queryConfig = loadString("/dataql_dynamic/set_04.xml");
-        DynamicSql parseXml = xmlParser.parseDynamicSql(queryConfig);
+        QueryProcSql parseXml = xmlParser.parseDynamicSql(queryConfig, new HintsSet());
         //
         String querySql1 = loadString("/dataql_dynamic/set_04.xml.sql_1");
         Map<String, Object> data1 = new HashMap<>();
@@ -121,7 +125,7 @@ public class DynamicXmlTest {
     @Test
     public void bindTest_01() throws Throwable {
         String queryConfig = loadString("/dataql_dynamic/bind_01.xml");
-        DynamicSql parseXml = xmlParser.parseDynamicSql(queryConfig);
+        QueryProcSql parseXml = xmlParser.parseDynamicSql(queryConfig, new HintsSet());
         //
         String querySql1 = loadString("/dataql_dynamic/bind_01.xml.sql_1");
         Map<String, Object> data1 = new HashMap<>();
@@ -134,7 +138,7 @@ public class DynamicXmlTest {
     @Test
     public void whereTest_01() throws Throwable {
         String queryConfig = loadString("/dataql_dynamic/where_01.xml");
-        DynamicSql parseXml = xmlParser.parseDynamicSql(queryConfig);
+        QueryProcSql parseXml = xmlParser.parseDynamicSql(queryConfig, new HintsSet());
         //
         String querySql1 = loadString("/dataql_dynamic/where_01.xml.sql_1");
         Map<String, Object> data1 = new HashMap<>();
@@ -155,7 +159,7 @@ public class DynamicXmlTest {
     @Test
     public void chooseTest_01() throws Throwable {
         String queryConfig = loadString("/dataql_dynamic/choose_01.xml");
-        DynamicSql parseXml = xmlParser.parseDynamicSql(queryConfig);
+        QueryProcSql parseXml = xmlParser.parseDynamicSql(queryConfig, new HintsSet());
         //
         String querySql1 = loadString("/dataql_dynamic/choose_01.xml.sql_1");
         Map<String, Object> data1 = new HashMap<>();
@@ -169,7 +173,7 @@ public class DynamicXmlTest {
     @Test
     public void chooseTest_02() throws Throwable {
         String queryConfig = loadString("/dataql_dynamic/choose_01.xml");
-        DynamicSql parseXml = xmlParser.parseDynamicSql(queryConfig);
+        QueryProcSql parseXml = xmlParser.parseDynamicSql(queryConfig, new HintsSet());
         //
         String querySql1 = loadString("/dataql_dynamic/choose_01.xml.sql_2");
         Map<String, Object> data1 = new HashMap<>();
@@ -180,7 +184,7 @@ public class DynamicXmlTest {
     @Test
     public void tokenTest_01() throws Throwable {
         String queryConfig = loadString("/dataql_dynamic/token_01.xml");
-        DynamicSql parseXml = xmlParser.parseDynamicSql(queryConfig);
+        QueryProcSql parseXml = xmlParser.parseDynamicSql(queryConfig, new HintsSet());
         //
         String querySql1 = loadString("/dataql_dynamic/token_01.xml.sql_1");
         Map<String, Object> data1 = new HashMap<>();

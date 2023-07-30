@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2009 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types.handler;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.*;
@@ -24,11 +23,12 @@ import java.util.Calendar;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * 读写 jdbc 数组类型
  * @author Clinton Begin
  * @author 赵永春 (zyc@hasor.net)
  */
 public class ArrayTypeHandler extends AbstractTypeHandler<Object> {
-    private static final ConcurrentHashMap<Class<?>, JDBCType> STANDARD_MAPPING;
+    protected static final ConcurrentHashMap<Class<?>, JDBCType> STANDARD_MAPPING;
 
     static {
         STANDARD_MAPPING = new ConcurrentHashMap<>();
@@ -113,8 +113,10 @@ public class ArrayTypeHandler extends AbstractTypeHandler<Object> {
         if (array == null) {
             return null;
         }
-        Object result = array.getArray();
-        array.free();
-        return result;
+        try {
+            return array.getArray();
+        } finally {
+            array.free();
+        }
     }
 }

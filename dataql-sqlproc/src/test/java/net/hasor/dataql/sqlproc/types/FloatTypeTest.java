@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2009 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
-import com.alibaba.druid.pool.DruidDataSource;
-import net.hasor.dataql.sqlproc.types.handler.FloatTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
-import net.hasor.dataql.sqlproc.utils.TypeHandlerWrap;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
+import net.hasor.dbvisitor.types.handler.FloatTypeHandler;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -32,11 +30,11 @@ import java.util.Map;
 public class FloatTypeTest {
     @Test
     public void testFloatTypeHandler_1() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_float) values (123.123);");
-            List<Float> dat = jdbcTemplate.query("select c_float from tb_h2_types where c_float is not null limit 1;", (rs, rowNum) -> {
+            List<Float> dat = jdbcTemplate.queryForList("select c_float from tb_h2_types where c_float is not null limit 1;", (rs, rowNum) -> {
                 return new FloatTypeHandler().getResult(rs, 1);
             });
             assert dat.get(0) == 123.123f;
@@ -45,11 +43,11 @@ public class FloatTypeTest {
 
     @Test
     public void testFloatTypeHandler_2() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_float) values (123.123);");
-            List<Float> dat = jdbcTemplate.query("select c_float from tb_h2_types where c_float is not null limit 1;", (rs, rowNum) -> {
+            List<Float> dat = jdbcTemplate.queryForList("select c_float from tb_h2_types where c_float is not null limit 1;", (rs, rowNum) -> {
                 return new FloatTypeHandler().getResult(rs, "c_float");
             });
             assert dat.get(0) == 123.123f;
@@ -58,15 +56,15 @@ public class FloatTypeTest {
 
     @Test
     public void testFloatTypeHandler_3() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             float dat1 = jdbcTemplate.queryForObject("select ?", new Object[] { 123.123f }, float.class);
             Float dat2 = jdbcTemplate.queryForObject("select ?", new Object[] { 123.123f }, Float.class);
             assert dat1 == 123.123f;
             assert dat2 == 123.123f;
 
-            List<Float> dat = jdbcTemplate.query("select ?", ps -> {
+            List<Float> dat = jdbcTemplate.queryForList("select ?", ps -> {
                 new FloatTypeHandler().setParameter(ps, 1, 123.123f, JDBCType.FLOAT.getVendorTypeNumber());
             }, (rs, rowNum) -> {
                 return new FloatTypeHandler().getNullableResult(rs, 1);
@@ -77,13 +75,13 @@ public class FloatTypeTest {
 
     @Test
     public void testFloatTypeHandler_4() throws SQLException {
-        try (Connection conn = DsUtils.mysqlConnection()) {
+        try (Connection conn = DsUtils.mysqlConn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(conn);
             jdbcTemplate.execute("drop procedure if exists proc_float;");
             jdbcTemplate.execute("create procedure proc_float(out p_out float) begin set p_out=123.123; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_float(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.FLOAT.getVendorTypeNumber(), new TypeHandlerWrap<>(new FloatTypeHandler()))));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.FLOAT.getVendorTypeNumber(), new FloatTypeHandler())));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Float;

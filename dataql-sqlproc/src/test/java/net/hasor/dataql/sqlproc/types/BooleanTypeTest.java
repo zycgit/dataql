@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2009 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
-import com.alibaba.druid.pool.DruidDataSource;
-import net.hasor.dataql.sqlproc.types.handler.BooleanTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
-import net.hasor.dataql.sqlproc.utils.TypeHandlerWrap;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
+import net.hasor.dbvisitor.types.handler.BooleanTypeHandler;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -32,11 +30,11 @@ import java.util.Map;
 public class BooleanTypeTest {
     @Test
     public void testBooleanTypeHandler_1() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_boolean) values (true);");
-            List<Boolean> dat = jdbcTemplate.query("select c_boolean from tb_h2_types where c_boolean is not null limit 1;", (rs, rowNum) -> {
+            List<Boolean> dat = jdbcTemplate.queryForList("select c_boolean from tb_h2_types where c_boolean is not null limit 1;", (rs, rowNum) -> {
                 return new BooleanTypeHandler().getResult(rs, 1);
             });
             assert dat.get(0);
@@ -45,11 +43,11 @@ public class BooleanTypeTest {
 
     @Test
     public void testBooleanTypeHandler_2() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             jdbcTemplate.executeUpdate("insert into tb_h2_types (c_boolean) values (true);");
-            List<Boolean> dat = jdbcTemplate.query("select c_boolean from tb_h2_types where c_boolean is not null limit 1;", (rs, rowNum) -> {
+            List<Boolean> dat = jdbcTemplate.queryForList("select c_boolean from tb_h2_types where c_boolean is not null limit 1;", (rs, rowNum) -> {
                 return new BooleanTypeHandler().getResult(rs, "c_boolean");
             });
             assert dat.get(0);
@@ -58,8 +56,8 @@ public class BooleanTypeTest {
 
     @Test
     public void testBooleanTypeHandler_3() throws Throwable {
-        try (DruidDataSource dataSource = DsUtils.createDs()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection c = DsUtils.h2Conn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             boolean dat1 = jdbcTemplate.queryForObject("select ?", new Object[] { true }, boolean.class);
             Boolean dat2 = jdbcTemplate.queryForObject("select ?", new Object[] { true }, Boolean.class);
@@ -70,7 +68,7 @@ public class BooleanTypeTest {
             assert !dat3;
             assert !dat4;
 
-            List<Boolean> dat = jdbcTemplate.query("select ?", ps -> {
+            List<Boolean> dat = jdbcTemplate.queryForList("select ?", ps -> {
                 new BooleanTypeHandler().setParameter(ps, 1, true, JDBCType.BOOLEAN.getVendorTypeNumber());
             }, (rs, rowNum) -> {
                 return new BooleanTypeHandler().getNullableResult(rs, 1);
@@ -81,13 +79,13 @@ public class BooleanTypeTest {
 
     @Test
     public void testBooleanTypeHandler_4() throws SQLException {
-        try (Connection conn = DsUtils.mysqlConnection()) {
+        try (Connection conn = DsUtils.mysqlConn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(conn);
             jdbcTemplate.execute("drop procedure if exists proc_boolean;");
             jdbcTemplate.execute("create procedure proc_boolean(out p_out boolean) begin set p_out=true; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_boolean(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.BOOLEAN.getVendorTypeNumber(), new TypeHandlerWrap<>(new BooleanTypeHandler()))));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.BOOLEAN.getVendorTypeNumber(), new BooleanTypeHandler())));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Boolean;

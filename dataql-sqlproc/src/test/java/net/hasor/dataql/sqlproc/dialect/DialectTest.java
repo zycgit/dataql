@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dialect;
-import net.hasor.dataql.sqlproc.dialect.provider.Oracle12cDialect;
-import net.hasor.dataql.sqlproc.dialect.provider.SqlServer2005Dialect;
-import net.hasor.dataql.sqlproc.dynamic.SqlArg;
-import net.hasor.dataql.sqlproc.execute.JdbcUtils;
+import net.hasor.dataql.sqlproc.JdbcUtils;
+import net.hasor.dataql.sqlproc.dialect.provider.OracleDialect;
+import net.hasor.dataql.sqlproc.dialect.provider.SqlServerDialect;
 import org.junit.Test;
 
 /***
@@ -297,7 +296,7 @@ public class DialectTest {
 
     @Test
     public void dialect_oracle12c_1() {
-        PageDialect dialect = new Oracle12cDialect();
+        PageDialect dialect = new OracleDialect();
 
         BoundSql countSql = dialect.countSql(this.queryBoundSql);
         assert countSql.getSqlString().equals("SELECT COUNT(*) FROM (select * from tb_user where age > 12 and sex = ?) TEMP_T");
@@ -313,7 +312,7 @@ public class DialectTest {
 
     @Test
     public void dialect_sqlserver2005_1() {
-        PageDialect dialect = new SqlServer2005Dialect();
+        PageDialect dialect = new SqlServerDialect();
 
         BoundSql pageSql = dialect.pageSql(this.queryBoundSql, 1, 3);
         assert pageSql.getSqlString().equals("WITH selectTemp AS (SELECT TOP 100 PERCENT  ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __row_number__,  * from tb_user where age > 12 and sex = ?) SELECT * FROM selectTemp WHERE __row_number__ BETWEEN 2 AND 4 ORDER BY __row_number__");
