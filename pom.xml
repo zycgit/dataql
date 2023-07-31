@@ -50,10 +50,10 @@
 
     <modules>
         <module>dataql-engine</module>
-        <module>dataql-dataway</module>
         <module>dataql-sqlproc</module>
         <module>dataql-functions</module>
-        <module>dataql-integration/dataql-maven-plugin</module>
+        <module>dataql-dataway</module>
+        <module>dataql-maven-plugin</module>
     </modules>
 
     <!-- 构建描述 -->
@@ -211,6 +211,15 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>dataql-example/springboot-1</module>
+            </modules>
         </profile>
     </profiles>
 
