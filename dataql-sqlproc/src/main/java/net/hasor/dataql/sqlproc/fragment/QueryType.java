@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.fragment;
-
 /**
  * 语句类型
  * @author 赵永春 (zyc@hasor.net)

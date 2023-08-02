@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.repository.rule;
+import net.hasor.cobble.ClassUtils;
+import net.hasor.cobble.ExceptionUtils;
 import net.hasor.cobble.NumberUtils;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.ref.LinkedCaseInsensitiveMap;
@@ -26,6 +28,7 @@ import net.hasor.dataql.sqlproc.repository.ognl.OgnlUtils;
 import net.hasor.dataql.sqlproc.types.TypeHandler;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 
+import java.lang.reflect.Constructor;
 import java.sql.JDBCType;
 import java.sql.Types;
 import java.util.Map;
@@ -79,18 +82,6 @@ public class ArgRule implements SqlBuildRule {
         return null;
     }
 
-    private TypeHandler<?> convertTypeHandler(DynamicContext context, String typeHandler) {
-        try {
-            if (StringUtils.isNotBlank(typeHandler)) {
-                Class<?> aClass = context.loadClass(typeHandler);
-                return context.findTypeHandler(aClass);
-            }
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-        return null;
-    }
-
     public Map<String, String> parserConfig(String[] content, int start, int length) {
         Map<String, String> exprMap = new LinkedCaseInsensitiveMap<>();
         for (int i = start; i < length; i++) {
@@ -129,7 +120,7 @@ public class ArgRule implements SqlBuildRule {
         SqlMode sqlMode = convertSqlMode((config != null) ? config.get(CFG_KEY_MODE) : null);
         Integer jdbcType = convertJdbcType((config != null) ? config.get(CFG_KEY_JDBC_TYPE) : null);
         Class<?> javaType = convertJavaType(context, (config != null) ? config.get(CFG_KEY_JAVA_TYPE) : null);
-        TypeHandler<?> typeHandler = convertTypeHandler(context, (config != null) ? config.get(CFG_KEY_HANDLER) : null);
+        String handlerType = (config != null) ? config.get(CFG_KEY_HANDLER) : null;
         Object argValue = sqlMode == SqlMode.Out ? null : OgnlUtils.evalOgnl(expr, data);
 
         if (sqlMode == null) {
@@ -143,20 +134,58 @@ public class ArgRule implements SqlBuildRule {
             jdbcType = Types.VARCHAR;// fix all parameters unknown.
         }
 
-        if (typeHandler == null) {
-            if (javaType != null && jdbcType != null) {
-                typeHandler = context.findJavaTypeHandler(javaType, jdbcType);
-            } else if (javaType != null) {
-                typeHandler = context.findJavaTypeHandler(javaType);
-            } else if (jdbcType != null) {
-                typeHandler = context.findJdbcTypeHandler(jdbcType);
-            }
-        }
+        TypeHandler<?> typeHandler = convertTypeHandler(context, javaType, jdbcType, handlerType);
         if (typeHandler == null) {
             typeHandler = TypeHandlerRegistry.DEFAULT.getDefaultTypeHandler();
         }
 
         sqlBuilder.appendSql("?", new SqlArg(expr, argValue, sqlMode, jdbcType, javaType, typeHandler));
+    }
+
+    private TypeHandler<?> convertTypeHandler(DynamicContext context, Class<?> javaType, Integer jdbcType, String typeHandlerName) {
+        TypeHandler<?> typeHandler = null;
+        if (StringUtils.isNotBlank(typeHandlerName)) {
+            try {
+                Class<?> handlerType = context.loadClass(typeHandlerName);
+                return createTypeHandler(handlerType, javaType);
+            } catch (ClassNotFoundException e) {
+                throw ExceptionUtils.toRuntime(e);
+            }
+        } else {
+            if (javaType != null && jdbcType != null) {
+                typeHandler = context.findJavaTypeHandler(javaType, jdbcType);
+            }
+            if (typeHandler == null && javaType != null) {
+                typeHandler = context.findJavaTypeHandler(javaType);
+            }
+            if (typeHandler == null && jdbcType != null) {
+                typeHandler = context.findJdbcTypeHandler(jdbcType);
+            }
+        }
+
+        if (typeHandler == null) {
+            return context.getTypeRegistry().getDefaultTypeHandler();
+        } else {
+            return typeHandler;
+        }
+    }
+
+    protected static TypeHandler<?> createTypeHandler(Class<?> configTypeHandlerType, Class<?> javaType) {
+        if (javaType == null) {
+            return ClassUtils.newInstance(configTypeHandlerType);
+        }
+
+        try {
+            // try use Constructor
+            Constructor<?> constructor = configTypeHandlerType.getConstructor(Class.class);
+            return (TypeHandler<?>) constructor.newInstance(javaType);
+        } catch (NoSuchMethodException e) {
+            // default new.
+            return ClassUtils.newInstance(configTypeHandlerType);
+        } catch (ReflectiveOperationException e) {
+            // ioc failed
+            throw ExceptionUtils.toRuntime(e);
+        }
     }
 
     @Override

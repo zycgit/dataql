@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dialect.provider;
-
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlObject;
 import net.hasor.dataql.sqlproc.dialect.PageDialect;

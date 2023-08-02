@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.execute;
-
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.sqlproc.SqlHintValue;
 

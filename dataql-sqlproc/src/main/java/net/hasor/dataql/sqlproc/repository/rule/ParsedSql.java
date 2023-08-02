@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.repository.rule;
-
 import net.hasor.dataql.sqlproc.repository.ognl.OgnlUtils;
 
 import java.sql.SQLException;
