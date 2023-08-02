@@ -16,6 +16,7 @@
 package net.hasor.dataql.sqlproc.execute;
 import net.hasor.cobble.ExceptionUtils;
 import net.hasor.cobble.StringUtils;
+import net.hasor.dataql.Hints;
 import net.hasor.dataql.sqlproc.dialect.PageDialect;
 import net.hasor.dataql.sqlproc.execute.page.Page;
 import net.hasor.dataql.sqlproc.fragment.QueryType;
@@ -31,8 +32,8 @@ import java.util.Map;
 
 /**
  * 执行器总入口
- * @version : 2021-07-20
  * @author 赵永春 (zyc@hasor.net)
+ * @version : 2021-07-20
  */
 public class ExecuteProxy {
     private final QueryType                   queryType;
@@ -97,18 +98,17 @@ public class ExecuteProxy {
         }
     }
 
-    public Object execute(Connection conn, Map<String, Object> data, //
-            boolean pageResult, boolean pageCount, Page pageInfo, PageDialect dialect,//
-            OpenPackageType resultType, ColumnCaseType columnCaseType) throws SQLException {
+    public Object execute(Connection conn, Map<String, Object> data, Hints hints, //
+            boolean pageResult, boolean pageCount, Page pageInfo, PageDialect dialect) throws SQLException {
 
         if (this.selectKeyExecute != null) {
-            this.selectKeyExecute.processBefore(conn, data, resultType, columnCaseType);
+            this.selectKeyExecute.processBefore(conn, data, hints);
         }
 
-        Object result = this.execute.execute(conn, this.dynamicSql, data, pageResult, pageCount, pageInfo, dialect, resultType, columnCaseType);
+        Object result = this.execute.execute(conn, this.dynamicSql, data, hints, pageResult, pageCount, pageInfo, dialect);
 
         if (this.selectKeyExecute != null) {
-            this.selectKeyExecute.processAfter(conn, data, resultType, columnCaseType);
+            this.selectKeyExecute.processAfter(conn, data, hints);
         }
 
         return result;
@@ -123,8 +123,8 @@ public class ExecuteProxy {
             this.selectKeyExecute = selectKeyExecute;
         }
 
-        public Object processSelectKey(Connection conn, Map<String, Object> parameter, OpenPackageType resultType, ColumnCaseType columnCaseType) throws SQLException {
-            Object resultValue = this.selectKeyExecute.execute(conn, this.keySqlConfig, parameter, false, false, null, null, resultType, columnCaseType);
+        public Object processSelectKey(Connection conn, Map<String, Object> parameter, Hints hints) throws SQLException {
+            Object resultValue = this.selectKeyExecute.execute(conn, this.keySqlConfig, parameter, hints, false, false, null, null);
 
             if (resultValue instanceof List) {
                 resultValue = ((List<?>) resultValue).get(0);

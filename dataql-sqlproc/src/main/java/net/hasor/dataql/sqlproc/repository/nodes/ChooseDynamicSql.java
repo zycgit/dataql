@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.repository.nodes;
+import net.hasor.dataql.Hints;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.dataql.sqlproc.repository.DynamicContext;
 import net.hasor.dataql.sqlproc.repository.DynamicSql;
@@ -42,7 +43,7 @@ public class ChooseDynamicSql extends ArrayDynamicSql {
     }
 
     @Override
-    public void buildQuery(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException {
+    public void buildQuery(Hints hints, Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException {
         boolean useDefault = true;
         try {
             for (DynamicSql dynamicSql : this.subNodes) {
@@ -50,13 +51,13 @@ public class ChooseDynamicSql extends ArrayDynamicSql {
 
                     boolean test = ((IfDynamicSql) dynamicSql).test(data);
                     if (test) {
-                        ((IfDynamicSql) dynamicSql).buildBody(data, context, sqlBuilder);
+                        ((IfDynamicSql) dynamicSql).buildBody(hints, data, context, sqlBuilder);
                         useDefault = false;
                         break;
                     }
 
                 } else {
-                    dynamicSql.buildQuery(data, context, sqlBuilder);
+                    dynamicSql.buildQuery(hints, data, context, sqlBuilder);
                 }
             }
         } finally {
@@ -64,7 +65,7 @@ public class ChooseDynamicSql extends ArrayDynamicSql {
                 if (!sqlBuilder.lastSpaceCharacter()) {
                     sqlBuilder.appendSql(" ");
                 }
-                this.defaultDynamicSql.buildQuery(data, context, sqlBuilder);
+                this.defaultDynamicSql.buildQuery(hints, data, context, sqlBuilder);
             }
         }
     }

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.repository.rule;
+import net.hasor.dataql.Hints;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.dataql.sqlproc.repository.DynamicContext;
 
@@ -28,7 +29,7 @@ public class TextRule implements SqlBuildRule {
     public static final SqlBuildRule INSTANCE = new TextRule();
 
     @Override
-    public void executeRule(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder, String activeExpr, String ruleValue) {
+    public void executeRule(Hints hints, Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder, String activeExpr, String ruleValue) {
         sqlBuilder.appendSql(ruleValue);
     }
 

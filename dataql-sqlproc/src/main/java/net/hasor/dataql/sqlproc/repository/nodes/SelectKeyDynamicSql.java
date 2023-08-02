@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.repository.nodes;
+import net.hasor.dataql.Hints;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.dataql.sqlproc.repository.DynamicContext;
 
@@ -74,11 +75,11 @@ public class SelectKeyDynamicSql extends ArrayDynamicSql {
     }
 
     @Override
-    public void buildQuery(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException {
+    public void buildQuery(Hints hints, Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException {
         // ignore
     }
 
-    public void buildSqlQuery(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException {
-        super.buildQuery(data, context, sqlBuilder);
+    public void buildSqlQuery(Hints hints, Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException {
+        super.buildQuery(hints, data, context, sqlBuilder);
     }
 }

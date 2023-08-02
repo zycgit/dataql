@@ -1,5 +1,4 @@
-
-    SELECT * FROM BLOG
-    where  state = ?
-        
-            and title like ? 
+SELECT * FROM BLOG
+where  state = ?
+    
+        and title like ?

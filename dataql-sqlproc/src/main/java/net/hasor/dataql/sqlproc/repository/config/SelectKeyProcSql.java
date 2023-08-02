@@ -15,6 +15,7 @@
  */
 package net.hasor.dataql.sqlproc.repository.config;
 
+import net.hasor.dataql.Hints;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.dataql.sqlproc.repository.DynamicContext;
 import net.hasor.dataql.sqlproc.repository.MultipleResultsType;
@@ -25,8 +26,8 @@ import java.util.Map;
 
 /**
  * SelectKey SqlConfig
- * @version : 2021-06-19
  * @author 赵永春 (zyc@hasor.net)
+ * @version : 2021-06-19
  */
 public class SelectKeyProcSql extends QueryProcSql {
     private String keyProperty;
@@ -72,7 +73,7 @@ public class SelectKeyProcSql extends QueryProcSql {
     }
 
     @Override
-    public void buildQuery(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException {
-        ((SelectKeyDynamicSql) this.target).buildSqlQuery(data, context, sqlBuilder);
+    public void buildQuery(Hints hints, Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException {
+        ((SelectKeyDynamicSql) this.target).buildSqlQuery(hints, data, context, sqlBuilder);
     }
 }

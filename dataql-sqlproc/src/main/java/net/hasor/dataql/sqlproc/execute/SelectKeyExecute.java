@@ -17,6 +17,7 @@ package net.hasor.dataql.sqlproc.execute;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.convert.ConverterBean;
 import net.hasor.cobble.ref.BeanMap;
+import net.hasor.dataql.Hints;
 import net.hasor.dataql.sqlproc.repository.config.SelectKeyProcSql;
 
 import java.sql.Connection;
@@ -26,8 +27,8 @@ import java.util.Map;
 
 /**
  * 负责处理 SelectKey 的执行
- * @version : 2021-11-05
  * @author 赵永春 (zyc@hasor.net)
+ * @version : 2021-11-05
  */
 class SelectKeyExecute {
     private final SelectKeyProcSql keySqlConfig;
@@ -38,22 +39,22 @@ class SelectKeyExecute {
         this.selectKeyHandler = selectKeyHandler;
     }
 
-    public void processBefore(Connection conn, Map<String, Object> parameter, OpenPackageType resultType, ColumnCaseType columnCaseType) throws SQLException {
+    public void processBefore(Connection conn, Map<String, Object> parameter, Hints hints) throws SQLException {
         if (StringUtils.equalsIgnoreCase("BEFORE", this.keySqlConfig.getOrder())) {
-            this.processSelectKey(conn, parameter, true, resultType, columnCaseType);
+            this.processSelectKey(conn, parameter, true, hints);
         }
     }
 
-    public void processAfter(Connection conn, Map<String, Object> parameter, OpenPackageType resultType, ColumnCaseType columnCaseType) throws SQLException {
+    public void processAfter(Connection conn, Map<String, Object> parameter, Hints hints) throws SQLException {
         if (StringUtils.equalsIgnoreCase("AFTER", this.keySqlConfig.getOrder())) {
-            this.processSelectKey(conn, parameter, false, resultType, columnCaseType);
+            this.processSelectKey(conn, parameter, false, hints);
         }
     }
 
-    private void processSelectKey(Connection conn, Map<String, Object> parameter, boolean isBefore, OpenPackageType resultType, ColumnCaseType columnCaseType) throws SQLException {
+    private void processSelectKey(Connection conn, Map<String, Object> parameter, boolean isBefore, Hints hints) throws SQLException {
         String keyColumn = this.keySqlConfig.getKeyColumn();
         String keyProperty = this.keySqlConfig.getKeyProperty();
-        Object resultValue = this.selectKeyHandler.processSelectKey(conn, parameter, resultType, columnCaseType);
+        Object resultValue = this.selectKeyHandler.processSelectKey(conn, parameter, hints);
 
         if (resultValue instanceof List) {
             resultValue = ((List<?>) resultValue).get(0);

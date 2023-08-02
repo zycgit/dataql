@@ -22,35 +22,43 @@ import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 
 /**
  * 解析动态 SQL 配置
- * @version : 2021-06-05
  * @author 赵永春 (zyc@hasor.net)
+ * @version : 2021-06-05
  */
 public interface DynamicContext extends ClassLoaderProvider {
 
     DynamicSql findDynamic(String dynamicId);
 
-    default TypeHandler<?> findTypeHandler(Integer jdbcType) {
-        TypeHandlerRegistry typeRegistry = getTypeRegistry();
-        if (typeRegistry.hasTypeHandler(jdbcType)) {
-            return typeRegistry.getTypeHandler(jdbcType);
-        } else {
-            return null;
-        }
-    }
-
     default TypeHandler<?> findTypeHandler(Class<?> handlerType) {
-        TypeHandlerRegistry typeRegistry = getTypeRegistry();
-        if (typeRegistry.hasTypeHandler(handlerType)) {
-            return typeRegistry.getTypeHandler(handlerType);
+        if (TypeHandlerRegistry.hasTypeHandler(handlerType)) {
+            return TypeHandlerRegistry.getTypeHandler(handlerType);
         } else {
             return null;
         }
     }
 
-    default TypeHandler<?> findTypeHandler(Class<?> javaType, Integer jdbcType) {
+    default TypeHandler<?> findJdbcTypeHandler(int jdbcType) {
         TypeHandlerRegistry typeRegistry = getTypeRegistry();
-        if (typeRegistry.hasTypeHandler(javaType, jdbcType)) {
-            return typeRegistry.getTypeHandler(javaType, jdbcType);
+        if (typeRegistry.hasJdbcTypeHandler(jdbcType)) {
+            return typeRegistry.getJdbcTypeHandler(jdbcType);
+        } else {
+            return null;
+        }
+    }
+
+    default TypeHandler<?> findJavaTypeHandler(Class<?> javaType) {
+        TypeHandlerRegistry typeRegistry = getTypeRegistry();
+        if (typeRegistry.hasJavaTypeHandler(javaType)) {
+            return typeRegistry.getJavaTypeHandler(javaType);
+        } else {
+            return null;
+        }
+    }
+
+    default TypeHandler<?> findJavaTypeHandler(Class<?> javaType, int jdbcType) {
+        TypeHandlerRegistry typeRegistry = getTypeRegistry();
+        if (typeRegistry.hasJavaTypeHandler(javaType, jdbcType)) {
+            return typeRegistry.getJavaTypeHandler(javaType, jdbcType);
         } else {
             return null;
         }
@@ -58,10 +66,6 @@ public interface DynamicContext extends ClassLoaderProvider {
 
     default SqlBuildRule findRule(String ruleName) {
         return getRuleRegistry().findByName(ruleName);
-    }
-
-    default TypeHandler<?> defaultTypeHandler() {
-        return getTypeRegistry().getDefaultTypeHandler();
     }
 
     default TypeHandlerRegistry getTypeRegistry() {

@@ -15,6 +15,8 @@
  */
 package net.hasor.dataql.sqlproc.repository.rule;
 
+import net.hasor.dataql.sqlproc.repository.ognl.OgnlUtils;
+
 import java.sql.SQLException;
 import java.util.*;
 
@@ -63,11 +65,6 @@ class ParsedSql {
     }
 
     /**生成SQL*/
-    public String buildSql() {
-        return this.buildSql(null);
-    }
-
-    /**生成SQL*/
     public String buildSql(Map<String, Object> paramSource) {
         String originalSql = this.getOriginalSql();
         List<String> parameterNames = this.getParameterNames();
@@ -82,8 +79,15 @@ class ParsedSql {
             sqlToUse.append(originalSql, lastIndex, startIndex);
 
             if (paramSource != null) {
+                String paramName = parameterNames.get(i);
                 Object value = paramSource.get(parameterNames.get(i));
                 if (this.namedParameterCount > 0) {
+                    //处理类似：@{and, cfg_id = :p.cfg_id.array[1].name} 的情况
+                    if (value == null && paramName.contains(".")) {
+                        if (!paramName.contains("#") && !paramName.contains("@")) {
+                            value = OgnlUtils.evalOgnl(paramName, paramSource);
+                        }
+                    }
                     if (value != null && value.getClass().isArray()) {
                         value = Arrays.asList((Object[]) value);
                     }
@@ -128,6 +132,13 @@ class ParsedSql {
         }
         for (String paramName : parameterNames) {
             Object value = paramSource.get(paramName);
+            //处理类似：@{and, cfg_id = :p.cfg_id.array[1].name} 的情况
+            if (value == null && paramName.contains(".")) {
+                if (paramName.contains("#") || paramName.contains("@")) {
+                    throw new SQLException("expr string cannot include '#' or '@', paramExpr= " + paramName);// 禁止可以造成安全隐患的 #,@操作符
+                }
+                value = OgnlUtils.evalOgnl(paramName, paramSource);
+            }
             if (value != null && value.getClass().isArray()) {
                 value = Arrays.asList((Object[]) value);
             }

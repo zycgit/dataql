@@ -15,6 +15,7 @@
  */
 package net.hasor.dataql.sqlproc.repository.rule;
 import net.hasor.cobble.codec.MD5;
+import net.hasor.dataql.Hints;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.dataql.sqlproc.dialect.SqlArg;
 import net.hasor.dataql.sqlproc.dialect.SqlMode;
@@ -38,7 +39,7 @@ public class MD5Rule implements SqlBuildRule {
     private static final TypeHandler<?> typeHandler = TypeHandlerRegistry.DEFAULT.getTypeHandler(String.class);
 
     @Override
-    public void executeRule(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder, String activeExpr, String ruleValue) throws SQLException {
+    public void executeRule(Hints hints, Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder, String activeExpr, String ruleValue) throws SQLException {
         Object argValue = OgnlUtils.evalOgnl(ruleValue, data);
 
         if (argValue == null) {

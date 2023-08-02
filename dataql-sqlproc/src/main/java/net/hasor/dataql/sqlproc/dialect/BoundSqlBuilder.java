@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dialect;
+import net.hasor.cobble.StringUtils;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -71,5 +73,14 @@ public class BoundSqlBuilder implements BoundSql {
     @Override
     public SqlArg[] getArgs() {
         return this.argList.toArray(new SqlArg[0]);
+    }
+
+    @Override
+    public String toString() {
+        if (this.argList.isEmpty()) {
+            return this.getSqlString() + " [EMPTY]";
+        } else {
+            return this.getSqlString() + " [" + StringUtils.join(getArgs(), ",") + "]";
+        }
     }
 }

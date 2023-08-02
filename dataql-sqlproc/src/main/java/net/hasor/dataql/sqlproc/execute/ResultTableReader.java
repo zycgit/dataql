@@ -56,9 +56,9 @@ public class ResultTableReader {
             // TODO with oracle columnClassName is specifically customizes standard types, it specializes process.
             jdbcType = TypeHandlerRegistry.toSqlType(columnClassName);
             if (targetType != null) {
-                return this.handlerRegistry.getTypeHandler(targetType, jdbcType);
+                return this.handlerRegistry.getJavaTypeHandler(targetType, jdbcType);
             } else {
-                return this.handlerRegistry.getTypeHandler(jdbcType);
+                return this.handlerRegistry.getJdbcTypeHandler(jdbcType);
             }
         }
 
@@ -70,7 +70,7 @@ public class ResultTableReader {
                 /**/
             }
         }
-        TypeHandler<?> typeHandler = this.handlerRegistry.getTypeHandler(columnTypeClass, jdbcType);
+        TypeHandler<?> typeHandler = this.handlerRegistry.getJavaTypeHandler(columnTypeClass, jdbcType);
         if (typeHandler == null) {
             String message = "jdbcType=" + jdbcType + " ,columnTypeClass=" + columnTypeClass;
             throw new SQLException("no typeHandler is matched to any available " + message);

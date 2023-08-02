@@ -1,4 +1,5 @@
 package net.hasor.dataql.runtime.basic;
+import net.hasor.cobble.CollectionUtils;
 import net.hasor.dataql.AbstractTestResource;
 import net.hasor.dataql.HintValue;
 import net.hasor.dataql.Query;
@@ -141,4 +142,15 @@ public class DoUoRuntimeTest extends AbstractTestResource implements HintValue {
         assert ((ValueModel) dataModel).isNumber();
         assert ((ValueModel) dataModel).asString().equals("Infinity");
     }
+
+    @Test
+    public void do_ternaryExpr_1_Test() throws Exception {
+        Query compilerQL = compilerQL("return ${currentPage} == \"\" ? 2 : ${currentPage};");
+        DataModel model1 = compilerQL.execute(CollectionUtils.asMap("currentPage", "")).getData();
+        DataModel model2 = compilerQL.execute(CollectionUtils.asMap("currentPage", 22)).getData();
+
+        assert model1.isValue() && ((ValueModel) model1).isNumber() && ((ValueModel) model1).asString().equals("2");
+        assert model2.isValue() && ((ValueModel) model2).isNumber() && ((ValueModel) model2).asString().equals("22");
+    }
+
 }

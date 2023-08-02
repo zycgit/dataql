@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.repository;
+import net.hasor.dataql.Hints;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 
 import java.sql.SQLException;
@@ -28,11 +29,5 @@ public interface DynamicSql {
     /** 是否包含替换占位符，如果包含替换占位符那么不能使用批量模式 */
     boolean isHavePlaceholder();
 
-    void buildQuery(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException;
-
-    default BoundSqlBuilder buildQuery(Map<String, Object> data, DynamicContext context) throws SQLException {
-        BoundSqlBuilder fxBuilder = new BoundSqlBuilder();
-        this.buildQuery(data, context, fxBuilder);
-        return fxBuilder;
-    }
+    void buildQuery(Hints hints, Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException;
 }

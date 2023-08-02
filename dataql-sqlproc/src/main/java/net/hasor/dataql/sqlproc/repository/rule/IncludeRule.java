@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.repository.rule;
+import net.hasor.cobble.StringUtils;
+import net.hasor.dataql.Hints;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.dataql.sqlproc.repository.DynamicContext;
 import net.hasor.dataql.sqlproc.repository.DynamicSql;
@@ -23,25 +25,36 @@ import java.util.Map;
 
 /**
  * 效果和使用 `<include refid="sqlid"/>` 标签相同
- * @version : 2021-06-05
  * @author 赵永春 (zyc@hasor.net)
+ * @version : 2021-06-05
  */
 public class IncludeRule implements SqlBuildRule {
     public static final SqlBuildRule INSTANCE = new IncludeRule();
 
     @Override
-    public void executeRule(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder, String activeExpr, String ruleValue) throws SQLException {
+    public void executeRule(Hints hints, Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder, String activeExpr, String ruleValue) throws SQLException {
         ruleValue = ruleValue.trim();
         DynamicSql includeSql = context.findDynamic(ruleValue);
         if (includeSql == null) {
             throw new SQLException("include sql '" + ruleValue + "' not found.");
         }
-        BoundSqlBuilder includeBuilder = includeSql.buildQuery(data, context);
+
+        BoundSqlBuilder includeBuilder = new BoundSqlBuilder();
+        includeSql.buildQuery(hints, data, context, includeBuilder);
+
+        if (StringUtils.isBlank(includeBuilder.getSqlString())) {
+            return;
+        }
+
         if (!sqlBuilder.lastSpaceCharacter()) {
             sqlBuilder.appendSql(" ");
         }
+
         sqlBuilder.appendBuilder(includeBuilder);
-        sqlBuilder.appendSql(" ");
+
+        if (!includeBuilder.lastSpaceCharacter()) {
+            sqlBuilder.appendSql(" ");
+        }
     }
 
     @Override

@@ -1,4 +1,4 @@
-package net.hasor.dataql.sqlproc.dynamic;
+package net.hasor.dataql.sqlproc.repository;
 import net.hasor.dataql.sqlproc.repository.segment.DefaultSqlSegment;
 import net.hasor.dataql.sqlproc.repository.segment.SqlSegmentParser;
 import org.junit.Test;

@@ -361,16 +361,16 @@ public final class TypeHandlerRegistry {
         return Types.JAVA_OBJECT;
     }
 
-    public static boolean hasTypeHandlerType(Class<?> handlerType) {
+    public static boolean hasTypeHandler(Class<?> handlerType) {
         Objects.requireNonNull(handlerType, "handlerType is null.");
         return cachedSingleHandlers.containsKey(handlerType);
     }
 
-    public static TypeHandler<?> getTypeHandlerByType(Class<?> handlerType) {
+    public static TypeHandler<?> getTypeHandler(Class<?> handlerType) {
         return cachedSingleHandlers.get(handlerType);
     }
 
-    public boolean hasTypeHandler(Class<?> typeClass) {
+    public boolean hasJavaTypeHandler(Class<?> typeClass) {
         Objects.requireNonNull(typeClass, "typeClass is null.");
         if (typeClass.isEnum()) {
             return true;
@@ -382,29 +382,29 @@ public final class TypeHandlerRegistry {
         return this.javaTypeHandlerMap.containsKey(typeClass.getName());
     }
 
-    public boolean hasTypeHandler(String typeName) {
+    public boolean hasJavaTypeHandler(String typeName) {
         Objects.requireNonNull(typeName, "typeName is null.");
         return this.javaTypeHandlerMap.containsKey(typeName);
     }
 
-    public boolean hasTypeHandler(int jdbcType) {
+    public boolean hasJdbcTypeHandler(int jdbcType) {
         return this.jdbcTypeHandlerMap.containsKey(jdbcType);
     }
 
-    public boolean hasTypeHandler(Class<?> typeClass, int jdbcType) {
+    public boolean hasJavaTypeHandler(Class<?> typeClass, Integer jdbcType) {
         Objects.requireNonNull(typeClass, "typeClass is null.");
         if (typeClass.isEnum()) {
             return true;
         }
         Map<Integer, TypeHandler<?>> jdbcHandlerMap = this.typeHandlerMap.get(typeClass.getName());
-        if (jdbcHandlerMap != null) {
+        if (jdbcType != null && jdbcHandlerMap != null) {
             return jdbcHandlerMap.containsKey(jdbcType);
         }
 
         return typeClass.isAnnotationPresent(BindTypeHandler.class);
     }
 
-    public TypeHandler<?> getTypeHandler(String typeName) {
+    public TypeHandler<?> getJavaTypeHandler(String typeName) {
         if (StringUtils.isBlank(typeName)) {
             throw new NullPointerException("typeName is null.");
         }
@@ -412,7 +412,7 @@ public final class TypeHandlerRegistry {
         return (typeHandler != null) ? typeHandler : this.defaultTypeHandler;
     }
 
-    public TypeHandler<?> getTypeHandler(Class<?> typeClass) {
+    public TypeHandler<?> getJavaTypeHandler(Class<?> typeClass) {
         Objects.requireNonNull(typeClass, "typeClass is null.");
         String typeClassName = typeClass.getName();
         TypeHandler<?> typeHandler = this.javaTypeHandlerMap.get(typeClassName);
@@ -447,7 +447,7 @@ public final class TypeHandlerRegistry {
         return this.defaultTypeHandler;
     }
 
-    public TypeHandler<?> getTypeHandler(int jdbcType) {
+    public TypeHandler<?> getJdbcTypeHandler(Integer jdbcType) {
         TypeHandler<?> typeHandler = this.jdbcTypeHandlerMap.get(jdbcType);
         return (typeHandler != null) ? typeHandler : this.defaultTypeHandler;
     }
@@ -456,7 +456,7 @@ public final class TypeHandlerRegistry {
      * 根据 typeClass 和 jdbcType 的映射关系查找对应的 TypeHandler。
      *  - 如果不存在对应的 TypeHandler，那么通过 typeClass 单独查找。
      *  - 如果 typeClass 也没有注册那么返回 {@link #getDefaultTypeHandler()} */
-    public TypeHandler<?> getTypeHandler(Class<?> typeClass, int jdbcType) {
+    public TypeHandler<?> getJavaTypeHandler(Class<?> typeClass, Integer jdbcType) {
         if (typeClass == null) {
             return this.defaultTypeHandler;
         }
@@ -464,7 +464,7 @@ public final class TypeHandlerRegistry {
         // find by classType and jdbcType
         String typeClassName = typeClass.getName();
         Map<Integer, TypeHandler<?>> handlerMap = this.typeHandlerMap.get(typeClassName);
-        if (handlerMap != null) {
+        if (jdbcType != null && handlerMap != null) {
             TypeHandler<?> typeHandler = handlerMap.get(jdbcType);
             if (typeHandler != null) {
                 return typeHandler;
@@ -482,7 +482,7 @@ public final class TypeHandlerRegistry {
             synchronized (this) {
                 if (this.typeHandlerMap.containsKey(typeClassName)) {
                     handlerMap = this.typeHandlerMap.get(typeClassName);
-                    if (handlerMap.containsKey(jdbcType)) {
+                    if (jdbcType != null && handlerMap.containsKey(jdbcType)) {
                         return handlerMap.get(jdbcType);
                     }
                 }
@@ -512,39 +512,5 @@ public final class TypeHandlerRegistry {
 
     public UnknownTypeHandler getDefaultTypeHandler() {
         return this.defaultTypeHandler;
-    }
-
-    /** 一个工具方法，会根据 value Type 自动的选择对应的 TypeHandler */
-    public void setParameterValue(final PreparedStatement ps, final int parameterPosition, final Object value) throws SQLException {
-        if (value == null) {
-            ps.setObject(parameterPosition, null);
-            return;
-        }
-
-        if (value instanceof MappedArg) {
-            Integer argType = ((MappedArg) value).getJdbcType();
-            TypeHandler argHandler = ((MappedArg) value).getTypeHandler();
-            Object argValue = ((MappedArg) value).getValue();
-
-            if (argType == null && argValue != null) {
-                argType = TypeHandlerRegistry.toSqlType(argValue.getClass());
-            }
-
-            if (argHandler == null && argValue != null) {
-                argHandler = this.getTypeHandler(argValue.getClass());
-            }
-
-            if (argHandler != null) {
-                argHandler.setParameter(ps, parameterPosition, argValue, argType);
-                return;
-            } else if (argValue == null) {
-                ps.setObject(parameterPosition, null);
-                return;
-            }
-        }
-
-        Class<?> valueClass = value.getClass();
-        TypeHandler<Object> typeHandler = (TypeHandler<Object>) getTypeHandler(valueClass);
-        typeHandler.setParameter(ps, parameterPosition, value, toSqlType(valueClass));
     }
 }

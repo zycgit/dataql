@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.dynamic;
+package net.hasor.dataql.sqlproc.repository;
 import net.hasor.cobble.ResourcesUtils;
 import net.hasor.cobble.io.IOUtils;
-import net.hasor.dbvisitor.dal.dynamic.DynamicParser;
-import net.hasor.dbvisitor.dal.dynamic.DynamicSql;
-import net.hasor.dbvisitor.dialect.SqlBuilder;
+import net.hasor.dataql.Hints;
+import net.hasor.dataql.runtime.HintsSet;
+import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
+import net.hasor.dataql.sqlproc.repository.config.QueryProcSql;
 import net.hasor.test.dataql.sqlproc.dto.CharacterSensitiveEnum;
 import net.hasor.test.dataql.sqlproc.dto.LicenseOfCodeEnum;
 import org.junit.Test;
@@ -27,7 +28,12 @@ import java.io.IOException;
 import java.util.*;
 
 public class CaseXmlTest {
-    private final DynamicParser xmlParser = new DynamicParser();
+    private static final ProcSqlParser xmlParser = new ProcSqlParser();
+    private static final Hints         hints     = new HintsSet();
+
+    static {
+        hints.setHint("hasXml", true);
+    }
 
     private String loadString(String queryConfig) throws IOException {
         return IOUtils.readToString(ResourcesUtils.getResourceAsStream(queryConfig), "UTF-8");
@@ -36,7 +42,7 @@ public class CaseXmlTest {
     @Test
     public void caseTest_01() throws Throwable {
         String queryConfig = loadString("/dataql_dynamic/testcase/case_01.xml");
-        DynamicSql parseXml = xmlParser.parseDynamicSql(queryConfig);
+        QueryProcSql parseXml = xmlParser.parseDynamicSql(queryConfig, hints);
         //
         String querySql1 = loadString("/dataql_dynamic/testcase/case_01.xml.sql_1");
         Map<String, Object> data1 = new HashMap<>();
@@ -44,13 +50,15 @@ public class CaseXmlTest {
         data1.put("label", new ArrayList<>(Arrays.asList(LicenseOfCodeEnum.Private, LicenseOfCodeEnum.GPLv3)));
         data1.put("state", new ArrayList<>(Collections.singletonList(CharacterSensitiveEnum.A)));
         data1.put("consoleJobId", "123");
-        SqlBuilder builder1 = parseXml.buildQuery(data1, null);
-        assert builder1.getSqlString().trim().equals(querySql1.trim());
-        assert builder1.getArgs()[0].equals("33322");
-        assert builder1.getArgs()[1].equals(LicenseOfCodeEnum.Private);
-        assert builder1.getArgs()[2].equals(LicenseOfCodeEnum.GPLv3);
-        assert builder1.getArgs()[3].equals(CharacterSensitiveEnum.A);
-        assert builder1.getArgs()[4].equals("123");
-        assert builder1.getArgs()[5] == null;
+
+        BoundSqlBuilder sqlBuilder = new BoundSqlBuilder();
+        parseXml.buildQuery(hints, data1, new TextBuilderContext(), sqlBuilder);
+        assert sqlBuilder.getSqlString().trim().equals(querySql1.trim());
+        assert sqlBuilder.getArgs()[0].getValue().equals("33322");
+        assert sqlBuilder.getArgs()[1].getValue().equals(LicenseOfCodeEnum.Private);
+        assert sqlBuilder.getArgs()[2].getValue().equals(LicenseOfCodeEnum.GPLv3);
+        assert sqlBuilder.getArgs()[3].getValue().equals(CharacterSensitiveEnum.A);
+        assert sqlBuilder.getArgs()[4].getValue().equals("123");
+        assert sqlBuilder.getArgs()[5].getValue() == null;
     }
 }

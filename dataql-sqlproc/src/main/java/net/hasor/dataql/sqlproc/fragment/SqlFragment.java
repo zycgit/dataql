@@ -29,9 +29,7 @@ import net.hasor.dataql.sqlproc.JdbcUtils;
 import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dialect.PageDialect;
 import net.hasor.dataql.sqlproc.dialect.SqlDialectRegister;
-import net.hasor.dataql.sqlproc.execute.ColumnCaseType;
 import net.hasor.dataql.sqlproc.execute.ExecuteProxy;
-import net.hasor.dataql.sqlproc.execute.OpenPackageType;
 import net.hasor.dataql.sqlproc.repository.*;
 import net.hasor.dataql.sqlproc.repository.config.QueryProcSql;
 import net.hasor.dataql.sqlproc.spi.LookupConnectionListener;
@@ -326,9 +324,7 @@ public class SqlFragment implements FragmentProcess, DynamicContext {
 
         try (Connection con = fetchConnection(hints)) {
             PageDialect dialect = fetchDialect(hints, con);
-            OpenPackageType resultType = OpenPackageType.valueOfCode(hints.getOrDefault(SqlHintNames.FRAGMENT_SQL_OPEN_PACKAGE.name(), SqlHintNames.FRAGMENT_SQL_OPEN_PACKAGE.getDefaultVal()).toString());
-            ColumnCaseType columnCaseType = ColumnCaseType.valueOfCode(hints.getOrDefault(SqlHintNames.FRAGMENT_SQL_COLUMN_CASE.name(), SqlHintNames.FRAGMENT_SQL_COLUMN_CASE.getDefaultVal()).toString());
-            return execute.execute(con, params, false, false, null, dialect, resultType, columnCaseType);
+            return execute.execute(con, params, hints, false, false, null, dialect);
         }
     }
 }

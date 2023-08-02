@@ -15,6 +15,7 @@
  */
 package net.hasor.dataql.sqlproc.repository.nodes;
 import net.hasor.cobble.StringUtils;
+import net.hasor.dataql.Hints;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.dataql.sqlproc.repository.DynamicContext;
 import net.hasor.dataql.sqlproc.repository.DynamicSql;
@@ -49,8 +50,8 @@ public class TextDynamicSql implements DynamicSql {
     }
 
     @Override
-    public void buildQuery(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException {
-        this.dynamicSql.buildQuery(data, context, sqlBuilder);
+    public void buildQuery(Hints hints, Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException {
+        this.dynamicSql.buildQuery(hints, data, context, sqlBuilder);
     }
 
     protected DynamicSql parserQuery(String fragmentString) {

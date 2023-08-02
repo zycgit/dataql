@@ -20,9 +20,9 @@ import net.hasor.dataql.parser.ast.value.PrimitiveVariable;
 import net.hasor.dataql.runtime.QueryHelper;
 import net.hasor.utils.ResourcesUtils;
 import net.hasor.utils.StringUtils;
-import net.hasor.utils.io.input.AutoCloseInputStream;
 import net.hasor.utils.io.FileUtils;
 import net.hasor.utils.io.IOUtils;
+import net.hasor.utils.io.input.AutoCloseInputStream;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -46,8 +46,8 @@ import java.util.Set;
 
 /**
  * Parses DataQL query files {@code *.ql} and transforms them into Java source files.
- * @version : 2020-02-09
  * @author 赵永春 (zyc@hasor.net)
+ * @version : 2020-02-09
  */
 @Mojo(name = "dataql", defaultPhase = LifecyclePhase.GENERATE_SOURCES, threadSafe = true,//
         requiresDependencyResolution = ResolutionScope.COMPILE)
@@ -97,7 +97,7 @@ public class QueryMojo extends AbstractMojo {
     /**
      * The main entry point for this Mojo, it is responsible for converting
      * dataql query into the target language specified.
-     * @exception MojoExecutionException if a configuration or query error causes the code generation process to fail
+     * @throws MojoExecutionException if a configuration or query error causes the code generation process to fail
      */
     @Override
     public void execute() throws MojoExecutionException {

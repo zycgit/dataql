@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.repository.rule;
+import net.hasor.dataql.Hints;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.dataql.sqlproc.repository.DynamicContext;
 
@@ -24,13 +25,14 @@ import static net.hasor.dataql.sqlproc.repository.ognl.OgnlUtils.evalOgnl;
 
 /**
  * 动态 SQL 中定义的规则。
- * @version : 2021-06-05
  * @author 赵永春 (zyc@hasor.net)
+ * @version : 2021-06-05
  */
 public interface SqlBuildRule {
-    default boolean test(Map<String, Object> data, DynamicContext context, String activeExpr) {
+
+    default boolean test(Hints hints, Map<String, Object> data, DynamicContext context, String activeExpr) {
         return Boolean.TRUE.equals(evalOgnl(activeExpr, data));
     }
 
-    void executeRule(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder, String activeExpr, String ruleValue) throws SQLException;
+    void executeRule(Hints hints, Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder, String activeExpr, String ruleValue) throws SQLException;
 }

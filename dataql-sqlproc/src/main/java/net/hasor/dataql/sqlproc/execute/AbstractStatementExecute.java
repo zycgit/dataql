@@ -18,6 +18,8 @@ import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.io.IOUtils;
 import net.hasor.cobble.logging.Logger;
 import net.hasor.cobble.logging.LoggerFactory;
+import net.hasor.dataql.Hints;
+import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dialect.*;
 import net.hasor.dataql.sqlproc.execute.page.Page;
 import net.hasor.dataql.sqlproc.repository.DynamicContext;
@@ -53,13 +55,13 @@ public abstract class AbstractStatementExecute<T> {
         return this.context;
     }
 
-    public final T execute(Connection conn, QueryProcSql dynamicSql, Map<String, Object> data,  //
-            boolean pageResult, boolean pageCount, Page pageInfo, PageDialect dialect,          //
-            OpenPackageType resultType, ColumnCaseType columnCaseType) throws SQLException {
+    public final T execute(Connection conn, QueryProcSql dynamicSql, Map<String, Object> data, Hints hints, //
+            boolean pageResult, boolean pageCount, Page pageInfo, PageDialect dialect) throws SQLException {
 
-        BoundSqlBuilder queryBuilder = dynamicSql.buildQuery(data, this.context);
+        BoundSqlBuilder queryBuilder = new BoundSqlBuilder();
+        dynamicSql.buildQuery(hints, data, this.context, queryBuilder);
+
         ExecuteInfo info = new ExecuteInfo();
-
         info.pageInfo = pageInfo;
         info.timeout = dynamicSql.getTimeout();
         info.fetchSize = dynamicSql.getFetchSize();
@@ -68,8 +70,8 @@ public abstract class AbstractStatementExecute<T> {
         info.pageDialect = dialect;
         info.pageResult = pageResult;
         info.pageCount = pageCount;
-        info.packageType = resultType;
-        info.columnCaseType = columnCaseType;
+        info.packageType = OpenPackageType.valueOfCode(hints.getOrDefault(SqlHintNames.FRAGMENT_SQL_OPEN_PACKAGE.name(), SqlHintNames.FRAGMENT_SQL_OPEN_PACKAGE.getDefaultVal()).toString());
+        info.columnCaseType = ColumnCaseType.valueOfCode(hints.getOrDefault(SqlHintNames.FRAGMENT_SQL_COLUMN_CASE.name(), SqlHintNames.FRAGMENT_SQL_COLUMN_CASE.getDefaultVal()).toString());
         info.data = data;
         info.hasSelectKey = dynamicSql.getSelectKey() != null;
         info.resultSetType = dynamicSql.getResultSetType();
@@ -126,7 +128,7 @@ public abstract class AbstractStatementExecute<T> {
                     sqlArg.setTypeHandler(getContext().getTypeRegistry().getDefaultTypeHandler());
                     sqlArg.setJdbcType(Types.NULL);
                 } else {
-                    sqlArg.setTypeHandler(getContext().findTypeHandler(o.getClass()));
+                    sqlArg.setTypeHandler(getContext().findJavaTypeHandler(o.getClass()));
                     sqlArg.setJdbcType(TypeHandlerRegistry.toSqlType(o.getClass()));
                 }
                 return sqlArg;

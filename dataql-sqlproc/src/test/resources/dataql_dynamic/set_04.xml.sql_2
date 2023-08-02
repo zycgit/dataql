@@ -1,8 +1,3 @@
+UPDATE alert_config_detail
 
-    UPDATE
-    alert_config_detail
-    
-    WHERE
-    id = ?
-    AND
-    uid = ?
+WHERE id = ? AND uid = ?

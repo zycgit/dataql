@@ -16,6 +16,7 @@
 package net.hasor.dataql.sqlproc.repository.nodes;
 import net.hasor.cobble.ArrayUtils;
 import net.hasor.cobble.StringUtils;
+import net.hasor.dataql.Hints;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.dataql.sqlproc.repository.DynamicContext;
 
@@ -57,9 +58,9 @@ public class TrimDynamicSql extends ArrayDynamicSql {
     }
 
     @Override
-    public void buildQuery(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException {
+    public void buildQuery(Hints hints, Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException {
         BoundSqlBuilder tempDalSqlBuilder = new BoundSqlBuilder();
-        super.buildQuery(data, context, tempDalSqlBuilder);
+        super.buildQuery(hints, data, context, tempDalSqlBuilder);
         //
         String childrenSql = tempDalSqlBuilder.getSqlString().trim();
         if (StringUtils.isNotBlank(childrenSql)) {

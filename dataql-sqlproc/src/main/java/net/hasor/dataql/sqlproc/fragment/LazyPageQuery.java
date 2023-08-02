@@ -17,11 +17,8 @@ package net.hasor.dataql.sqlproc.fragment;
 import net.hasor.cobble.convert.ConverterUtils;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.UdfSourceAssembly;
-import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dialect.PageDialect;
-import net.hasor.dataql.sqlproc.execute.ColumnCaseType;
 import net.hasor.dataql.sqlproc.execute.ExecuteProxy;
-import net.hasor.dataql.sqlproc.execute.OpenPackageType;
 import net.hasor.dataql.sqlproc.execute.page.Page;
 import net.hasor.dataql.sqlproc.execute.page.PageObject;
 import net.hasor.dataql.sqlproc.execute.page.PageResult;
@@ -35,8 +32,8 @@ import static net.hasor.dataql.sqlproc.SqlHintNames.FRAGMENT_SQL_QUERY_BY_PAGE_N
 
 /**
  * 翻页数据，同时负责调用分页的SQL执行分页查询
- * @version : 2014年10月25日
  * @author 赵永春 zyc@hasor.net
+ * @version : 2014年10月25日
  */
 class LazyPageQuery implements UdfSourceAssembly {
 
@@ -133,13 +130,11 @@ class LazyPageQuery implements UdfSourceAssembly {
     }
 
     private PageResult<Object> fetchData(Page pageInfo, boolean onlyPageCount) throws SQLException {
-        try (Connection con = this.fragment.fetchConnection(hints)) {
-            PageDialect dialect = this.fragment.fetchDialect(hints, con);
-            OpenPackageType resultType = OpenPackageType.valueOfCode(hints.getOrDefault(SqlHintNames.FRAGMENT_SQL_OPEN_PACKAGE.name(), SqlHintNames.FRAGMENT_SQL_OPEN_PACKAGE.getDefaultVal()).toString());
-            ColumnCaseType columnCaseType = ColumnCaseType.valueOfCode(hints.getOrDefault(SqlHintNames.FRAGMENT_SQL_COLUMN_CASE.name(), SqlHintNames.FRAGMENT_SQL_COLUMN_CASE.getDefaultVal()).toString());
+        try (Connection con = this.fragment.fetchConnection(this.hints)) {
+            PageDialect dialect = this.fragment.fetchDialect(this.hints, con);
 
             boolean usePageCnt = pageInfo.getTotalCount() <= 0;
-            Object oriResult = this.execute.execute(con, this.params, !onlyPageCount, usePageCnt, pageInfo, dialect, resultType, columnCaseType);
+            Object oriResult = this.execute.execute(con, this.params, this.hints, !onlyPageCount, usePageCnt, pageInfo, dialect);
             this.pageResult = (PageResult<Object>) oriResult;
             return this.pageResult;
         }

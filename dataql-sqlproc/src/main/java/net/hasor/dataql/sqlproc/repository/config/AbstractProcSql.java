@@ -15,6 +15,7 @@
  */
 package net.hasor.dataql.sqlproc.repository.config;
 import net.hasor.cobble.StringUtils;
+import net.hasor.dataql.Hints;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.dataql.sqlproc.repository.DynamicContext;
 import net.hasor.dataql.sqlproc.repository.DynamicSql;
@@ -32,8 +33,8 @@ import java.util.Map;
 
 /**
  * All DML SqlConfig
- * @version : 2021-06-19
  * @author 赵永春 (zyc@hasor.net)
+ * @version : 2021-06-19
  */
 public abstract class AbstractProcSql implements DynamicSql {
     protected final DynamicSql       target;
@@ -99,8 +100,8 @@ public abstract class AbstractProcSql implements DynamicSql {
     }
 
     @Override
-    public void buildQuery(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException {
-        this.target.buildQuery(data, context, sqlBuilder);
+    public void buildQuery(Hints hints, Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) throws SQLException {
+        this.target.buildQuery(hints, data, context, sqlBuilder);
     }
 
     public SelectKeyProcSql getSelectKey() {

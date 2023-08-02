@@ -17,6 +17,7 @@ package net.hasor.dataql.sqlproc.repository.rule;
 import net.hasor.cobble.NumberUtils;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.ref.LinkedCaseInsensitiveMap;
+import net.hasor.dataql.Hints;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.dataql.sqlproc.dialect.SqlArg;
 import net.hasor.dataql.sqlproc.dialect.SqlMode;
@@ -31,8 +32,8 @@ import java.util.Map;
 
 /**
  * 动态参数规则，负责动态 SQL 中 #{} 的解析。
- * @version : 2021-06-05
  * @author 赵永春 (zyc@hasor.net)
+ * @version : 2021-06-05
  */
 public class ArgRule implements SqlBuildRule {
     public static final ArgRule INSTANCE          = new ArgRule();
@@ -111,7 +112,7 @@ public class ArgRule implements SqlBuildRule {
     }
 
     @Override
-    public void executeRule(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder, String activeExpr, String ruleValue) {
+    public void executeRule(Hints hints, Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder, String activeExpr, String ruleValue) {
         String[] testSplit = ruleValue.split(",");
         if (testSplit.length > 6 || testSplit.length == 0) {
             throw new IllegalArgumentException("analysisSQL failed, format error -> '#{valueExpr [,mode= IN|OUT|INOUT] [,jdbcType=INT] [,javaType=java.lang.String] [,typeHandler=YouTypeHandlerClassName]}'");
@@ -121,10 +122,10 @@ public class ArgRule implements SqlBuildRule {
         String expr = noExpr ? "" : testSplit[0];
         Map<String, String> config = ArgRule.INSTANCE.parserConfig(testSplit, noExpr ? 0 : 1, testSplit.length);
 
-        executeRule(data, context, sqlBuilder, expr, config);
+        executeRule(hints, data, context, sqlBuilder, expr, config);
     }
 
-    public void executeRule(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder, String expr, Map<String, String> config) {
+    public void executeRule(Hints hints, Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder, String expr, Map<String, String> config) {
         SqlMode sqlMode = convertSqlMode((config != null) ? config.get(CFG_KEY_MODE) : null);
         Integer jdbcType = convertJdbcType((config != null) ? config.get(CFG_KEY_JDBC_TYPE) : null);
         Class<?> javaType = convertJavaType(context, (config != null) ? config.get(CFG_KEY_JAVA_TYPE) : null);
@@ -144,11 +145,11 @@ public class ArgRule implements SqlBuildRule {
 
         if (typeHandler == null) {
             if (javaType != null && jdbcType != null) {
-                typeHandler = context.findTypeHandler(javaType, jdbcType);
+                typeHandler = context.findJavaTypeHandler(javaType, jdbcType);
             } else if (javaType != null) {
-                typeHandler = context.findTypeHandler(javaType);
+                typeHandler = context.findJavaTypeHandler(javaType);
             } else if (jdbcType != null) {
-                typeHandler = context.findTypeHandler(jdbcType);
+                typeHandler = context.findJdbcTypeHandler(jdbcType);
             }
         }
         if (typeHandler == null) {

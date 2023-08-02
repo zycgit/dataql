@@ -23,13 +23,13 @@ import java.security.NoSuchAlgorithmException;
 
 /**
  * Parses DataQL query files {@code *.ql} and transforms them into Java source files.
- * @version : 2020-02-09
  * @author 赵永春 (zyc@hasor.net)
+ * @version : 2020-02-09
  */
 class MojoUtils {
     /**
      * Creates the MD5 checksum for the given file.
-     * @param   file  the file.
+     * @param file the file.
      * @return the checksum.
      */
     public static byte[] checksum(File file) throws IOException {
@@ -59,9 +59,8 @@ class MojoUtils {
      * path to the named query file in relative terms to the {@code sourceDirectory}.
      * This will then allow DataQL to produce output relative to the base of the output
      * directory and reflect the input organization of the query files.
-     *
-     * @param   sourceDirectory  The source directory {@link File} object
-     * @param   queryFile  The full path to the input query file
+     * @param sourceDirectory The source directory {@link File} object
+     * @param queryFile The full path to the input query file
      * @return The path to the query file relative to the source directory
      */
     public static String findSourceSubdir(File sourceDirectory, File queryFile) {

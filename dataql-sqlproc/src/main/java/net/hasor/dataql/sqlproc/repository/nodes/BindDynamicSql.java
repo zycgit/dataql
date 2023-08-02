@@ -15,6 +15,7 @@
  */
 package net.hasor.dataql.sqlproc.repository.nodes;
 import net.hasor.cobble.StringUtils;
+import net.hasor.dataql.Hints;
 import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
 import net.hasor.dataql.sqlproc.repository.DynamicContext;
 import net.hasor.dataql.sqlproc.repository.DynamicSql;
@@ -42,7 +43,7 @@ public class BindDynamicSql implements DynamicSql {
     }
 
     @Override
-    public void buildQuery(Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) {
+    public void buildQuery(Hints hints, Map<String, Object> data, DynamicContext context, BoundSqlBuilder sqlBuilder) {
         if (StringUtils.isNotBlank(this.name)) {
             Object testExprResult = OgnlUtils.evalOgnl(this.valueExpr, data);
             data.put(this.name, testExprResult);

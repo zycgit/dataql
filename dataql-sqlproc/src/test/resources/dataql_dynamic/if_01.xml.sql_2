@@ -1,10 +1,4 @@
+select * from PROJECT_INFO
+where status = 2
 
-    select
-    * 
-    from
-    PROJECT_INFO
-    where 1=1
-    and status = 2
-    
-    order by
-    name asc
+order by name asc

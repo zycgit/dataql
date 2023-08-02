@@ -70,7 +70,7 @@ public class UnknownTypeHandler extends AbstractTypeHandler<Object> {
         if (parameter == null) {
             handler = OBJECT_TYPE_HANDLER;
         } else {
-            handler = this.typeHandlerRegistry.getTypeHandler(parameter.getClass(), jdbcType);
+            handler = this.typeHandlerRegistry.getJavaTypeHandler(parameter.getClass(), jdbcType);
             // check if handler is null (issue #270) <- mybatis
             if (handler == null || handler instanceof UnknownTypeHandler) {
                 handler = OBJECT_TYPE_HANDLER;
@@ -107,11 +107,11 @@ public class UnknownTypeHandler extends AbstractTypeHandler<Object> {
         Integer jdbcType = safeGetJdbcTypeForColumn(rsmd, columnIndex);
         Class<?> javaType = safeGetClassForColumn(rsmd, columnIndex);
         if (javaType != null && jdbcType != null) {
-            handler = this.typeHandlerRegistry.getTypeHandler(javaType, jdbcType);
+            handler = this.typeHandlerRegistry.getJavaTypeHandler(javaType, jdbcType);
         } else if (javaType != null) {
-            handler = this.typeHandlerRegistry.getTypeHandler(javaType);
+            handler = this.typeHandlerRegistry.getJavaTypeHandler(javaType);
         } else if (jdbcType != null) {
-            handler = this.typeHandlerRegistry.getTypeHandler(jdbcType);
+            handler = this.typeHandlerRegistry.getJdbcTypeHandler(jdbcType);
         }
         return handler;
     }
