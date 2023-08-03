@@ -30,26 +30,17 @@ import static net.hasor.dataql.sqlproc.utils.TestUtils.*;
  */
 public class DsUtils {
     public static String MYSQL_SCHEMA_NAME = "devtester";
-    public static String MYSQL_JDBC_URL    = "jdbc:mysql://127.0.0.1:3306/devtester?allowMultiQueries=true";
-    public static String PG_JDBC_URL       = "jdbc:postgresql://127.0.0.1:5432/postgres";
-    public static String ORACLE_JDBC_URL   = "jdbc:oracle:thin:@127.0.0.1:1521:xe";
+    public static String MYSQL_JDBC_URL    = "jdbc:mysql://127.0.0.1:13306/devtester?allowMultiQueries=true";
+    public static String PG_JDBC_URL       = "jdbc:postgresql://127.0.0.1:15432/postgres";
+    public static String ORACLE_JDBC_URL   = "jdbc:oracle:thin:@127.0.0.1:11521:xe";
 
     private static void initH2(JdbcTemplate jdbcTemplate) {
         try {
             jdbcTemplate.execute("drop all objects delete files;");
-            jdbcTemplate.loadSQL("dbvisitor_coverage/tb_user_for_h2.sql");
-            jdbcTemplate.loadSQL("dbvisitor_coverage/all_types/tb_h2_types.sql");
-            jdbcTemplate.loadSQL("dbvisitor_coverage/auto_id_for_h2.sql");
-            //
-            jdbcTemplate.loadSQL("/dbvisitor_scene/user_for_h2.sql");
-            jdbcTemplate.execute("insert into user values (1, 'mali', 26, now());");
-            jdbcTemplate.execute("insert into user values (2, 'dative', 32, now());");
-            jdbcTemplate.execute("insert into user values (3, 'jon wes', 41, now());");
-            jdbcTemplate.execute("insert into user values (4, 'mary', 66, now());");
-            jdbcTemplate.execute("insert into user values (5, 'matt', 25, now());");
-
+            jdbcTemplate.loadSQL("dataql_sqltypes/tb_h2_types.sql");
             jdbcTemplate.execute("create sequence test_seq;");
         } catch (Exception ignored) {
+            ignored.printStackTrace();
         }
     }
 
@@ -59,16 +50,7 @@ public class DsUtils {
             jdbcTemplate.execute("drop database devtester;");
             jdbcTemplate.execute("create database devtester;");
             jdbcTemplate.execute("use devtester;");
-            jdbcTemplate.loadSQL("dbvisitor_coverage/tb_user_for_mysql.sql");
-            jdbcTemplate.loadSQL("dbvisitor_coverage/all_types/tb_mysql_types.sql");
-            jdbcTemplate.loadSQL("dbvisitor_coverage/auto_id_for_mysql.sql");
-            //
-            jdbcTemplate.loadSQL("/dbvisitor_scene/user_for_mysql.sql");
-            jdbcTemplate.execute("insert into user values (1, 'mali', 26, now());");
-            jdbcTemplate.execute("insert into user values (2, 'dative', 32, now());");
-            jdbcTemplate.execute("insert into user values (3, 'jon wes', 41, now());");
-            jdbcTemplate.execute("insert into user values (4, 'mary', 66, now());");
-            jdbcTemplate.execute("insert into user values (5, 'matt', 25, now());");
+            jdbcTemplate.loadSQL("dataql_sqltypes/tb_mysql_types.sql");
         } catch (Exception ignored) {
         }
     }
@@ -84,11 +66,6 @@ public class DsUtils {
         Connection conn = ds.getConnection();
         JdbcTemplate jdbcTemplate = new JdbcTemplate(conn);
         initH2(jdbcTemplate);
-
-        jdbcTemplate.executeUpdate(INSERT_ARRAY, arrayForData1());
-        jdbcTemplate.executeUpdate(INSERT_ARRAY, arrayForData2());
-        jdbcTemplate.executeUpdate(INSERT_ARRAY, arrayForData3());
-
         return conn;
     }
 

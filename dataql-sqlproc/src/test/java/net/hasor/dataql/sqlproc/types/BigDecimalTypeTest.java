@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
+import net.hasor.dataql.sqlproc.types.handler.BigDecimalTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
+import net.hasor.dataql.sqlproc.utils.TypeHandlerBridge;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
-import net.hasor.dbvisitor.types.handler.BigDecimalTypeHandler;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -34,14 +35,15 @@ public class BigDecimalTypeTest {
         try (Connection c = DsUtils.h2Conn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_decimal_1) values (1234567890.1234567890);");
-            List<BigDecimal> dat1 = jdbcTemplate.queryForList("select c_decimal_1 from tb_h2_types where c_decimal_1 is not null limit 1;", (rs, rowNum) -> {
+            c.createStatement().executeUpdate("insert into tb_h2_types (c_numeric_10) values (1234567890.1234567890);");
+            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_numeric_10) values (1234567890.1234567890);");
+            List<BigDecimal> dat1 = jdbcTemplate.queryForList("select c_numeric_10 from tb_h2_types where c_numeric_10 is not null limit 1;", (rs, rowNum) -> {
                 return new BigDecimalTypeHandler().getResult(rs, 1);
             });
             assert dat1.get(0).toString().equals("1234567890.1234567890");
 
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_decimal_2) values (1234567890.1234567890);");
-            List<BigDecimal> dat2 = jdbcTemplate.queryForList("select c_decimal_2 from tb_h2_types where c_decimal_2 is not null limit 1;", (rs, rowNum) -> {
+            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_numeric_2) values (1234567890.1234567890);");
+            List<BigDecimal> dat2 = jdbcTemplate.queryForList("select c_numeric_2 from tb_h2_types where c_numeric_2 is not null limit 1;", (rs, rowNum) -> {
                 return new BigDecimalTypeHandler().getResult(rs, 1);
             });
             assert dat2.get(0).toString().equals("1234567890.12");
@@ -53,15 +55,15 @@ public class BigDecimalTypeTest {
         try (Connection c = DsUtils.h2Conn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_decimal_1) values (1234567890.1234567890);");
-            List<BigDecimal> dat1 = jdbcTemplate.queryForList("select c_decimal_1 from tb_h2_types where c_decimal_1 is not null limit 1;", (rs, rowNum) -> {
-                return new BigDecimalTypeHandler().getResult(rs, "c_decimal_1");
+            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_numeric_10) values (1234567890.1234567890);");
+            List<BigDecimal> dat1 = jdbcTemplate.queryForList("select c_numeric_10 from tb_h2_types where c_numeric_10 is not null limit 1;", (rs, rowNum) -> {
+                return new BigDecimalTypeHandler().getResult(rs, "c_numeric_10");
             });
             assert dat1.get(0).toString().equals("1234567890.1234567890");
 
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_decimal_2) values (1234567890.1234567890);");
-            List<BigDecimal> dat2 = jdbcTemplate.queryForList("select c_decimal_2 from tb_h2_types where c_decimal_2 is not null limit 1;", (rs, rowNum) -> {
-                return new BigDecimalTypeHandler().getResult(rs, "c_decimal_2");
+            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_numeric_2) values (1234567890.1234567890);");
+            List<BigDecimal> dat2 = jdbcTemplate.queryForList("select c_numeric_2 from tb_h2_types where c_numeric_2 is not null limit 1;", (rs, rowNum) -> {
+                return new BigDecimalTypeHandler().getResult(rs, "c_numeric_2");
             });
             assert dat2.get(0).toString().equals("1234567890.12");
         }
@@ -89,7 +91,7 @@ public class BigDecimalTypeTest {
             jdbcTemplate.execute("create procedure proc_decimal(out p_out decimal(10,2)) begin set p_out=123.123; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_decimal(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.NUMERIC.getVendorTypeNumber(), new BigDecimalTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.NUMERIC.getVendorTypeNumber(), new TypeHandlerBridge<>(new BigDecimalTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof BigDecimal;

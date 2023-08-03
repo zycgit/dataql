@@ -2,7 +2,7 @@ param1 = #{abc}
 <!-- 参数化 -->
 param2 = #{futures, mode = out,
             typeHandler=net.hasor.dataql.sqlproc.types.handler.BlobAsBytesTypeHandler,
-            javaType=net.hasor.test.dataql.sqlproc.dto.TB_User,
+            javaType=net.hasor.test.dataql.sqlproc.dto.TbUser,
             jdbcType=INT}
 <!-- SQL 注入 -->
 param3 = ${orderBy}

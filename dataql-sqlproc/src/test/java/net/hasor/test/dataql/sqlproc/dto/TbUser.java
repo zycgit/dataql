@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 package net.hasor.test.dataql.sqlproc.dto;
-import net.hasor.dbvisitor.mapping.Column;
-import net.hasor.dbvisitor.mapping.Table;
-
 import java.util.Date;
 
 /**
@@ -24,21 +21,13 @@ import java.util.Date;
  * @version : 2013-12-10
  * @author 赵永春 (zyc@hasor.net)
  */
-@Table("tb_user")
 public class TbUser {
-    @Column(value = "userUUID", primary = true)
     private String uid;
-    @Column()
     private String name;
-    @Column("loginName")
     private String account;
-    @Column("loginPassword")
     private String password;
-    @Column("email")
     private String mail;
-    @Column()
     private int    index;
-    @Column("registerTime")
     private Date   createTime;
 
     public String getUid() {

@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
+import net.hasor.dataql.sqlproc.types.handler.NStringAsCharTypeHandler;
+import net.hasor.dataql.sqlproc.types.handler.StringAsCharTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
+import net.hasor.dataql.sqlproc.utils.TypeHandlerBridge;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
-import net.hasor.dbvisitor.types.handler.NStringAsCharTypeHandler;
-import net.hasor.dbvisitor.types.handler.StringAsCharTypeHandler;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -89,7 +90,7 @@ public class CharacterTypeTest {
             jdbcTemplate.execute("create procedure proc_char(out p_out char) begin set p_out='A'; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_char(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.CHAR.getVendorTypeNumber(), new StringAsCharTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.CHAR.getVendorTypeNumber(), new TypeHandlerBridge<>(new StringAsCharTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Character;
@@ -158,7 +159,7 @@ public class CharacterTypeTest {
             jdbcTemplate.execute("create procedure proc_char(out p_out char) begin set p_out='A'; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_char(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.NCHAR.getVendorTypeNumber(), new NStringAsCharTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.NCHAR.getVendorTypeNumber(), new TypeHandlerBridge<>(new NStringAsCharTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Character;

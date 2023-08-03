@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
+import net.hasor.dataql.sqlproc.types.handler.DoubleTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
+import net.hasor.dataql.sqlproc.utils.TypeHandlerBridge;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
-import net.hasor.dbvisitor.types.handler.DoubleTypeHandler;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -81,7 +82,7 @@ public class DoubleTypeTest {
             jdbcTemplate.execute("create procedure proc_double(out p_out double) begin set p_out=123.123; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_double(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.DOUBLE.getVendorTypeNumber(), new DoubleTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.DOUBLE.getVendorTypeNumber(), new TypeHandlerBridge<>(new DoubleTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Double;

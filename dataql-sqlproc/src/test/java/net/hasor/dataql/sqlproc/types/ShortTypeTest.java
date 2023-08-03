@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
+import net.hasor.dataql.sqlproc.types.handler.ShortTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
+import net.hasor.dataql.sqlproc.utils.TypeHandlerBridge;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
-import net.hasor.dbvisitor.types.handler.ShortTypeHandler;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -81,7 +82,7 @@ public class ShortTypeTest {
             jdbcTemplate.execute("create procedure proc_integer(out p_out integer) begin set p_out=123; end;");
             //
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_integer(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.INTEGER.getVendorTypeNumber(), new ShortTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.INTEGER.getVendorTypeNumber(), new TypeHandlerBridge<>(new ShortTypeHandler()))));
             //
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Short;

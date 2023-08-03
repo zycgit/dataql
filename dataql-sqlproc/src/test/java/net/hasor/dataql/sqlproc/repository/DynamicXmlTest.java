@@ -23,7 +23,7 @@ import net.hasor.dataql.sqlproc.dialect.SqlMode;
 import net.hasor.dataql.sqlproc.repository.config.QueryProcSql;
 import net.hasor.dataql.sqlproc.types.handler.BlobAsBytesTypeHandler;
 import net.hasor.dataql.sqlproc.types.handler.StringTypeHandler;
-import net.hasor.test.dataql.sqlproc.dto.TB_User;
+import net.hasor.test.dataql.sqlproc.dto.TbUser;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -226,7 +226,7 @@ public class DynamicXmlTest {
         assert sqlBuilder.getArgs()[0].getValue().equals("123");
         assert sqlBuilder.getArgs()[1].getValue() == null;// mode = out not eval value.
         assert sqlBuilder.getArgs()[0].getJavaType() == String.class;
-        assert sqlBuilder.getArgs()[1].getJavaType() == TB_User.class;
+        assert sqlBuilder.getArgs()[1].getJavaType() == TbUser.class;
         assert sqlBuilder.getArgs()[0].getTypeHandler() instanceof StringTypeHandler;
         assert sqlBuilder.getArgs()[1].getTypeHandler() instanceof BlobAsBytesTypeHandler;
         assert sqlBuilder.getArgs()[0].getSqlMode() == SqlMode.In;

@@ -15,12 +15,13 @@
  */
 package net.hasor.dataql.sqlproc.types;
 import net.hasor.cobble.io.IOUtils;
+import net.hasor.dataql.sqlproc.types.handler.SqlXmlForInputStreamTypeHandler;
+import net.hasor.dataql.sqlproc.types.handler.SqlXmlForReaderTypeHandler;
+import net.hasor.dataql.sqlproc.types.handler.SqlXmlTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
+import net.hasor.dataql.sqlproc.utils.TypeHandlerBridge;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
-import net.hasor.dbvisitor.types.handler.SqlXmlForInputStreamTypeHandler;
-import net.hasor.dbvisitor.types.handler.SqlXmlForReaderTypeHandler;
-import net.hasor.dbvisitor.types.handler.SqlXmlTypeHandler;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -106,7 +107,7 @@ public class SqlXmlTypeTest {
             preProc(jdbcTemplate);
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_xmltype(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.SQLXML.getVendorTypeNumber(), new SqlXmlTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.SQLXML.getVendorTypeNumber(), new TypeHandlerBridge<>(new SqlXmlTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof String;
@@ -167,7 +168,7 @@ public class SqlXmlTypeTest {
             preProc(jdbcTemplate);
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_xmltype(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.SQLXML.getVendorTypeNumber(), new SqlXmlForInputStreamTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.SQLXML.getVendorTypeNumber(), new TypeHandlerBridge<>(new SqlXmlForInputStreamTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof InputStream;
@@ -229,7 +230,7 @@ public class SqlXmlTypeTest {
             preProc(jdbcTemplate);
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_xmltype(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.SQLXML.getVendorTypeNumber(), new SqlXmlForReaderTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.SQLXML.getVendorTypeNumber(), new TypeHandlerBridge<>(new SqlXmlForReaderTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Reader;

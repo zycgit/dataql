@@ -16,13 +16,18 @@
 package net.hasor.dataql.sqlproc.types;
 import net.hasor.dataql.sqlproc.types.handler.BigIntegerTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
+import net.hasor.dataql.sqlproc.utils.TypeHandlerBridge;
+import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
 import org.junit.Test;
 
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.JDBCType;
+import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class BigIntegerTypeTest {
     @Test
@@ -65,20 +70,20 @@ public class BigIntegerTypeTest {
         }
     }
 
-    //    @Test
-    //    public void testBigIntegerTypeHandler_4() throws SQLException {
-    //        try (Connection conn = DsUtils.mysqlConn()) {
-    //            JdbcTemplate jdbcTemplate = new JdbcTemplate(conn);
-    //            jdbcTemplate.execute("drop procedure if exists proc_bigint;");
-    //            jdbcTemplate.execute("create procedure proc_bigint(out p_out bigint) begin set p_out=123123; end;");
-    //
-    //            Map<String, Object> objectMap = jdbcTemplate.call("{call proc_bigint(?)}",//
-    //                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.BIGINT.getVendorTypeNumber(), new BigIntegerTypeHandler())));
-    //
-    //            assert objectMap.size() == 2;
-    //            assert objectMap.get("out") instanceof BigInteger;
-    //            assert objectMap.get("out").equals(new BigInteger("123123"));
-    //            assert objectMap.get("#update-count-1").equals(0);
-    //        }
-    //    }
+    @Test
+    public void testBigIntegerTypeHandler_4() throws SQLException {
+        try (Connection conn = DsUtils.mysqlConn()) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(conn);
+            jdbcTemplate.execute("drop procedure if exists proc_bigint;");
+            jdbcTemplate.execute("create procedure proc_bigint(out p_out bigint) begin set p_out=123123; end;");
+
+            Map<String, Object> objectMap = jdbcTemplate.call("{call proc_bigint(?)}",//
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.BIGINT.getVendorTypeNumber(), new TypeHandlerBridge<>(new BigIntegerTypeHandler()))));
+
+            assert objectMap.size() == 2;
+            assert objectMap.get("out") instanceof BigInteger;
+            assert objectMap.get("out").equals(new BigInteger("123123"));
+            assert objectMap.get("#update-count-1").equals(0);
+        }
+    }
 }

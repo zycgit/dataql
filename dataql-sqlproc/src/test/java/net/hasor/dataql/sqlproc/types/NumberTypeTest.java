@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
+import net.hasor.dataql.sqlproc.types.handler.NumberTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
+import net.hasor.dataql.sqlproc.utils.TypeHandlerBridge;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
-import net.hasor.dbvisitor.types.handler.NumberTypeHandler;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -78,9 +79,9 @@ public class NumberTypeTest {
         try (Connection c = DsUtils.h2Conn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_clob) values ('123');");
-            List<Number> dat = jdbcTemplate.queryForList("select c_clob from tb_h2_types where c_clob is not null limit 1;", (rs, rowNum) -> {
-                return new NumberTypeHandler().getResult(rs, "c_clob");
+            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_char_lage) values ('123');");
+            List<Number> dat = jdbcTemplate.queryForList("select c_char_lage from tb_h2_types where c_char_lage is not null limit 1;", (rs, rowNum) -> {
+                return new NumberTypeHandler().getResult(rs, "c_char_lage");
             });
 
             assert dat.get(0).longValue() == 123;
@@ -103,15 +104,15 @@ public class NumberTypeTest {
             jdbcTemplate.execute("create procedure proc_data(out p_out date) begin set p_out= str_to_date('2008-08-09 10:11:12', '%Y-%m-%d %h:%i:%s'); end;");
 
             Map<String, Object> objectMap1 = jdbcTemplate.call("{call proc_varchar(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.VARCHAR.getVendorTypeNumber(), new NumberTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.VARCHAR.getVendorTypeNumber(), new TypeHandlerBridge<>(new NumberTypeHandler()))));
             Map<String, Object> objectMap2 = jdbcTemplate.call("{call proc_bigint(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.BIGINT.getVendorTypeNumber(), new NumberTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.BIGINT.getVendorTypeNumber(), new TypeHandlerBridge<>(new NumberTypeHandler()))));
             Map<String, Object> objectMap4 = jdbcTemplate.call("{call proc_float(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.FLOAT.getVendorTypeNumber(), new NumberTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.FLOAT.getVendorTypeNumber(), new TypeHandlerBridge<>(new NumberTypeHandler()))));
             Map<String, Object> objectMap5 = jdbcTemplate.call("{call proc_timestamp(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new NumberTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new TypeHandlerBridge<>(new NumberTypeHandler()))));
             Map<String, Object> objectMap6 = jdbcTemplate.call("{call proc_data(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.DATE.getVendorTypeNumber(), new NumberTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.DATE.getVendorTypeNumber(), new TypeHandlerBridge<>(new NumberTypeHandler()))));
 
             assert objectMap1.size() == 2;
             assert objectMap2.size() == 2;

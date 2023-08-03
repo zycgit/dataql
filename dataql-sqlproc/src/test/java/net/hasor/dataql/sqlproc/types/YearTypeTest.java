@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
+import net.hasor.dataql.sqlproc.types.handler.IntegerAsYearTypeHandler;
+import net.hasor.dataql.sqlproc.types.handler.SqlTimestampAsYearTypeHandler;
+import net.hasor.dataql.sqlproc.types.handler.StringAsYearTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
+import net.hasor.dataql.sqlproc.utils.TypeHandlerBridge;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
-import net.hasor.dbvisitor.types.handler.IntegerAsYearTypeHandler;
-import net.hasor.dbvisitor.types.handler.SqlTimestampAsYearTypeHandler;
-import net.hasor.dbvisitor.types.handler.StringAsYearTypeHandler;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -81,7 +82,7 @@ public class YearTypeTest {
             jdbcTemplate.execute("create procedure proc_integer(out p_out integer) begin set p_out=2020; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_integer(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.INTEGER.getVendorTypeNumber(), new IntegerAsYearTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.INTEGER.getVendorTypeNumber(), new TypeHandlerBridge<>(new IntegerAsYearTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Year;
@@ -147,7 +148,7 @@ public class YearTypeTest {
             jdbcTemplate.execute("create procedure proc_varchar(out p_out varchar(10)) begin set p_out='2020'; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_varchar(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.VARCHAR.getVendorTypeNumber(), new StringAsYearTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.VARCHAR.getVendorTypeNumber(), new TypeHandlerBridge<>(new StringAsYearTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Year;
@@ -216,7 +217,7 @@ public class YearTypeTest {
             jdbcTemplate.execute("create procedure proc_timestamp(out p_out timestamp) begin set p_out= str_to_date('2008-08-09 10:11:12', '%Y-%m-%d %h:%i:%s'); end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_timestamp(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new SqlTimestampAsYearTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new TypeHandlerBridge<>(new SqlTimestampAsYearTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Year;

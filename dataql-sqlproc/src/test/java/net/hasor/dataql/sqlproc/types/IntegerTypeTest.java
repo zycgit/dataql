@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
+import net.hasor.dataql.sqlproc.types.handler.IntegerTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
+import net.hasor.dataql.sqlproc.utils.TypeHandlerBridge;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
-import net.hasor.dbvisitor.types.handler.IntegerTypeHandler;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -81,7 +82,7 @@ public class IntegerTypeTest {
             jdbcTemplate.execute("create procedure proc_integer(out p_out integer) begin set p_out=123123; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_integer(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.INTEGER.getVendorTypeNumber(), new IntegerTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.INTEGER.getVendorTypeNumber(), new TypeHandlerBridge<>(new IntegerTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Integer;

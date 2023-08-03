@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
+import net.hasor.dataql.sqlproc.types.handler.IntegerAsMonthDayTypeHandler;
+import net.hasor.dataql.sqlproc.types.handler.SqlTimestampAsMonthDayTypeHandler;
+import net.hasor.dataql.sqlproc.types.handler.StringAsMonthDayTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
+import net.hasor.dataql.sqlproc.utils.TypeHandlerBridge;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
-import net.hasor.dbvisitor.types.handler.IntegerAsMonthDayTypeHandler;
-import net.hasor.dbvisitor.types.handler.SqlTimestampAsMonthDayTypeHandler;
-import net.hasor.dbvisitor.types.handler.StringAsMonthDayTypeHandler;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -89,7 +90,7 @@ public class MonthDayTypeTest {
             jdbcTemplate.execute("create procedure proc_integer(out p_out integer) begin set p_out=1112; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_integer(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.INTEGER.getVendorTypeNumber(), new IntegerAsMonthDayTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.INTEGER.getVendorTypeNumber(), new TypeHandlerBridge<>(new IntegerAsMonthDayTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof MonthDay;
@@ -164,7 +165,7 @@ public class MonthDayTypeTest {
             jdbcTemplate.execute("create procedure proc_varchar(out p_out varchar(10)) begin set p_out='11-12'; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_varchar(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.VARCHAR.getVendorTypeNumber(), new StringAsMonthDayTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.VARCHAR.getVendorTypeNumber(), new TypeHandlerBridge<>(new StringAsMonthDayTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof MonthDay;
@@ -240,7 +241,7 @@ public class MonthDayTypeTest {
             jdbcTemplate.execute("create procedure proc_timestamp(out p_out timestamp) begin set p_out= str_to_date('2008-08-09 10:11:12', '%Y-%m-%d %h:%i:%s'); end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_timestamp(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new SqlTimestampAsMonthDayTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new TypeHandlerBridge<>(new SqlTimestampAsMonthDayTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof MonthDay;

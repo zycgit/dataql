@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
+import net.hasor.dataql.sqlproc.types.handler.LocalDateTimeAsLocalDateTypeHandler;
+import net.hasor.dataql.sqlproc.types.handler.LocalDateTimeTypeHandler;
+import net.hasor.dataql.sqlproc.types.handler.SqlTimestampAsLocalTimeTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
+import net.hasor.dataql.sqlproc.utils.TypeHandlerBridge;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
-import net.hasor.dbvisitor.types.handler.LocalDateTimeAsLocalDateTypeHandler;
-import net.hasor.dbvisitor.types.handler.LocalDateTimeTypeHandler;
-import net.hasor.dbvisitor.types.handler.SqlTimestampAsLocalTimeTypeHandler;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -106,7 +107,7 @@ public class LocalTimeTypeTest {
             jdbcTemplate.execute("create procedure proc_timestamp(out p_out timestamp) begin set p_out= str_to_date('2008-08-09 10:11:12', '%Y-%m-%d %h:%i:%s'); end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_timestamp(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new LocalDateTimeTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new TypeHandlerBridge<>(new LocalDateTimeTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof LocalDateTime;
@@ -186,7 +187,7 @@ public class LocalTimeTypeTest {
             jdbcTemplate.execute("create procedure proc_timestamp(out p_out timestamp) begin set p_out= str_to_date('2008-08-09 10:11:12', '%Y-%m-%d %h:%i:%s'); end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_timestamp(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new LocalDateTimeAsLocalDateTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new TypeHandlerBridge<>(new LocalDateTimeAsLocalDateTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof LocalDate;
@@ -265,7 +266,7 @@ public class LocalTimeTypeTest {
             jdbcTemplate.execute("create procedure proc_timestamp(out p_out timestamp) begin set p_out= str_to_date('2008-08-09 10:11:12', '%Y-%m-%d %h:%i:%s'); end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_timestamp(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new SqlTimestampAsLocalTimeTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new TypeHandlerBridge<>(new SqlTimestampAsLocalTimeTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof LocalTime;

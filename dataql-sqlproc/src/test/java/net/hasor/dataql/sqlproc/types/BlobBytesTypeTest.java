@@ -16,12 +16,13 @@
 package net.hasor.dataql.sqlproc.types;
 import net.hasor.cobble.codec.MD5;
 import net.hasor.cobble.io.IOUtils;
+import net.hasor.dataql.sqlproc.types.handler.BlobAsBytesTypeHandler;
+import net.hasor.dataql.sqlproc.types.handler.BlobAsBytesWrapTypeHandler;
+import net.hasor.dataql.sqlproc.types.handler.BlobAsInputStreamTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
+import net.hasor.dataql.sqlproc.utils.TypeHandlerBridge;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
-import net.hasor.dbvisitor.types.handler.BlobAsBytesTypeHandler;
-import net.hasor.dbvisitor.types.handler.BlobAsBytesWrapTypeHandler;
-import net.hasor.dbvisitor.types.handler.BlobAsInputStreamTypeHandler;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -56,8 +57,8 @@ public class BlobBytesTypeTest {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             byte[] testData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_blob) values (?);", new Object[] { testData });
-            List<Byte[]> dat = jdbcTemplate.queryForList("select c_blob from tb_h2_types where c_blob is not null limit 1;", (rs, rowNum) -> {
+            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_binary_lage) values (?);", new Object[] { testData });
+            List<Byte[]> dat = jdbcTemplate.queryForList("select c_binary_lage from tb_h2_types where c_binary_lage is not null limit 1;", (rs, rowNum) -> {
                 return new BlobAsBytesWrapTypeHandler().getResult(rs, 1);
             });
 
@@ -73,9 +74,9 @@ public class BlobBytesTypeTest {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             byte[] testData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_blob) values (?);", new Object[] { testData });
-            List<Byte[]> dat = jdbcTemplate.queryForList("select c_blob from tb_h2_types where c_blob is not null limit 1;", (rs, rowNum) -> {
-                return new BlobAsBytesWrapTypeHandler().getResult(rs, "c_blob");
+            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_binary_lage) values (?);", new Object[] { testData });
+            List<Byte[]> dat = jdbcTemplate.queryForList("select c_binary_lage from tb_h2_types where c_binary_lage is not null limit 1;", (rs, rowNum) -> {
+                return new BlobAsBytesWrapTypeHandler().getResult(rs, "c_binary_lage");
             });
 
             String s1 = MD5.encodeMD5(testData);
@@ -111,7 +112,7 @@ public class BlobBytesTypeTest {
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_blob(?)}",//
                     Collections.singletonList(//
-                            SqlParameterUtils.withOutputName("out", JDBCType.BLOB.getVendorTypeNumber(), new BlobAsBytesWrapTypeHandler())//
+                            SqlParameterUtils.withOutputName("out", JDBCType.BLOB.getVendorTypeNumber(), new TypeHandlerBridge<>(new BlobAsBytesWrapTypeHandler()))//
                     ));
 
             assert objectMap.size() == 2;
@@ -130,8 +131,8 @@ public class BlobBytesTypeTest {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             byte[] testData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_blob) values (?);", new Object[] { testData });
-            List<byte[]> dat = jdbcTemplate.queryForList("select c_blob from tb_h2_types where c_blob is not null limit 1;", (rs, rowNum) -> {
+            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_binary_lage) values (?);", new Object[] { testData });
+            List<byte[]> dat = jdbcTemplate.queryForList("select c_binary_lage from tb_h2_types where c_binary_lage is not null limit 1;", (rs, rowNum) -> {
                 return new BlobAsBytesTypeHandler().getResult(rs, 1);
             });
 
@@ -147,9 +148,9 @@ public class BlobBytesTypeTest {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             byte[] testData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_blob) values (?);", new Object[] { testData });
-            List<byte[]> dat = jdbcTemplate.queryForList("select c_blob from tb_h2_types where c_blob is not null limit 1;", (rs, rowNum) -> {
-                return new BlobAsBytesTypeHandler().getResult(rs, "c_blob");
+            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_binary_lage) values (?);", new Object[] { testData });
+            List<byte[]> dat = jdbcTemplate.queryForList("select c_binary_lage from tb_h2_types where c_binary_lage is not null limit 1;", (rs, rowNum) -> {
+                return new BlobAsBytesTypeHandler().getResult(rs, "c_binary_lage");
             });
 
             String s1 = MD5.encodeMD5(testData);
@@ -184,7 +185,7 @@ public class BlobBytesTypeTest {
             jdbcTemplate.execute("create procedure proc_blob(out p_out blob) begin set p_out= b'0111111100001111'; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_blob(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.BLOB.getVendorTypeNumber(), new BlobAsBytesTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.BLOB.getVendorTypeNumber(), new TypeHandlerBridge<>(new BlobAsBytesTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof byte[];
@@ -202,8 +203,8 @@ public class BlobBytesTypeTest {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             byte[] testData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_blob) values (?);", new Object[] { testData });
-            List<InputStream> dat = jdbcTemplate.queryForList("select c_blob from tb_h2_types where c_blob is not null limit 1;", (rs, rowNum) -> {
+            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_binary_lage) values (?);", new Object[] { testData });
+            List<InputStream> dat = jdbcTemplate.queryForList("select c_binary_lage from tb_h2_types where c_binary_lage is not null limit 1;", (rs, rowNum) -> {
                 return new BlobAsInputStreamTypeHandler().getResult(rs, 1);
             });
 
@@ -219,9 +220,9 @@ public class BlobBytesTypeTest {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
             byte[] testData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_blob) values (?);", new Object[] { testData });
-            List<InputStream> dat = jdbcTemplate.queryForList("select c_blob from tb_h2_types where c_blob is not null limit 1;", (rs, rowNum) -> {
-                return new BlobAsInputStreamTypeHandler().getResult(rs, "c_blob");
+            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_binary_lage) values (?);", new Object[] { testData });
+            List<InputStream> dat = jdbcTemplate.queryForList("select c_binary_lage from tb_h2_types where c_binary_lage is not null limit 1;", (rs, rowNum) -> {
+                return new BlobAsInputStreamTypeHandler().getResult(rs, "c_binary_lage");
             });
 
             String s1 = MD5.encodeMD5(testData);
@@ -256,7 +257,7 @@ public class BlobBytesTypeTest {
             jdbcTemplate.execute("create procedure proc_blob(out p_out blob) begin set p_out= b'0111111100001111'; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_blob(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.BLOB.getVendorTypeNumber(), new BlobAsInputStreamTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.BLOB.getVendorTypeNumber(), new TypeHandlerBridge<>(new BlobAsInputStreamTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof InputStream;

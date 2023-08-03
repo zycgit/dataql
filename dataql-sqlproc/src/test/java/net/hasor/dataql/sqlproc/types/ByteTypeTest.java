@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
+import net.hasor.dataql.sqlproc.types.handler.ByteTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
+import net.hasor.dataql.sqlproc.utils.TypeHandlerBridge;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
-import net.hasor.dbvisitor.types.handler.ByteTypeHandler;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -81,7 +82,7 @@ public class ByteTypeTest {
             jdbcTemplate.execute("create procedure proc_smallint(out p_out smallint) begin set p_out=123; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_smallint(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.SMALLINT.getVendorTypeNumber(), new ByteTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.SMALLINT.getVendorTypeNumber(), new TypeHandlerBridge<>(new ByteTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Byte;

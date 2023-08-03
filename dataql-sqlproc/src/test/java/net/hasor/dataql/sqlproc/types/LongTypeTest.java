@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
+import net.hasor.dataql.sqlproc.types.handler.LongTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
+import net.hasor.dataql.sqlproc.utils.TypeHandlerBridge;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
-import net.hasor.dbvisitor.types.handler.LongTypeHandler;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -81,7 +82,7 @@ public class LongTypeTest {
             jdbcTemplate.execute("create procedure proc_bigint(out p_out bigint) begin set p_out=123123; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_bigint(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.BIGINT.getVendorTypeNumber(), new LongTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.BIGINT.getVendorTypeNumber(), new TypeHandlerBridge<>(new LongTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Long;

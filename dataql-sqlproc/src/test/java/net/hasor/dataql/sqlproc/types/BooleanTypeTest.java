@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
+import net.hasor.dataql.sqlproc.types.handler.BooleanTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
+import net.hasor.dataql.sqlproc.utils.TypeHandlerBridge;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
-import net.hasor.dbvisitor.types.handler.BooleanTypeHandler;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -85,7 +86,7 @@ public class BooleanTypeTest {
             jdbcTemplate.execute("create procedure proc_boolean(out p_out boolean) begin set p_out=true; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_boolean(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.BOOLEAN.getVendorTypeNumber(), new BooleanTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.BOOLEAN.getVendorTypeNumber(), new TypeHandlerBridge<>(new BooleanTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Boolean;

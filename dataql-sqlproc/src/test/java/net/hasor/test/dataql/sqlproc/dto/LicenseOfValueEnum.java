@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 package net.hasor.test.dataql.sqlproc.dto;
-import net.hasor.dbvisitor.types.EnumOfValue;
+
+import net.hasor.dataql.sqlproc.types.EnumOfValue;
 
 /**
  * 授权协议类型

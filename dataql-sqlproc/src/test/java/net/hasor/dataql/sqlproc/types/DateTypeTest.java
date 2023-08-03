@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
+import net.hasor.dataql.sqlproc.types.handler.SqlDateAsDateHandler;
+import net.hasor.dataql.sqlproc.types.handler.SqlTimeAsDateTypeHandler;
+import net.hasor.dataql.sqlproc.types.handler.SqlTimestampAsDateTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
+import net.hasor.dataql.sqlproc.utils.TypeHandlerBridge;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
-import net.hasor.dbvisitor.types.handler.SqlDateAsDateHandler;
-import net.hasor.dbvisitor.types.handler.SqlTimeAsDateTypeHandler;
-import net.hasor.dbvisitor.types.handler.SqlTimestampAsDateTypeHandler;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -91,7 +92,7 @@ public class DateTypeTest {
             jdbcTemplate.execute("create procedure proc_timestamp(out p_out timestamp) begin set p_out= str_to_date('2008-08-09 08:09:30', '%Y-%m-%d %h:%i:%s'); end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_timestamp(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new SqlTimestampAsDateTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new TypeHandlerBridge<>(new SqlTimestampAsDateTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Date;
@@ -176,7 +177,7 @@ public class DateTypeTest {
             jdbcTemplate.execute("create procedure proc_timestamp(out p_out timestamp) begin set p_out= str_to_date('2008-08-09 08:09:30', '%Y-%m-%d %h:%i:%s'); end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_timestamp(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new SqlTimeAsDateTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new TypeHandlerBridge<>(new SqlTimeAsDateTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Date;
@@ -261,7 +262,7 @@ public class DateTypeTest {
             jdbcTemplate.execute("create procedure proc_timestamp(out p_out timestamp) begin set p_out= str_to_date('2008-08-09 08:09:30', '%Y-%m-%d %h:%i:%s'); end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_timestamp(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new SqlDateAsDateHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.TIMESTAMP.getVendorTypeNumber(), new TypeHandlerBridge<>(new SqlDateAsDateHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Date;

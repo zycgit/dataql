@@ -15,13 +15,14 @@
  */
 package net.hasor.dataql.sqlproc.types;
 import net.hasor.cobble.io.IOUtils;
+import net.hasor.dataql.sqlproc.types.handler.ClobAsReaderTypeHandler;
+import net.hasor.dataql.sqlproc.types.handler.NClobAsReaderTypeHandler;
+import net.hasor.dataql.sqlproc.types.handler.NStringAsReaderTypeHandler;
+import net.hasor.dataql.sqlproc.types.handler.StringAsReaderTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
+import net.hasor.dataql.sqlproc.utils.TypeHandlerBridge;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
-import net.hasor.dbvisitor.types.handler.ClobAsReaderTypeHandler;
-import net.hasor.dbvisitor.types.handler.NClobAsReaderTypeHandler;
-import net.hasor.dbvisitor.types.handler.NStringAsReaderTypeHandler;
-import net.hasor.dbvisitor.types.handler.StringAsReaderTypeHandler;
 import org.junit.Test;
 
 import java.io.Reader;
@@ -38,8 +39,8 @@ public class StringReaderTypeTest {
         try (Connection c = DsUtils.h2Conn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_clob) values ('abcdefg');");
-            List<Reader> dat = jdbcTemplate.queryForList("select c_clob from tb_h2_types where c_clob is not null limit 1;", (rs, rowNum) -> {
+            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_char_lage) values ('abcdefg');");
+            List<Reader> dat = jdbcTemplate.queryForList("select c_char_lage from tb_h2_types where c_char_lage is not null limit 1;", (rs, rowNum) -> {
                 return new ClobAsReaderTypeHandler().getResult(rs, 1);
             });
             String readerDat = IOUtils.toString(dat.get(0));
@@ -52,9 +53,9 @@ public class StringReaderTypeTest {
         try (Connection c = DsUtils.h2Conn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_clob) values ('abcdefg');");
-            List<Reader> dat = jdbcTemplate.queryForList("select c_clob from tb_h2_types where c_clob is not null limit 1;", (rs, rowNum) -> {
-                return new ClobAsReaderTypeHandler().getResult(rs, "c_clob");
+            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_char_lage) values ('abcdefg');");
+            List<Reader> dat = jdbcTemplate.queryForList("select c_char_lage from tb_h2_types where c_char_lage is not null limit 1;", (rs, rowNum) -> {
+                return new ClobAsReaderTypeHandler().getResult(rs, "c_char_lage");
             });
             String readerDat = IOUtils.toString(dat.get(0));
             assert readerDat.equals("abcdefg");
@@ -84,7 +85,7 @@ public class StringReaderTypeTest {
             jdbcTemplate.execute("create procedure proc_text(out p_out text) begin set p_out='abcdefg'; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_text(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.CLOB.getVendorTypeNumber(), new ClobAsReaderTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.CLOB.getVendorTypeNumber(), new TypeHandlerBridge<>(new ClobAsReaderTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Reader;
@@ -98,8 +99,8 @@ public class StringReaderTypeTest {
         try (Connection c = DsUtils.h2Conn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_clob) values ('abcdefg');");
-            List<Reader> dat = jdbcTemplate.queryForList("select c_clob from tb_h2_types where c_clob is not null limit 1;", (rs, rowNum) -> {
+            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_char_lage) values ('abcdefg');");
+            List<Reader> dat = jdbcTemplate.queryForList("select c_char_lage from tb_h2_types where c_char_lage is not null limit 1;", (rs, rowNum) -> {
                 return new NClobAsReaderTypeHandler().getResult(rs, 1);
             });
             String readerDat = IOUtils.toString(dat.get(0));
@@ -112,9 +113,9 @@ public class StringReaderTypeTest {
         try (Connection c = DsUtils.h2Conn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_clob) values ('abcdefg');");
-            List<Reader> dat = jdbcTemplate.queryForList("select c_clob from tb_h2_types where c_clob is not null limit 1;", (rs, rowNum) -> {
-                return new NClobAsReaderTypeHandler().getResult(rs, "c_clob");
+            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_char_lage) values ('abcdefg');");
+            List<Reader> dat = jdbcTemplate.queryForList("select c_char_lage from tb_h2_types where c_char_lage is not null limit 1;", (rs, rowNum) -> {
+                return new NClobAsReaderTypeHandler().getResult(rs, "c_char_lage");
             });
             String readerDat = IOUtils.toString(dat.get(0));
             assert readerDat.equals("abcdefg");
@@ -144,7 +145,7 @@ public class StringReaderTypeTest {
             jdbcTemplate.execute("create procedure proc_text(out p_out text) begin set p_out='abcdefg'; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_text(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.NCLOB.getVendorTypeNumber(), new NClobAsReaderTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.NCLOB.getVendorTypeNumber(), new TypeHandlerBridge<>(new NClobAsReaderTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Reader;
@@ -158,8 +159,8 @@ public class StringReaderTypeTest {
         try (Connection c = DsUtils.h2Conn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_text) values ('abcdefg');");
-            List<Reader> dat = jdbcTemplate.queryForList("select c_text from tb_h2_types where c_text is not null limit 1;", (rs, rowNum) -> {
+            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_char_lage) values ('abcdefg');");
+            List<Reader> dat = jdbcTemplate.queryForList("select c_char_lage from tb_h2_types where c_char_lage is not null limit 1;", (rs, rowNum) -> {
                 return new StringAsReaderTypeHandler().getResult(rs, 1);
             });
             String readerDat = IOUtils.toString(dat.get(0));
@@ -172,9 +173,9 @@ public class StringReaderTypeTest {
         try (Connection c = DsUtils.h2Conn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_text) values ('abcdefg');");
-            List<Reader> dat = jdbcTemplate.queryForList("select c_text from tb_h2_types where c_text is not null limit 1;", (rs, rowNum) -> {
-                return new StringAsReaderTypeHandler().getResult(rs, "c_text");
+            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_char_lage) values ('abcdefg');");
+            List<Reader> dat = jdbcTemplate.queryForList("select c_char_lage from tb_h2_types where c_char_lage is not null limit 1;", (rs, rowNum) -> {
+                return new StringAsReaderTypeHandler().getResult(rs, "c_char_lage");
             });
             String readerDat = IOUtils.toString(dat.get(0));
             assert readerDat.equals("abcdefg");
@@ -209,7 +210,7 @@ public class StringReaderTypeTest {
             jdbcTemplate.execute("create procedure proc_varchar(out p_out varchar(10)) begin set p_out='abcdefg'; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_varchar(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.VARCHAR.getVendorTypeNumber(), new StringAsReaderTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.VARCHAR.getVendorTypeNumber(), new TypeHandlerBridge<>(new StringAsReaderTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Reader;
@@ -223,8 +224,8 @@ public class StringReaderTypeTest {
         try (Connection c = DsUtils.h2Conn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_text) values ('abcdefg');");
-            List<Reader> dat = jdbcTemplate.queryForList("select c_text from tb_h2_types where c_text is not null limit 1;", (rs, rowNum) -> {
+            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_char_lage) values ('abcdefg');");
+            List<Reader> dat = jdbcTemplate.queryForList("select c_char_lage from tb_h2_types where c_char_lage is not null limit 1;", (rs, rowNum) -> {
                 return new NStringAsReaderTypeHandler().getResult(rs, 1);
             });
             String readerDat = IOUtils.toString(dat.get(0));
@@ -237,9 +238,9 @@ public class StringReaderTypeTest {
         try (Connection c = DsUtils.h2Conn()) {
             JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
 
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_text) values ('abcdefg');");
-            List<Reader> dat = jdbcTemplate.queryForList("select c_text from tb_h2_types where c_text is not null limit 1;", (rs, rowNum) -> {
-                return new NStringAsReaderTypeHandler().getResult(rs, "c_text");
+            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_char_lage) values ('abcdefg');");
+            List<Reader> dat = jdbcTemplate.queryForList("select c_char_lage from tb_h2_types where c_char_lage is not null limit 1;", (rs, rowNum) -> {
+                return new NStringAsReaderTypeHandler().getResult(rs, "c_char_lage");
             });
             String readerDat = IOUtils.toString(dat.get(0));
             assert readerDat.equals("abcdefg");
@@ -274,7 +275,7 @@ public class StringReaderTypeTest {
             jdbcTemplate.execute("create procedure proc_nvarchar(out p_out nvarchar(10)) begin set p_out='abcdefg'; end;");
 
             Map<String, Object> objectMap = jdbcTemplate.call("{call proc_nvarchar(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.NVARCHAR.getVendorTypeNumber(), new NStringAsReaderTypeHandler())));
+                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.NVARCHAR.getVendorTypeNumber(), new TypeHandlerBridge<>(new NStringAsReaderTypeHandler()))));
 
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof Reader;
