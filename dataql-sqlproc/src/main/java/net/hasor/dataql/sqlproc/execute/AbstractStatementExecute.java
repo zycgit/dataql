@@ -19,6 +19,8 @@ import net.hasor.cobble.io.IOUtils;
 import net.hasor.cobble.logging.Logger;
 import net.hasor.cobble.logging.LoggerFactory;
 import net.hasor.dataql.Hints;
+import net.hasor.dataql.sqlproc.ColumnCaseType;
+import net.hasor.dataql.sqlproc.OpenPackageType;
 import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dialect.*;
 import net.hasor.dataql.sqlproc.execute.page.Page;
@@ -70,8 +72,8 @@ public abstract class AbstractStatementExecute<T> {
         info.pageDialect = dialect;
         info.pageResult = pageResult;
         info.pageCount = pageCount;
-        info.packageType = OpenPackageType.valueOfCode(hints.getOrDefault(SqlHintNames.FRAGMENT_SQL_OPEN_PACKAGE.name(), SqlHintNames.FRAGMENT_SQL_OPEN_PACKAGE.getDefaultVal()).toString());
-        info.columnCaseType = ColumnCaseType.valueOfCode(hints.getOrDefault(SqlHintNames.FRAGMENT_SQL_COLUMN_CASE.name(), SqlHintNames.FRAGMENT_SQL_COLUMN_CASE.getDefaultVal()).toString());
+        info.packageType = OpenPackageType.valueOfCode(String.valueOf(hints.getHint(SqlHintNames.FRAGMENT_SQL_OPEN_PACKAGE.name())));
+        info.columnCaseType = ColumnCaseType.valueOfCode(String.valueOf(hints.getHint(SqlHintNames.FRAGMENT_SQL_COLUMN_CASE.name())));
         info.data = data;
         info.hasSelectKey = dynamicSql.getSelectKey() != null;
         info.resultSetType = dynamicSql.getResultSetType();
@@ -98,8 +100,7 @@ public abstract class AbstractStatementExecute<T> {
     }
 
     protected ResultTableExtractor buildExtractor(ExecuteInfo info) {
-        ResultTableReader tableReader = new ResultTableReader(info.caseInsensitive, context.getTypeRegistry());
-        return new ResultTableExtractor(info.packageType, info.columnCaseType, info.multipleResultType, tableReader);
+        return new ResultTableExtractor(info.packageType, info.columnCaseType, info.multipleResultType, context.getTypeRegistry());
     }
 
     protected Object getResult(List<Object> result, ExecuteInfo info) {
@@ -206,7 +207,6 @@ public abstract class AbstractStatementExecute<T> {
         public int                 timeout            = -1;
         public int                 fetchSize          = 256;
         public ResultSetType       resultSetType      = ResultSetType.FORWARD_ONLY;
-        public boolean             caseInsensitive    = true;
         public MultipleResultsType multipleResultType = MultipleResultsType.LAST;
         // key
         public boolean             hasSelectKey;

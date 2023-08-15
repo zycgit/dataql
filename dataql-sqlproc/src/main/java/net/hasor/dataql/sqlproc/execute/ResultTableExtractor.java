@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.execute;
+import net.hasor.cobble.ResourcesUtils;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.logging.Logger;
 import net.hasor.cobble.logging.LoggerFactory;
+import net.hasor.dataql.sqlproc.ColumnCaseType;
+import net.hasor.dataql.sqlproc.OpenPackageType;
 import net.hasor.dataql.sqlproc.repository.MultipleResultsType;
+import net.hasor.dataql.sqlproc.types.TypeHandler;
+import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.*;
 
 /**
@@ -33,14 +35,14 @@ public class ResultTableExtractor {
     private static final Logger              logger = LoggerFactory.getLogger(ResultTableExtractor.class);
     private final        OpenPackageType     openPackage;
     private final        ColumnCaseType      caseModule;
-    private final        ResultTableReader   tableReader;
     private final        MultipleResultsType processType;
+    private final        TypeHandlerRegistry typeHandler;
 
-    public ResultTableExtractor(OpenPackageType openPackage, ColumnCaseType caseModule, MultipleResultsType processType, ResultTableReader tableReader) {
+    public ResultTableExtractor(OpenPackageType openPackage, ColumnCaseType caseModule, MultipleResultsType processType, TypeHandlerRegistry typeHandler) {
         this.openPackage = openPackage;
         this.caseModule = caseModule;
         this.processType = processType == null ? MultipleResultsType.ALL : processType;
-        this.tableReader = tableReader;
+        this.typeHandler = typeHandler;
     }
 
     public List<Object> doResult(boolean retVal, Statement stmt) throws SQLException {
@@ -93,30 +95,55 @@ public class ResultTableExtractor {
 
         ResultSetMetaData rsmd = rs.getMetaData();
         int nrOfColumns = rsmd.getColumnCount();
-        List<String> columnList = new ArrayList<>();
+
+        Map<String, Integer> columns = new LinkedHashMap<>();
+        Map<Integer, TypeHandler<?>> typeHandlers = new HashMap<>();
+
         for (int i = 1; i <= nrOfColumns; i++) {
-            columnList.add(lookupColumnName(rsmd, i));
+            String name = rsmd.getColumnLabel(i);
+            if (name == null || name.length() < 1) {
+                name = rsmd.getColumnName(i);
+            }
+
+            String useColumn = convertColumn(name);
+            if (columns.containsKey(useColumn)) {
+                continue;
+            }
+
+            columns.put(useColumn, i);
+            typeHandlers.put(i, this.getResultSetTypeHandler(rsmd, i, null));
         }
 
         List<Map<String, Object>> results = new ArrayList<>();
         int rowNum = 0;
         while (rs.next()) {
-            results.add(this.tableReader.extractRow(columnList, rs, rowNum++));
+            results.add(this.extractRow(columns, typeHandlers, rs, rowNum++));
         }
 
         return convertResult(results);
     }
 
-    protected String lookupColumnName(ResultSetMetaData resultSetMetaData, int columnIndex) throws SQLException {
-        String name = resultSetMetaData.getColumnLabel(columnIndex);
-        if (name == null || name.length() < 1) {
-            name = resultSetMetaData.getColumnName(columnIndex);
+    protected Map<String, Object> extractRow(Map<String, Integer> columns, Map<Integer, TypeHandler<?>> typeHandlers, ResultSet rs, int rowNum) throws SQLException {
+        Map<String, Object> target = new LinkedHashMap<>();
+
+        for (Map.Entry<String, Integer> colEnt : columns.entrySet()) {
+            String mapKey = colEnt.getKey();
+            int colIndex = colEnt.getValue();
+            TypeHandler<?> colHandler = typeHandlers.get(colIndex);
+
+            if (colHandler == null) {
+                colHandler = this.typeHandler.getDefaultTypeHandler();
+            }
+
+            Object result = colHandler.getResult(rs, colIndex);
+            target.put(mapKey, result);
         }
-        return convertColumn(name);
+
+        return target;
     }
 
     /** Key名转换 */
-    protected String convertColumn(String key) {
+    private String convertColumn(String key) {
         switch (this.caseModule) {
             case ColumnCaseUpper:
                 return key.toUpperCase();
@@ -128,6 +155,41 @@ public class ResultTableExtractor {
             default:
                 return key;
         }
+    }
+
+    /** 获取读取列用到的那个 TypeHandler */
+    private TypeHandler<?> getResultSetTypeHandler(ResultSetMetaData rsmd, int columnIndex, Class<?> targetType) throws SQLException {
+        int jdbcType = rsmd.getColumnType(columnIndex);
+        String columnTypeName = rsmd.getColumnTypeName(columnIndex);
+        String columnClassName = rsmd.getColumnClassName(columnIndex);
+
+        if ("YEAR".equalsIgnoreCase(columnTypeName)) {
+            // TODO with mysql `YEAR` type, columnType is DATE. but getDate() throw Long cast Date failed.
+            jdbcType = JDBCType.INTEGER.getVendorTypeNumber();
+        } else if (StringUtils.isNotBlank(columnClassName) && columnClassName.startsWith("oracle.")) {
+            // TODO with oracle columnClassName is specifically customizes standard types, it specializes process.
+            jdbcType = TypeHandlerRegistry.toSqlType(columnClassName);
+            if (targetType != null) {
+                return this.typeHandler.getJavaTypeHandler(targetType, jdbcType);
+            } else {
+                return this.typeHandler.getJdbcTypeHandler(jdbcType);
+            }
+        }
+
+        Class<?> columnTypeClass = targetType;
+        if (columnTypeClass == null) {
+            try {
+                columnTypeClass = ResourcesUtils.classForName(columnClassName);
+            } catch (ClassNotFoundException e) {
+                /**/
+            }
+        }
+        TypeHandler<?> typeHandler = this.typeHandler.getJavaTypeHandler(columnTypeClass, jdbcType);
+        if (typeHandler == null) {
+            String message = "jdbcType=" + jdbcType + " ,columnTypeClass=" + columnTypeClass;
+            throw new SQLException("no typeHandler is matched to any available " + message);
+        }
+        return typeHandler;
     }
 
     /** 结果转换 */

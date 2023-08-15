@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.execute;
+package net.hasor.dataql.sqlproc;
 import net.hasor.cobble.StringUtils;
-import net.hasor.dataql.sqlproc.SqlHintValue;
 
 /**
  * 返回值类型
@@ -51,11 +50,14 @@ public enum OpenPackageType {
     }
 
     public static OpenPackageType valueOfCode(String typeCode) {
+        if (StringUtils.isBlank(typeCode)) {
+            typeCode = SqlHintNames.FRAGMENT_SQL_OPEN_PACKAGE.getDefaultVal();
+        }
         for (OpenPackageType type : OpenPackageType.values()) {
             if (StringUtils.equalsIgnoreCase(type.typeCode, typeCode)) {
                 return type;
             }
         }
-        return null;
+        return Column;
     }
 }
