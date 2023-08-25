@@ -15,9 +15,7 @@
  */
 package net.hasor.dataql.sqlproc.types;
 import net.hasor.cobble.codec.MD5;
-import net.hasor.cobble.io.IOUtils;
 import net.hasor.dataql.sqlproc.types.handler.BytesAsBytesWrapTypeHandler;
-import net.hasor.dataql.sqlproc.types.handler.BytesAsInputStreamTypeHandler;
 import net.hasor.dataql.sqlproc.types.handler.BytesTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
 import net.hasor.dataql.sqlproc.utils.TypeHandlerBridge;
@@ -25,8 +23,6 @@ import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.JDBCType;
 import java.sql.SQLException;
@@ -195,79 +191,4 @@ public class BytesTypeTest {
         }
     }
 
-    @Test
-    public void testBytesInputStreamTypeHandler_1() throws Throwable {
-        try (Connection c = DsUtils.h2Conn()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
-
-            byte[] testData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_varbinary) values (?);", new Object[] { testData });
-            List<InputStream> dat = jdbcTemplate.queryForList("select c_varbinary from tb_h2_types where c_varbinary is not null limit 1;", (rs, rowNum) -> {
-                return new BytesAsInputStreamTypeHandler().getResult(rs, 1);
-            });
-
-            String s1 = MD5.encodeMD5(testData);
-            String s2 = MD5.encodeMD5(IOUtils.toByteArray(dat.get(0)));
-            assert s1.equals(s2);
-        }
-    }
-
-    @Test
-    public void testBytesInputStreamTypeHandler_2() throws Throwable {
-        try (Connection c = DsUtils.h2Conn()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
-
-            byte[] testData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_varbinary) values (?);", new Object[] { testData });
-            List<InputStream> dat = jdbcTemplate.queryForList("select c_varbinary from tb_h2_types where c_varbinary is not null limit 1;", (rs, rowNum) -> {
-                return new BytesAsInputStreamTypeHandler().getResult(rs, "c_varbinary");
-            });
-
-            String s1 = MD5.encodeMD5(testData);
-            String s2 = MD5.encodeMD5(IOUtils.toByteArray(dat.get(0)));
-            assert s1.equals(s2);
-        }
-    }
-
-    @Test
-    public void testBytesInputStreamTypeHandler_3() throws Throwable {
-        try (Connection c = DsUtils.h2Conn()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
-
-            byte[] testData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-            List<InputStream> dat = jdbcTemplate.queryForList("select ?", ps -> {
-                new BytesAsInputStreamTypeHandler().setParameter(ps, 1, new ByteArrayInputStream(testData), JDBCType.BLOB.getVendorTypeNumber());
-            }, (rs, rowNum) -> {
-                return new BytesAsInputStreamTypeHandler().getNullableResult(rs, 1);
-            });
-
-            String s1 = MD5.encodeMD5(testData);
-            String s2 = MD5.encodeMD5(IOUtils.toByteArray(dat.get(0)));
-            assert s1.equals(s2);
-        }
-    }
-
-    @Test
-    public void testBytesInputStreamTypeHandler_4() throws Exception {
-        try (Connection conn = DsUtils.mysqlConn()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(conn);
-            jdbcTemplate.execute("drop procedure if exists proc_bytes;");
-            jdbcTemplate.execute("create procedure proc_bytes(out p_out varbinary(10)) begin set p_out= b'0111111100001111'; end;");
-
-            Map<String, Object> objectMap = jdbcTemplate.call("{call proc_bytes(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.VARBINARY.getVendorTypeNumber(), new TypeHandlerBridge<>(new BytesAsInputStreamTypeHandler()))));
-
-            assert objectMap.size() == 2;
-            assert objectMap.get("out") instanceof InputStream;
-            assert objectMap.get("#update-count-1").equals(0);
-
-            byte[] bytes = new byte[2];
-            bytes[0] = 0b01111111;
-            bytes[1] = 0b00001111;
-
-            String s1 = MD5.encodeMD5(bytes);
-            String s2 = MD5.encodeMD5(IOUtils.toByteArray((InputStream) objectMap.get("out")));
-            assert s1.equals(s2);
-        }
-    }
 }

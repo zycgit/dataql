@@ -15,18 +15,14 @@
  */
 package net.hasor.dataql.sqlproc.types;
 import net.hasor.cobble.codec.MD5;
-import net.hasor.cobble.io.IOUtils;
 import net.hasor.dataql.sqlproc.types.handler.BlobAsBytesTypeHandler;
 import net.hasor.dataql.sqlproc.types.handler.BlobAsBytesWrapTypeHandler;
-import net.hasor.dataql.sqlproc.types.handler.BlobAsInputStreamTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
 import net.hasor.dataql.sqlproc.utils.TypeHandlerBridge;
 import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.JDBCType;
 import java.sql.SQLException;
@@ -194,82 +190,6 @@ public class BlobBytesTypeTest {
             assert bytes[0] == 0b01111111;
             assert bytes[1] == 0b00001111;
             assert objectMap.get("#update-count-1").equals(0);
-        }
-    }
-
-    @Test
-    public void testBlobInputStreamTypeHandler_1() throws Throwable {
-        try (Connection c = DsUtils.h2Conn()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
-
-            byte[] testData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_binary_lage) values (?);", new Object[] { testData });
-            List<InputStream> dat = jdbcTemplate.queryForList("select c_binary_lage from tb_h2_types where c_binary_lage is not null limit 1;", (rs, rowNum) -> {
-                return new BlobAsInputStreamTypeHandler().getResult(rs, 1);
-            });
-
-            String s1 = MD5.encodeMD5(testData);
-            String s2 = MD5.encodeMD5(IOUtils.toByteArray(dat.get(0)));
-            assert s1.equals(s2);
-        }
-    }
-
-    @Test
-    public void testBlobInputStreamTypeHandler_2() throws Throwable {
-        try (Connection c = DsUtils.h2Conn()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
-
-            byte[] testData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-            jdbcTemplate.executeUpdate("insert into tb_h2_types (c_binary_lage) values (?);", new Object[] { testData });
-            List<InputStream> dat = jdbcTemplate.queryForList("select c_binary_lage from tb_h2_types where c_binary_lage is not null limit 1;", (rs, rowNum) -> {
-                return new BlobAsInputStreamTypeHandler().getResult(rs, "c_binary_lage");
-            });
-
-            String s1 = MD5.encodeMD5(testData);
-            String s2 = MD5.encodeMD5(IOUtils.toByteArray(dat.get(0)));
-            assert s1.equals(s2);
-        }
-    }
-
-    @Test
-    public void testBlobInputStreamTypeHandler_3() throws Throwable {
-        try (Connection c = DsUtils.h2Conn()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
-
-            byte[] testData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-            List<InputStream> dat = jdbcTemplate.queryForList("select ?", ps -> {
-                new BlobAsInputStreamTypeHandler().setParameter(ps, 1, new ByteArrayInputStream(testData), JDBCType.BLOB.getVendorTypeNumber());
-            }, (rs, rowNum) -> {
-                return new BlobAsInputStreamTypeHandler().getNullableResult(rs, 1);
-            });
-
-            String s1 = MD5.encodeMD5(testData);
-            String s2 = MD5.encodeMD5(IOUtils.toByteArray(dat.get(0)));
-            assert s1.equals(s2);
-        }
-    }
-
-    @Test
-    public void testBlobInputStreamTypeHandler_4() throws Exception {
-        try (Connection conn = DsUtils.mysqlConn()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(conn);
-            jdbcTemplate.execute("drop procedure if exists proc_blob;");
-            jdbcTemplate.execute("create procedure proc_blob(out p_out blob) begin set p_out= b'0111111100001111'; end;");
-
-            Map<String, Object> objectMap = jdbcTemplate.call("{call proc_blob(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.BLOB.getVendorTypeNumber(), new TypeHandlerBridge<>(new BlobAsInputStreamTypeHandler()))));
-
-            assert objectMap.size() == 2;
-            assert objectMap.get("out") instanceof InputStream;
-            assert objectMap.get("#update-count-1").equals(0);
-
-            byte[] bytes = new byte[2];
-            bytes[0] = 0b01111111;
-            bytes[1] = 0b00001111;
-
-            String s1 = MD5.encodeMD5(bytes);
-            String s2 = MD5.encodeMD5(IOUtils.toByteArray((InputStream) objectMap.get("out")));
-            assert s1.equals(s2);
         }
     }
 }

@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
-import net.hasor.cobble.io.IOUtils;
-import net.hasor.dataql.sqlproc.types.handler.SqlXmlForInputStreamTypeHandler;
-import net.hasor.dataql.sqlproc.types.handler.SqlXmlForReaderTypeHandler;
 import net.hasor.dataql.sqlproc.types.handler.SqlXmlTypeHandler;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
 import net.hasor.dataql.sqlproc.utils.TypeHandlerBridge;
@@ -24,10 +21,6 @@ import net.hasor.dbvisitor.jdbc.SqlParameterUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.Reader;
-import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.JDBCType;
 import java.sql.SQLException;
@@ -112,130 +105,6 @@ public class SqlXmlTypeTest {
             assert objectMap.size() == 2;
             assert objectMap.get("out") instanceof String;
             assert objectMap.get("out").equals("<xml>abc</xml>");
-            assert objectMap.get("#update-count-1").equals(-1);// in oracle ,no more result is -1
-        }
-    }
-
-    @Test
-    public void testSqlXmlForInputStreamTypeHandler_1() throws Exception {
-        try (Connection c = DsUtils.oracleConn()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
-            preTable(jdbcTemplate);
-
-            jdbcTemplate.executeUpdate("insert into tb_oracle_types_onlyxml (c_xml) values ('<xml>abc</xml>')");
-            List<InputStream> dat = jdbcTemplate.queryForList("select c_xml from tb_oracle_types_onlyxml where c_xml is not null", (rs, rowNum) -> {
-                return new SqlXmlForInputStreamTypeHandler().getResult(rs, 1);
-            });
-            String xmlBody = IOUtils.readToString(dat.get(0), "UTF-8");
-            assert xmlBody.equals("<xml>abc</xml>");
-        }
-    }
-
-    @Test
-    public void testSqlXmlForInputStreamTypeHandler_2() throws Exception {
-        try (Connection c = DsUtils.oracleConn()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
-            preTable(jdbcTemplate);
-
-            jdbcTemplate.executeUpdate("insert into tb_oracle_types_onlyxml (c_xml) values ('<xml>abc</xml>')");
-            List<InputStream> dat = jdbcTemplate.queryForList("select c_xml from tb_oracle_types_onlyxml where c_xml is not null", (rs, rowNum) -> {
-                return new SqlXmlForInputStreamTypeHandler().getResult(rs, "c_xml");
-            });
-            String xmlBody = IOUtils.readToString(dat.get(0), "UTF-8");
-            assert xmlBody.equals("<xml>abc</xml>");
-        }
-    }
-
-    @Test
-    public void testSqlXmlForInputStreamTypeHandler_3() throws Exception {
-        try (Connection c = DsUtils.oracleConn()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
-
-            List<InputStream> dat = jdbcTemplate.queryForList("select ? from dual", ps -> {
-                new SqlXmlForInputStreamTypeHandler().setParameter(ps, 1, new ByteArrayInputStream("<xml>abc</xml>".getBytes()), JDBCType.SQLXML.getVendorTypeNumber());
-            }, (rs, rowNum) -> {
-                return new SqlXmlForInputStreamTypeHandler().getNullableResult(rs, 1);
-            });
-            String xmlBody = IOUtils.readToString(dat.get(0), "UTF-8");
-            assert xmlBody.equals("<xml>abc</xml>");
-        }
-    }
-
-    @Test
-    public void testSqlXmlForInputStreamTypeHandler_4() throws Exception {
-        try (Connection c = DsUtils.oracleConn()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
-            preProc(jdbcTemplate);
-
-            Map<String, Object> objectMap = jdbcTemplate.call("{call proc_xmltype(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.SQLXML.getVendorTypeNumber(), new TypeHandlerBridge<>(new SqlXmlForInputStreamTypeHandler()))));
-
-            assert objectMap.size() == 2;
-            assert objectMap.get("out") instanceof InputStream;
-            String xmlBody = IOUtils.readToString((InputStream) objectMap.get("out"), "UTF-8");
-            assert xmlBody.equals("<xml>abc</xml>");
-            assert objectMap.get("#update-count-1").equals(-1);// in oracle ,no more result is -1
-        }
-    }
-
-    @Test
-    public void testSqlXmlForReaderTypeHandler_1() throws Exception {
-        try (Connection c = DsUtils.oracleConn()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
-            preTable(jdbcTemplate);
-
-            jdbcTemplate.executeUpdate("insert into tb_oracle_types_onlyxml (c_xml) values ('<xml>abc</xml>')");
-            List<Reader> dat = jdbcTemplate.queryForList("select c_xml from tb_oracle_types_onlyxml where c_xml is not null", (rs, rowNum) -> {
-                return new SqlXmlForReaderTypeHandler().getResult(rs, 1);
-            });
-            String xmlBody = IOUtils.readToString(dat.get(0));
-            assert xmlBody.equals("<xml>abc</xml>");
-        }
-    }
-
-    @Test
-    public void testSqlXmlForReaderTypeHandler_2() throws Exception {
-        try (Connection c = DsUtils.oracleConn()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
-            preTable(jdbcTemplate);
-
-            jdbcTemplate.executeUpdate("insert into tb_oracle_types_onlyxml (c_xml) values ('<xml>abc</xml>')");
-            List<Reader> dat = jdbcTemplate.queryForList("select c_xml from tb_oracle_types_onlyxml where c_xml is not null", (rs, rowNum) -> {
-                return new SqlXmlForReaderTypeHandler().getResult(rs, "c_xml");
-            });
-            String xmlBody = IOUtils.readToString(dat.get(0));
-            assert xmlBody.equals("<xml>abc</xml>");
-        }
-    }
-
-    @Test
-    public void testSqlXmlForReaderTypeHandler_3() throws Exception {
-        try (Connection c = DsUtils.oracleConn()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
-
-            List<Reader> dat = jdbcTemplate.queryForList("select ? from dual", ps -> {
-                new SqlXmlForReaderTypeHandler().setParameter(ps, 1, new StringReader("<xml>abc</xml>"), JDBCType.SQLXML.getVendorTypeNumber());
-            }, (rs, rowNum) -> {
-                return new SqlXmlForReaderTypeHandler().getNullableResult(rs, 1);
-            });
-            String xmlBody = IOUtils.readToString(dat.get(0));
-            assert xmlBody.equals("<xml>abc</xml>");
-        }
-    }
-
-    @Test
-    public void testSqlXmlForReaderTypeHandler_4() throws Exception {
-        try (Connection c = DsUtils.oracleConn()) {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(c);
-            preProc(jdbcTemplate);
-
-            Map<String, Object> objectMap = jdbcTemplate.call("{call proc_xmltype(?)}",//
-                    Collections.singletonList(SqlParameterUtils.withOutputName("out", JDBCType.SQLXML.getVendorTypeNumber(), new TypeHandlerBridge<>(new SqlXmlForReaderTypeHandler()))));
-
-            assert objectMap.size() == 2;
-            assert objectMap.get("out") instanceof Reader;
-            String xmlBody = IOUtils.readToString((Reader) objectMap.get("out"));
-            assert xmlBody.equals("<xml>abc</xml>");
             assert objectMap.get("#update-count-1").equals(-1);// in oracle ,no more result is -1
         }
     }

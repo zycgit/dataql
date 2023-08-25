@@ -145,8 +145,6 @@ public final class TypeHandlerRegistry {
         this.register(String.class, createSingleTypeHandler(StringTypeHandler.class));
         this.register(BigInteger.class, createSingleTypeHandler(BigIntegerTypeHandler.class));
         this.register(BigDecimal.class, createSingleTypeHandler(BigDecimalTypeHandler.class));
-        this.register(Reader.class, createSingleTypeHandler(StringAsReaderTypeHandler.class));
-        this.register(InputStream.class, createSingleTypeHandler(BytesAsInputStreamTypeHandler.class));
         this.register(Byte[].class, createSingleTypeHandler(BytesAsBytesWrapTypeHandler.class));
         this.register(byte[].class, createSingleTypeHandler(BytesTypeHandler.class));
         this.register(Object[].class, createSingleTypeHandler(ArrayTypeHandler.class));
@@ -214,14 +212,7 @@ public final class TypeHandlerRegistry {
         this.registerCrossNChars(String.class, createSingleTypeHandler(NStringTypeHandler.class));
         this.registerCross(Types.CLOB, String.class, createSingleTypeHandler(ClobAsStringTypeHandler.class));
         this.registerCross(Types.NCLOB, String.class, createSingleTypeHandler(NClobAsStringTypeHandler.class));
-        this.registerCrossChars(Reader.class, createSingleTypeHandler(StringAsReaderTypeHandler.class));
-        this.registerCrossNChars(Reader.class, createSingleTypeHandler(NStringAsReaderTypeHandler.class));
-        this.registerCross(Types.CLOB, Reader.class, createSingleTypeHandler(ClobAsReaderTypeHandler.class));
-        this.registerCross(Types.NCLOB, Reader.class, createSingleTypeHandler(NClobAsReaderTypeHandler.class));
-
         this.registerCross(Types.SQLXML, String.class, createSingleTypeHandler(SqlXmlTypeHandler.class));
-        this.registerCross(Types.SQLXML, Reader.class, createSingleTypeHandler(SqlXmlForReaderTypeHandler.class));
-        this.registerCross(Types.SQLXML, InputStream.class, createSingleTypeHandler(SqlXmlForInputStreamTypeHandler.class));
 
         this.registerCross(Types.BINARY, byte[].class, createSingleTypeHandler(BytesTypeHandler.class));
         this.registerCross(Types.BINARY, Byte[].class, createSingleTypeHandler(BytesAsBytesWrapTypeHandler.class));
@@ -231,11 +222,6 @@ public final class TypeHandlerRegistry {
         this.registerCross(Types.BLOB, Byte[].class, createSingleTypeHandler(BlobAsBytesWrapTypeHandler.class));
         this.registerCross(Types.LONGVARBINARY, byte[].class, createSingleTypeHandler(BytesTypeHandler.class));
         this.registerCross(Types.LONGVARBINARY, Byte[].class, createSingleTypeHandler(BytesAsBytesWrapTypeHandler.class));
-
-        this.registerCross(Types.BINARY, InputStream.class, createSingleTypeHandler(BytesAsInputStreamTypeHandler.class));
-        this.registerCross(Types.VARBINARY, InputStream.class, createSingleTypeHandler(BytesAsInputStreamTypeHandler.class));
-        this.registerCross(Types.LONGVARBINARY, InputStream.class, createSingleTypeHandler(BytesAsInputStreamTypeHandler.class));
-        this.registerCross(Types.BLOB, InputStream.class, createSingleTypeHandler(BlobAsInputStreamTypeHandler.class));
 
         this.registerCross(Types.ARRAY, Object.class, createSingleTypeHandler(ArrayTypeHandler.class));
 
