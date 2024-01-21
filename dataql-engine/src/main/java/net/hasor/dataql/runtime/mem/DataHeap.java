@@ -51,7 +51,7 @@ public class DataHeap implements Cloneable {
             System.arraycopy(this.heapDataPool, 0, newHeapDataPool, 0, heapDataPool.length);
             this.heapDataPool = newHeapDataPool;
         }
-        this.heapDataPool[position] = data;
+        this.heapDataPool[position] = data; // 这里有越界的 Bug，
     }
 
     public Object loadData(int depth, int position) {
