@@ -13,19 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.dialect.provider;
-import net.hasor.dataql.sqlproc.dialect.BoundSql;
-import net.hasor.dataql.sqlproc.dialect.PageDialect;
+package net.hasor.dataql.sqlproc.dynamic.config;
+import net.hasor.dataql.Hints;
+import net.hasor.dataql.sqlproc.dynamic.logic.ArrayDynamicSql;
 
 /**
- * 公共 SqlDialect 实现
+ * Query SqlConfig
  * @author 赵永春 (zyc@hasor.net)
- * @version : 2020-10-31
+ * @version : 2021-06-19
  */
-public abstract class AbstractDialect implements PageDialect {
+public class SelectConfig extends DqlConfig {
+    public SelectConfig(ArrayDynamicSql target, Hints config) {
+        super(target, config);
+    }
 
-    /** 生成 count 查询 SQL */
-    public BoundSql countSql(BoundSql boundSql) {
-        return new BoundSql.BoundSqlObj("SELECT COUNT(*) FROM (" + boundSql.getSqlString() + ") as TEMP_T", boundSql.getArgs());
+    @Override
+    public QueryType getType() {
+        return QueryType.Select;
     }
 }

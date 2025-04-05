@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic;
-import net.hasor.dbvisitor.dialect.BoundSql;
+
+import net.hasor.dataql.sqlproc.dialect.BoundSql;
+import net.hasor.dataql.sqlproc.dynamic.rule.ResultArg;
 
 import java.util.ArrayList;
 import java.util.Arrays;

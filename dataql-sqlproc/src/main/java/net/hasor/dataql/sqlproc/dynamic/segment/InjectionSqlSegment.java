@@ -17,11 +17,33 @@ package net.hasor.dataql.sqlproc.dynamic.segment;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
+import static net.hasor.dataql.sqlproc.internal.OgnlUtils.evalOgnl;
 
 import java.sql.SQLException;
 
-public interface SqlSegment extends Cloneable {
-    void buildQuery(SqlArgSource data, QueryContext context, SqlBuilder sqlBuilder) throws SQLException;
+public class InjectionSqlSegment implements SqlSegment {
+    private final String exprString;
 
-    SqlSegment clone();
+    public InjectionSqlSegment(String exprString) {
+        this.exprString = exprString;
+    }
+
+    public String getExpr() {
+        return this.exprString;
+    }
+
+    @Override
+    public void buildQuery(SqlArgSource data, QueryContext context, SqlBuilder sqlBuilder) throws SQLException {
+        sqlBuilder.appendSql(String.valueOf(evalOgnl(this.exprString, data)));
+    }
+
+    @Override
+    public InjectionSqlSegment clone() {
+        return new InjectionSqlSegment(this.exprString);
+    }
+
+    @Override
+    public String toString() {
+        return "Injection [" + this.exprString + "]";
+    }
 }

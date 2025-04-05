@@ -13,15 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.dynamic.segment;
-import net.hasor.dataql.sqlproc.dynamic.QueryContext;
-import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
-import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
+package net.hasor.dataql.sqlproc.dynamic;
 
-import java.sql.SQLException;
+import net.hasor.dataql.sqlproc.dynamic.rule.SqlRule;
+import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 
-public interface SqlSegment extends Cloneable {
-    void buildQuery(SqlArgSource data, QueryContext context, SqlBuilder sqlBuilder) throws SQLException;
+public interface QueryContext {
 
-    SqlSegment clone();
+    SqlRule findRule(String ruleName);
+
+    DynamicSql findMacro(String name);
+
+    Class<?> loadClass(String typeName) throws ClassNotFoundException;
+
+    TypeHandlerRegistry getTypeRegistry();
+
+    //Options options();
 }

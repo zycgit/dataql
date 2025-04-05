@@ -17,11 +17,34 @@ package net.hasor.dataql.sqlproc.dynamic.segment;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
+import net.hasor.dataql.sqlproc.dynamic.rule.ArgRule;
 
 import java.sql.SQLException;
+import java.util.Collections;
 
-public interface SqlSegment extends Cloneable {
-    void buildQuery(SqlArgSource data, QueryContext context, SqlBuilder sqlBuilder) throws SQLException;
+public class PositionSqlSegment implements SqlSegment {
+    private final int position;
 
-    SqlSegment clone();
+    public PositionSqlSegment(int position) {
+        this.position = position;
+    }
+
+    public int getPosition() {
+        return this.position;
+    }
+
+    @Override
+    public void buildQuery(SqlArgSource data, QueryContext context, SqlBuilder sqlBuilder) throws SQLException {
+        ArgRule.INSTANCE.executeRule(data, context, sqlBuilder, "arg" + position, Collections.emptyMap());
+    }
+
+    @Override
+    public PositionSqlSegment clone() {
+        return new PositionSqlSegment(this.position);
+    }
+
+    @Override
+    public String toString() {
+        return "Args [" + this.position + "]";
+    }
 }

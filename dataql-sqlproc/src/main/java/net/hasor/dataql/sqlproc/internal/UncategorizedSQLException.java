@@ -13,15 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.dynamic.segment;
-import net.hasor.dataql.sqlproc.dynamic.QueryContext;
-import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
-import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
+package net.hasor.dataql.sqlproc.internal;
+import net.hasor.dbvisitor.jdbc.SqlProvider;
 
 import java.sql.SQLException;
 
-public interface SqlSegment extends Cloneable {
-    void buildQuery(SqlArgSource data, QueryContext context, SqlBuilder sqlBuilder) throws SQLException;
+/**
+ * JDBC 执行异常
+ * @author 赵永春 (zyc@hasor.net)
+ * @version 2013-10-14
+ */
+public class UncategorizedSQLException extends SQLException implements SqlProvider {
+    private final String sql;
 
-    SqlSegment clone();
+    public UncategorizedSQLException(String sql, String message, SQLException ex) {
+        super(message, ex);
+        this.sql = sql;
+    }
+
+    public UncategorizedSQLException(String sql, String message) {
+        super(message);
+        this.sql = sql;
+    }
+
+    @Override
+    public String getSql() {
+        return this.sql;
+    }
 }

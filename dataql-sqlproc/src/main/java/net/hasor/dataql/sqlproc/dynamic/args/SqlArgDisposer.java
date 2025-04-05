@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,19 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.dialect.provider;
-import net.hasor.dataql.sqlproc.dialect.BoundSql;
-import net.hasor.dataql.sqlproc.dialect.PageDialect;
-
+package net.hasor.dataql.sqlproc.dynamic.args;
 /**
- * 公共 SqlDialect 实现
+ * 用于关闭 SQL 参数的资源分配，例如： Lob 类型参数。
  * @author 赵永春 (zyc@hasor.net)
- * @version : 2020-10-31
+ * @version 2013-10-14
  */
-public abstract class AbstractDialect implements PageDialect {
-
-    /** 生成 count 查询 SQL */
-    public BoundSql countSql(BoundSql boundSql) {
-        return new BoundSql.BoundSqlObj("SELECT COUNT(*) FROM (" + boundSql.getSqlString() + ") as TEMP_T", boundSql.getArgs());
-    }
+public interface SqlArgDisposer {
+    /** 关闭参数分配的可回收资源，例如：Lob 类型参数。 */
+    void cleanupParameters();
 }

@@ -17,9 +17,11 @@ package net.hasor.dataql.sqlproc.dialect;
 import net.hasor.cobble.ResourcesUtils;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.ref.LinkedCaseInsensitiveMap;
-import net.hasor.dataql.sqlproc.JdbcHelper;
 import net.hasor.dataql.sqlproc.dialect.provider.*;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 import java.util.Map;
 
 /**
@@ -62,6 +64,12 @@ public class SqlDialectRegister {
 
     public static PageDialect findOrCreate(String dialectName) {
         return findOrCreate(dialectName, null);
+    }
+
+    public static PageDialect findDialect(Connection conn) throws SQLException {
+        DatabaseMetaData metaData = conn.getMetaData();
+        String tmpDbType = JdbcHelper.getDbType(metaData.getURL(), metaData.getDriverName());
+        return findOrCreate(tmpDbType, null);
     }
 
     public static PageDialect findOrCreate(String dialectName, ClassLoader loader) {

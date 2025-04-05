@@ -20,8 +20,29 @@ import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
 
 import java.sql.SQLException;
 
-public interface SqlSegment extends Cloneable {
-    void buildQuery(SqlArgSource data, QueryContext context, SqlBuilder sqlBuilder) throws SQLException;
+public class TextSqlSegment implements SqlSegment {
+    private final StringBuilder textString;
 
-    SqlSegment clone();
+    public TextSqlSegment(String exprString) {
+        this.textString = new StringBuilder(exprString);
+    }
+
+    public void append(String append) {
+        this.textString.append(append);
+    }
+
+    @Override
+    public void buildQuery(SqlArgSource data, QueryContext context, SqlBuilder sqlBuilder) throws SQLException {
+        sqlBuilder.appendSql(this.textString.toString());
+    }
+
+    @Override
+    public TextSqlSegment clone() {
+        return new TextSqlSegment(this.textString.toString());
+    }
+
+    @Override
+    public String toString() {
+        return "Text [" + this.textString + "]";
+    }
 }
