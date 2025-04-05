@@ -1,11 +1,11 @@
 /*
- * Copyright 2008-2009 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,17 +15,13 @@
  */
 package net.hasor.dataql.sqlproc.dialect.provider;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
-import net.hasor.dataql.sqlproc.dialect.BoundSqlObject;
-import net.hasor.dataql.sqlproc.dialect.PageDialect;
-import net.hasor.dataql.sqlproc.dialect.SqlArg;
 
 /**
  * DB2 的 SqlDialect 实现
- * @version : 2020-10-31
  * @author 赵永春 (zyc@hasor.net)
+ * @version : 2020-10-31
  */
-public class Db2Dialect extends AbstractDialect implements PageDialect {
-
+public class Db2Dialect extends AbstractDialect {
     @Override
     public BoundSql pageSql(BoundSql boundSql, long start, long limit) {
         StringBuilder sqlBuilder = new StringBuilder();
@@ -33,12 +29,11 @@ public class Db2Dialect extends AbstractDialect implements PageDialect {
         sqlBuilder.append(boundSql.getSqlString());
         sqlBuilder.append(" ) AS TMP_PAGE) TMP_PAGE WHERE ROW_ID BETWEEN ? AND ?");
 
-        SqlArg[] paramArray = boundSql.getArgs();
-        SqlArg[] destArgs = new SqlArg[paramArray.length + 2];
+        Object[] paramArray = boundSql.getArgs();
+        Object[] destArgs = new Object[paramArray.length + 2];
         System.arraycopy(paramArray, 0, destArgs, 0, paramArray.length);
-        destArgs[paramArray.length] = buildNumber(start);
-        destArgs[paramArray.length + 1] = buildNumber(limit);
-        return new BoundSqlObject(sqlBuilder.toString(), destArgs);
+        destArgs[paramArray.length] = start;
+        destArgs[paramArray.length + 1] = limit;
+        return new BoundSql.BoundSqlObj(sqlBuilder.toString(), destArgs);
     }
-
 }

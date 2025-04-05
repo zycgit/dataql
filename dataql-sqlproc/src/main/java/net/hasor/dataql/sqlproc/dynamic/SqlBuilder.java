@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.dialect;
-import net.hasor.cobble.StringUtils;
+package net.hasor.dataql.sqlproc.dynamic;
+import net.hasor.dbvisitor.dialect.BoundSql;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,12 +22,13 @@ import java.util.List;
 
 /**
  * SQL Build
- * @version : 2021-06-05
  * @author 赵永春 (zyc@hasor.net)
+ * @version 2021-06-05
  */
-public class BoundSqlBuilder implements BoundSql {
-    protected final StringBuilder queryString = new StringBuilder();
-    protected final List<SqlArg>  argList     = new ArrayList<>();
+public class SqlBuilder implements BoundSql {
+    protected final StringBuilder   queryString = new StringBuilder();
+    protected final List<Object>    argList     = new ArrayList<>();
+    protected final List<ResultArg> rules       = new ArrayList<>();
 
     public boolean lastSpaceCharacter() {
         if (this.queryString.length() == 0) {
@@ -38,7 +39,13 @@ public class BoundSqlBuilder implements BoundSql {
         }
     }
 
-    public void appendSql(String sql, SqlArg... args) {
+    public void appendResult(ResultArg rule) {
+        if (rule != null) {
+            this.rules.add(rule);
+        }
+    }
+
+    public void appendSql(String sql, Object... args) {
         this.queryString.append(sql);
         this.argList.addAll(Arrays.asList(args));
     }
@@ -52,9 +59,9 @@ public class BoundSqlBuilder implements BoundSql {
     }
 
     public void appendBuilder(BoundSql boundSql) {
-        if (boundSql instanceof BoundSqlBuilder) {
-            this.queryString.append(((BoundSqlBuilder) boundSql).queryString);
-            this.argList.addAll(((BoundSqlBuilder) boundSql).argList);
+        if (boundSql instanceof SqlBuilder) {
+            this.queryString.append(((SqlBuilder) boundSql).queryString);
+            this.argList.addAll(((SqlBuilder) boundSql).argList);
         } else {
             this.queryString.append(boundSql.getSqlString());
             this.argList.addAll(Arrays.asList(boundSql.getArgs()));
@@ -71,16 +78,11 @@ public class BoundSqlBuilder implements BoundSql {
     }
 
     @Override
-    public SqlArg[] getArgs() {
-        return this.argList.toArray(new SqlArg[0]);
+    public Object[] getArgs() {
+        return this.argList.toArray();
     }
 
-    @Override
-    public String toString() {
-        if (this.argList.isEmpty()) {
-            return this.getSqlString() + " [EMPTY]";
-        } else {
-            return this.getSqlString() + " [" + StringUtils.join(getArgs(), ",") + "]";
-        }
+    public List<ResultArg> getResultArgs() {
+        return this.rules;
     }
 }

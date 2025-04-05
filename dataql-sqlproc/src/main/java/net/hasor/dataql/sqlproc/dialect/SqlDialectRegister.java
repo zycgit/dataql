@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dialect;
+import net.hasor.cobble.ResourcesUtils;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.ref.LinkedCaseInsensitiveMap;
-import net.hasor.dataql.sqlproc.JdbcUtils;
+import net.hasor.dataql.sqlproc.JdbcHelper;
 import net.hasor.dataql.sqlproc.dialect.provider.*;
 
 import java.util.Map;
@@ -31,24 +32,23 @@ public class SqlDialectRegister {
     private static final Map<String, PageDialect> dialectCache    = new LinkedCaseInsensitiveMap<>();
 
     static {
-        registerDialectAlias(JdbcUtils.DB2, Db2Dialect.class);
-        registerDialectAlias(JdbcUtils.DERBY, DerbyDialect.class);// Apache Derby
-        registerDialectAlias(JdbcUtils.DM, DmDialect.class);
-        registerDialectAlias(JdbcUtils.H2, H2Dialect.class);
-        //registerDialectAlias(JdbcUtils.HIVE, HiveDialect.class);
-        registerDialectAlias(JdbcUtils.HSQL, HSQLDialect.class);
-        registerDialectAlias(JdbcUtils.IMPALA, ImpalaDialect.class);
-        registerDialectAlias(JdbcUtils.INFORMIX, InformixDialect.class);
-        registerDialectAlias(JdbcUtils.KINGBASE, KingbaseDialect.class);
-        registerDialectAlias(JdbcUtils.MARIADB, MariaDBDialect.class);
-        registerDialectAlias(JdbcUtils.MYSQL, MySqlDialect.class);
-        registerDialectAlias(JdbcUtils.ORACLE, OracleDialect.class);
-        registerDialectAlias(JdbcUtils.PHOENIX, PhoenixDialect.class);
-        registerDialectAlias(JdbcUtils.POSTGRESQL, PostgreSqlDialect.class);
-        registerDialectAlias(JdbcUtils.SQLITE, SqlLiteDialect.class);
-        registerDialectAlias(JdbcUtils.SQL_SERVER, SqlServerDialect.class);
-        registerDialectAlias(JdbcUtils.JTDS, SqlServerDialect.class);
-        registerDialectAlias(JdbcUtils.XUGU, XuGuDialect.class);
+        registerDialectAlias(JdbcHelper.DB2, Db2Dialect.class);
+        registerDialectAlias(JdbcHelper.DERBY, DerbyDialect.class);// Apache Derby
+        registerDialectAlias(JdbcHelper.DM, DmDialect.class);
+        registerDialectAlias(JdbcHelper.H2, H2Dialect.class);
+        //registerDialectAlias(JdbcHelper.HIVE, HiveDialect.class);
+        registerDialectAlias(JdbcHelper.HSQL, HSQLDialect.class);
+        registerDialectAlias(JdbcHelper.IMPALA, ImpalaDialect.class);
+        registerDialectAlias(JdbcHelper.INFORMIX, InformixDialect.class);
+        registerDialectAlias(JdbcHelper.KINGBASE, PostgreSqlDialect.class);
+        registerDialectAlias(JdbcHelper.POSTGRESQL, PostgreSqlDialect.class);
+        registerDialectAlias(JdbcHelper.MARIADB, MySqlDialect.class);
+        registerDialectAlias(JdbcHelper.MYSQL, MySqlDialect.class);
+        registerDialectAlias(JdbcHelper.ORACLE, OracleDialect.class);
+        registerDialectAlias(JdbcHelper.SQLITE, SqlLiteDialect.class);
+        registerDialectAlias(JdbcHelper.SQL_SERVER, SqlServerDialect.class);
+        registerDialectAlias(JdbcHelper.JTDS, SqlServerDialect.class);
+        registerDialectAlias(JdbcHelper.XUGU, XuGuDialect.class);
     }
 
     public static void clearDialectCache() {
@@ -57,28 +57,32 @@ public class SqlDialectRegister {
 
     public static void registerDialectAlias(String dialectName, Class<? extends PageDialect> dialectClass) {
         dialectAliasMap.put(dialectName, dialectClass);
+        dialectAliasMap.put(dialectClass.getName(), dialectClass);
     }
 
-    public static PageDialect findOrCreate(final String dialectName, ClassLoaderProvider loader) {
+    public static PageDialect findOrCreate(String dialectName) {
+        return findOrCreate(dialectName, null);
+    }
+
+    public static PageDialect findOrCreate(String dialectName, ClassLoader loader) {
         if (StringUtils.isBlank(dialectName)) {
-            return null;
+            return DefaultPageDialect.DEFAULT;
         }
         PageDialect dialect = dialectCache.get(dialectName);
         if (dialect != null) {
             return dialect;
         }
-
-        loader = (loader == null) ? name -> Thread.currentThread().getContextClassLoader().loadClass(name) : loader;
+        //
+        loader = (loader == null) ? Thread.currentThread().getContextClassLoader() : loader;
         String lastMessage = null;
         Class<?> aClass = dialectAliasMap.get(dialectName);
         if (aClass == null) {
             try {
-                aClass = loader.loadClass(dialectName);
+                aClass = ResourcesUtils.classForName(loader, dialectName);
             } catch (ClassNotFoundException e) {
                 lastMessage = "load dialect '" + dialectName + "' class not found";
             }
         }
-
         if (aClass != null) {
             try {
                 dialect = (PageDialect) aClass.newInstance();
@@ -92,7 +96,7 @@ public class SqlDialectRegister {
                 throw new IllegalStateException("no dialect '" + dialectName + "' found.");
             }
         }
-
+        //
         dialectCache.put(dialectName, dialect);
         return dialect;
     }

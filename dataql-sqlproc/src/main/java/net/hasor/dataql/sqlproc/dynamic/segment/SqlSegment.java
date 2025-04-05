@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2010 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.dialect.provider;
+package net.hasor.dataql.sqlproc.dynamic.segment;
+import net.hasor.dbvisitor.dynamic.QueryContext;
+import net.hasor.dbvisitor.dynamic.SqlArgSource;
+import net.hasor.dbvisitor.dynamic.SqlBuilder;
 
-/**
- * MariaDB 的 SqlDialect 实现
- * @version : 2020-10-31
- * @author 赵永春 (zyc@hasor.net)
- */
-public class MariaDBDialect extends MySqlDialect {
+import java.sql.SQLException;
+
+public interface SqlSegment extends Cloneable {
+    void buildQuery(SqlArgSource data, QueryContext context, SqlBuilder sqlBuilder) throws SQLException;
+
+    SqlSegment clone();
 }

@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2010 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dialect.provider;
-import net.hasor.dataql.sqlproc.dialect.*;
+import net.hasor.dataql.sqlproc.dialect.BoundSql;
+import net.hasor.dataql.sqlproc.dialect.PageDialect;
+import net.hasor.dataql.sqlproc.dynamic.SqlMode;
+import net.hasor.dataql.sqlproc.types.SqlArg;
 import net.hasor.dataql.sqlproc.types.TypeHandler;
-import net.hasor.dataql.sqlproc.types.handler.IntegerTypeHandler;
+import net.hasor.dataql.sqlproc.types.handler.number.IntegerTypeHandler;
 
 import java.sql.Types;
 
@@ -34,6 +37,6 @@ public abstract class AbstractDialect implements PageDialect {
 
     /** 生成 count 查询 SQL */
     public BoundSql countSql(BoundSql boundSql) {
-        return new BoundSqlObject("SELECT COUNT(*) FROM (" + boundSql.getSqlString() + ") as TEMP_T", boundSql.getArgs());
+        return new BoundSql.BoundSqlObj("SELECT COUNT(*) FROM (" + boundSql.getSqlString() + ") as TEMP_T", boundSql.getArgs());
     }
 }

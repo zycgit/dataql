@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,12 +17,14 @@ package net.hasor.dataql.sqlproc.dialect;
 
 /**
  * SQL 分页方言
- * @version : 2020-10-31
  * @author 赵永春 (zyc@hasor.net)
+ * @version : 2020-10-31
  */
 public interface PageDialect {
     /** 生成 count 查询 SQL */
-    BoundSql countSql(BoundSql boundSql);
+    default BoundSql countSql(BoundSql boundSql) {
+        return new BoundSql.BoundSqlObj("SELECT COUNT(*) FROM (" + boundSql.getSqlString() + ") as TEMP_T", boundSql.getArgs());
+    }
 
     /** 生成分页查询 SQL（基于 count 的） */
     BoundSql pageSql(BoundSql boundSql, long start, long limit);

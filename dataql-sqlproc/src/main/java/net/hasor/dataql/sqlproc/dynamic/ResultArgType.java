@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.dialect;
+package net.hasor.dataql.sqlproc.dynamic;
 /**
- * 查询序列的方言
- * @version : 2020-10-31
+ * 参数模式
  * @author 赵永春 (zyc@hasor.net)
+ * @version 2021-05-24
  */
-public interface SeqSqlDialect extends PageDialect {
-    /** 查询序列 */
-    String selectSeq(boolean useQualifier, String catalog, String schema, String seqName);
+public enum ResultArgType {
+    ResultSet,
+    ResultUpdate,
+    Default;
 }

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,9 +16,6 @@
 package net.hasor.dataql.sqlproc.dialect.provider;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
-import net.hasor.dataql.sqlproc.dialect.BoundSqlObject;
-import net.hasor.dataql.sqlproc.dialect.PageDialect;
-import net.hasor.dataql.sqlproc.dialect.SqlArg;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,8 +26,7 @@ import java.util.List;
  * @author 赵永春 (zyc@hasor.net)
  * @since 2016-11-10
  */
-public class SqlServerDialect extends AbstractDialect implements PageDialect {
-
+public class SqlServerDialect extends AbstractDialect {
     private static String getOrderByPart(String sql) {
         String loweredString = sql.toLowerCase();
         int orderByIndex = loweredString.indexOf("order by");
@@ -44,7 +40,7 @@ public class SqlServerDialect extends AbstractDialect implements PageDialect {
     @Override
     public BoundSql pageSql(BoundSql boundSql, long start, long limit) {
         String sqlString = boundSql.getSqlString();
-        List<SqlArg> paramArrays = new ArrayList<>(Arrays.asList(boundSql.getArgs()));
+        List<Object> paramArrays = new ArrayList<>(Arrays.asList(boundSql.getArgs()));
         //
         StringBuilder pagingBuilder = new StringBuilder();
         String orderby = getOrderByPart(sqlString);
@@ -64,8 +60,8 @@ public class SqlServerDialect extends AbstractDialect implements PageDialect {
         if (StringUtils.isBlank(orderby)) {
             orderby = "ORDER BY CURRENT_TIMESTAMP";
         }
-        SqlArg firstParam = buildNumber(start + 1);
-        SqlArg secondParam = buildNumber(start + limit);
+        long firstParam = start + 1;
+        long secondParam = start + limit;
         sqlString = "WITH selectTemp AS (SELECT " + distinctStr + "TOP 100 PERCENT " + //
                 " ROW_NUMBER() OVER (" + orderby + ") as __row_number__, " + pagingBuilder + ") SELECT * FROM selectTemp WHERE __row_number__ BETWEEN " +
                 //FIX#299：原因：mysql 中 limit 10(offset,size) 是从第10开始（不包含10）,；而这里用的BETWEEN是两边都包含，所以改为offset+1
@@ -73,6 +69,6 @@ public class SqlServerDialect extends AbstractDialect implements PageDialect {
         //
         paramArrays.add(firstParam);
         paramArrays.add(secondParam);
-        return new BoundSqlObject(sqlString, paramArrays.toArray(new SqlArg[0]));
+        return new BoundSql.BoundSqlObj(sqlString, paramArrays.toArray());
     }
 }

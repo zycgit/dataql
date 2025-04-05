@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,12 +15,15 @@
  */
 package net.hasor.dataql.sqlproc.dialect;
 /**
- * 参数模式
+ * 默认 SqlDialect 实现
  * @author 赵永春 (zyc@hasor.net)
- * @version : 2021-05-24
+ * @version : 2020-10-31
  */
-public enum SqlMode {
-    In,
-    Out,
-    InOut
+public class DefaultPageDialect implements PageDialect {
+    public static final DefaultPageDialect DEFAULT = new DefaultPageDialect();
+
+    @Override
+    public BoundSql pageSql(BoundSql boundSql, long start, long limit) {
+        throw new UnsupportedOperationException();
+    }
 }

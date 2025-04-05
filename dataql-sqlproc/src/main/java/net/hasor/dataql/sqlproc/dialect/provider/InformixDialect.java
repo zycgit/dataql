@@ -1,11 +1,11 @@
 /*
- * Copyright 2008-2009 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,9 +15,6 @@
  */
 package net.hasor.dataql.sqlproc.dialect.provider;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
-import net.hasor.dataql.sqlproc.dialect.BoundSqlObject;
-import net.hasor.dataql.sqlproc.dialect.PageDialect;
-import net.hasor.dataql.sqlproc.dialect.SqlArg;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,32 +22,31 @@ import java.util.List;
 
 /**
  * Informix 的 SqlDialect 实现
- * @version : 2020-10-31
  * @author 赵永春 (zyc@hasor.net)
+ * @version : 2020-10-31
  */
-public class InformixDialect extends AbstractDialect implements PageDialect {
-
+public class InformixDialect extends AbstractDialect {
     @Override
     public BoundSql pageSql(BoundSql boundSql, long start, long limit) {
         String sqlString = boundSql.getSqlString();
-        List<SqlArg> paramArrays = new ArrayList<>(Arrays.asList(boundSql.getArgs()));
+        List<Object> paramArrays = new ArrayList<>(Arrays.asList(boundSql.getArgs()));
 
         StringBuilder sqlBuilder = new StringBuilder();
-        List<SqlArg> newParam = new ArrayList<>();
+        List<Object> newParam = new ArrayList<>();
         sqlBuilder.append("SELECT ");
         if (start > 0) {
             sqlBuilder.append(" SKIP ? ");
-            newParam.add(buildNumber(start));
+            newParam.add(start);
         }
         if (limit > 0) {
             sqlBuilder.append(" FIRST ? ");
-            newParam.add(buildNumber(limit));
+            newParam.add(limit);
         }
         sqlBuilder.append(" * FROM ( ");
         sqlBuilder.append(sqlString);
         sqlBuilder.append(" ) TEMP_T");
 
         paramArrays.addAll(0, newParam);
-        return new BoundSqlObject(sqlBuilder.toString(), paramArrays.toArray(new SqlArg[0]));
+        return new BoundSql.BoundSqlObj(sqlBuilder.toString(), paramArrays.toArray());
     }
 }

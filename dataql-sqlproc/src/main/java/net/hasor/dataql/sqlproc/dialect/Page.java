@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2005 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.execute.page;
+package net.hasor.dataql.sqlproc.dialect;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -50,8 +50,14 @@ public interface Page {
     /** 获取记录总数 */
     long getTotalCount();
 
-    /** 设置记录总数（用于避免 count 查询） */
+    /** 设置记录总数 */
     void setTotalCount(long totalCount);
+
+    /** 无论 totalCount 是否设置了值，分页查询都将会执行 select count 语句用以刷新总数 */
+    void refreshTotalCount();
+
+    /** 获取是否刷新总记录数 */
+    boolean isRefreshTotalCount();
 
     /** 移动到第一页 */
     default void firstPage() {
@@ -75,14 +81,15 @@ public interface Page {
 
     /** 获取分页信息 */
     default Map<String, Object> toPageInfo() {
-        return new LinkedHashMap<String, Object>() {{
-            put("enable", getPageSize() > 0);
-            put("pageSize", getPageSize());
-            put("totalCount", getTotalCount());
-            put("totalPage", getTotalPage());
-            put("currentPage", getCurrentPage());
-            put("recordPosition", getFirstRecordPosition());
-        }};
+        return new LinkedHashMap<String, Object>() {
+            {
+                put("enable", getPageSize() > 0);
+                put("pageSize", getPageSize());
+                put("totalCount", getTotalCount());
+                put("totalPage", getTotalPage());
+                put("currentPage", getCurrentPage());
+                put("recordPosition", getFirstRecordPosition());
+            }
+        };
     }
-
 }
