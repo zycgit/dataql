@@ -34,9 +34,9 @@ public abstract class DqlConfig extends SqlConfig {
         super(target, config);
 
         if (config != null) {
-            String fetchSizeStr = getNodeAttributeValue(config, SqlHintNames.FRAGMENT_SQL_FETCH_SIZE);
-            String resultSetTypeStr = getNodeAttributeValue(config, SqlHintNames.FRAGMENT_SQL_RESULT_SET_TYPE);
-            String bindOutStr = getNodeAttributeValue(config, SqlHintNames.FRAGMENT_SQL_BIND_OUT);
+            String fetchSizeStr = SqlHintNames.getValue(config, SqlHintNames.FRAGMENT_SQL_FETCH_SIZE);
+            String resultSetTypeStr = SqlHintNames.getValue(config, SqlHintNames.FRAGMENT_SQL_RESULT_SET_TYPE);
+            String bindOutStr = SqlHintNames.getValue(config, SqlHintNames.FRAGMENT_SQL_BIND_OUT);
 
             this.fetchSize = Integer.parseInt(StringUtils.isBlank(fetchSizeStr) ? "256" : fetchSizeStr);
             this.resultSetType = ResultSetType.valueOfCode(resultSetTypeStr, ResultSetType.DEFAULT);

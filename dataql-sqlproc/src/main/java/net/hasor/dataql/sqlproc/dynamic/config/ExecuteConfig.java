@@ -32,7 +32,7 @@ public class ExecuteConfig extends SqlConfig {
         super(target, config);
 
         if (config != null) {
-            String bindOutStr = getNodeAttributeValue(config, SqlHintNames.FRAGMENT_SQL_BIND_OUT);
+            String bindOutStr = SqlHintNames.getValue(config, SqlHintNames.FRAGMENT_SQL_BIND_OUT);
 
             this.bindOut = StringUtils.isNotBlank(bindOutStr) ? bindOutStr.split(",") : ArrayUtils.EMPTY_STRING_ARRAY;
         }

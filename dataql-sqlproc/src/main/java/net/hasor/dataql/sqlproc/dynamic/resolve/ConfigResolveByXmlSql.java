@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,13 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.repository;
-import net.hasor.cobble.StringUtils;
+package net.hasor.dataql.sqlproc.dynamic.resolve;
 import net.hasor.dataql.Hints;
-import net.hasor.dataql.sqlproc.repository.config.QueryProcSql;
-import net.hasor.dataql.sqlproc.repository.nodes.*;
+import net.hasor.dataql.runtime.HintsSet;
+import net.hasor.dataql.sqlproc.SqlHintNames;
+import net.hasor.dataql.sqlproc.dynamic.config.InsertConfig;
+import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
+import net.hasor.dataql.sqlproc.dynamic.config.SelectKeyConfig;
+import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
+import net.hasor.dataql.sqlproc.dynamic.logic.*;
+import net.hasor.dataql.sqlproc.dynamic.segment.PlanDynamicSql;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
@@ -29,50 +33,56 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import java.io.Reader;
 import java.io.StringReader;
 
 /**
- * 解析动态 SQL 配置
+ * parse dynamic SQL from mapperFile
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2021-06-05
- * @author 赵永春 (zyc@hasor.net)
  */
-public class ProcSqlParser {
+public class ConfigResolveByXmlSql extends ConfigResolve {
     private static final DocumentBuilderFactory FACTORY = DocumentBuilderFactory.newInstance();
 
-    public QueryProcSql parseDynamicSql(String queryBody, Hints hints) throws ParserConfigurationException, IOException, SAXException {
-        StringBuilder strBuilder = new StringBuilder();
-        String hasXml = String.valueOf(hints.getOrDefault("hasXml", "false"));
-
-        strBuilder.append("<execute");
-        hints.forEach((key, value) -> {
-            String xmlValue = value != null ? value.toString().replace("\"", "&quot;") : "";
-            strBuilder.append(" " + key + " =\"" + xmlValue + "\"");
-        });
-        strBuilder.append(">");
-
-        if (StringUtils.equalsIgnoreCase("true", hasXml)) {
-            strBuilder.append(queryBody);
-        } else {
-            strBuilder.append("<![CDATA[ " + queryBody + " ]]>");
+    public static Document loadXmlRoot(Reader reader) throws ParserConfigurationException, IOException, SAXException {
+        if (reader == null) {
+            throw new NullPointerException("stream is null.");
         }
-
-        strBuilder.append("</execute>");
-        return readDynamicSql(strBuilder.toString());
+        DocumentBuilder documentBuilder = FACTORY.newDocumentBuilder();
+        return documentBuilder.parse(new InputSource(reader));
     }
 
-    protected QueryProcSql readDynamicSql(String queryBody) throws ParserConfigurationException, IOException, SAXException {
-        DocumentBuilder documentBuilder = FACTORY.newDocumentBuilder();
-        Document document = documentBuilder.parse(new InputSource(new StringReader(queryBody)));
-        Element configNode = document.getDocumentElement();
-
-        ArrayDynamicSql dynamicSql = new ArrayDynamicSql();
-        parseNodeList(dynamicSql, configNode.getChildNodes());
-
-        if (dynamicSql.getSubNodes().isEmpty()) {
-            return null;
+    @Override
+    public SqlConfig parseConfig(String fragmentName, Hints hint, String config) {
+        QueryType queryType = QueryType.valueOfTag(fragmentName.toLowerCase().trim());
+        if (queryType == null) {
+            throw new UnsupportedOperationException("fragment '" + fragmentName + "' Unsupported.");
         }
-        return new QueryProcSql(dynamicSql, configNode);
+        try {
+            Document document = loadXmlRoot(new StringReader("<root>" + config + "</root>"));
+            NodeList rootNodes = document.getDocumentElement().getChildNodes();
+
+            ArrayDynamicSql dynamicSql = new ArrayDynamicSql();
+            parseNodeList(dynamicSql, rootNodes);
+
+            SqlConfig sqlConfig = super.createConfig(queryType, hint, dynamicSql);
+
+            // find selectKey
+            if (sqlConfig instanceof InsertConfig) {
+                InsertConfig insertConfig = (InsertConfig) sqlConfig;
+                SelectKeyConfig keyConfig = null;
+                for (int i = 0, len = rootNodes.getLength(); i < len; i++) {
+                    Node node = rootNodes.item(i);
+                    if (node.getNodeType() == Node.ELEMENT_NODE && "selectKey".equalsIgnoreCase(node.getNodeName())) {
+                        keyConfig = parseSelectKeySqlNode(node);
+                    }
+                }
+                insertConfig.setSelectKey(keyConfig);
+            }
+            return sqlConfig;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     protected String getNodeAttributeValue(Node node, String attributeKey) {
@@ -108,7 +118,7 @@ public class ProcSqlParser {
                 } else if ("include".equalsIgnoreCase(nodeName)) {
                     parseIncludeSqlNode(parentSqlNode, node);
                 } else if ("selectKey".equalsIgnoreCase(nodeName)) {
-                    parseSelectKeySqlNode(parentSqlNode, node);
+                    //skip and Skip special treatment.
                 } else {
                     throw new UnsupportedOperationException("Unsupported tags :" + nodeName);
                 }
@@ -118,12 +128,17 @@ public class ProcSqlParser {
         }
     }
 
-    /** 工具节点 */
+    /** append text */
     protected void parseTextSqlNode(ArrayDynamicSql parentSqlNode, Node curXmlNode) {
-        parentSqlNode.appendText(curXmlNode.getNodeValue());
+        String sqlNode = curXmlNode.getNodeValue();
+        if (parentSqlNode.lastIsText()) {
+            ((PlanDynamicSql) parentSqlNode.lastNode()).parsedAppend(sqlNode);
+        } else {
+            parentSqlNode.addChildNode(new PlanDynamicSql(sqlNode));
+        }
     }
 
-    /** 解析 <foreach> 节点 */
+    /** passer &lt;foreach&gt; xmlNode */
     protected void parseForeachSqlNode(ArrayDynamicSql parentSqlNode, Node curXmlNode) {
         String collection = getNodeAttributeValue(curXmlNode, "collection");
         String item = getNodeAttributeValue(curXmlNode, "item");
@@ -136,7 +151,7 @@ public class ProcSqlParser {
         this.parseNodeList(parent, curXmlNode.getChildNodes());
     }
 
-    /** 解析 <if> 节点 */
+    /** passer &lt;if&gt; xmlNode */
     protected void parseIfSqlNode(ArrayDynamicSql parentSqlNode, Node curXmlNode) {
         String test = getNodeAttributeValue(curXmlNode, "test");
 
@@ -145,7 +160,7 @@ public class ProcSqlParser {
         this.parseNodeList(parent, curXmlNode.getChildNodes());
     }
 
-    /** 解析 <trim> 节点 */
+    /** passer &lt;trim&gt; xmlNode */
     protected void parseTrimSqlNode(ArrayDynamicSql parentSqlNode, Node curXmlNode) {
         String prefix = getNodeAttributeValue(curXmlNode, "prefix");
         String prefixOverrides = getNodeAttributeValue(curXmlNode, "prefixOverrides");
@@ -157,15 +172,14 @@ public class ProcSqlParser {
         this.parseNodeList(parent, curXmlNode.getChildNodes());
     }
 
-    /** 解析 <where> 节点 */
+    /** passer &lt;where&gt; xmlNode */
     protected void parseWhereSqlNode(ArrayDynamicSql parentSqlNode, Node curXmlNode) {
-
         ArrayDynamicSql parent = new WhereDynamicSql();
         parentSqlNode.addChildNode(parent);
         this.parseNodeList(parent, curXmlNode.getChildNodes());
     }
 
-    /** 解析 <set> 节点 */
+    /** passer &lt;set&gt; xmlNode */
     protected void parseSetSqlNode(ArrayDynamicSql parentSqlNode, Node curXmlNode) {
 
         ArrayDynamicSql parent = new SetDynamicSql();
@@ -173,7 +187,7 @@ public class ProcSqlParser {
         this.parseNodeList(parent, curXmlNode.getChildNodes());
     }
 
-    /** 解析 <bind> 节点 */
+    /** passer &lt;bind&gt; xmlNode */
     protected void parseBindSqlNode(ArrayDynamicSql parentSqlNode, Node curXmlNode) {
         String name = getNodeAttributeValue(curXmlNode, "name");
         String value = getNodeAttributeValue(curXmlNode, "value");
@@ -181,15 +195,14 @@ public class ProcSqlParser {
         parentSqlNode.addChildNode(new BindDynamicSql(name, value));
     }
 
-    /** 解析 <choose> 节点 */
+    /** passer &lt;choose&gt; xmlNode */
     protected void parseChooseSqlNode(ArrayDynamicSql parentSqlNode, Node curXmlNode) {
-
         ArrayDynamicSql parent = new ChooseDynamicSql();
         parentSqlNode.addChildNode(parent);
         this.parseNodeList(parent, curXmlNode.getChildNodes());
     }
 
-    /** 解析 <when> 节点 */
+    /** passer &lt;when&gt; xmlNode */
     protected void parseWhenSqlNode(ArrayDynamicSql parentSqlNode, Node curXmlNode) {
         if (!(parentSqlNode instanceof ChooseDynamicSql)) {
             throw new UnsupportedOperationException("the tag `<when>` parent tag must be `<choose>`");
@@ -198,11 +211,11 @@ public class ProcSqlParser {
         ChooseDynamicSql chooseSqlNode = (ChooseDynamicSql) parentSqlNode;
 
         ArrayDynamicSql parent = new ArrayDynamicSql();
-        chooseSqlNode.addWhen(test, parent);
+        chooseSqlNode.addThen(test, parent);
         this.parseNodeList(parent, curXmlNode.getChildNodes());
     }
 
-    /** 解析 <otherwise> 节点 */
+    /** passer &lt;otherwise&gt; xmlNode */
     protected void parseOtherwiseSqlNode(ArrayDynamicSql parentSqlNode, Node curXmlNode) {
         if (!(parentSqlNode instanceof ChooseDynamicSql)) {
             throw new UnsupportedOperationException("the tag `<otherwise>` parent tag must be `<choose>`");
@@ -214,28 +227,25 @@ public class ProcSqlParser {
         this.parseNodeList(parent, curXmlNode.getChildNodes());
     }
 
-    /** 解析 <include> 节点 */
+    /** passer &lt;include&gt; xmlNode */
     protected void parseIncludeSqlNode(ArrayDynamicSql parentSqlNode, Node curXmlNode) {
         String refId = getNodeAttributeValue(curXmlNode, "refid");
-
-        parentSqlNode.addChildNode(new IncludeDynamicSql(refId));
+        parentSqlNode.addChildNode(new MacroDynamicSql(refId));
     }
 
-    /** 解析 <selectKey> 节点 */
-    private void parseSelectKeySqlNode(ArrayDynamicSql parentSqlNode, Node curXmlNode) {
-        String statementType = getNodeAttributeValue(curXmlNode, "statementType");
-        String timeout = getNodeAttributeValue(curXmlNode, "timeout");
-        String fetchSize = getNodeAttributeValue(curXmlNode, "fetchSize");
-        String keyProperty = getNodeAttributeValue(curXmlNode, "keyProperty");
-        String keyColumn = getNodeAttributeValue(curXmlNode, "keyColumn");
-        String order = getNodeAttributeValue(curXmlNode, "order");
-        String handler = getNodeAttributeValue(curXmlNode, "handler");
-        int timeoutNum = StringUtils.isBlank(timeout) ? -1 : Math.max(-1, Integer.parseInt(timeout));
-        int fetchSizeNum = StringUtils.isBlank(fetchSize) ? 256 : Integer.parseInt(fetchSize);
+    /** passer &lt;selectKey&gt; xmlNode */
+    private SelectKeyConfig parseSelectKeySqlNode(Node curXmlNode) {
+        Hints cfg = new HintsSet();
+        cfg.setHint(SqlHintNames.FRAGMENT_SQL_STATEMENT.getShortName(), getNodeAttributeValue(curXmlNode, "statementType"));
+        cfg.setHint(SqlHintNames.FRAGMENT_SQL_TIMEOUT.getShortName(), getNodeAttributeValue(curXmlNode, "timeout"));
+        cfg.setHint(SqlHintNames.FRAGMENT_SQL_FETCH_SIZE.getShortName(), getNodeAttributeValue(curXmlNode, "fetchSize"));
+        cfg.setHint(SqlHintNames.FRAGMENT_SQL_RESULT_SET_TYPE.getShortName(), getNodeAttributeValue(curXmlNode, "resultSetType"));
+        cfg.setHint(SqlHintNames.FRAGMENT_SQL_KEY_COLUMN.getShortName(), getNodeAttributeValue(curXmlNode, "keyColumn"));
+        cfg.setHint(SqlHintNames.FRAGMENT_SQL_ORDER.getShortName(), getNodeAttributeValue(curXmlNode, "order"));
 
-        ArrayDynamicSql parent = new SelectKeyDynamicSql(statementType, timeoutNum, fetchSizeNum, keyProperty, keyColumn, order, handler);
-        parentSqlNode.addChildNode(parent);
+        ArrayDynamicSql parent = new ArrayDynamicSql();
         this.parseNodeList(parent, curXmlNode.getChildNodes());
-    }
 
+        return new SelectKeyConfig(parent, cfg);
+    }
 }

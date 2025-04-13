@@ -21,9 +21,9 @@ import net.hasor.dataql.sqlproc.dynamic.SqlArg;
 import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
 import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
-import net.hasor.dataql.sqlproc.types.string.StringTypeHandler;
 import net.hasor.dataql.sqlproc.types.TypeHandler;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
+import net.hasor.dataql.sqlproc.types.string.StringTypeHandler;
 
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;

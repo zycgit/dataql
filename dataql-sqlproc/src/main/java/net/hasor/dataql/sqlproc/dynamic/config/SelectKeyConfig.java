@@ -27,6 +27,7 @@ import net.hasor.dataql.sqlproc.dynamic.logic.ArrayDynamicSql;
 public class SelectKeyConfig extends SqlConfig {
     private int           fetchSize     = 256;
     private ResultSetType resultSetType = ResultSetType.DEFAULT;
+    private String        keyProperty   = null;
     private String        keyColumn     = null;
     private String        order         = null;
 
@@ -34,13 +35,15 @@ public class SelectKeyConfig extends SqlConfig {
         super(target, config);
 
         if (config != null) {
-            String fetchSizeStr = getNodeAttributeValue(config, SqlHintNames.FRAGMENT_SQL_FETCH_SIZE);
-            String resultSetTypeStr = getNodeAttributeValue(config, SqlHintNames.FRAGMENT_SQL_RESULT_SET_TYPE);
-            String keyColumn = getNodeAttributeValue(config, SqlHintNames.FRAGMENT_SQL_KEY_COLUMN);
-            String order = getNodeAttributeValue(config, SqlHintNames.FRAGMENT_SQL_ORDER);
+            String fetchSizeStr = SqlHintNames.getValue(config, SqlHintNames.FRAGMENT_SQL_FETCH_SIZE);
+            String resultSetTypeStr = SqlHintNames.getValue(config, SqlHintNames.FRAGMENT_SQL_RESULT_SET_TYPE);
+            String keyProperty = SqlHintNames.getValue(config, SqlHintNames.FRAGMENT_SQL_KEY_PROPERTY);
+            String keyColumn = SqlHintNames.getValue(config, SqlHintNames.FRAGMENT_SQL_KEY_COLUMN);
+            String order = SqlHintNames.getValue(config, SqlHintNames.FRAGMENT_SQL_ORDER);
 
             this.fetchSize = Integer.parseInt(StringUtils.isBlank(fetchSizeStr) ? "256" : fetchSizeStr);
             this.resultSetType = ResultSetType.valueOfCode(resultSetTypeStr, ResultSetType.DEFAULT);
+            this.keyProperty = keyProperty;
             this.keyColumn = keyColumn;
             this.order = order;
         }
@@ -73,6 +76,14 @@ public class SelectKeyConfig extends SqlConfig {
 
     public void setResultSetType(ResultSetType resultSetType) {
         this.resultSetType = resultSetType;
+    }
+
+    public String getKeyProperty() {
+        return this.keyProperty;
+    }
+
+    public void setKeyProperty(String keyProperty) {
+        this.keyProperty = keyProperty;
     }
 
     public String getKeyColumn() {

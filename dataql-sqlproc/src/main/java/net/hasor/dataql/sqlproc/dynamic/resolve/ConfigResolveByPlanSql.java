@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.dynamic.config;
+package net.hasor.dataql.sqlproc.dynamic.resolve;
 import net.hasor.dataql.Hints;
+import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
+import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
 import net.hasor.dataql.sqlproc.dynamic.logic.ArrayDynamicSql;
 import net.hasor.dataql.sqlproc.dynamic.segment.PlanDynamicSql;
 

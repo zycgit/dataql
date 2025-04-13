@@ -40,8 +40,8 @@ public abstract class SqlConfig implements DynamicSql {
         this.target = Objects.requireNonNull(target, "target is null.");
 
         if (config != null) {
-            String statementTypeStr = getNodeAttributeValue(config, SqlHintNames.FRAGMENT_SQL_STATEMENT);
-            String timeoutStr = getNodeAttributeValue(config, SqlHintNames.FRAGMENT_SQL_TIMEOUT);
+            String statementTypeStr = SqlHintNames.getValue(config, SqlHintNames.FRAGMENT_SQL_STATEMENT);
+            String timeoutStr = SqlHintNames.getValue(config, SqlHintNames.FRAGMENT_SQL_TIMEOUT);
 
             this.statementType = StatementType.valueOfCode(statementTypeStr, StatementType.Prepared);
             this.timeout = Integer.parseInt(StringUtils.isBlank(timeoutStr) ? "-1" : timeoutStr);
@@ -74,14 +74,5 @@ public abstract class SqlConfig implements DynamicSql {
     @Override
     public void buildQuery(SqlArgSource data, QueryContext context, SqlBuilder sqlBuilder) throws SQLException {
         this.target.buildQuery(data, context, sqlBuilder);
-    }
-
-    protected String getNodeAttributeValue(Hints hint, SqlHintNames hintName) {
-        Object value = hint.getHint(hintName.getShortName());
-        if (value == null) {
-            return (String) hint.getOrDefault(hintName.name(), hintName.getDefaultVal());
-        } else {
-            return (String) value;
-        }
     }
 }

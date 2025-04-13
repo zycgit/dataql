@@ -34,10 +34,11 @@ public class InsertConfig extends DmlConfig {
         super(target, config);
 
         if (config != null) {
-            String generated = getNodeAttributeValue(config, SqlHintNames.FRAGMENT_SQL_KEY_GENERATED);
+            String generated = SqlHintNames.getValue(config, SqlHintNames.FRAGMENT_SQL_KEY_GENERATED);
+
             this.useGeneratedKeys = StringUtils.isNotBlank(generated) && Boolean.parseBoolean(generated);
-            this.keyProperty = getNodeAttributeValue(config, SqlHintNames.FRAGMENT_SQL_KEY_PROPERTY);
-            this.keyColumn = getNodeAttributeValue(config, SqlHintNames.FRAGMENT_SQL_KEY_COLUMN);
+            this.keyProperty = SqlHintNames.getValue(config, SqlHintNames.FRAGMENT_SQL_KEY_PROPERTY);
+            this.keyColumn = SqlHintNames.getValue(config, SqlHintNames.FRAGMENT_SQL_KEY_COLUMN);
         }
     }
 

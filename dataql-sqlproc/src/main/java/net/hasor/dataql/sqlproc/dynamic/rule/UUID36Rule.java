@@ -15,9 +15,9 @@
  */
 package net.hasor.dataql.sqlproc.dynamic.rule;
 import net.hasor.dataql.sqlproc.dynamic.*;
-import net.hasor.dataql.sqlproc.types.string.StringTypeHandler;
 import net.hasor.dataql.sqlproc.types.TypeHandler;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
+import net.hasor.dataql.sqlproc.types.string.StringTypeHandler;
 
 import java.sql.Types;
 import java.util.UUID;
