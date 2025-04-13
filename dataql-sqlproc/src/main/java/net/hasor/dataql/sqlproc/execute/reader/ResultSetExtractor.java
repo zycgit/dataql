@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2005 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,25 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.fragment;
+package net.hasor.dataql.sqlproc.execute.reader;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
+
 /**
- * 语句类型
+ * 回调接口，用于 JDBC 结果集转换。
  * @author 赵永春 (zyc@hasor.net)
- * @version : 2021-02-04
+ * @version 2013-10-9
  */
-public enum QueryType {
-    // DML
-    Insert,
-    Update,
-    Delete,
-    Merge,
-    // DQL
-    Query,
-    With,
-    // DDL
-    Call,
-    Create,
-    Drop,
-    Alter,
-    Other,
+@FunctionalInterface
+public interface ResultSetExtractor {
+    List<Map<String, Object>> extractData(ResultSet rs) throws SQLException;
 }

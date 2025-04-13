@@ -14,65 +14,85 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.execute;
+import net.hasor.dataql.Hints;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
-import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
-import net.hasor.dataql.sqlproc.repository.DynamicContext;
-import net.hasor.dataql.sqlproc.repository.ResultSetType;
+import net.hasor.dataql.sqlproc.dialect.Page;
+import net.hasor.dataql.sqlproc.dynamic.QueryContext;
+import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
+import net.hasor.dataql.sqlproc.dynamic.config.DqlConfig;
+import net.hasor.dataql.sqlproc.dynamic.config.ResultSetType;
+import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
+import net.hasor.dataql.sqlproc.execute.reader.PreparedMultipleResultSetExtractor;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
+import java.util.Map;
 
 /**
  * 负责一般SQL调用的执行器
  * @author 赵永春 (zyc@hasor.net)
- * @version : 2021-07-20
+ * @version 2021-07-20
  */
-public class StatementExecute extends AbstractStatementExecute<Object> {
-    public StatementExecute(DynamicContext context) {
+public class StatementExecute extends AbstractStatementExecute {
+    public StatementExecute(QueryContext context) {
         super(context);
     }
 
-    protected Statement createStatement(Connection conn, ResultSetType resultSetType) throws SQLException {
-        if (resultSetType == null || resultSetType.getResultSetType() == null) {
-            return conn.createStatement();
-        } else {
-            int resultSetTypeInt = resultSetType.getResultSetType();
-            return conn.createStatement(resultSetTypeInt, ResultSet.CONCUR_READ_ONLY);
+    @Override
+    protected void doCheck(Connection conn, Hints hints, SqlConfig config, Map<String, Object> data, Page pageInfo) throws SQLException {
+        super.doCheck(conn, hints, config, data, pageInfo);
+        if (ExecuteHelper.usingPage(pageInfo)) {
+            throw new UnsupportedOperationException("STATEMENT does not support paging query, please using PREPARED.");
         }
     }
 
     @Override
-    protected Object executeQuery(Connection con, ExecuteInfo info, BoundSqlBuilder sqlBuilder) throws SQLException {
-        if (usingPage(info)) {
-            throw new UnsupportedOperationException("Statement does not support page query, please using PreparedStatement.");
-        }
-
-        try (Statement stat = createStatement(con, info.resultSetType)) {
-            configStatement(info, stat);
-            return executeQuery(stat, info, sqlBuilder);
+    protected Statement createStatement(Connection conn, SqlConfig config, BoundSql execSql) throws SQLException {
+        if (config instanceof DqlConfig) {
+            ResultSetType resultSetType = ((DqlConfig) config).getResultSetType();
+            if (resultSetType == null || resultSetType == ResultSetType.DEFAULT) {
+                return conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            } else {
+                int resultSetTypeInt = resultSetType.getResultSetType();
+                return conn.createStatement(resultSetTypeInt, ResultSet.CONCUR_READ_ONLY);
+            }
+        } else {
+            return conn.createStatement();
         }
     }
 
-    protected Object executeQuery(Statement statement, ExecuteInfo info, BoundSql boundSql) throws SQLException {
-        if (logger.isTraceEnabled()) {
-            logger.trace(fmtBoundSql(boundSql).toString());
-        }
-
-        String querySQL = boundSql.getSqlString();
-
-        ResultTableExtractor extractor = super.buildExtractor(info);
-        boolean retVal;
+    @Override
+    protected boolean executeQuery(Statement stat, SqlConfig config, BoundSql execSql) throws SQLException {
         try {
-            retVal = statement.execute(querySQL);
+            return stat.execute(execSql.getSqlString());
         } catch (SQLException e) {
-            logger.error("executeQuery failed, " + fmtBoundSql(boundSql, info.data), e);
+            logger.error("executeQuery failed, " + ExecuteHelper.fmtBoundSql(execSql), e);
             throw e;
         }
-        List<Object> result = extractor.doResult(retVal, statement);
+    }
 
-        return getResult(result, info);
+    @Override
+    protected Map<String, Object> multipleResultFetch(SqlBuilder buildSql, Statement stat, boolean retVal) throws SQLException {
+        return new StatementPreparedMultipleResultSetExtractor(buildSql).fetchResult(retVal, stat);
+    }
+
+    private static class StatementPreparedMultipleResultSetExtractor extends PreparedMultipleResultSetExtractor {
+        public StatementPreparedMultipleResultSetExtractor(SqlBuilder buildSql) {
+            super(buildSql);
+        }
+
+        public Map<String, Object> fetchResult(boolean retVal, Statement s) throws SQLException {
+            try {
+                Map<String, Object> resultsMap = createResultsMap();
+                this.beforeFetchResult(s, resultsMap);
+                this.fetchResult(retVal, s, resultsMap);
+                this.afterFetchResult(s, resultsMap);
+                return resultsMap;
+            } finally {
+                this.afterStatement(s);
+            }
+        }
     }
 }

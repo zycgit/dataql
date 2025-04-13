@@ -14,213 +14,201 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.execute;
-import net.hasor.cobble.StringUtils;
-import net.hasor.cobble.io.IOUtils;
+import net.hasor.cobble.ArrayUtils;
+import net.hasor.cobble.ExceptionUtils;
 import net.hasor.cobble.logging.Logger;
 import net.hasor.cobble.logging.LoggerFactory;
 import net.hasor.dataql.Hints;
-import net.hasor.dataql.sqlproc.ColumnCaseType;
-import net.hasor.dataql.sqlproc.OpenPackageType;
-import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dialect.*;
-import net.hasor.dataql.sqlproc.execute.page.Page;
-import net.hasor.dataql.sqlproc.repository.DynamicContext;
-import net.hasor.dataql.sqlproc.repository.MultipleResultsType;
-import net.hasor.dataql.sqlproc.repository.ResultSetType;
-import net.hasor.dataql.sqlproc.repository.config.QueryProcSql;
+import net.hasor.dataql.sqlproc.dynamic.QueryContext;
+import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
+import net.hasor.dataql.sqlproc.dynamic.config.DmlConfig;
+import net.hasor.dataql.sqlproc.dynamic.config.DqlConfig;
+import net.hasor.dataql.sqlproc.dynamic.config.ExecuteConfig;
+import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
+import net.hasor.dataql.sqlproc.execute.reader.ColumnMapRowMapper;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 
-import java.io.StringReader;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Types;
-import java.util.Arrays;
+import java.sql.*;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 执行器基类
  * @author 赵永春 (zyc@hasor.net)
- * @version : 2021-07-20
+ * @version 2021-07-20
  */
-public abstract class AbstractStatementExecute<T> {
-    protected static final Logger         logger = LoggerFactory.getLogger(AbstractStatementExecute.class);
-    private final          DynamicContext context;
+public abstract class AbstractStatementExecute {
+    protected static final Logger       logger = LoggerFactory.getLogger(AbstractStatementExecute.class);
+    protected final        QueryContext context;
 
-    public AbstractStatementExecute(DynamicContext context) {
+    public AbstractStatementExecute(QueryContext context) {
         this.context = context;
     }
 
-    protected DynamicContext getContext() {
-        return this.context;
-    }
-
-    public final T execute(Connection conn, QueryProcSql dynamicSql, Map<String, Object> data, Hints hints, //
-            boolean pageResult, boolean pageCount, Page pageInfo, PageDialect dialect) throws SQLException {
-
-        BoundSqlBuilder queryBuilder = new BoundSqlBuilder();
-        dynamicSql.buildQuery(hints, data, this.context, queryBuilder);
-
-        ExecuteInfo info = new ExecuteInfo();
-        info.pageInfo = pageInfo;
-        info.timeout = dynamicSql.getTimeout();
-        info.fetchSize = dynamicSql.getFetchSize();
-        info.resultSetType = ResultSetType.DEFAULT;
-        info.multipleResultType = MultipleResultsType.LAST;
-        info.pageDialect = dialect;
-        info.pageResult = pageResult;
-        info.pageCount = pageCount;
-        info.packageType = OpenPackageType.valueOfCode(String.valueOf(hints.getHint(SqlHintNames.FRAGMENT_SQL_OPEN_PACKAGE.name())));
-        info.columnCaseType = ColumnCaseType.valueOfCode(String.valueOf(hints.getHint(SqlHintNames.FRAGMENT_SQL_COLUMN_CASE.name())));
-        info.data = data;
-        info.hasSelectKey = dynamicSql.getSelectKey() != null;
-        info.resultSetType = dynamicSql.getResultSetType();
-        info.multipleResultType = dynamicSql.getMultipleResultType();
-        info.useGeneratedKeys = dynamicSql.isUseGeneratedKeys();
-        info.keyProperty = dynamicSql.getKeyProperty();
-
-        return executeQuery(conn, info, queryBuilder);
-    }
-
-    protected boolean usingPage(ExecuteInfo executeInfo) {
-        return executeInfo.pageInfo != null && executeInfo.pageResult && executeInfo.pageInfo.getPageSize() > 0;
-    }
-
-    protected abstract T executeQuery(Connection con, ExecuteInfo info, BoundSqlBuilder sqlBuilder) throws SQLException;
-
-    protected void configStatement(ExecuteInfo info, Statement statement) throws SQLException {
-        if (info.timeout > 0) {
-            statement.setQueryTimeout(info.timeout);
-        }
-        if (info.fetchSize > 0) {
-            statement.setFetchSize(info.fetchSize);
-        }
-    }
-
-    protected ResultTableExtractor buildExtractor(ExecuteInfo info) {
-        return new ResultTableExtractor(info.packageType, info.columnCaseType, info.multipleResultType, context.getTypeRegistry());
-    }
-
-    protected Object getResult(List<Object> result, ExecuteInfo info) {
-        if (result == null || result.isEmpty()) {
-            return null;
-        }
-
-        if (info.multipleResultType == MultipleResultsType.FIRST) {
-            return result.get(0);
-        } else if (info.multipleResultType == MultipleResultsType.LAST) {
-            return result.get(result.size() - 1);
+    protected void doCheck(Connection conn, Hints hints, SqlConfig config, Map<String, Object> data, Page pageInfo) throws SQLException {
+        boolean hasOutBind;
+        if (config instanceof ExecuteConfig) {
+            hasOutBind = ((ExecuteConfig) config).getBindOut().length > 0;
+        } else if (config instanceof DqlConfig) {
+            hasOutBind = ((DqlConfig) config).getBindOut().length > 0;
         } else {
-            return result;
+            hasOutBind = false;
+        }
+
+        if (hasOutBind && ExecuteHelper.usingPage(pageInfo)) {
+            throw new SQLException("cannot use paging queries when using bindOut.");
         }
     }
 
-    protected List<SqlArg> toArgs(BoundSql boundSql) {
-        Object[] oriArgs = boundSql.getArgs();
-        return Arrays.stream(oriArgs).map(o -> {
-            if (o instanceof SqlArg) {
-                return (SqlArg) o;
+    public final Object execute(Connection conn, Hints hints, SqlConfig config, Map<String, Object> data, Page pageInfo, boolean pageResult) throws SQLException {
+        this.doCheck(conn, hints, config, data, pageInfo);
+
+        // prepare sql
+        MergedMap<String, Object> dataCtx = null;
+        if (data instanceof MergedMap) {
+            dataCtx = (MergedMap<String, Object>) data;
+        } else {
+            dataCtx = new MergedMap<>();
+            dataCtx.appendMap(data, true);
+        }
+
+        SqlBuilder oriSql = config.buildQuery(dataCtx, this.context);
+        BoundSql execSql = oriSql;
+        BoundSql countSql = null;
+
+        // prepare page
+        long resultCount = 0L;
+        if (ExecuteHelper.usingPage(pageInfo)) {
+            PageDialect dialect = SqlDialectRegister.findDialect(conn, hints, this.context.getClassLoader());
+            long position = pageInfo.getFirstRecordPosition();
+            long pageSize = pageInfo.getPageSize();
+            execSql = dialect.pageSql(oriSql, position, pageSize);
+
+            if (pageInfo.isRefreshTotalCount() || pageInfo.getTotalCount() <= 0) {
+                countSql = dialect.countSql(oriSql);
+            }
+
+            resultCount = pageInfo.getTotalCount(); // old value
+        }
+
+        // query count
+        if (countSql != null && pageResult) {
+            try (PreparedStatement stat = conn.prepareStatement(countSql.getSqlString())) {
+                if (logger.isTraceEnabled()) {
+                    logger.trace(ExecuteHelper.fmtBoundSql(countSql).toString());
+                }
+                this.configStatement(stat, config);
+                resultCount = this.executeCount(stat, countSql.getArgs());
+            } catch (SQLException e) {
+                logger.error("executeCount failed, " + ExceptionUtils.getRootCauseMessage(e) + ", " + ExecuteHelper.fmtBoundSql(countSql), e);
+                throw e;
+            }
+        }
+
+        // query data
+        try (Statement stat = this.createStatement(conn, config, execSql)) {
+            if (logger.isTraceEnabled()) {
+                logger.trace(ExecuteHelper.fmtBoundSql(execSql).toString());
+            }
+
+            this.configStatement(stat, config);
+
+            boolean retVal = this.executeQuery(stat, config, execSql);
+            return this.fetchResult(retVal, stat, hints, config, oriSql, dataCtx, pageInfo, resultCount, pageResult);
+        } catch (SQLException e) {
+            logger.error("executeQuery failed, " + ExceptionUtils.getRootCauseMessage(e) + ", " + ExecuteHelper.fmtBoundSql(countSql), e);
+            throw e;
+        }
+    }
+
+    protected abstract Statement createStatement(Connection conn, SqlConfig config, BoundSql execSql) throws SQLException;
+
+    protected void configStatement(Statement stat, SqlConfig config) throws SQLException {
+        if (config.getTimeout() > 0) {
+            stat.setQueryTimeout(config.getTimeout());
+        }
+        if (config instanceof DqlConfig && ((DqlConfig) config).getFetchSize() > 0) {
+            stat.setFetchSize(((DqlConfig) config).getFetchSize());
+        }
+    }
+
+    private long executeCount(PreparedStatement cntStat, Object[] args) throws SQLException {
+        for (int j = 0; j < args.length; j++) {
+            TypeHandlerRegistry.DEFAULT.setParameterValue(cntStat, j + 1, args[j]);
+        }
+
+        try (ResultSet resultSet = cntStat.executeQuery()) {
+            if (resultSet.next()) {
+                return resultSet.getLong(1);
             } else {
-                SqlArg sqlArg = SqlArg.valueOf(o);
-                sqlArg.setSqlMode(SqlMode.In);
-                if (o == null) {
-                    sqlArg.setTypeHandler(getContext().getTypeRegistry().getDefaultTypeHandler());
-                    sqlArg.setJdbcType(Types.NULL);
+                return -1;
+            }
+        }
+    }
+
+    protected abstract boolean executeQuery(Statement stat, SqlConfig config, BoundSql execSql) throws SQLException;
+
+    protected Object fetchResult(boolean retVal, Statement stat, Hints hints, SqlConfig config, SqlBuilder oriSql, Map<String, Object> ctx, Page oriPageInfo, long newPageCnt, boolean pageResult) throws SQLException {
+        String[] bindOut = null;
+        boolean usingMultipleResultFetch = false;
+
+        if (config instanceof DqlConfig) {
+            bindOut = ((DqlConfig) config).getBindOut();
+            usingMultipleResultFetch = bindOut.length > 0;
+        } else if (config instanceof ExecuteConfig) {
+            bindOut = ((ExecuteConfig) config).getBindOut();
+            usingMultipleResultFetch = bindOut.length > 0;
+        } else {
+            bindOut = ArrayUtils.EMPTY_STRING_ARRAY;
+        }
+
+        if (usingMultipleResultFetch) {
+            Map<String, Object> result = new HashMap<>();
+            Map<String, Object> multipleResult = this.multipleResultFetch(oriSql, stat, retVal);
+            for (String argName : bindOut) {
+                if (multipleResult.containsKey(argName)) {
+                    result.put(argName, multipleResult.get(argName));
+                } else if (ctx.containsKey(argName)) {
+                    result.put(argName, ctx.get(argName));
                 } else {
-                    sqlArg.setTypeHandler(getContext().findJavaTypeHandler(o.getClass()));
-                    sqlArg.setJdbcType(TypeHandlerRegistry.toSqlType(o.getClass()));
-                }
-                return sqlArg;
-            }
-        }).collect(Collectors.toList());
-    }
-
-    protected static StringBuilder fmtBoundSql(BoundSql boundSql) {
-        StringBuilder builder = new StringBuilder("querySQL: ");
-
-        try {
-            List<String> lines = IOUtils.readLines(new StringReader(boundSql.getSqlString()));
-            for (String line : lines) {
-                if (StringUtils.isNotBlank(line)) {
-                    builder.append(line.trim()).append(" ");
+                    result.put(argName, null);
                 }
             }
-        } catch (Exception e) {
-            builder.append(boundSql.getSqlString().replace("\n", ""));
-        }
-        builder.append(" ");
+            return result;
+        } else {
 
-        builder.append(",parameter: [");
-        int i = 0;
-        for (Object arg : boundSql.getArgs()) {
-            if (i > 0) {
-                builder.append(", ");
+            if (config instanceof DmlConfig) {
+                return stat.getUpdateCount();
             }
-            builder.append(fmtValue(arg));
-            i++;
-        }
-        builder.append("] ");
 
-        return builder;
-    }
+            if (retVal) {
+                try (ResultSet rs = stat.getResultSet()) {
+                    if (rs.isLast()) {
+                        return Collections.emptyList();
+                    }
 
-    protected static String fmtBoundSql(BoundSql boundSql, Map<String, Object> userData) {
-        StringBuilder builder = fmtBoundSql(boundSql);
-
-        builder.append(",userData: {");
-        int j = 0;
-        for (String key : userData.keySet()) {
-            if (j > 0) {
-                builder.append(", ");
-            }
-            builder.append(key);
-            builder.append(" = ");
-            builder.append(fmtValue(userData.get(key)));
-            j++;
-        }
-        builder.append("}");
-        return builder.toString();
-    }
-
-    protected static String fmtValue(Object value) {
-        Object object = value instanceof SqlArg ? ((SqlArg) value).getValue() : value;
-        if (object == null) {
-            return "null";
-        } else if (object instanceof String) {
-            if (((String) object).length() > 2048) {
-                return "'" + ((String) object).substring(0, 2048) + "...'";
+                    TypeHandlerRegistry typeRegistry = this.context.getTypeRegistry();
+                    List<?> objects = new ColumnMapRowMapper(hints, typeRegistry).extractData(rs);
+                    return pageOrNot(objects, oriPageInfo, newPageCnt, pageResult);
+                }
             } else {
-                return "'" + ((String) object).replace("'", "\\'") + "'";
+                return stat.getUpdateCount();
             }
-        } else if (object instanceof Page) {
-            return "page[pageSize=" + ((Page) object).getPageSize()//
-                    + ", currentPage=" + ((Page) object).getCurrentPage()//
-                    + ", pageNumberOffset=" + ((Page) object).getPageNumberOffset() + "]";
         }
-        return object.toString();
     }
 
-    protected static class ExecuteInfo {
-        // query
-        public int                 timeout            = -1;
-        public int                 fetchSize          = 256;
-        public ResultSetType       resultSetType      = ResultSetType.FORWARD_ONLY;
-        public MultipleResultsType multipleResultType = MultipleResultsType.LAST;
-        // key
-        public boolean             hasSelectKey;
-        public boolean             useGeneratedKeys;
-        public String              keyProperty;
-        // page
-        public Page                pageInfo;
-        public PageDialect         pageDialect;
-        public boolean             pageResult;
-        public boolean             pageCount;
-        // hints
-        public OpenPackageType     packageType;
-        public ColumnCaseType      columnCaseType;
-        // data
-        public Map<String, Object> data;
+    protected Object pageOrNot(List<?> objects, Page oriPageInfo, long newPageCnt, boolean pageResult) {
+        if (pageResult) {
+            PageResult<?> page = new PageResult<>(oriPageInfo, objects);
+            page.setTotalCount(newPageCnt);
+            return page;
+        } else {
+            return objects;
+        }
     }
+
+    protected abstract Map<String, Object> multipleResultFetch(SqlBuilder buildSql, Statement stat, boolean retVal) throws SQLException;
 }

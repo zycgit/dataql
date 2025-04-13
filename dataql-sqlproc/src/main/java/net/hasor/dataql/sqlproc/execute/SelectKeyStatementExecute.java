@@ -18,7 +18,7 @@ import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.convert.ConverterBean;
 import net.hasor.cobble.ref.BeanMap;
 import net.hasor.dataql.Hints;
-import net.hasor.dataql.sqlproc.repository.config.SelectKeyProcSql;
+import net.hasor.dataql.sqlproc.dynamic.config.SelectKeyConfig;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -28,33 +28,34 @@ import java.util.Map;
 /**
  * 负责处理 SelectKey 的执行
  * @author 赵永春 (zyc@hasor.net)
- * @version : 2021-11-05
+ * @version 2021-11-05
  */
-class SelectKeyExecute {
-    private final SelectKeyProcSql keySqlConfig;
-    private final SelectKeyHandler selectKeyHandler;
+class SelectKeyStatementExecute {
+    private final SelectKeyConfig          config;
+    private final AbstractStatementExecute execute;
 
-    SelectKeyExecute(SelectKeyProcSql keySqlConfig, SelectKeyHandler selectKeyHandler) {
-        this.keySqlConfig = keySqlConfig;
-        this.selectKeyHandler = selectKeyHandler;
+    SelectKeyStatementExecute(SelectKeyConfig config, AbstractStatementExecute execute) {
+        this.config = config;
+        this.execute = execute;
+
     }
 
-    public void processBefore(Connection conn, Map<String, Object> parameter, Hints hints) throws SQLException {
-        if (StringUtils.equalsIgnoreCase("BEFORE", this.keySqlConfig.getOrder())) {
-            this.processSelectKey(conn, parameter, true, hints);
+    public void processBefore(Connection conn, Hints hints, Map<String, Object> parameter) throws SQLException {
+        if (StringUtils.equalsIgnoreCase("BEFORE", this.config.getOrder())) {
+            this.processSelectKey(conn, hints, parameter);
         }
     }
 
-    public void processAfter(Connection conn, Map<String, Object> parameter, Hints hints) throws SQLException {
-        if (StringUtils.equalsIgnoreCase("AFTER", this.keySqlConfig.getOrder())) {
-            this.processSelectKey(conn, parameter, false, hints);
+    public void processAfter(Connection conn, Hints hints, Map<String, Object> parameter) throws SQLException {
+        if (StringUtils.equalsIgnoreCase("AFTER", this.config.getOrder())) {
+            this.processSelectKey(conn, hints, parameter);
         }
     }
 
-    private void processSelectKey(Connection conn, Map<String, Object> parameter, boolean isBefore, Hints hints) throws SQLException {
-        String keyColumn = this.keySqlConfig.getKeyColumn();
-        String keyProperty = this.keySqlConfig.getKeyProperty();
-        Object resultValue = this.selectKeyHandler.processSelectKey(conn, parameter, hints);
+    private void processSelectKey(Connection conn, Hints hints, Map<String, Object> parameter) throws SQLException {
+        String keyColumn = this.config.getKeyColumn();
+        String keyProperty = this.config.getKeyProperty();
+        Object resultValue = this.execute.execute(conn, hints, this.config, parameter, null, false);
 
         if (resultValue instanceof List) {
             resultValue = ((List<?>) resultValue).get(0);

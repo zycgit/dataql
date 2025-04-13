@@ -14,104 +14,125 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.execute;
-import net.hasor.dataql.sqlproc.dialect.BoundSqlBuilder;
-import net.hasor.dataql.sqlproc.dialect.SqlArg;
-import net.hasor.dataql.sqlproc.dialect.SqlMode;
-import net.hasor.dataql.sqlproc.repository.DynamicContext;
-import net.hasor.dataql.sqlproc.repository.ResultSetType;
-import net.hasor.dataql.sqlproc.repository.ognl.OgnlUtils;
-import net.hasor.dataql.sqlproc.types.TypeHandler;
+import net.hasor.cobble.ArrayUtils;
+import net.hasor.dataql.Hints;
+import net.hasor.dataql.sqlproc.dialect.BoundSql;
+import net.hasor.dataql.sqlproc.dialect.Page;
+import net.hasor.dataql.sqlproc.dynamic.QueryContext;
+import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
+import net.hasor.dataql.sqlproc.dynamic.config.DqlConfig;
+import net.hasor.dataql.sqlproc.dynamic.config.ExecuteConfig;
+import net.hasor.dataql.sqlproc.dynamic.config.ResultSetType;
+import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
+import net.hasor.dataql.sqlproc.execute.reader.CallableMultipleResultSetExtractor;
+import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 
 import java.sql.*;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 负责存储过程调用的执行器
- * @version : 2021-07-20
  * @author 赵永春 (zyc@hasor.net)
+ * @version 2021-07-20
  */
-public class CallableStatementExecute extends AbstractStatementExecute<Object> {
-    public CallableStatementExecute(DynamicContext context) {
+public class CallableStatementExecute extends AbstractStatementExecute {
+    public CallableStatementExecute(QueryContext context) {
         super(context);
     }
 
-    protected CallableStatement createCallableStatement(Connection conn, String queryString, ResultSetType resultSetType) throws SQLException {
-        if (resultSetType == null || resultSetType.getResultSetType() == null) {
-            return conn.prepareCall(queryString);
-        } else {
-            int resultSetTypeInt = resultSetType.getResultSetType();
-            return conn.prepareCall(queryString, resultSetTypeInt, ResultSet.CONCUR_READ_ONLY);
+    @Override
+    protected void doCheck(Connection conn, Hints hints, SqlConfig config, Map<String, Object> data, Page pageInfo) throws SQLException {
+        super.doCheck(conn, hints, config, data, pageInfo);
+        if (!conn.getMetaData().supportsStoredProcedures()) {
+            throw new UnsupportedOperationException("procedure DataSource Unsupported.");
+        }
+        if (ExecuteHelper.usingPage(pageInfo)) {
+            throw new UnsupportedOperationException("CALLABLE does not support paging query, please using PREPARED.");
         }
     }
 
     @Override
-    protected Object executeQuery(Connection con, ExecuteInfo info, BoundSqlBuilder boundSql) throws SQLException {
-        if (!con.getMetaData().supportsStoredProcedures()) {
-            throw new UnsupportedOperationException("procedure DataSource Unsupported.");
+    protected CallableStatement createStatement(Connection conn, SqlConfig config, BoundSql execSql) throws SQLException {
+        if (config instanceof DqlConfig) {
+            ResultSetType resultSetType = ((DqlConfig) config).getResultSetType();
+            if (resultSetType == null || resultSetType == ResultSetType.DEFAULT) {
+                return conn.prepareCall(execSql.getSqlString(), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            } else {
+                int resultSetTypeInt = resultSetType.getResultSetType();
+                return conn.prepareCall(execSql.getSqlString(), resultSetTypeInt, ResultSet.CONCUR_READ_ONLY);
+            }
+        } else {
+            return conn.prepareCall(execSql.getSqlString());
         }
-        if (usingPage(info)) {
-            throw new UnsupportedOperationException("procedure does not support page query.");
-        }
+    }
 
-        String querySQL = boundSql.getSqlString();
-        try (CallableStatement ps = createCallableStatement(con, querySQL, info.resultSetType)) {
-            configStatement(info, ps);
-            return executeQuery(ps, info, boundSql);
+    @Override
+    protected boolean executeQuery(Statement stat, SqlConfig config, BoundSql execSql) throws SQLException {
+        try {
+            CallableStatement cs = (CallableStatement) stat;
+            Object[] args = execSql.getArgs();
+            for (int j = 0; j < args.length; j++) {
+                TypeHandlerRegistry.DEFAULT.setParameterValue(cs, j + 1, args[j]);
+            }
+
+            return cs.execute();
         } catch (SQLException e) {
-            logger.error("executeQuery failed, " + fmtBoundSql(boundSql, info.data), e);
+            logger.error("executeQuery failed, " + ExecuteHelper.fmtBoundSql(execSql), e);
             throw e;
         }
     }
 
-    protected Object executeQuery(CallableStatement cs, ExecuteInfo info, BoundSqlBuilder queryBuilder) throws SQLException {
-        List<SqlArg> sqlArgs = toArgs(queryBuilder);
+    @Override
+    protected Map<String, Object> multipleResultFetch(SqlBuilder buildSql, Statement stat, boolean retVal) throws SQLException {
+        return new StatementCallableMultipleResultSetExtractor(buildSql).fetchResult(retVal, stat);
+    }
 
-        for (int i = 0; i < sqlArgs.size(); i++) {
-            int sqlColIndex = i + 1;
-            SqlArg arg = sqlArgs.get(i);
-            TypeHandler<Object> typeHandler = (TypeHandler<Object>) arg.getTypeHandler();
+    protected Object fetchResult(boolean retVal, Statement stat, SqlConfig config, SqlBuilder oriSql, Map<String, Object> ctx, Page oriPageInfo, long newPageCnt, boolean pageResult) throws SQLException {
+        String[] bindOut = null;
 
-            switch (arg.getSqlMode()) {
-                case In: {
-                    typeHandler.setParameter(cs, sqlColIndex, arg.getValue(), arg.getJdbcType());
-                    break;
-                }
-                case InOut: {
-                    typeHandler.setParameter(cs, sqlColIndex, arg.getValue(), arg.getJdbcType());
-                    cs.registerOutParameter(sqlColIndex, arg.getJdbcType());
-                    break;
-                }
-                case Out: {
-                    cs.registerOutParameter(sqlColIndex, arg.getJdbcType());
-                    break;
-                }
-            }
+        if (config instanceof DqlConfig) {
+            bindOut = ((DqlConfig) config).getBindOut();
+        } else if (config instanceof ExecuteConfig) {
+            bindOut = ((ExecuteConfig) config).getBindOut();
+        } else {
+            bindOut = ArrayUtils.EMPTY_STRING_ARRAY;
         }
 
-        // execute call
-        boolean retVal = cs.execute();
+        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> multipleResult = this.multipleResultFetch(oriSql, stat, retVal);
 
-        // fetch output
-        for (int i = 0; i < sqlArgs.size(); i++) {
-            SqlArg arg = sqlArgs.get(i);
-            TypeHandler<Object> argHandler = (TypeHandler<Object>) arg.getTypeHandler();
-
-            if (arg.getSqlMode() != SqlMode.Out) {
-                continue;
-            }
-
-            if (arg.getJdbcType() == Types.REF_CURSOR) {
-                throw new UnsupportedOperationException("Types.REF_CURSOR Unsupported.");
-            }
-
-            String expr = arg.getExpr();
-            Object resultValue = argHandler.getResult(cs, i + 1);
-            OgnlUtils.writeByExpr(expr, info.data, resultValue);
+        if (bindOut.length == 0) {
+            return multipleResult;
         }
 
-        // result
-        ResultTableExtractor extractor = super.buildExtractor(info);
-        List<Object> resultSet = extractor.doResult(retVal, cs);
-        return getResult(resultSet, info);
+        for (String argName : bindOut) {
+            if (multipleResult.containsKey(argName)) {
+                result.put(argName, multipleResult.get(argName));
+            } else if (ctx.containsKey(argName)) {
+                result.put(argName, ctx.get(argName));
+            } else {
+                result.put(argName, null);
+            }
+        }
+        return result;
+    }
+
+    private static class StatementCallableMultipleResultSetExtractor extends CallableMultipleResultSetExtractor {
+        public StatementCallableMultipleResultSetExtractor(SqlBuilder buildSql) {
+            super(buildSql);
+        }
+
+        public Map<String, Object> fetchResult(boolean retVal, Statement s) throws SQLException {
+            try {
+                Map<String, Object> resultsMap = createResultsMap();
+                this.beforeFetchResult(s, resultsMap);
+                this.fetchResult(retVal, s, resultsMap);
+                this.afterFetchResult(s, resultsMap);
+                return resultsMap;
+            } finally {
+                this.afterStatement(s);
+            }
+        }
     }
 }
