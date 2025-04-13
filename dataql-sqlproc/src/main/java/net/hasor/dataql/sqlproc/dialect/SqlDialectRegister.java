@@ -17,10 +17,11 @@ package net.hasor.dataql.sqlproc.dialect;
 import net.hasor.cobble.ResourcesUtils;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.ref.LinkedCaseInsensitiveMap;
+import net.hasor.dataql.Hints;
+import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dialect.provider.*;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.Map;
 
@@ -62,17 +63,19 @@ public class SqlDialectRegister {
         dialectAliasMap.put(dialectClass.getName(), dialectClass);
     }
 
-    public static PageDialect findOrCreate(String dialectName) {
-        return findOrCreate(dialectName, null);
-    }
+    public static PageDialect findDialect(Connection conn, Hints hints, ClassLoader loader) throws SQLException {
+        // .优先从 hint 中取方言，取不到在自动推断
+        String dialectName = hints.getOrDefault(SqlHintNames.FRAGMENT_SQL_PAGE_DIALECT.name(), "").toString();
+        if (StringUtils.isBlank(dialectName)) {
+            String jdbcUrl = conn.getMetaData().getURL();
+            String jdbcDriverName = conn.getMetaData().getDriverName();
+            dialectName = JdbcHelper.getDbType(jdbcUrl, jdbcDriverName);
 
-    public static PageDialect findDialect(Connection conn) throws SQLException {
-        DatabaseMetaData metaData = conn.getMetaData();
-        String tmpDbType = JdbcHelper.getDbType(metaData.getURL(), metaData.getDriverName());
-        return findOrCreate(tmpDbType, null);
-    }
+            if (StringUtils.isBlank(dialectName)) {
+                throw new IllegalArgumentException("Query dialect missing.");
+            }
+        }
 
-    public static PageDialect findOrCreate(String dialectName, ClassLoader loader) {
         if (StringUtils.isBlank(dialectName)) {
             return DefaultPageDialect.DEFAULT;
         }

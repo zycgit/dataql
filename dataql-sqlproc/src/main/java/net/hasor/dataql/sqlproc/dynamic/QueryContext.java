@@ -28,5 +28,7 @@ public interface QueryContext {
 
     TypeHandlerRegistry getTypeRegistry();
 
+    ClassLoader getClassLoader();
+
     //Options options();
 }
