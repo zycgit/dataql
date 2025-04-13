@@ -13,10 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.dynamic.resolve;
+package net.hasor.dataql.sqlproc;
 import net.hasor.cobble.StringUtils;
-import net.hasor.dataql.sqlproc.SqlHintNames;
-import net.hasor.dataql.sqlproc.SqlHintValue;
 
 /**
  * 返回值类型
@@ -47,7 +45,7 @@ public enum ConfigFormatType {
 
     public static ConfigFormatType valueOfCode(String typeCode) {
         if (StringUtils.isBlank(typeCode)) {
-            typeCode = SqlHintNames.FRAGMENT_SQL_OPEN_PACKAGE.getDefaultVal();
+            typeCode = SqlHintNames.FRAGMENT_SQL_FORMAT.getDefaultVal();
         }
         for (ConfigFormatType type : ConfigFormatType.values()) {
             if (StringUtils.equalsIgnoreCase(type.typeCode, typeCode)) {

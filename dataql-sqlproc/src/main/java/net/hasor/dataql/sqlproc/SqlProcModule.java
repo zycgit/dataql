@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,6 @@ package net.hasor.dataql.sqlproc;
 
 import net.hasor.dataql.binder.QueryApiBinder;
 import net.hasor.dataql.binder.QueryModule;
-import net.hasor.dataql.sqlproc.fragment.SqlFragment;
 
 /**
  * @author 赵永春 (zyc@hasor.net)
@@ -26,7 +25,7 @@ import net.hasor.dataql.sqlproc.fragment.SqlFragment;
 public class SqlProcModule implements QueryModule {
     @Override
     public void loadModule(QueryApiBinder apiBinder) {
-        apiBinder.bindFragment("sql", new SqlFragment());
-        apiBinder.bindFragment("mybatis", new SqlFragment());
+        //        apiBinder.bindFragment("sql", new SqlFragment());
+        //        apiBinder.bindFragment("mybatis", new SqlFragment());
     }
 }

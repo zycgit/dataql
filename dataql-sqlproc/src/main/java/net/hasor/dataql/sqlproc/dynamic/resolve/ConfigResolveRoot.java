@@ -15,6 +15,7 @@
  */
 package net.hasor.dataql.sqlproc.dynamic.resolve;
 import net.hasor.dataql.Hints;
+import net.hasor.dataql.sqlproc.ConfigFormatType;
 import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
 
