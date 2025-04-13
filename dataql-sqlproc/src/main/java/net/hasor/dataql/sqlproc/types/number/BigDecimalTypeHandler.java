@@ -13,37 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.types;
+package net.hasor.dataql.sqlproc.types.number;
+
+import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
+
+import java.math.BigDecimal;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
+ * 读写 {@link BigDecimal}  类型数据
  * @author Clinton Begin
  * @author 赵永春 (zyc@hasor.net)
  */
-public class UnknownTypeHandler implements TypeHandler {
-    public UnknownTypeHandler(TypeHandlerRegistry registry) {
+public class BigDecimalTypeHandler extends AbstractTypeHandler {
+    @Override
+    public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
+        ps.setBigDecimal(i, (BigDecimal) parameter);
     }
 
     @Override
-    public void setParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
-
+    public Object getNullableResult(ResultSet rs, String columnName) throws SQLException {
+        return rs.getBigDecimal(columnName);
     }
 
     @Override
-    public Object getResult(ResultSet rs, String columnName) throws SQLException {
-        return null;
+    public Object getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+        return rs.getBigDecimal(columnIndex);
     }
 
     @Override
-    public Object getResult(ResultSet rs, int columnIndex) throws SQLException {
-        return null;
-    }
-
-    @Override
-    public Object getResult(CallableStatement cs, int columnIndex) throws SQLException {
-        return null;
+    public Object getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
+        return cs.getBigDecimal(columnIndex);
     }
 }
