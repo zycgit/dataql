@@ -33,7 +33,7 @@ import java.util.function.Supplier;
  * @version : 2017-03-23
  */
 public interface DataQL extends Hints {
-    public enum ConfigOption {
+    enum ConfigOption {
         /** 代码行号的编译模式 */
         CODE_LOCATION("codeLocation"),
         ;
@@ -49,24 +49,24 @@ public interface DataQL extends Hints {
     }
 
     /** 配置编译参数 */
-    public void configOption(ConfigOption optionKey, Object value);
+    void configOption(ConfigOption optionKey, Object value);
 
     /** 添加全局变量（等同于 compilerVar） */
-    public default DataQL addShareVarValue(String name, Object instance) {
+    default DataQL addShareVarValue(String name, Object instance) {
         return this.addShareVar(name, () -> instance);
     }
 
     /** 添加全局变量（等同于 compilerVar） */
-    public DataQL addShareVar(String name, Class<?> implementation);
+    DataQL addShareVar(String name, Class<?> implementation);
 
     /** 添加全局变量（等同于 compilerVar） */
-    public DataQL addShareVar(String name, Supplier<?> provider);
+    DataQL addShareVar(String name, Supplier<?> provider);
 
     /**
      * 解析 DataQL 执行脚本
      * @param queryString 脚本字符串
      */
-    public default QueryModel parserQuery(String queryString) throws IOException {
+    default QueryModel parserQuery(String queryString) throws IOException {
         return parserQuery(new StringReader(queryString));
     }
 
@@ -74,7 +74,7 @@ public interface DataQL extends Hints {
      * 解析 DataQL 执行脚本
      * @param queryReader 脚本输入流
      */
-    public default QueryModel parserQuery(Reader queryReader) throws IOException {
+    default QueryModel parserQuery(Reader queryReader) throws IOException {
         return parserQuery(CharStreams.fromReader(queryReader));
     }
 
@@ -82,7 +82,7 @@ public interface DataQL extends Hints {
      * 解析 DataQL 执行脚本
      * @param queryInput 脚本输入流，使用 UTF-8 字符集
      */
-    public default QueryModel parserQuery(InputStream queryInput) throws IOException {
+    default QueryModel parserQuery(InputStream queryInput) throws IOException {
         return parserQuery(queryInput, StandardCharsets.UTF_8);
     }
 
@@ -91,7 +91,7 @@ public interface DataQL extends Hints {
      * @param inputStream 脚本输入流
      * @param charset 读取字节流使用的字符集
      */
-    public default QueryModel parserQuery(InputStream inputStream, Charset charset) throws IOException {
+    default QueryModel parserQuery(InputStream inputStream, Charset charset) throws IOException {
         return parserQuery(CharStreams.fromStream(inputStream, charset));
     }
 
@@ -99,13 +99,13 @@ public interface DataQL extends Hints {
      * 解析 DataQL 执行脚本
      * @param charStream 脚本输入流
      */
-    public QueryModel parserQuery(CharStream charStream);
+    QueryModel parserQuery(CharStream charStream);
 
     /**
      * 解析并编译 DataQL 执行脚本
      * @param queryString 脚本字符串
      */
-    public default QIL compilerQuery(String queryString) throws IOException {
+    default QIL compilerQuery(String queryString) throws IOException {
         return compilerQuery(parserQuery(queryString));
     }
 
@@ -113,7 +113,7 @@ public interface DataQL extends Hints {
      * 解析并编译 DataQL 执行脚本
      * @param queryReader 脚本输入流
     `     */
-    public default QIL compilerQuery(Reader queryReader) throws IOException {
+    default QIL compilerQuery(Reader queryReader) throws IOException {
         return compilerQuery(parserQuery(queryReader));
     }
 
@@ -121,7 +121,7 @@ public interface DataQL extends Hints {
      * 解析并编译 DataQL 执行脚本
      * @param queryInput 脚本输入流，使用 UTF-8 字符集
      */
-    public default QIL compilerQuery(InputStream queryInput) throws IOException {
+    default QIL compilerQuery(InputStream queryInput) throws IOException {
         return compilerQuery(parserQuery(queryInput, StandardCharsets.UTF_8));
     }
 
@@ -130,7 +130,7 @@ public interface DataQL extends Hints {
      * @param queryInput 脚本输入流
      * @param charset 读取字节流使用的字符集
      */
-    public default QIL compilerQuery(InputStream queryInput, Charset charset) throws IOException {
+    default QIL compilerQuery(InputStream queryInput, Charset charset) throws IOException {
         return compilerQuery(parserQuery(queryInput, charset));
     }
 
@@ -138,28 +138,28 @@ public interface DataQL extends Hints {
      * 编译已经解析好的 DataQL
      * @param queryModel 解析之后的 DataQL 查询模型。
      */
-    public QIL compilerQuery(QueryModel queryModel) throws IOException;
+    QIL compilerQuery(QueryModel queryModel) throws IOException;
 
     /** 创建查询实例 */
-    public default Query createQuery(String queryString) throws IOException {
+    default Query createQuery(String queryString) throws IOException {
         return createQuery(compilerQuery(queryString));
     }
 
     /** 创建查询实例 */
-    public default Query createQuery(Reader queryReader) throws IOException {
+    default Query createQuery(Reader queryReader) throws IOException {
         return createQuery(compilerQuery(queryReader));
     }
 
     /** 创建查询实例 */
-    public default Query createQuery(InputStream queryInput) throws IOException {
+    default Query createQuery(InputStream queryInput) throws IOException {
         return createQuery(compilerQuery(queryInput));
     }
 
     /** 创建查询实例 */
-    public default Query createQuery(InputStream inputStream, Charset charset) throws IOException {
+    default Query createQuery(InputStream inputStream, Charset charset) throws IOException {
         return createQuery(compilerQuery(inputStream, charset));
     }
 
     /** 创建查询实例 */
-    public Query createQuery(QIL compilerQIL);
+    Query createQuery(QIL compilerQIL);
 }

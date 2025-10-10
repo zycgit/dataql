@@ -24,19 +24,19 @@ import net.hasor.dataql.runtime.mem.ExitType;
  */
 public interface QueryResult {
     /** 执行结果是否通过 EXIT 形式返回的 */
-    public default boolean isExit() {
+    default boolean isExit() {
         return ExitType.Exit == getExitType();
     }
 
     /** 执行结果是否通过 EXIT 形式返回的 */
-    public ExitType getExitType();
+    ExitType getExitType();
 
     /** 获得退出码。如果未指定退出码，则默认值为 0 */
-    public int getCode();
+    int getCode();
 
     /** 获得返回值 */
-    public DataModel getData();
+    DataModel getData();
 
     /** 获得本次执行耗时 */
-    public long executionTime();
+    long executionTime();
 }

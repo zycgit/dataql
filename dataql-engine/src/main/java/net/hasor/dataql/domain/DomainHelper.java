@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 package net.hasor.dataql.domain;
+import net.hasor.cobble.ArrayUtils;
+import net.hasor.cobble.ref.BeanMap;
 import net.hasor.dataql.Udf;
 import net.hasor.dataql.runtime.operator.OperatorUtils;
-import net.hasor.utils.ArrayUtils;
-import net.hasor.utils.ref.BeanMap;
 
 import java.util.*;
 

@@ -24,5 +24,5 @@ import java.util.function.Supplier;
  */
 @FunctionalInterface
 public interface UdfSource {
-    public Supplier<Map<String, Udf>> getUdfResource(Finder finder);
+    Supplier<Map<String, Udf>> getUdfResource(Finder finder);
 }

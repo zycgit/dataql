@@ -17,7 +17,6 @@ package net.hasor.dataql.service;
 import net.hasor.cobble.ResourcesUtils;
 import net.hasor.cobble.io.input.AutoCloseInputStream;
 import net.hasor.cobble.ref.LinkedCaseInsensitiveMap;
-import net.hasor.core.TypeSupplier;
 import net.hasor.dataql.Finder;
 import net.hasor.dataql.FragmentProcess;
 
@@ -40,11 +39,6 @@ public class DefaultFinder implements Finder {
 
     public DefaultFinder() {
         this(Thread.currentThread().getContextClassLoader(), Finder.DEFAULT);
-    }
-
-    public DefaultFinder(ClassLoader classLoader, TypeSupplier typeSupplier) {
-        this.classLoader = classLoader;
-        this.parent = (typeSupplier != null) ? Finder.TYPE_SUPPLIER.apply(typeSupplier) : Finder.DEFAULT;
     }
 
     public DefaultFinder(ClassLoader classLoader, Finder parent) {

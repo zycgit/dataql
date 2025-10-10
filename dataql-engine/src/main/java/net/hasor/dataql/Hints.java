@@ -168,4 +168,9 @@ public interface Hints extends HintValue {
             }
         }
     }
+
+    default <V> Function<String, V> andThen(Function<Object, ? extends V> after) {
+        Objects.requireNonNull(after);
+        return (String t) -> after.apply(getHint(t));
+    }
 }

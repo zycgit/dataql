@@ -96,15 +96,10 @@
             <groupId>net.hasor</groupId>
             <artifactId>cobble-all</artifactId>
         </dependency>
-        <dependency>
-            <groupId>net.hasor</groupId>
-            <artifactId>hasor-core</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
-            <version>1.2.67</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

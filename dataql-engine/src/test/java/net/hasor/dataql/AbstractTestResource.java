@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 package net.hasor.dataql;
-import net.hasor.core.Settings;
+import net.hasor.cobble.ResourcesUtils;
+import net.hasor.cobble.StringUtils;
+import net.hasor.cobble.io.IOUtils;
+import net.hasor.cobble.logging.Logger;
+import net.hasor.cobble.logging.LoggerFactory;
 import net.hasor.dataql.parser.QueryModel;
 import net.hasor.dataql.parser.ast.AstVisitor;
 import net.hasor.dataql.parser.ast.InstVisitorContext;
 import net.hasor.dataql.runtime.CompilerArguments;
 import net.hasor.dataql.runtime.QueryHelper;
-import net.hasor.utils.ResourcesUtils;
-import net.hasor.utils.StringUtils;
-import net.hasor.utils.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -51,7 +50,7 @@ public class AbstractTestResource {
         // .获取 DataQL 查询字符串
         logger.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         logger.info("resource = " + queryResource);
-        InputStreamReader reader = new InputStreamReader(inStream, Charset.forName(Settings.DefaultCharset));
+        InputStreamReader reader = new InputStreamReader(inStream, StandardCharsets.UTF_8);
         StringWriter outWriter = new StringWriter();
         IOUtils.copy(reader, outWriter);
         String buildQuery = outWriter.toString();

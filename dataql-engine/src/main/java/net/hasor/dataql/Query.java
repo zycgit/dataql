@@ -28,10 +28,10 @@ import java.util.function.Supplier;
  */
 public interface Query extends Hints, Cloneable {
     /** 添加全局变量 */
-    public void addShareVar(String key, Object value);
+    void addShareVar(String key, Object value);
 
     /** 添加全局变量 */
-    public default void putShareVar(Map<String, Supplier<?>> shareVarMap) {
+    default void putShareVar(Map<String, Supplier<?>> shareVarMap) {
         if (shareVarMap == null) {
             return;
         }
@@ -41,17 +41,17 @@ public interface Query extends Hints, Cloneable {
     }
 
     /** 执行查询 */
-    public default QueryResult execute() throws QueryRuntimeException {
+    default QueryResult execute() throws QueryRuntimeException {
         return this.execute(symbol -> Collections.emptyMap());
     }
 
     /** 执行查询 */
-    public default QueryResult execute(Map<String, ?> envData) throws QueryRuntimeException {
+    default QueryResult execute(Map<String, ?> envData) throws QueryRuntimeException {
         return this.execute(symbol -> envData);
     }
 
     /** 执行查询 */
-    public default QueryResult execute(Object[] envData) throws QueryRuntimeException {
+    default QueryResult execute(Object[] envData) throws QueryRuntimeException {
         if (envData == null) {
             return this.execute(Collections.emptyMap());
         }
@@ -63,8 +63,8 @@ public interface Query extends Hints, Cloneable {
     }
 
     /** 执行查询 */
-    public QueryResult execute(CustomizeScope customizeScope) throws QueryRuntimeException;
+    QueryResult execute(CustomizeScope customizeScope) throws QueryRuntimeException;
 
     /** 复制一个Query */
-    public Query clone();
+    Query clone();
 }

@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 package net.hasor.dataql;
-import net.hasor.core.TypeSupplier;
+import net.hasor.cobble.BeanUtils;
+import net.hasor.cobble.StringUtils;
+import net.hasor.cobble.convert.ConverterUtils;
+import net.hasor.cobble.function.ESupplier;
+import net.hasor.cobble.provider.SingleProvider;
 import net.hasor.dataql.domain.DataModel;
-import net.hasor.utils.BeanUtils;
-import net.hasor.utils.StringUtils;
-import net.hasor.utils.convert.ConverterUtils;
-import net.hasor.utils.function.ESupplier;
-import net.hasor.utils.supplier.SingleProvider;
 
 import java.lang.annotation.*;
 import java.lang.reflect.Method;
@@ -37,8 +36,8 @@ import java.util.function.Supplier;
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2019-12-11
  */
-public interface UdfSourceAssembly extends UdfSource, TypeSupplier {
-    public default <T> T get(Class<? extends T> targetType) {
+public interface UdfSourceAssembly extends UdfSource {
+    default <T> T get(Class<? extends T> targetType) {
         try {
             return targetType.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
@@ -46,7 +45,7 @@ public interface UdfSourceAssembly extends UdfSource, TypeSupplier {
         }
     }
 
-    public default Predicate<Method> getPredicate(Class<?> targetType) {
+    default Predicate<Method> getPredicate(Class<?> targetType) {
         return method -> {
             // ignore all method form Object\UdfSource\UdfSourceAssembly
             boolean testA = method.getDeclaringClass() != Object.class;
@@ -58,19 +57,19 @@ public interface UdfSourceAssembly extends UdfSource, TypeSupplier {
 
     /** 获取所有参数 */
     @FunctionalInterface
-    public interface UdfParams {
-        public Object[] allParams();
+    interface UdfParams {
+        Object[] allParams();
     }
 
     /** 函数名 */
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ ElementType.TYPE, ElementType.METHOD })
-    public @interface UdfName {
-        public String value();
+    @interface UdfName {
+        String value();
     }
 
     @Override
-    public default ESupplier<Map<String, Udf>, Exception> getUdfResource(Finder finder) {
+    default ESupplier<Map<String, Udf>, Exception> getUdfResource(Finder finder) {
         Class<?> targetType = getClass();
         ESupplier<?, Exception> supplier = () -> get(targetType);
         Predicate<Method> predicate = getPredicate(targetType);
@@ -78,7 +77,7 @@ public interface UdfSourceAssembly extends UdfSource, TypeSupplier {
         return () -> udfMap;
     }
 
-    public static class TypeUdfMap extends HashMap<String, Udf> {
+    class TypeUdfMap extends HashMap<String, Udf> {
         public TypeUdfMap(Class<?> utilType) {
             this(utilType, method -> true);
         }

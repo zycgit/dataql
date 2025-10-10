@@ -17,11 +17,9 @@ package net.hasor.dataql;
 import net.hasor.cobble.ClassUtils;
 import net.hasor.cobble.ExceptionUtils;
 import net.hasor.cobble.ResourcesUtils;
-import net.hasor.core.TypeSupplier;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.function.Function;
 
 /**
  * 资源加载器
@@ -30,23 +28,11 @@ import java.util.function.Function;
  */
 public interface Finder {
     /** 默认实现 */
-    public static final Finder                         DEFAULT       = new Finder() {
-    };
-    /** 通过 TypeSupplier 委托 findBean 的类型创建 */
-    public static final Function<TypeSupplier, Finder> TYPE_SUPPLIER = typeSupplier -> {
-        return new Finder() {
-            public Object findBean(Class<?> beanType) {
-                if (typeSupplier.test(beanType)) {
-                    return typeSupplier.get(beanType);
-                } else {
-                    return ClassUtils.newInstance(beanType);
-                }
-            }
-        };
+    Finder DEFAULT = new Finder() {
     };
 
     /** 负责处理 <code>import @"/net/hasor/demo.ql" as demo;</code>方式中 ‘/net/hasor/demo.ql’ 资源的加载 */
-    public default InputStream findResource(String resourceName) throws IOException {
+    default InputStream findResource(String resourceName) throws IOException {
         // .加载资源
         InputStream inputStream = null;
         try {
@@ -58,11 +44,11 @@ public interface Finder {
     }
 
     /** 负责处理 <code>import 'net.hasor.dataql.sdk.CollectionUdfSource' as collect;</code>方式的资源的加载。 */
-    public default Object findBean(Class<?> beanType) {
+    default Object findBean(Class<?> beanType) {
         return ClassUtils.newInstance(beanType);
     }
 
-    public default FragmentProcess findFragmentProcess(String fragmentType) {
+    default FragmentProcess findFragmentProcess(String fragmentType) {
         throw new UnsupportedOperationException(fragmentType + " fragment undefine.");
     }
 }

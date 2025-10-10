@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 package net.hasor.dataql.domain;
+import net.hasor.cobble.NumberUtils;
 import net.hasor.dataql.runtime.operator.OperatorUtils;
-import net.hasor.utils.NumberUtils;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

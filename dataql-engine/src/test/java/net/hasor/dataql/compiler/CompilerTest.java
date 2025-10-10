@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.compiler;
+import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.AbstractTestResource;
 import net.hasor.dataql.Finder;
 import net.hasor.dataql.compiler.qil.QIL;
@@ -21,7 +22,6 @@ import net.hasor.dataql.parser.QueryModel;
 import net.hasor.dataql.runtime.CompilerArguments;
 import net.hasor.dataql.runtime.CompilerArguments.CodeLocationEnum;
 import net.hasor.dataql.runtime.QueryHelper;
-import net.hasor.utils.StringUtils;
 import org.junit.Test;
 
 import java.io.IOException;

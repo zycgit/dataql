@@ -47,7 +47,7 @@ public class CompilerArguments {
         return arguments;
     }
 
-    public static enum CodeLocationEnum {
+    public enum CodeLocationEnum {
         /** 行定位信息：不输出行列信息。*/
         NONE,
         /** 行定位信息：精确到行，忽略列的变化，并且丢弃终止信息。 */

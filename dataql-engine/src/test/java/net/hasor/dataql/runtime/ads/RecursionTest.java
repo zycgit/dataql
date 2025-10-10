@@ -1,19 +1,15 @@
 package net.hasor.dataql.runtime.ads;
 import com.alibaba.fastjson.JSON;
-import net.hasor.core.Hasor;
 import net.hasor.dataql.AbstractTestResource;
 import net.hasor.dataql.DataQL;
-import net.hasor.dataql.FragmentProcess;
 import net.hasor.dataql.Query;
-import net.hasor.dataql.binder.QueryModule;
 import net.hasor.dataql.domain.UdfModel;
-import net.hasor.test.dataql.udfs.SqlFragmentUdf;
+import net.hasor.dataql.service.DataQLContext;
 import org.junit.Test;
 
 import java.io.IOException;
 
 public class RecursionTest extends AbstractTestResource {
-    private DataQL dataQL = Hasor.create().build().getInstance(DataQL.class);
 
     private void queryTest(DataQL dataQL, String testCase) throws IOException {
         Query query = dataQL.createQuery(getScript("/net_hasor_dataql_adv/" + testCase + ".ql"));
@@ -25,30 +21,30 @@ public class RecursionTest extends AbstractTestResource {
     }
 
     private void queryTest(String testCase) throws IOException {
-        queryTest(this.dataQL, testCase);
+        queryTest(new DataQLContext(), testCase);
     }
 
     @Test
     public void returnLambda() throws Throwable {
-        Query query = this.dataQL.createQuery(getScript("/net_hasor_dataql_adv/return_lambda.ql"));
+        Query query = new DataQLContext().createQuery(getScript("/net_hasor_dataql_adv/return_lambda.ql"));
         UdfModel testUdf = (UdfModel) query.execute().getData();
         //
         assert testUdf.call(new Object[] { 1 }).unwrap().equals("性别：男");
         assert testUdf.call(new Object[] { 0 }).unwrap().equals("性别：女");
     }
 
-    @Test
-    public void sql_fragment_test() throws IOException {
-        DataQL dataQL1 = Hasor.create().build((QueryModule) apiBinder -> {
-            apiBinder.bindFragment("sql", new SqlFragmentUdf(1));
-        }).getInstance(DataQL.class);
-        queryTest(dataQL1, "sql_fragment");
-        //
-        DataQL dataQL2 = Hasor.create().build((QueryModule) apiBinder -> {
-            apiBinder.bindType("sql", FragmentProcess.class, new SqlFragmentUdf(1));
-        }).getInstance(DataQL.class);
-        queryTest(dataQL2, "sql_fragment");
-    }
+    //    @Test
+    //    public void sql_fragment_test() throws IOException {
+    //        DataQL dataQL1 = Hasor.create().build((QueryModule) apiBinder -> {
+    //            apiBinder.bindFragment("sql", new SqlFragmentUdf(1));
+    //        }).getInstance(DataQL.class);
+    //        queryTest(dataQL1, "sql_fragment");
+    //        //
+    //        DataQL dataQL2 = Hasor.create().build((QueryModule) apiBinder -> {
+    //            apiBinder.bindType("sql", FragmentProcess.class, new SqlFragmentUdf(1));
+    //        }).getInstance(DataQL.class);
+    //        queryTest(dataQL2, "sql_fragment");
+    //    }
 
     @Test
     public void basic_fmt_test() throws IOException {

@@ -24,10 +24,10 @@ import net.hasor.dataql.runtime.HintsSet;
 @FunctionalInterface
 public interface Udf {
     /** UDF 的返回值必须是一个 对象或者数组 */
-    public default Object call(Object... params) throws Throwable {
+    default Object call(Object... params) throws Throwable {
         return call(new HintsSet(), params);
     }
 
     /** UDF 的返回值必须是一个 对象或者数组 */
-    public Object call(Hints readOnly, Object... params) throws Throwable;
+    Object call(Hints readOnly, Object... params) throws Throwable;
 }

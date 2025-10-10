@@ -1,11 +1,10 @@
 package net.hasor.test.dataql.udfs;
-import net.hasor.dataql.DimUdfSource;
 import net.hasor.dataql.UdfSourceAssembly;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-@DimUdfSource("time")
+//@DimUdfSource("time")
 public class TimeUdfSource implements UdfSourceAssembly {
     /** 格式化指定时间 */
     public String format(long time, String pattern) {
