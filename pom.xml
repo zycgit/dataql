@@ -13,8 +13,8 @@
         <downloadJavadocs>true</downloadJavadocs>
         <jacoco.version>0.8.5</jacoco.version>
         <hasor.version>4.2.5</hasor.version>
-        <cobble.version>4.6.3</cobble.version>
-        <dbvisitor.version>5.4.2</dbvisitor.version>
+        <cobble.version>4.8.2</cobble.version>
+        <dbvisitor.version>6.0.5</dbvisitor.version>
         <!--<maven.test.skip>true</maven.test.skip>-->
         <!--<skipTests>true</skipTests>-->
     </properties>
@@ -52,8 +52,7 @@
         <module>dataql-engine</module>
         <module>dataql-sqlproc</module>
         <module>dataql-functions</module>
-        <module>dataql-dataway</module>
-        <module>dataql-maven-plugin</module>
+        <!--        <module>dataql-dataway</module>-->
     </modules>
 
     <!-- 构建描述 -->
@@ -218,7 +217,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
-                <module>dataql-example/springboot-1</module>
+                <!--                <module>dataql-example/springboot-1</module>-->
             </modules>
         </profile>
     </profiles>
