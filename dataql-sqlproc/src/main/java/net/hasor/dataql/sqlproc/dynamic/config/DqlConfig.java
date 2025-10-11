@@ -48,23 +48,11 @@ public abstract class DqlConfig extends SqlConfig {
         return this.fetchSize;
     }
 
-    public void setFetchSize(int fetchSize) {
-        this.fetchSize = fetchSize;
-    }
-
     public ResultSetType getResultSetType() {
         return this.resultSetType;
     }
 
-    public void setResultSetType(ResultSetType resultSetType) {
-        this.resultSetType = resultSetType;
-    }
-
     public String[] getBindOut() {
         return this.bindOut;
-    }
-
-    public void setBindOut(String[] bindOut) {
-        this.bindOut = bindOut;
     }
 }

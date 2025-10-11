@@ -16,7 +16,6 @@
 package net.hasor.dataql.sqlproc.dynamic;
 
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
-import net.hasor.dataql.sqlproc.dynamic.rule.ResultArg;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,9 +27,8 @@ import java.util.List;
  * @version 2021-06-05
  */
 public class SqlBuilder implements BoundSql {
-    protected final StringBuilder   queryString = new StringBuilder();
-    protected final List<Object>    argList     = new ArrayList<>();
-    protected final List<ResultArg> rules       = new ArrayList<>();
+    protected final StringBuilder queryString = new StringBuilder();
+    protected final List<Object>  argList     = new ArrayList<>();
 
     public boolean lastSpaceCharacter() {
         if (this.queryString.length() == 0) {
@@ -38,12 +36,6 @@ public class SqlBuilder implements BoundSql {
         } else {
             char charAt = this.queryString.charAt(this.queryString.length() - 1);
             return charAt == ' ' || charAt == '\n' || charAt == '\t';
-        }
-    }
-
-    public void appendResult(ResultArg rule) {
-        if (rule != null) {
-            this.rules.add(rule);
         }
     }
 
@@ -82,9 +74,5 @@ public class SqlBuilder implements BoundSql {
     @Override
     public Object[] getArgs() {
         return this.argList.toArray();
-    }
-
-    public List<ResultArg> getResultArgs() {
-        return this.rules;
     }
 }

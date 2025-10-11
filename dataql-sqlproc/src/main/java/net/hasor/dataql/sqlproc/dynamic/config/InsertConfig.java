@@ -59,23 +59,11 @@ public class InsertConfig extends DmlConfig {
         return this.useGeneratedKeys;
     }
 
-    public void setUseGeneratedKeys(boolean useGeneratedKeys) {
-        this.useGeneratedKeys = useGeneratedKeys;
-    }
-
     public String getKeyColumn() {
         return this.keyColumn;
     }
 
-    public void setKeyColumn(String keyColumn) {
-        this.keyColumn = keyColumn;
-    }
-
     public String getKeyProperty() {
         return this.keyProperty;
-    }
-
-    public void setKeyProperty(String keyProperty) {
-        this.keyProperty = keyProperty;
     }
 }

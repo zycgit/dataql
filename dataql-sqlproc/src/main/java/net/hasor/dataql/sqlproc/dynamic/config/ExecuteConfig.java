@@ -46,8 +46,4 @@ public class ExecuteConfig extends SqlConfig {
     public String[] getBindOut() {
         return this.bindOut;
     }
-
-    public void setBindOut(String[] bindOut) {
-        this.bindOut = bindOut;
-    }
 }

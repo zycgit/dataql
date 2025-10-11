@@ -52,16 +52,8 @@ public abstract class SqlConfig implements DynamicSql {
         return this.statementType;
     }
 
-    public void setStatementType(StatementType statementType) {
-        this.statementType = statementType;
-    }
-
     public int getTimeout() {
         return this.timeout;
-    }
-
-    public void setTimeout(int timeout) {
-        this.timeout = timeout;
     }
 
     public abstract QueryType getType();

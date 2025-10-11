@@ -58,47 +58,23 @@ public class SelectKeyConfig extends SqlConfig {
         return this.target;
     }
 
-    public void setTarget(ArrayDynamicSql target) {
-        this.target = target;
-    }
-
     public int getFetchSize() {
         return this.fetchSize;
-    }
-
-    public void setFetchSize(int fetchSize) {
-        this.fetchSize = fetchSize;
     }
 
     public ResultSetType getResultSetType() {
         return this.resultSetType;
     }
 
-    public void setResultSetType(ResultSetType resultSetType) {
-        this.resultSetType = resultSetType;
-    }
-
     public String getKeyProperty() {
         return this.keyProperty;
-    }
-
-    public void setKeyProperty(String keyProperty) {
-        this.keyProperty = keyProperty;
     }
 
     public String getKeyColumn() {
         return this.keyColumn;
     }
 
-    public void setKeyColumn(String keyColumn) {
-        this.keyColumn = keyColumn;
-    }
-
     public String getOrder() {
         return this.order;
-    }
-
-    public void setOrder(String order) {
-        this.order = order;
     }
 }
