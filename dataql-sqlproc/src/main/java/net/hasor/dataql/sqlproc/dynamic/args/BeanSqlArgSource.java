@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic.args;
+import java.util.*;
 import net.hasor.cobble.BeanUtils;
 import net.hasor.cobble.function.Property;
 import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
-
-import java.util.*;
 
 /**
  * @author 赵永春 (zyc@hasor.net)

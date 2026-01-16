@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic.segment;
+import java.sql.SQLException;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
-
-import java.sql.SQLException;
 
 public class TextSqlSegment implements SqlSegment {
     private final StringBuilder textString;

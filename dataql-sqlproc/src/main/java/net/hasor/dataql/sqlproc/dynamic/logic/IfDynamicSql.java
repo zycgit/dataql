@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic.logic;
+import java.sql.SQLException;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
 import net.hasor.dataql.sqlproc.internal.OgnlUtils;
-
-import java.sql.SQLException;
 
 /**
  * <if> 标签

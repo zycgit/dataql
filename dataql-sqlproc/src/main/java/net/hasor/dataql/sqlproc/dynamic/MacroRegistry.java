@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic;
-import net.hasor.cobble.StringUtils;
-import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
-
 import java.util.HashMap;
 import java.util.Map;
+import net.hasor.cobble.StringUtils;
+import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
 
 /**
  * 解析动态 SQL 配置

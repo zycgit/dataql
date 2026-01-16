@@ -15,15 +15,14 @@
  */
 package net.hasor.dataql.sqlproc.dynamic.logic;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import net.hasor.dataql.sqlproc.dynamic.DynamicSql;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
 import net.hasor.dataql.sqlproc.dynamic.segment.PlanDynamicSql;
-
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 多个 SQL 节点组合成一个 SqlNode

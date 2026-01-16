@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic.rule;
+import java.security.NoSuchAlgorithmException;
+import java.sql.SQLException;
+import java.sql.Types;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.codec.MD5;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
@@ -24,10 +27,6 @@ import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
 import net.hasor.dataql.sqlproc.types.TypeHandler;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 import net.hasor.dataql.sqlproc.types.string.StringTypeHandler;
-
-import java.security.NoSuchAlgorithmException;
-import java.sql.SQLException;
-import java.sql.Types;
 
 /**
  * 进行 OGNL 求值，值结果用 MD5 进行编码然后加入到 SQL 参数中

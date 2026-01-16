@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic.rule;
-import net.hasor.cobble.ref.LinkedCaseInsensitiveMap;
-
 import java.util.Map;
 import java.util.Objects;
+import net.hasor.cobble.ref.LinkedCaseInsensitiveMap;
 
 /**
  * SqlBuildRule 注册器

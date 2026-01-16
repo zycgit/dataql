@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic.logic;
+import java.sql.SQLException;
+import java.util.Arrays;
 import net.hasor.cobble.ArrayUtils;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
-
-import java.sql.SQLException;
-import java.util.Arrays;
 
 /**
  * 对应XML中 <trim>

@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic.segment;
+import java.sql.SQLException;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
 import net.hasor.dataql.sqlproc.dynamic.rule.SqlRule;
-
-import java.sql.SQLException;
 
 public class RuleSqlSegment implements SqlSegment {
     private final String ruleExpr;

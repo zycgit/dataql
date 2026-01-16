@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic.rule;
+import java.sql.Types;
+import java.util.UUID;
 import net.hasor.dataql.sqlproc.dynamic.*;
 import net.hasor.dataql.sqlproc.types.TypeHandler;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 import net.hasor.dataql.sqlproc.types.string.StringTypeHandler;
-
-import java.sql.Types;
-import java.util.UUID;
 
 /**
  * 产生一个 32 字符长度的 `UUID`，并加入到 SQL 参数中

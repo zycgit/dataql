@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic.rule;
+import java.sql.SQLException;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
 import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
 import static net.hasor.dataql.sqlproc.internal.OgnlUtils.evalOgnl;
-
-import java.sql.SQLException;
 
 /**
  * 如果参数不为空，则生成 'column = ?'。

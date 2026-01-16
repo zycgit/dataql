@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic.segment;
+import java.util.Map;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.sqlproc.dynamic.rule.ArgRule;
 import net.hasor.dataql.sqlproc.internal.RuntimeSQLException;
-
-import java.util.Map;
 
 /**
  * Holds information about a parsed SQL statement.

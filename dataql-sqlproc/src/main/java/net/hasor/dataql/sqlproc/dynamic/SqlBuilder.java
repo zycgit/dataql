@@ -15,11 +15,10 @@
  */
 package net.hasor.dataql.sqlproc.dynamic;
 
-import net.hasor.dataql.sqlproc.dialect.BoundSql;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import net.hasor.dataql.sqlproc.dialect.BoundSql;
 
 /**
  * SQL Build

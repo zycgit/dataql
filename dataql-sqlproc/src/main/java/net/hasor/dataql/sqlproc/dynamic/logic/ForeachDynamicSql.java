@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic.logic;
+import java.lang.reflect.Array;
+import java.sql.SQLException;
+import java.util.Collection;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
 import net.hasor.dataql.sqlproc.internal.OgnlUtils;
-
-import java.lang.reflect.Array;
-import java.sql.SQLException;
-import java.util.Collection;
 
 /**
  * 对应XML中 <foreach>

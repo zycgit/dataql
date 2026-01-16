@@ -15,14 +15,13 @@
  */
 package net.hasor.dataql.sqlproc.dynamic.segment;
 
+import java.sql.SQLException;
+import java.util.*;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.sqlproc.dynamic.DynamicSql;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
-
-import java.sql.SQLException;
-import java.util.*;
 
 /**
  * 本处理器，兼容 @{...}、#{...}、${...} 三种写法。

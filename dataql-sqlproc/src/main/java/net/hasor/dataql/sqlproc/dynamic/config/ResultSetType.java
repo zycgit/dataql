@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic.config;
+import java.sql.ResultSet;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.sqlproc.SqlHintValue;
-
-import java.sql.ResultSet;
 
 /**
  * FORWARD_ONLY，SCROLL_SENSITIVE, SCROLL_INSENSITIVE 或 DEFAULT（等价于 unset） 中的一个，默认值为 unset （依赖数据库驱动）。

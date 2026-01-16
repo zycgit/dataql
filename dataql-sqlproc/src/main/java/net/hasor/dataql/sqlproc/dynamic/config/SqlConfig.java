@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic.config;
+import java.sql.SQLException;
+import java.util.Objects;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.sqlproc.SqlHintNames;
@@ -22,9 +24,6 @@ import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
 import net.hasor.dataql.sqlproc.dynamic.logic.ArrayDynamicSql;
-
-import java.sql.SQLException;
-import java.util.Objects;
 
 /**
  * Segment SqlConfig

@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic.resolve;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.runtime.HintsSet;
 import net.hasor.dataql.sqlproc.SqlHintNames;
@@ -28,13 +34,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
 
 /**
  * parse dynamic SQL from mapperFile
