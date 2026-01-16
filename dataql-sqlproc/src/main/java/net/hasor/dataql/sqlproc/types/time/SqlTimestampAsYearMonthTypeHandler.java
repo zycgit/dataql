@@ -15,8 +15,6 @@
  */
 package net.hasor.dataql.sqlproc.types.time;
 
-import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
-
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,6 +22,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
 
 /**
  * 使用 {@link YearMonth} 类型读写 jdbc {@link java.sql.Timestamp} 数据。缺失的时间信息使用 0 补充，月份/日期使用 1。

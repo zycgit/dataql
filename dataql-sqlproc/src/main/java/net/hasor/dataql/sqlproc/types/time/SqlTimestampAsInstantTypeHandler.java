@@ -15,13 +15,12 @@
  */
 package net.hasor.dataql.sqlproc.types.time;
 
-import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
-
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
+import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
 
 /**
  * 使用 {@link Instant} 类型读写 jdbc {@link java.sql.Timestamp} 数据。

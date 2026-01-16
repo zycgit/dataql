@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types.string;
-import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
-
 import java.io.StringReader;
 import java.sql.*;
+import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
 
 /**
  * 使用 String 类型读写 jdbc Clob 数据。

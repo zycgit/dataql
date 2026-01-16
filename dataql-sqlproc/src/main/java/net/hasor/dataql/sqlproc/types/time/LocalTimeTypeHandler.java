@@ -15,13 +15,12 @@
  */
 package net.hasor.dataql.sqlproc.types.time;
 
-import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
-
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalTime;
+import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
 
 /**
  * 读写 {@link LocalTime}  类型数据

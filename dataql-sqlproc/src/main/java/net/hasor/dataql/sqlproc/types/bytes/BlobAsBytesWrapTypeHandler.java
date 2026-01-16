@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types.bytes;
-import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
-
 import java.io.ByteArrayInputStream;
 import java.sql.*;
+import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
 
 /**
  * 使用 bytes 包装类型读写 jdbc blob 数据。

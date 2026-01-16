@@ -14,23 +14,6 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
-import net.hasor.cobble.ClassUtils;
-import net.hasor.dataql.sqlproc.dialect.JdbcHelper;
-import net.hasor.dataql.sqlproc.dynamic.SqlArg;
-import net.hasor.dataql.sqlproc.dynamic.SqlMode;
-import net.hasor.dataql.sqlproc.types.array.ArrayTypeHandler;
-import net.hasor.dataql.sqlproc.types.bool.BooleanTypeHandler;
-import net.hasor.dataql.sqlproc.types.bytes.BlobAsBytesTypeHandler;
-import net.hasor.dataql.sqlproc.types.bytes.BlobAsBytesWrapTypeHandler;
-import net.hasor.dataql.sqlproc.types.bytes.BytesAsBytesWrapTypeHandler;
-import net.hasor.dataql.sqlproc.types.bytes.BytesTypeHandler;
-import net.hasor.dataql.sqlproc.types.number.*;
-import net.hasor.dataql.sqlproc.types.string.ClobAsStringTypeHandler;
-import net.hasor.dataql.sqlproc.types.string.NClobAsStringTypeHandler;
-import net.hasor.dataql.sqlproc.types.string.StringAsCharTypeHandler;
-import net.hasor.dataql.sqlproc.types.string.StringTypeHandler;
-import net.hasor.dataql.sqlproc.types.time.*;
-
 import java.io.InputStream;
 import java.io.Reader;
 import java.lang.reflect.Constructor;
@@ -48,6 +31,22 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import net.hasor.cobble.ClassUtils;
+import net.hasor.dataql.sqlproc.dialect.JdbcHelper;
+import net.hasor.dataql.sqlproc.dynamic.SqlArg;
+import net.hasor.dataql.sqlproc.dynamic.SqlMode;
+import net.hasor.dataql.sqlproc.types.array.ArrayTypeHandler;
+import net.hasor.dataql.sqlproc.types.bool.BooleanTypeHandler;
+import net.hasor.dataql.sqlproc.types.bytes.BlobAsBytesTypeHandler;
+import net.hasor.dataql.sqlproc.types.bytes.BlobAsBytesWrapTypeHandler;
+import net.hasor.dataql.sqlproc.types.bytes.BytesAsBytesWrapTypeHandler;
+import net.hasor.dataql.sqlproc.types.bytes.BytesTypeHandler;
+import net.hasor.dataql.sqlproc.types.number.*;
+import net.hasor.dataql.sqlproc.types.string.ClobAsStringTypeHandler;
+import net.hasor.dataql.sqlproc.types.string.NClobAsStringTypeHandler;
+import net.hasor.dataql.sqlproc.types.string.StringAsCharTypeHandler;
+import net.hasor.dataql.sqlproc.types.string.StringTypeHandler;
+import net.hasor.dataql.sqlproc.types.time.*;
 
 /**
  * JDBC 4.2 full  compatible
@@ -578,6 +577,20 @@ public final class TypeHandlerRegistry {
             }
         }
 
+        // maybe classType is abstract
+        for (Class<?> abstractType : this.abstractCachedByCrossType.keySet()) {
+            if (abstractType.isAssignableFrom(typeClass) || abstractType == typeClass) {
+                Map<Integer, TypeHandler> typeHandlerMap = this.abstractCachedByCrossType.get(abstractType);
+                if (typeHandlerMap != null) {
+                    TypeHandler typeHandler = typeHandlerMap.get(jdbcType);
+                    if (typeHandler != null) {
+                        register(jdbcType, typeClass, typeHandler);
+                        return typeHandler;
+                    }
+                }
+            }
+        }
+
         // find by classType
         TypeHandler typeHandler = this.cachedByJavaType.get(typeClassName);
         if (typeHandler != null) {
@@ -593,14 +606,6 @@ public final class TypeHandlerRegistry {
                 //                register(jdbcType, typeClass, handler);
                 //                return handler;
                 throw new UnsupportedOperationException("EnumTypeHandler not support yet.");
-            }
-        }
-        // maybe classType is abstract
-        for (Class<?> abstractType : this.abstractCachedByCrossType.keySet()) {
-            if (abstractType.isAssignableFrom(typeClass) || abstractType == typeClass) {
-                Map<Integer, TypeHandler> typeHandlerMap = this.abstractCachedByCrossType.get(typeClass);
-                typeHandler = typeHandlerMap.get(jdbcType);
-                break;
             }
         }
 

@@ -15,8 +15,6 @@
  */
 package net.hasor.dataql.sqlproc.types.array;
 
-import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
@@ -26,6 +24,7 @@ import java.time.*;
 import java.time.chrono.JapaneseDate;
 import java.util.Calendar;
 import java.util.concurrent.ConcurrentHashMap;
+import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
 
 /**
  * 读写 jdbc 数组类型

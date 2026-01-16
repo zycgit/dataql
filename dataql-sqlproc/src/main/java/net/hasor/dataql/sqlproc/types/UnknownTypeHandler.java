@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types;
-import net.hasor.cobble.ResourcesUtils;
-
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
+import net.hasor.cobble.ResourcesUtils;
 
 /**
  * @author Clinton Begin
@@ -68,7 +67,11 @@ public class UnknownTypeHandler extends AbstractTypeHandler {
         if (parameter == null) {
             handler = OBJECT_TYPE_HANDLER;
         } else {
-            handler = this.typeHandlerRegistry.getTypeHandler(parameter.getClass(), jdbcType);
+            if (jdbcType == null) {
+                handler = this.typeHandlerRegistry.getTypeHandler(parameter.getClass());
+            } else {
+                handler = this.typeHandlerRegistry.getTypeHandler(parameter.getClass(), jdbcType);
+            }
             // check if handler is null (issue #270) <- mybatis
             if (handler == null || handler instanceof UnknownTypeHandler) {
                 handler = OBJECT_TYPE_HANDLER;

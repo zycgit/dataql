@@ -15,12 +15,11 @@
  */
 package net.hasor.dataql.sqlproc.types.string;
 
-import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
-
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
 
 /**
  * 以 char 方式读写 String 数据。

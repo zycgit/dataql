@@ -15,10 +15,9 @@
  */
 package net.hasor.dataql.sqlproc.types.string;
 
-import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
-
 import java.io.StringReader;
 import java.sql.*;
+import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
 
 /**
  * 使用 string 类型读写 jdbc NClob 数据。

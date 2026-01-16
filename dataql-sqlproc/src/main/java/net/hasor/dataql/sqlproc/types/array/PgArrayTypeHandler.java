@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.types.array;
-import net.hasor.cobble.codec.HexUtils;
-import net.hasor.dataql.sqlproc.types.NoCache;
-import net.hasor.dataql.sqlproc.types.number.PgMoneyAsBigDecimalTypeHandler;
-
 import java.sql.Array;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import net.hasor.cobble.codec.HexUtils;
+import net.hasor.dataql.sqlproc.types.NoCache;
+import net.hasor.dataql.sqlproc.types.number.PgMoneyAsBigDecimalTypeHandler;
 
 /**
  * PostgreSQL，数组类型
