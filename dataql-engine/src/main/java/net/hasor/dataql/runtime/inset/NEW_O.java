@@ -24,10 +24,9 @@ import net.hasor.dataql.runtime.mem.EnvStack;
 
 /**
  * NEW_O   // 构造一个键值对对象并压入栈
- *         - 参数说明：共0参数；
- *         - 栈行为：消费0，产出1
- *         - 堆行为：无
- *
+ * - 参数说明：共0参数；
+ * - 栈行为：消费0，产出1
+ * - 堆行为：无
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-19
  */

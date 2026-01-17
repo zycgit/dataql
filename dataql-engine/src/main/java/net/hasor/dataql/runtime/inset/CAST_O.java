@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 package net.hasor.dataql.runtime.inset;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import net.hasor.dataql.domain.DataModel;
 import net.hasor.dataql.domain.ListModel;
 import net.hasor.dataql.runtime.InsetProcess;
@@ -23,16 +26,11 @@ import net.hasor.dataql.runtime.mem.DataHeap;
 import net.hasor.dataql.runtime.mem.DataStack;
 import net.hasor.dataql.runtime.mem.EnvStack;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-
 /**
  * CAST_O  // 将栈顶元素转换为一个对象，如果是集合那么取第一条记录（可以通过CAST_I方式解决，但会多消耗大约8条左右的指令）
- *         - 参数说明：共0参数
- *         - 栈行为：消费1，产出1
- *         - 堆行为：无
- *
+ * - 参数说明：共0参数
+ * - 栈行为：消费1，产出1
+ * - 堆行为：无
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-19
  */

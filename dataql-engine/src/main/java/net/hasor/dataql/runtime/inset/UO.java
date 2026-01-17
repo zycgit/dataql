@@ -26,10 +26,9 @@ import net.hasor.dataql.runtime.operator.OperatorProcess;
 
 /**
  * UO      // 一元运算
- *         - 参数说明：共1参数；参数1：一元操作符
- *         - 栈行为：消费1，产出1
- *         - 堆行为：无
- *
+ * - 参数说明：共1参数；参数1：一元操作符
+ * - 栈行为：消费1，产出1
+ * - 堆行为：无
  * 开发者可以通过实现 OperatorProcess 接口，覆盖某个运算符实现 运算符重载功能。
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-19

@@ -1,4 +1,0 @@
-select * from PROJECT_INFO
-where status = 2
-
-order by name asc

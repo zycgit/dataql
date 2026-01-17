@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 package net.hasor.dataql.runtime.mem;
+import java.util.*;
 import net.hasor.dataql.FragmentProcess;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.Udf;
 import net.hasor.dataql.parser.location.RuntimeLocation;
 import net.hasor.dataql.runtime.QueryRuntimeException;
-
-import java.util.*;
 
 /**
  * 代理 Fragment 使其成为 UDF.

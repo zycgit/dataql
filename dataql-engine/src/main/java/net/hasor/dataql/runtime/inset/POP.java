@@ -23,10 +23,9 @@ import net.hasor.dataql.runtime.mem.EnvStack;
 
 /**
  * POP     // 丢弃栈顶数据
- *         - 参数说明：共0参数；
- *         - 栈行为：消费1，产出0
- *         - 堆行为：无
- *
+ * - 参数说明：共0参数；
+ * - 栈行为：消费1，产出0
+ * - 堆行为：无
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-19
  */

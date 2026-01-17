@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 package net.hasor.dataql.parser.ast.expr;
+import java.io.IOException;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.parser.ast.AstVisitor;
 import net.hasor.dataql.parser.ast.Expression;
 import net.hasor.dataql.parser.ast.FormatWriter;
 import net.hasor.dataql.parser.ast.InstVisitorContext;
 import net.hasor.dataql.parser.location.BlockLocation;
-
-import java.io.IOException;
 
 /**
  * 三元运算表达式

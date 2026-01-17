@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 package net.hasor.dataql.compiler.cc;
+import java.util.Stack;
 import net.hasor.dataql.compiler.qil.CompilerContext;
 import net.hasor.dataql.compiler.qil.InstCompiler;
 import net.hasor.dataql.compiler.qil.InstQueue;
 import net.hasor.dataql.parser.ast.Expression;
 import net.hasor.dataql.parser.ast.expr.DyadicExpression;
 import net.hasor.dataql.parser.ast.token.SymbolToken;
-
-import java.util.Stack;
 
 /**
  * 二元运算表达式

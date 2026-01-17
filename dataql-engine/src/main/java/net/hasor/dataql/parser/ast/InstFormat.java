@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 package net.hasor.dataql.parser.ast;
-import net.hasor.dataql.Hints;
-
 import java.io.IOException;
+import net.hasor.dataql.Hints;
 
 /**
  * 格式化输出

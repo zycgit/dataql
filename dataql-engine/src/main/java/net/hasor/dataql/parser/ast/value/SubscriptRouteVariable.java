@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.parser.ast.value;
+import java.io.IOException;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.parser.ast.*;
 import net.hasor.dataql.parser.ast.expr.AtomExpression;
@@ -23,8 +24,6 @@ import net.hasor.dataql.parser.ast.token.StringToken;
 import net.hasor.dataql.parser.ast.value.EnterRouteVariable.RouteType;
 import net.hasor.dataql.parser.ast.value.EnterRouteVariable.SpecialType;
 import net.hasor.dataql.parser.location.BlockLocation;
-
-import java.io.IOException;
 
 /**
  * 对 RouteVariable 的下标操作

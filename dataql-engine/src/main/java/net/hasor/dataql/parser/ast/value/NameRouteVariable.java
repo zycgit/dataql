@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 package net.hasor.dataql.parser.ast.value;
+import java.io.IOException;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.parser.ast.*;
 import net.hasor.dataql.parser.ast.token.StringToken;
 import net.hasor.dataql.parser.location.BlockLocation;
-
-import java.io.IOException;
 
 /**
  * 函数调用 - 之所以是 Variable 是由于 FunctionCall 的最终结果是 函数调用的返回值。而返回值是属于 Variable 的

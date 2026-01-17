@@ -1,5 +1,0 @@
-insert into test_user (
-    <include form user_do_allColumns> 
-) values (
-    ? , ?
-);

@@ -23,10 +23,9 @@ import net.hasor.dataql.runtime.mem.EnvStack;
 
 /**
  * GOTO    // 执行跳转
- *         - 参数说明：共1参数；参数1：GOTO 的位置
- *         - 栈行为：消费0，产出0
- *         - 堆行为：无
- *
+ * - 参数说明：共1参数；参数1：GOTO 的位置
+ * - 栈行为：消费0，产出0
+ * - 堆行为：无
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-19
  */

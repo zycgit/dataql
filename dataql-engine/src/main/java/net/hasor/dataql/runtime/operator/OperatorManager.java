@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 package net.hasor.dataql.runtime.operator;
-import net.hasor.cobble.provider.SingleProvider;
-import net.hasor.dataql.runtime.operator.ops.*;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import net.hasor.cobble.provider.SingleProvider;
+import net.hasor.dataql.runtime.operator.ops.*;
 
 /**
  * 一元二元运算符注册管理器。

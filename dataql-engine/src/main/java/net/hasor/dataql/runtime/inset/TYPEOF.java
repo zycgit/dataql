@@ -24,19 +24,13 @@ import net.hasor.dataql.runtime.QueryRuntimeException;
 import net.hasor.dataql.runtime.mem.DataHeap;
 import net.hasor.dataql.runtime.mem.DataStack;
 import net.hasor.dataql.runtime.mem.EnvStack;
-
-import static net.hasor.dataql.domain.TypeOfEnum.Boolean;
-import static net.hasor.dataql.domain.TypeOfEnum.Number;
-import static net.hasor.dataql.domain.TypeOfEnum.Object;
-import static net.hasor.dataql.domain.TypeOfEnum.String;
 import static net.hasor.dataql.domain.TypeOfEnum.*;
 
 /**
  * TYPEOF   // 计算表达式值的类型。
- *         - 参数说明：共0参数；
- *         - 栈行为：消费1，产出1，产出内容为：string、number、boolean、object、list、udf、null
- *         - 堆行为：无
- *
+ * - 参数说明：共0参数；
+ * - 栈行为：消费1，产出1，产出内容为：string、number、boolean、object、list、udf、null
+ * - 堆行为：无
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2020-01-24
  */

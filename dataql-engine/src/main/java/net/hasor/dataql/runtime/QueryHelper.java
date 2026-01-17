@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 package net.hasor.dataql.runtime;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringReader;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import net.hasor.dataql.Finder;
 import net.hasor.dataql.Query;
 import net.hasor.dataql.compiler.qil.*;
@@ -22,14 +29,6 @@ import net.hasor.dataql.parser.ast.inst.RootBlockSet;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.io.StringReader;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
 
 /**
  * DataQL 小工具。
@@ -123,7 +122,7 @@ public class QueryHelper {
      * 编译已经解析好的 DataQL
      * @param queryModel 解析之后的 DataQL 查询模型。
      * @param compilerArguments 编译参数，编译参数中包含了编译器需要的一些列变量。例如：编译变量，相当于在脚本中预先 执行 var xxx = null;
-     *                    其意义在于在编译期就把脚本中尚未定义过的变量预先进行声明从而免去通过 ${...} 或类似方式查找变量。
+     * 其意义在于在编译期就把脚本中尚未定义过的变量预先进行声明从而免去通过 ${...} 或类似方式查找变量。
      * @param importFinder import 导入用到的资源加载器。
      */
     public static QIL queryCompiler(QueryModel queryModel, CompilerArguments compilerArguments, Finder importFinder) throws IOException {

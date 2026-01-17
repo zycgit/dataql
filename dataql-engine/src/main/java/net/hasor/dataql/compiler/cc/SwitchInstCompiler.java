@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.compiler.cc;
+import java.util.List;
 import net.hasor.dataql.compiler.QueryCompilerException;
 import net.hasor.dataql.compiler.qil.CompilerContext;
 import net.hasor.dataql.compiler.qil.InstCompiler;
@@ -23,8 +24,6 @@ import net.hasor.dataql.parser.ast.Expression;
 import net.hasor.dataql.parser.ast.inst.InstSet;
 import net.hasor.dataql.parser.ast.inst.SwitchInst;
 import net.hasor.dataql.parser.ast.inst.SwitchInst.SwitchExpression;
-
-import java.util.List;
 
 /**
  * if指令

@@ -25,15 +25,15 @@ import net.hasor.dataql.runtime.mem.ExitType;
 
 /**
  * EXIT    // 结束所有指令序列的执行并返回数据和状态
- *         - 参数说明：共1参数；参数1：退出码
- *         - 栈行为：消费1，产出0
- *         - 堆行为：无
+ * - 参数说明：共1参数；参数1：退出码
+ * - 栈行为：消费1，产出0
+ * - 堆行为：无
  * 提示：区别于 RETURN 指令的是，EXIT 指令将会终结整个查询的执行。
  * 而 RETURN 指令只会终止当前指令序列的执行。同时有别于 THROW 指令的是，EXIT 执行不会得到异常抛出。
- * @see net.hasor.dataql.runtime.inset.THROW
- * @see net.hasor.dataql.runtime.inset.EXIT
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-19
+ * @see net.hasor.dataql.runtime.inset.THROW
+ * @see net.hasor.dataql.runtime.inset.EXIT
  */
 class EXIT implements InsetProcess {
     @Override

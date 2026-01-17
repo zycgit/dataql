@@ -1,3 +1,0 @@
-<bind name="abc" value="sellerId + 'abc'"/>
-SELECT * FROM console_job
-WHERE aac = #{abc}

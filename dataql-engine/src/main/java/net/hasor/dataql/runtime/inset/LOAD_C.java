@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package net.hasor.dataql.runtime.inset;
+import java.util.Collections;
+import java.util.Map;
 import net.hasor.dataql.runtime.InsetProcess;
 import net.hasor.dataql.runtime.InsetProcessContext;
 import net.hasor.dataql.runtime.InstSequence;
@@ -21,15 +23,11 @@ import net.hasor.dataql.runtime.mem.DataHeap;
 import net.hasor.dataql.runtime.mem.DataStack;
 import net.hasor.dataql.runtime.mem.EnvStack;
 
-import java.util.Collections;
-import java.util.Map;
-
 /**
  * LOAD_C  // 加载自定义路由
- *         - 参数说明：共1参数；参数1：@#$符号之一
- *         - 栈行为：消费0，产出1
- *         - 堆行为：无
- *
+ * - 参数说明：共1参数；参数1：@#$符号之一
+ * - 栈行为：消费0，产出1
+ * - 堆行为：无
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-19
  */

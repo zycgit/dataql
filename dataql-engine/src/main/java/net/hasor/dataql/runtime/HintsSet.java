@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 package net.hasor.dataql.runtime;
-import net.hasor.dataql.Hints;
-
 import java.util.HashMap;
 import java.util.Map;
+import net.hasor.dataql.Hints;
 
 /**
  * 用于封装 Hint。

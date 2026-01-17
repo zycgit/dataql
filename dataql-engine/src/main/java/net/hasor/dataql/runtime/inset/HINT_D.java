@@ -23,10 +23,9 @@ import net.hasor.dataql.runtime.mem.EnvStack;
 
 /**
  * HINT_D  // 丢弃当前 Hint 快照，如果不存在任何快照指令会报错。
- *         - 参数说明：共0参数；
- *         - 栈行为：消费0，产出0
- *         - 堆行为：无
- *
+ * - 参数说明：共0参数；
+ * - 栈行为：消费0，产出0
+ * - 堆行为：无
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-19
  */

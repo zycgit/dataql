@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 package net.hasor.dataql.fx.basic;
-import net.hasor.cobble.StringUtils;
-import net.hasor.core.Singleton;
-import net.hasor.dataql.UdfSourceAssembly;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import net.hasor.cobble.StringUtils;
+import net.hasor.core.Singleton;
+import net.hasor.dataql.UdfSourceAssembly;
 
 /**
  * 字符串函数 <code>import 'net.hasor.dataql.fx.basic.StringUdfSource' as string;</code>
@@ -319,14 +318,13 @@ public class StringUdfSource implements UdfSourceAssembly {
      * <blockquote><pre>
      * this.length()-anotherString.length()
      * </pre></blockquote>
-     *
-     * @param   str1   the {@code String} to be compared.
-     * @param   str2   the {@code String} to be compared.
+     * @param str1 the {@code String} to be compared.
+     * @param str2 the {@code String} to be compared.
      * @return the value {@code 0} if the argument string is equal to
-     *          this string; a value less than {@code 0} if this string
-     *          is lexicographically less than the string argument; and a
-     *          value greater than {@code 0} if this string is
-     *          lexicographically greater than the string argument.
+     * this string; a value less than {@code 0} if this string
+     * is lexicographically less than the string argument; and a
+     * value greater than {@code 0} if this string is
+     * lexicographically greater than the string argument.
      */
     public static int compareString(String str1, String str2) {
         str1 = str1 == null ? "" : str1;
@@ -346,13 +344,12 @@ public class StringUdfSource implements UdfSourceAssembly {
      * and will result in an unsatisfactory ordering for certain locales.
      * The java.text package provides <em>collators</em> to allow
      * locale-sensitive ordering.
-     *
-     * @param   str1   the {@code String} to be compared.
-     * @param   str2   the {@code String} to be compared.
+     * @param str1 the {@code String} to be compared.
+     * @param str2 the {@code String} to be compared.
      * @return a negative integer, zero, or a positive integer as the
-     *          specified String is greater than, equal to, or less
-     *          than this String, ignoring case considerations.
-     * @see     java.text.Collator#compare(String, String)
+     * specified String is greater than, equal to, or less
+     * than this String, ignoring case considerations.
+     * @see java.text.Collator#compare(String, String)
      * @since 1.2
      */
     public static int compareStringIgnoreCase(String str1, String str2) {
@@ -366,14 +363,11 @@ public class StringUdfSource implements UdfSourceAssembly {
     /**
      * <p>Splits the provided text into an array, separators specified.
      * This is an alternative to using StringTokenizer.</p>
-     *
      * <p>The separator is not included in the returned String array.
      * Adjacent separators are treated as one separator.
      * For more control over the split use the StrTokenizer class.</p>
-     *
      * <p>A <code>null</code> input String returns <code>null</code>.
      * A <code>null</code> separatorChars splits on whitespace.</p>
-     *
      * <pre>
      * StringUtils.split(null, *)         = null
      * StringUtils.split("", *)           = []
@@ -382,9 +376,8 @@ public class StringUdfSource implements UdfSourceAssembly {
      * StringUtils.split("abc  def", " ") = ["abc", "def"]
      * StringUtils.split("ab:cd:ef", ":") = ["ab", "cd", "ef"]
      * </pre>
-     *
-     * @param str  the String to parse, may be null
-     * @param separatorChars  the characters used as the delimiters, <code>null</code> splits on whitespace
+     * @param str the String to parse, may be null
+     * @param separatorChars the characters used as the delimiters, <code>null</code> splits on whitespace
      * @return an array of parsed Strings, <code>null</code> if null String input
      */
     public static List<String> split(String str, String separatorChars) {
@@ -399,7 +392,7 @@ public class StringUdfSource implements UdfSourceAssembly {
         return StringUtils.join(array.toArray(), separator);
     }
 
-    /** Checks if a String is empty ("") or null.*/
+    /** Checks if a String is empty ("") or null. */
     public static boolean isEmpty(String str) {
         return str == null || str.length() == 0;
     }

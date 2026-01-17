@@ -25,14 +25,13 @@ import net.hasor.dataql.runtime.mem.ExitType;
 
 /**
  * RETURN  // 结束当前指令序列的执行，并返回数据和状态给上一个指令序列。如果没有上一个指令序列那么结束整个查询
- *         - 参数说明：共1参数；参数1：返回码
- *         - 栈行为：消费1，产出0
- *         - 堆行为：无
- *
- * @see net.hasor.dataql.runtime.inset.THROW
- * @see net.hasor.dataql.runtime.inset.EXIT
+ * - 参数说明：共1参数；参数1：返回码
+ * - 栈行为：消费1，产出0
+ * - 堆行为：无
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-19
+ * @see net.hasor.dataql.runtime.inset.THROW
+ * @see net.hasor.dataql.runtime.inset.EXIT
  */
 class RETURN implements InsetProcess {
     @Override

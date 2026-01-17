@@ -23,10 +23,9 @@ import net.hasor.dataql.runtime.mem.EnvStack;
 
 /**
  * LDC_S   // 将字符串数据压入栈（例：LDC_S "ssssss"）
- *         - 参数说明：共1参数；参数1：数据；
- *         - 栈行为：消费0，产出1
- *         - 堆行为：无
- *
+ * - 参数说明：共1参数；参数1：数据；
+ * - 栈行为：消费0，产出1
+ * - 堆行为：无
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-19
  */

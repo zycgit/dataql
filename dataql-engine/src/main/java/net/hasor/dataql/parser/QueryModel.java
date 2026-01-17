@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 package net.hasor.dataql.parser;
-import net.hasor.dataql.parser.ast.Visitor;
-import net.hasor.dataql.runtime.HintsSet;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import net.hasor.dataql.parser.ast.Visitor;
+import net.hasor.dataql.runtime.HintsSet;
 
 /**
  * 查询模型 -> Data QL 的 AST Tree

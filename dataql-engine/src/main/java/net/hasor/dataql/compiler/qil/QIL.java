@@ -15,10 +15,9 @@
  */
 package net.hasor.dataql.compiler.qil;
 
-import net.hasor.cobble.StringUtils;
-
 import java.util.Collections;
 import java.util.Map;
+import net.hasor.cobble.StringUtils;
 
 /**
  * Query intermediate language 中间查询语言

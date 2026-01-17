@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 package net.hasor.dataql.parser.ast.expr;
+import java.io.IOException;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.parser.ast.*;
 import net.hasor.dataql.parser.location.BlockLocation;
-
-import java.io.IOException;
 
 /**
  * Variable 类型的 Expression 形态

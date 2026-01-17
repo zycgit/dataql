@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 package net.hasor.dataql.parser.ast.fmt;
+import java.io.IOException;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.parser.ast.*;
 import net.hasor.dataql.parser.ast.value.ListVariable;
 import net.hasor.dataql.parser.location.BlockLocation;
-
-import java.io.IOException;
 
 /**
  * 函数调用的返回值处理格式，List格式。

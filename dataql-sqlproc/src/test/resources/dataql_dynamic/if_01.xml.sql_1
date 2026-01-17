@@ -1,7 +1,0 @@
-select * from PROJECT_INFO
-where status = 2
-
-    and owner_id = ?
-    and owner_type = ?
-
-order by name asc

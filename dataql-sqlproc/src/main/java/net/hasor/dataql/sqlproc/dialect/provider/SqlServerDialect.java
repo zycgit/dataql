@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dialect.provider;
-import net.hasor.cobble.StringUtils;
-import net.hasor.dataql.sqlproc.dialect.BoundSql;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import net.hasor.cobble.StringUtils;
+import net.hasor.dataql.sqlproc.dialect.BoundSql;
 
 /**
  * SqlServer2005 的 SqlDialect 实现

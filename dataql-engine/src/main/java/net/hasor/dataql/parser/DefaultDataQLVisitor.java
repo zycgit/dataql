@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 package net.hasor.dataql.parser;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.List;
+import java.util.Stack;
 import net.hasor.dataql.parser.DataQLParser.*;
 import net.hasor.dataql.parser.ast.Expression;
 import net.hasor.dataql.parser.ast.RouteVariable;
@@ -37,11 +41,6 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
 import org.antlr.v4.runtime.tree.TerminalNode;
-
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.List;
-import java.util.Stack;
 
 /**
  * This class provides an empty implementation of {@link DataQLParserVisitor},

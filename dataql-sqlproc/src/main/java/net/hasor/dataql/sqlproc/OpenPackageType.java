@@ -28,14 +28,15 @@ public enum OpenPackageType {
     Off(SqlHintValue.FRAGMENT_SQL_OPEN_PACKAGE_OFF),
     /**
      * SqlFragment 返回值拆分到行，如果返回值是多条记录那么行为和 off 相同。
-     *  - 当返回 0 或 1 条记录时，自动解开最外层的 List，返回一个 Object。
+     * - 当返回 0 或 1 条记录时，自动解开最外层的 List，返回一个 Object。
      */
     Row(SqlHintValue.FRAGMENT_SQL_OPEN_PACKAGE_ROW),
     /**
      * SqlFragment 返回值拆分到行，如果返回值是多条记录那么行为和 off 相同。
-     *  - 如果返回值是 1条记录并且具有多个字段值，那么行为和 row 相同。
-     *  - 一条记录中如果只有一个字段，那么会忽略字段名直接返回这个字段的值。
-     *  - 如果查询结果为空集合，那么返回 null 值。 */
+     * - 如果返回值是 1条记录并且具有多个字段值，那么行为和 row 相同。
+     * - 一条记录中如果只有一个字段，那么会忽略字段名直接返回这个字段的值。
+     * - 如果查询结果为空集合，那么返回 null 值。
+     */
     Column(SqlHintValue.FRAGMENT_SQL_OPEN_PACKAGE_COLUMN),
     ;
 

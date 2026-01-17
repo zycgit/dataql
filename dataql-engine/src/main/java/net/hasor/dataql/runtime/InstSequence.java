@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.runtime;
+import java.util.concurrent.atomic.AtomicInteger;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.compiler.qil.Instruction;
 import net.hasor.dataql.compiler.qil.QIL;
@@ -21,8 +22,6 @@ import net.hasor.dataql.parser.location.BlockLocation;
 import net.hasor.dataql.parser.location.CodeLocation;
 import net.hasor.dataql.parser.location.LocationUtils;
 import net.hasor.dataql.parser.location.RuntimeLocation;
-
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 指令序列集
@@ -146,18 +145,18 @@ public class InstSequence {
         return true;
     }
 
-    /**指令集的出口地址*/
+    /** 指令集的出口地址 */
     public int exitPosition() {
         return this.endPosition;
     }
 
-    /**重置执行指针到序列指定位置*/
+    /** 重置执行指针到序列指定位置 */
     public void jumpTo(int position) {
         this.sequenceIndex.set(position);
         this.jumpMark = true;
     }
 
-    /**重置执行指针到序列最开始*/
+    /** 重置执行指针到序列最开始 */
     public void reset() {
         this.sequenceIndex.set(this.startPosition);
     }

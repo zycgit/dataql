@@ -21,16 +21,14 @@ import net.hasor.dataql.runtime.mem.DataHeap;
 import net.hasor.dataql.runtime.mem.DataStack;
 import net.hasor.dataql.runtime.mem.EnvStack;
 import net.hasor.dataql.runtime.operator.OperatorUtils;
-
 import static net.hasor.dataql.HintValue.MIN_DECIMAL_WIDTH;
 import static net.hasor.dataql.HintValue.MIN_INTEGER_WIDTH;
 
 /**
  * LDC_D   // 将数字压入栈（例：LDC_D 12345）
- *         - 参数说明：共1参数；参数1：数据；
- *         - 栈行为：消费0，产出1
- *         - 堆行为：无
- *
+ * - 参数说明：共1参数；参数1：数据；
+ * - 栈行为：消费0，产出1
+ * - 堆行为：无
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-19
  */

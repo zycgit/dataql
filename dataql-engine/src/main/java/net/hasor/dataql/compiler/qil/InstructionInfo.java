@@ -15,9 +15,8 @@
  */
 package net.hasor.dataql.compiler.qil;
 
-import net.hasor.cobble.StringUtils;
-
 import java.lang.reflect.Field;
+import net.hasor.cobble.StringUtils;
 
 /**
  * QL 指令
@@ -33,32 +32,32 @@ public class InstructionInfo implements Opcodes, Instruction {
         this.instParam = instParam == null ? new Object[0] : instParam;
     }
 
-    /**获取指令码。*/
+    /** 获取指令码。 */
     public byte getInstCode() {
         return this.instCode;
     }
 
-    /**获取 字符串数据*/
+    /** 获取 字符串数据 */
     public String getString(int index) {
         return (String) this.instParam[index];
     }
 
-    /**获取 布尔数据*/
+    /** 获取 布尔数据 */
     public Boolean getBoolean(int index) {
         return (Boolean) this.instParam[index];
     }
 
-    /**获取 数字数据*/
+    /** 获取 数字数据 */
     public Number getNumber(int index) {
         return (Number) this.instParam[index];
     }
 
-    /**获取 数字数据*/
+    /** 获取 数字数据 */
     public int getInt(int index) {
         return (Integer) this.instParam[index];
     }
 
-    /**获取 字符串数据*/
+    /** 获取 字符串数据 */
     public Object[] getArrays() {
         return this.instParam;
     }
@@ -67,7 +66,7 @@ public class InstructionInfo implements Opcodes, Instruction {
      * 将 Label 替换为本身标记的行号。
      * 如果出现 Label 未插入情况，则返回false。
      * （每个Label 都要通过 InstQueue.inst方法插入到指令序列中，一个被使用的 Label 如果没有插入到序列中的情况被成为，Label未插入）
-     * */
+     */
     public boolean replaceLabel() {
         for (int i = 0; i < this.instParam.length; i++) {
             if (this.instParam[i] instanceof Label) {

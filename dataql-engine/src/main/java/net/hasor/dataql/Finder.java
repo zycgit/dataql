@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 package net.hasor.dataql;
+import java.io.IOException;
+import java.io.InputStream;
 import net.hasor.cobble.ClassUtils;
 import net.hasor.cobble.ExceptionUtils;
 import net.hasor.cobble.ResourcesUtils;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * 资源加载器

@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 package net.hasor.dataql.runtime.mem;
-import net.hasor.dataql.domain.DomainHelper;
-
 import java.util.Iterator;
+import net.hasor.dataql.domain.DomainHelper;
 
 /**
  * 数据迭代器

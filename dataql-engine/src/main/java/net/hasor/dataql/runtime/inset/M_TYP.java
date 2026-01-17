@@ -25,10 +25,9 @@ import net.hasor.dataql.runtime.mem.EnvStack;
 
 /**
  * M_TYP   // 加载一个类型对象到栈顶.
- *         - 参数说明：共1参数；参数为要加载的Bean名
- *         - 栈行为：消费0，产出1
- *         - 堆行为：无
- *
+ * - 参数说明：共1参数；参数为要加载的Bean名
+ * - 栈行为：消费0，产出1
+ * - 堆行为：无
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-19
  */

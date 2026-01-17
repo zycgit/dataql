@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 package net.hasor.dataql.runtime.inset;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import net.hasor.cobble.convert.ConverterUtils;
-import static net.hasor.dataql.HintNames.INDEX_OVERFLOW;
-import static net.hasor.dataql.HintValue.*;
 import net.hasor.dataql.domain.ListModel;
 import net.hasor.dataql.domain.ValueModel;
 import net.hasor.dataql.runtime.InsetProcess;
@@ -26,17 +27,14 @@ import net.hasor.dataql.runtime.QueryRuntimeException;
 import net.hasor.dataql.runtime.mem.DataHeap;
 import net.hasor.dataql.runtime.mem.DataStack;
 import net.hasor.dataql.runtime.mem.EnvStack;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import static net.hasor.dataql.HintNames.INDEX_OVERFLOW;
+import static net.hasor.dataql.HintValue.*;
 
 /**
  * PULL    // 栈顶元素是一个集合类型，获取集合的指定索引元素。（例：PULL 123）
- *         - 参数说明：共1参数；参数1：元素位置(负数表示从后向前，正数表示从前向后)
- *         - 栈行为：消费1，产出1
- *         - 堆行为：无
- *
+ * - 参数说明：共1参数；参数1：元素位置(负数表示从后向前，正数表示从前向后)
+ * - 栈行为：消费1，产出1
+ * - 堆行为：无
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-19
  */

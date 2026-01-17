@@ -24,10 +24,9 @@ import net.hasor.dataql.runtime.mem.EnvStack;
 
 /**
  * COPY    // 将栈顶元素复制一个
- *         - 参数说明：共0参数；
- *         - 栈行为：消费0，产出1
- *         - 堆行为：无
- *
+ * - 参数说明：共0参数；
+ * - 栈行为：消费0，产出1
+ * - 堆行为：无
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-19
  */

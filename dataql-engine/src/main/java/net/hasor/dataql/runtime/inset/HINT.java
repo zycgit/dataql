@@ -23,10 +23,9 @@ import net.hasor.dataql.runtime.mem.EnvStack;
 
 /**
  * HINT     // 设置 Hint，影响执行引擎的参数选项。
- *         - 参数说明：共2参数；参数1：选项Key；参数2：选项Value
- *         - 栈行为：消费2，产出0
- *         - 堆行为：无
- *
+ * - 参数说明：共2参数；参数1：选项Key；参数2：选项Value
+ * - 栈行为：消费2，产出0
+ * - 堆行为：无
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-19
  */

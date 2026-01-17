@@ -20,6 +20,6 @@ package net.hasor.dataql.compiler.qil;
  * @version : 2017-03-23
  */
 public interface InstCompilerExecutor extends Opcodes {
-    /**生成指令序列*/
+    /** 生成指令序列 */
     public void doCompiler(InstQueue queue);
 }

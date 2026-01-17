@@ -16,9 +16,9 @@
 package net.hasor.dataql.fx.db;
 /**
  * SQL 执行前的检查。
- * @see net.hasor.dataql.sqlproc.spi.FxSqlCheckChainSpi
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2020-09-18
+ * @see net.hasor.dataql.sqlproc.spi.FxSqlCheckChainSpi
  */
 @Deprecated
 public interface FxSqlCheckChainSpi extends net.hasor.dataql.sqlproc.spi.FxSqlCheckChainSpi, java.util.EventListener {

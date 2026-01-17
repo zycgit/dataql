@@ -1,7 +1,0 @@
-select * from PROJECT_INFO
-where status = 2
-<if test="ownerID != null and ownerType !=null">
-    and owner_id = #{ownerID}
-    and owner_type = #{ownerType}
-</if>
-order by name asc

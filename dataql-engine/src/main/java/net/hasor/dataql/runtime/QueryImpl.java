@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 package net.hasor.dataql.runtime;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import net.hasor.dataql.CustomizeScope;
 import net.hasor.dataql.Finder;
 import net.hasor.dataql.Query;
@@ -24,10 +27,6 @@ import net.hasor.dataql.runtime.mem.DataHeap;
 import net.hasor.dataql.runtime.mem.DataStack;
 import net.hasor.dataql.runtime.mem.EnvStack;
 import net.hasor.dataql.runtime.mem.ExitType;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 用于封装和引发 QL 查询执行。

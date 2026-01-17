@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.runtime.inset;
+import java.util.*;
 import net.hasor.dataql.domain.ListModel;
 import net.hasor.dataql.domain.ValueModel;
 import net.hasor.dataql.runtime.InsetProcess;
@@ -24,14 +25,11 @@ import net.hasor.dataql.runtime.mem.DataIterator;
 import net.hasor.dataql.runtime.mem.DataStack;
 import net.hasor.dataql.runtime.mem.EnvStack;
 
-import java.util.*;
-
 /**
  * CAST_I  // 将栈顶元素转换为迭代器，作为迭代器有三个特殊操作：data(数据)、next(移动到下一个，如果成功返回true)
- *         - 参数说明：共0参数
- *         - 栈行为：消费1，产出1
- *         - 堆行为：无
- *
+ * - 参数说明：共0参数
+ * - 栈行为：消费1，产出1
+ * - 堆行为：无
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-19
  */

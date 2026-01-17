@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 package net.hasor.dataql.compiler.cc;
+import java.util.List;
+import java.util.Map;
 import net.hasor.dataql.compiler.qil.CompilerContext;
 import net.hasor.dataql.compiler.qil.InstCompiler;
 import net.hasor.dataql.compiler.qil.InstQueue;
 import net.hasor.dataql.parser.ast.Variable;
 import net.hasor.dataql.parser.ast.token.StringToken;
 import net.hasor.dataql.parser.ast.value.ObjectVariable;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * 对象

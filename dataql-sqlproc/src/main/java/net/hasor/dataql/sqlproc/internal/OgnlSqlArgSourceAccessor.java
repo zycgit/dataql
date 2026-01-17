@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.internal;
-import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
-import ognl.*;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
+import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
+import ognl.*;
 
 public class OgnlSqlArgSourceAccessor implements PropertyAccessor {
 

@@ -24,9 +24,9 @@ import net.hasor.dbvisitor.transaction.TransactionTemplate;
 
 /**
  * 数据库事务函数库。函数库引入 <code>import 'net.hasor.dataql.fx.db.TransactionUdfSource' as tran;</code>
- * @see Propagation
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2020-03-28
+ * @see Propagation
  */
 @Singleton
 public class TransactionUdfSource implements UdfSourceAssembly {

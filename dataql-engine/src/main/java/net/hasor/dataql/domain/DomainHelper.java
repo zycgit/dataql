@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 package net.hasor.dataql.domain;
+import java.util.*;
 import net.hasor.cobble.ArrayUtils;
 import net.hasor.cobble.ref.BeanMap;
 import net.hasor.dataql.Udf;
 import net.hasor.dataql.runtime.operator.OperatorUtils;
-
-import java.util.*;
 
 public class DomainHelper {
     public static ValueModel nullDomain() {

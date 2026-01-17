@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.parser.ast.inst;
+import java.io.IOException;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.parser.ast.AstVisitor;
 import net.hasor.dataql.parser.ast.FormatWriter;
@@ -21,8 +22,6 @@ import net.hasor.dataql.parser.ast.Inst;
 import net.hasor.dataql.parser.ast.InstVisitorContext;
 import net.hasor.dataql.parser.ast.token.StringToken;
 import net.hasor.dataql.parser.location.BlockLocation;
-
-import java.io.IOException;
 
 /**
  * import 语法

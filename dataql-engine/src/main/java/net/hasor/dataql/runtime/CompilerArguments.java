@@ -23,11 +23,11 @@ import java.util.Set;
  * @version : 2020-06-23
  */
 public class CompilerArguments {
-    /** 调试模式：编译的结果比较大，埋入的信息较多。*/
+    /** 调试模式：编译的结果比较大，埋入的信息较多。 */
     public static final CompilerArguments DEBUG        = new CompilerArguments() {{
         setCodeLocation(CodeLocationEnum.TERM);
     }};
-    /** 默认模式：一般性编译优化，不贵追求极致编译性能*/
+    /** 默认模式：一般性编译优化，不贵追求极致编译性能 */
     public static final CompilerArguments DEFAULT      = new CompilerArguments() {{
         setCodeLocation(CodeLocationEnum.TERM);
     }};
@@ -48,7 +48,7 @@ public class CompilerArguments {
     }
 
     public enum CodeLocationEnum {
-        /** 行定位信息：不输出行列信息。*/
+        /** 行定位信息：不输出行列信息。 */
         NONE,
         /** 行定位信息：精确到行，忽略列的变化，并且丢弃终止信息。 */
         LINE,

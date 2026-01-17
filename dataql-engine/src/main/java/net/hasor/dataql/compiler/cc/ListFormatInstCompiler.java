@@ -22,7 +22,6 @@ import net.hasor.dataql.parser.ast.RouteVariable;
 import net.hasor.dataql.parser.ast.Variable;
 import net.hasor.dataql.parser.ast.fmt.ListFormat;
 import net.hasor.dataql.parser.ast.value.PrimitiveVariable;
-
 import static net.hasor.dataql.parser.ast.value.EnterRouteVariable.SpecialType.Special_A;
 
 /**

@@ -58,14 +58,13 @@ public class CompareUdfSource implements UdfSourceAssembly {
      * <blockquote><pre>
      * this.length()-anotherString.length()
      * </pre></blockquote>
-     *
-     * @param   str1   the {@code String} to be compared.
-     * @param   str2   the {@code String} to be compared.
+     * @param str1 the {@code String} to be compared.
+     * @param str2 the {@code String} to be compared.
      * @return the value {@code 0} if the argument string is equal to
-     *          this string; a value less than {@code 0} if this string
-     *          is lexicographically less than the string argument; and a
-     *          value greater than {@code 0} if this string is
-     *          lexicographically greater than the string argument.
+     * this string; a value less than {@code 0} if this string
+     * is lexicographically less than the string argument; and a
+     * value greater than {@code 0} if this string is
+     * lexicographically greater than the string argument.
      */
     public static int compareString(String str1, String str2) {
         return StringUdfSource.compareString(str1, str2);
@@ -83,13 +82,12 @@ public class CompareUdfSource implements UdfSourceAssembly {
      * and will result in an unsatisfactory ordering for certain locales.
      * The java.text package provides <em>collators</em> to allow
      * locale-sensitive ordering.
-     *
-     * @param   str1   the {@code String} to be compared.
-     * @param   str2   the {@code String} to be compared.
+     * @param str1 the {@code String} to be compared.
+     * @param str2 the {@code String} to be compared.
      * @return a negative integer, zero, or a positive integer as the
-     *          specified String is greater than, equal to, or less
-     *          than this String, ignoring case considerations.
-     * @see     java.text.Collator#compare(String, String)
+     * specified String is greater than, equal to, or less
+     * than this String, ignoring case considerations.
+     * @see java.text.Collator#compare(String, String)
      * @since 1.2
      */
     public static int compareStringIgnoreCase(String str1, String str2) {

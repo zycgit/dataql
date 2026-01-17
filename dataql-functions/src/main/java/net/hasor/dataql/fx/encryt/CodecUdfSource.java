@@ -14,12 +14,6 @@
  * limitations under the License.
  */
 package net.hasor.dataql.fx.encryt;
-import net.hasor.core.Singleton;
-import net.hasor.dataql.UdfSourceAssembly;
-import net.hasor.utils.ArrayUtils;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -28,6 +22,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.List;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import net.hasor.core.Singleton;
+import net.hasor.dataql.UdfSourceAssembly;
+import net.hasor.utils.ArrayUtils;
 
 /**
  * 签名/编码函数库。函数库引入 <code>import 'net.hasor.dataql.fx.encryt.CodecUdfSource' as codec;</code>

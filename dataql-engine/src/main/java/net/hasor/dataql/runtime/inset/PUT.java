@@ -25,10 +25,9 @@ import net.hasor.dataql.runtime.mem.EnvStack;
 
 /**
  * PUT     // 将栈顶对象元素放入对象元素中（例：PUT,"xxxx"）
- *         - 参数说明：共1参数；参数1：属性名称（Map的Key 或 对象的属性名）
- *         - 栈行为：消费1，产出0
- *         - 堆行为：无
- *
+ * - 参数说明：共1参数；参数1：属性名称（Map的Key 或 对象的属性名）
+ * - 栈行为：消费1，产出0
+ * - 堆行为：无
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-19
  */

@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 package net.hasor.dataql.fx.basic;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.util.List;
 import net.hasor.cobble.ArrayUtils;
 import net.hasor.cobble.BooleanUtils;
 import net.hasor.cobble.NumberUtils;
@@ -21,10 +24,6 @@ import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.codec.HexUtils;
 import net.hasor.core.Singleton;
 import net.hasor.dataql.UdfSourceAssembly;
-
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-import java.util.List;
 
 /**
  * 转换函数。函数库引入 <code>import 'net.hasor.dataql.fx.basic.ConvertUdfSource' as convert;</code>

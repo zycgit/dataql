@@ -24,10 +24,9 @@ import net.hasor.dataql.runtime.mem.RefLambdaCall;
 
 /**
  * M_REF   // 引用另一处的指令序列地址，并将其作为 UDF 形态存放到栈顶
- *         - 参数说明：共1参数；参数1：内置lambda函数的入口地址
- *         - 栈行为：消费0，产出1
- *         - 堆行为：无
- *
+ * - 参数说明：共1参数；参数1：内置lambda函数的入口地址
+ * - 栈行为：消费0，产出1
+ * - 堆行为：无
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-19
  */

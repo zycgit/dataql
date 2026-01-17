@@ -25,7 +25,7 @@ import net.hasor.dataql.runtime.operator.OperatorProcess;
  * @version : 2017-03-23
  */
 abstract class AbstractUOP implements OperatorProcess {
-    /**执行运算*/
+    /** 执行运算 */
     public Object doProcess(RuntimeLocation location, String operator, Object[] args, Hints option) throws QueryRuntimeException {
         if (args == null) {
             throw new QueryRuntimeException(location, "unary operator error, args is null.");
@@ -40,6 +40,6 @@ abstract class AbstractUOP implements OperatorProcess {
         return this.doUnaryProcess(location, operator, args[0], option);
     }
 
-    /**执行运算*/
+    /** 执行运算 */
     public abstract Object doUnaryProcess(RuntimeLocation location, String operator, Object object, Hints option) throws QueryRuntimeException;
 }

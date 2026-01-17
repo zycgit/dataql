@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 package net.hasor.dataql.fx.basic;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 import net.hasor.core.Singleton;
 import net.hasor.dataql.Udf;
 import net.hasor.dataql.UdfSourceAssembly;
-
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 状态函数 <code>import 'net.hasor.dataql.fx.basic.StateUdfSource' as state;</code>
@@ -40,7 +39,7 @@ public class StateUdfSource implements UdfSourceAssembly {
         return (params, readOnly) -> atomicLong.decrementAndGet();
     }
 
-    /** 返回一个完整格式的 UUID 字符串。  */
+    /** 返回一个完整格式的 UUID 字符串。 */
     public static String uuid() {
         return UUID.randomUUID().toString();
     }

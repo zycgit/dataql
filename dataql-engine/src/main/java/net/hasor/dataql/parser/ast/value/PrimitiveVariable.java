@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 package net.hasor.dataql.parser.ast.value;
-import net.hasor.dataql.Hints;
-import net.hasor.dataql.parser.ast.*;
-import net.hasor.dataql.parser.location.BlockLocation;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-
+import net.hasor.dataql.Hints;
+import net.hasor.dataql.parser.ast.*;
+import net.hasor.dataql.parser.location.BlockLocation;
 import static net.hasor.cobble.NumberUtils.*;
 
 /**

@@ -14,11 +14,6 @@
  * limitations under the License.
  */
 package net.hasor.dataql;
-import net.hasor.dataql.compiler.qil.QIL;
-import net.hasor.dataql.parser.QueryModel;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -26,6 +21,10 @@ import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
+import net.hasor.dataql.compiler.qil.QIL;
+import net.hasor.dataql.parser.QueryModel;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
 
 /**
  * DataQL 上下文。
@@ -112,7 +111,8 @@ public interface DataQL extends Hints {
     /**
      * 解析并编译 DataQL 执行脚本
      * @param queryReader 脚本输入流
-    `     */
+     * `
+     */
     default QIL compilerQuery(Reader queryReader) throws IOException {
         return compilerQuery(parserQuery(queryReader));
     }

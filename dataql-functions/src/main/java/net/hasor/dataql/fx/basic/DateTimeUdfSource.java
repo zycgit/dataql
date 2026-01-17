@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 package net.hasor.dataql.fx.basic;
-import net.hasor.core.Singleton;
-import net.hasor.dataql.UdfSourceAssembly;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import net.hasor.core.Singleton;
+import net.hasor.dataql.UdfSourceAssembly;
 
 /**
  * 时间函数。函数库引入 <code>import 'net.hasor.dataql.fx.basic.DateTimeUdfSource' as time;</code>
@@ -88,14 +87,14 @@ public class DateTimeUdfSource implements UdfSourceAssembly {
         return date.get(Calendar.DAY_OF_MONTH);
     }
 
-    /** 这个日期在这一周中是第几天。*/
+    /** 这个日期在这一周中是第几天。 */
     public static int dayOfWeek(long time) {
         Calendar date = Calendar.getInstance();
         date.setTime(new Date(time));
         return date.get(Calendar.DAY_OF_WEEK);
     }
 
-    /** 这个日期所在的周月中是第几周。*/
+    /** 这个日期所在的周月中是第几周。 */
     public static int weekOfMonth(long time) {
         Calendar date = Calendar.getInstance();
         date.setTime(new Date(time));

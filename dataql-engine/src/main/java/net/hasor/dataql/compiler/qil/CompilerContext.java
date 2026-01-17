@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 package net.hasor.dataql.compiler.qil;
-import net.hasor.dataql.parser.ast.Inst;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import net.hasor.dataql.parser.ast.Inst;
 
 /**
  * 编译期的编译上下文。

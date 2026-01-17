@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 package net.hasor.dataql.parser.ast.value;
+import java.io.IOException;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.parser.ast.AstVisitor;
 import net.hasor.dataql.parser.ast.FormatWriter;
 import net.hasor.dataql.parser.ast.InstVisitorContext;
 import net.hasor.dataql.parser.ast.RouteVariable;
 import net.hasor.dataql.parser.location.BlockLocation;
-
-import java.io.IOException;
 
 /**
  * 路由的入口，一切路由操作都要有一个入口

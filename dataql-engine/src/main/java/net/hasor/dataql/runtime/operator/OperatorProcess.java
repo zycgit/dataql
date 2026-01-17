@@ -25,7 +25,7 @@ import net.hasor.dataql.runtime.QueryRuntimeException;
  * @version : 2017-03-23
  */
 public interface OperatorProcess {
-    /**执行运算*/
+    /** 执行运算 */
     public Object doProcess(RuntimeLocation location, String operator, Object[] args, Hints option) throws QueryRuntimeException;
 
     public default boolean testIn(String[] dataSet, String test) {

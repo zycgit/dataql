@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 package net.hasor.dataql.fx.encryt;
-import net.hasor.core.Singleton;
-import net.hasor.dataql.UdfSourceAssembly;
-
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import net.hasor.core.Singleton;
+import net.hasor.dataql.UdfSourceAssembly;
 
 /**
  * 摘要算法库。函数库引入 <code>import 'net.hasor.dataql.fx.encryt.DigestUdfSource' as digest;</code>

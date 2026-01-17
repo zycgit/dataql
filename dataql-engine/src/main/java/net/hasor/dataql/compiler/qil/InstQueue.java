@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 package net.hasor.dataql.compiler.qil;
-import net.hasor.cobble.StringUtils;
-import net.hasor.dataql.compiler.QueryCompilerException;
-import net.hasor.dataql.runtime.CompilerArguments;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-
+import net.hasor.cobble.StringUtils;
+import net.hasor.dataql.compiler.QueryCompilerException;
+import net.hasor.dataql.runtime.CompilerArguments;
 import static net.hasor.dataql.compiler.qil.Opcodes.LINE;
 
 /**

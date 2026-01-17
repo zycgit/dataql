@@ -24,10 +24,9 @@ import net.hasor.dataql.runtime.mem.*;
 
 /**
  * M_DEF   // 函数定义，将栈顶元素转换为 UDF
- *         - 参数说明：共0参数；
- *         - 栈行为：消费1，产出1
- *         - 堆行为：无
- *
+ * - 参数说明：共0参数；
+ * - 栈行为：消费1，产出1
+ * - 堆行为：无
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-19
  */

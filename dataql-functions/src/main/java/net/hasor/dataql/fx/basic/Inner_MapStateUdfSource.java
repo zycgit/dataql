@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 package net.hasor.dataql.fx.basic;
-import net.hasor.dataql.Udf;
-import net.hasor.dataql.UdfSourceAssembly;
-
 import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Predicate;
+import net.hasor.dataql.Udf;
+import net.hasor.dataql.UdfSourceAssembly;
 
 /**
  * 带有状态的集合。函数库引入 <code>import 'net.hasor.dataql.fx.basic.CollectionUdfSource' as collect; var arr = collect.newList()</code>
@@ -63,8 +62,9 @@ class Inner_MapStateUdfSource implements UdfSourceAssembly {
         return this.objectMap.size();
     }
 
-    /** 有状态集合的数据
-     * @return*/
+    /**
+     * 有状态集合的数据
+     */
     public Map<String, Object> data() {
         return this.objectMap;
     }

@@ -22,6 +22,6 @@ import net.hasor.dataql.compiler.qil.Instruction;
  * @version : 2017-07-14
  */
 public interface InstFilter {
-    /**测试该指令是否作为圈定的结束位置。*/
+    /** 测试该指令是否作为圈定的结束位置。 */
     public boolean isExit(Instruction inst);
 }

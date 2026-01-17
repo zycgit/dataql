@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 package net.hasor.dataql.runtime.operator.ops;
+import java.math.BigDecimal;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.parser.location.RuntimeLocation;
 import net.hasor.dataql.runtime.QueryRuntimeException;
 import net.hasor.dataql.runtime.operator.OperatorUtils;
-
-import java.math.BigDecimal;
-
 import static net.hasor.dataql.Hints.MIN_DECIMAL_WIDTH;
 import static net.hasor.dataql.Hints.MIN_INTEGER_WIDTH;
 

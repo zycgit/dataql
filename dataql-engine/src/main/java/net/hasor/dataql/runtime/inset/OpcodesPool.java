@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.runtime.inset;
+import java.util.function.Supplier;
 import net.hasor.cobble.provider.SingleProvider;
 import net.hasor.dataql.parser.location.RuntimeLocation;
 import net.hasor.dataql.runtime.InsetProcess;
@@ -23,8 +24,6 @@ import net.hasor.dataql.runtime.QueryRuntimeException;
 import net.hasor.dataql.runtime.mem.DataHeap;
 import net.hasor.dataql.runtime.mem.DataStack;
 import net.hasor.dataql.runtime.mem.EnvStack;
-
-import java.util.function.Supplier;
 
 /**
  * 指令池

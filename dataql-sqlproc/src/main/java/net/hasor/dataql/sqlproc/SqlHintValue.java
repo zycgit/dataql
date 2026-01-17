@@ -64,14 +64,15 @@ public interface SqlHintValue extends HintValue {
     String FRAGMENT_SQL_OPEN_PACKAGE_OFF               = "off";
     /**
      * SqlFragment 返回值拆分到行，如果返回值是多条记录那么行为和 off 相同。
-     *  - 当返回 0 或 1 条记录时，自动解开最外层的 List，返回一个 Object。
+     * - 当返回 0 或 1 条记录时，自动解开最外层的 List，返回一个 Object。
      */
     String FRAGMENT_SQL_OPEN_PACKAGE_ROW               = "row";
     /**
      * SqlFragment 返回值拆分到行，如果返回值是多条记录那么行为和 off 相同。
-     *  - 如果返回值是 1条记录并且具有多个字段值，那么行为和 row 相同。
-     *  - 一条记录中如果只有一个字段，那么会忽略字段名直接返回这个字段的值。
-     *  - 如果查询结果为空集合，那么返回 null 值。 */
+     * - 如果返回值是 1条记录并且具有多个字段值，那么行为和 row 相同。
+     * - 一条记录中如果只有一个字段，那么会忽略字段名直接返回这个字段的值。
+     * - 如果查询结果为空集合，那么返回 null 值。
+     */
     String FRAGMENT_SQL_OPEN_PACKAGE_COLUMN            = "column";
     /**
      * SqlFragment 在执行 select 语句时采用分页模式执行，获取数据的步骤：1先获取查询对象，2.设置分页参数，3.获取分页之后的数据。
@@ -97,16 +98,4 @@ public interface SqlHintValue extends HintValue {
      * SqlFragment 返回的列信息,全部列名做一次驼峰转换。如：goods_id => goodsId、GOODS_id => goodsId。
      */
     String FRAGMENT_SQL_COLUMN_CASE_HUMP               = "hump";
-    /**
-     * SqlFragment 当遇到多条 SQL 同时执行时，结果集的行为是，返回第一个结果
-     */
-    String FRAGMENT_SQL_MULTIPLE_QUERIES_FIRST         = "first";
-    /**
-     * SqlFragment 当遇到多条 SQL 同时执行时，结果集的行为是，返回最后一个结果（默认）
-     */
-    String FRAGMENT_SQL_MULTIPLE_QUERIES_LAST          = "last";
-    /**
-     * SqlFragment 当遇到多条 SQL 同时执行时，结果集的行为是，返回所有结果
-     */
-    String FRAGMENT_SQL_MULTIPLE_QUERIES_ALL           = "all";
 }

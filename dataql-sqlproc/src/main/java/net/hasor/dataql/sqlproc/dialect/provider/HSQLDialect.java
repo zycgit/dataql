@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dialect.provider;
-import net.hasor.dataql.sqlproc.dialect.BoundSql;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import net.hasor.dataql.sqlproc.dialect.BoundSql;
 
 /**
  * HSQL 对象名有大小写敏感不敏感的问题

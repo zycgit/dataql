@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package net.hasor.dataql.compiler.cc;
+import java.io.InputStream;
+import java.util.Objects;
 import net.hasor.cobble.ExceptionUtils;
 import net.hasor.dataql.compiler.QueryCompilerException;
 import net.hasor.dataql.compiler.qil.CompilerContext;
@@ -24,9 +26,6 @@ import net.hasor.dataql.parser.ast.inst.ImportInst.ImportType;
 import net.hasor.dataql.parser.ast.inst.RootBlockSet;
 import net.hasor.dataql.parser.ast.token.StringToken;
 import net.hasor.dataql.runtime.QueryHelper;
-
-import java.io.InputStream;
-import java.util.Objects;
 
 /**
  * import 语法

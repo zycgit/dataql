@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 package net.hasor.dataql;
-import net.hasor.dataql.runtime.operator.OperatorUtils;
-
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import net.hasor.dataql.runtime.operator.OperatorUtils;
 
 /**
  * 用于封装 Hint。
@@ -65,7 +64,6 @@ public interface Hints extends HintValue {
      * otherwise specified by the implementing class, actions are performed in
      * the order of entry set iteration (if an iteration order is specified.)
      * Exceptions thrown by the action are relayed to the caller.
-     *
      * @param action The action to be performed for each entry
      * @throws NullPointerException if the specified action is null
      * @since 1.8
@@ -82,7 +80,6 @@ public interface Hints extends HintValue {
      * If the specified key is not already associated with a value (or is mapped
      * to {@code null}) associates it with the given value and returns
      * {@code null}, else returns the current value.
-     *
      * @param hintName key with which the specified value is to be associated
      * @param value value to be associated with the specified key
      * @throws UnsupportedOperationException if the {@code put} operation is not supported by this map
@@ -103,12 +100,10 @@ public interface Hints extends HintValue {
     /**
      * Returns the value to which the specified key is mapped, or
      * {@code defaultValue} if this map contains no mapping for the key.
-     *
      * The default implementation makes no guarantees about synchronization
      * or atomicity properties of this method. Any implementation providing
      * atomicity guarantees must override this method and document its
      * concurrency properties.
-     *
      * @param hintName the key whose associated value is to be returned
      * @param defaultValue the default mapping of the key
      * @return the value to which the specified key is mapped, or {@code defaultValue} if this map contains no mapping for the key
@@ -122,12 +117,10 @@ public interface Hints extends HintValue {
     /**
      * Returns the value to which the specified key is mapped, or
      * {@code defaultValue} if this map contains no mapping for the key.
-     *
      * The default implementation makes no guarantees about synchronization
      * or atomicity properties of this method. Any implementation providing
      * atomicity guarantees must override this method and document its
      * concurrency properties.
-     *
      * @param hintName the key whose associated value is to be returned
      * @param defaultValue the default mapping of the key
      * @return the value to which the specified key is mapped, or {@code defaultValue} if this map contains no mapping for the key
@@ -141,13 +134,11 @@ public interface Hints extends HintValue {
      * If the specified key is not already associated with a value (or is mapped
      * to {@code null}), attempts to compute its value using the given mapping
      * function and enters it into this map unless {@code null}.
-     *
      * <p>If the function returns {@code null} no mapping is recorded. If
      * the function itself throws an (unchecked) exception, the
      * exception is rethrown, and no mapping is recorded.  The most
      * common usage is to construct a new object serving as an initial
      * mapped value or memoized result.
-     *
      * @param hintName key with which the specified value is to be associated
      * @param mappingFunction the function to compute a value
      * @throws UnsupportedOperationException if the {@code put} operation is not supported by this map

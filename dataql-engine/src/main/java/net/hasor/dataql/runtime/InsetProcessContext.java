@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 package net.hasor.dataql.runtime;
+import java.util.Map;
+import java.util.Stack;
 import net.hasor.dataql.CustomizeScope;
 import net.hasor.dataql.Finder;
 import net.hasor.dataql.FragmentProcess;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.runtime.operator.OperatorManager;
 import net.hasor.dataql.runtime.operator.OperatorProcess;
-
-import java.util.Map;
-import java.util.Stack;
 
 /**
  * 指令执行器接口

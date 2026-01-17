@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.runtime.inset;
+import java.util.Map;
 import net.hasor.cobble.BeanUtils;
 import net.hasor.dataql.domain.ObjectModel;
 import net.hasor.dataql.domain.ValueModel;
@@ -24,14 +25,11 @@ import net.hasor.dataql.runtime.mem.DataHeap;
 import net.hasor.dataql.runtime.mem.DataStack;
 import net.hasor.dataql.runtime.mem.EnvStack;
 
-import java.util.Map;
-
 /**
  * GET     // 获取栈顶对象元素的属性（例：GET,"xxxx"）
- *         - 参数说明：共1参数；参数1：属性名称（Map的Key 或 对象的属性名）
- *         - 栈行为：消费1，产出1
- *         - 堆行为：无
- *
+ * - 参数说明：共1参数；参数1：属性名称（Map的Key 或 对象的属性名）
+ * - 栈行为：消费1，产出1
+ * - 堆行为：无
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-19
  */

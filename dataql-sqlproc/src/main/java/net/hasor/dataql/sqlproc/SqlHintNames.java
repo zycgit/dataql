@@ -38,9 +38,9 @@ public enum SqlHintNames {
     FRAGMENT_SQL_BIND_OUT(null, "bindOut"),
     /** 在执行 SQL 后是否获取由执行生成的任何自增属性 */
     FRAGMENT_SQL_KEY_GENERATED(FRAGMENT_SQL_STAT_KEY_GENERATED_DISABLE, "useGeneratedKeys"),
-    /** 配合 selectKey 一起使用，用来决定获取的自增列名在回写对象时的属性名。*/
+    /** 配合 selectKey 一起使用，用来决定获取的自增列名在回写对象时的属性名。 */
     FRAGMENT_SQL_KEY_PROPERTY(null, "keyProperty"),
-    /** 配合 selectKey 一起使用返回结果集中与属性匹配的列名，如果需要选择多个列，可以使用逗号分割属性名列表。列名和属性名的顺序一致。  */
+    /** 配合 selectKey 一起使用返回结果集中与属性匹配的列名，如果需要选择多个列，可以使用逗号分割属性名列表。列名和属性名的顺序一致。 */
     FRAGMENT_SQL_KEY_COLUMN(null, "keyColumn"),
     /** 用来决定 SQL 执行中使用了 selectKey 方式获取自增属性的执行时机 */
     FRAGMENT_SQL_ORDER(FRAGMENT_SQL_STAT_ORDER_AFTER, "order"),
@@ -68,8 +68,6 @@ public enum SqlHintNames {
 
     /** SqlFragment 数据源名字 */
     FRAGMENT_SQL_DATA_SOURCE(""),
-    /** SqlFragment 当遇到多条 SQL 同时执行时，结果集的行为（默认：返回最后一个结果） */
-    FRAGMENT_SQL_MULTIPLE_QUERIES(FRAGMENT_SQL_MULTIPLE_QUERIES_LAST),
     ;
 
     private final String shortName;

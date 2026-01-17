@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 package net.hasor.dataql.compiler.qil;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import net.hasor.dataql.Finder;
 import net.hasor.dataql.compiler.cc.*;
 import net.hasor.dataql.parser.ast.Inst;
@@ -22,12 +27,6 @@ import net.hasor.dataql.parser.ast.fmt.ListFormat;
 import net.hasor.dataql.parser.ast.fmt.ObjectFormat;
 import net.hasor.dataql.parser.ast.inst.*;
 import net.hasor.dataql.parser.ast.value.*;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 /**
  * Finder 接口的内部实现，

@@ -37,9 +37,9 @@ public interface HintValue {
     //
     //
     //
-    /** 当遇到索引溢出情况时严格的抛出 ArrayIndexOutOfBoundsException 异常*/
+    /** 当遇到索引溢出情况时严格的抛出 ArrayIndexOutOfBoundsException 异常 */
     String INDEX_OVERFLOW_THROW        = "throw";
-    /** 当遇到索引溢出情况时返回 null。*/
+    /** 当遇到索引溢出情况时返回 null。 */
     String INDEX_OVERFLOW_NULL         = "null";
     /** 当遇到索引溢出情况时取最近的元素。例：正向索引溢出：`list[100]`，取最后一个、反向索引溢出：`list[-100]`，取第一个。 */
     String INDEX_OVERFLOW_NEAR         = "near";
@@ -59,11 +59,11 @@ public interface HintValue {
     String MIN_INTEGER_WIDTH_BIG       = "big";
     //
     //
-    /** 向远离零的方向舍入。舍弃非零部分，并将非零舍弃部分相邻的一位数字加一。*/
+    /** 向远离零的方向舍入。舍弃非零部分，并将非零舍弃部分相邻的一位数字加一。 */
     String NUMBER_ROUNDING_UP          = "UP";
-    /** 向接近零的方向舍入。舍弃非零部分，同时不会非零舍弃部分相邻的一位数字加一，采取截取行为。*/
+    /** 向接近零的方向舍入。舍弃非零部分，同时不会非零舍弃部分相邻的一位数字加一，采取截取行为。 */
     String NUMBER_ROUNDING_DOWN        = "DOWN";
-    /** 向正无穷的方向舍入。如果为正数，舍入结果同ROUND_UP一致；如果为负数，舍入结果同ROUND_DOWN一致。注意：此模式不会减少数值大小。*/
+    /** 向正无穷的方向舍入。如果为正数，舍入结果同ROUND_UP一致；如果为负数，舍入结果同ROUND_DOWN一致。注意：此模式不会减少数值大小。 */
     String NUMBER_ROUNDING_CEILING     = "CEILING";
     /**
      * 向负无穷的方向舍入。如果为正数，舍入结果同ROUND_DOWN一致；如果为负数，舍入结果同ROUND_UP一致。
@@ -72,7 +72,8 @@ public interface HintValue {
     String NUMBER_ROUNDING_FLOOR       = "FLOOR";
     /**
      * 向“最接近”的数字舍入，如果与两个相邻数字的距离相等，则为向上舍入的舍入模式。如果舍弃部分>= 0.5，则舍入行为与ROUND_UP相同；否则舍入行为与ROUND_DOWN相同。
-     * 这种模式也就是我们常说的我们的“四舍五入”。*/
+     * 这种模式也就是我们常说的我们的“四舍五入”。
+     */
     String NUMBER_ROUNDING_HALF_UP     = "HALF_UP";
     /**
      * 向“最接近”的数字舍入，如果与两个相邻数字的距离相等，则为向下舍入的舍入模式。如果舍弃部分> 0.5，则舍入行为与ROUND_UP相同；否则舍入行为与ROUND_DOWN相同。
@@ -86,6 +87,6 @@ public interface HintValue {
      * 四舍六入，五分两种情况，如果前一位为奇数，则入位，否则舍去。
      */
     String NUMBER_ROUNDING_HALF_EVEN   = "HALF_EVEN";
-    /** 断言请求的操作具有精确的结果，因此不需要舍入。如果对获得精确结果的操作指定此舍入模式，则抛出ArithmeticException。*/
+    /** 断言请求的操作具有精确的结果，因此不需要舍入。如果对获得精确结果的操作指定此舍入模式，则抛出ArithmeticException。 */
     String NUMBER_ROUNDING_UNNECESSARY = "UNNECESSARY";
 }

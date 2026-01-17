@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 package net.hasor.dataql.runtime.operator.ops;
+import java.util.Objects;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.parser.location.RuntimeLocation;
 import net.hasor.dataql.runtime.QueryRuntimeException;
-
-import java.util.Objects;
 
 /**
  * 字符串拼接

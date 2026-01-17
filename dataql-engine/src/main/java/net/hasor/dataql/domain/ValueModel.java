@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 package net.hasor.dataql.domain;
-import net.hasor.cobble.NumberUtils;
-import net.hasor.dataql.runtime.operator.OperatorUtils;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import net.hasor.cobble.NumberUtils;
+import net.hasor.dataql.runtime.operator.OperatorUtils;
 
 /**
  * 值类型结果

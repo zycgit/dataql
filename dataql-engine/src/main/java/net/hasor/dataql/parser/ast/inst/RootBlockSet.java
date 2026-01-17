@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 package net.hasor.dataql.parser.ast.inst;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import net.hasor.dataql.parser.QueryModel;
 import net.hasor.dataql.parser.ast.AstVisitor;
 import net.hasor.dataql.parser.ast.FormatWriter;
 import net.hasor.dataql.parser.ast.Inst;
 import net.hasor.dataql.parser.ast.InstVisitorContext;
 import net.hasor.dataql.runtime.HintsSet;
-
-import java.io.IOException;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 
 /**
  * 指令序列

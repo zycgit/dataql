@@ -26,7 +26,7 @@ import net.hasor.dataql.runtime.operator.OperatorProcess;
  * @version : 2017-03-23
  */
 abstract class AbstractDOP implements OperatorProcess {
-    /**执行运算*/
+    /** 执行运算 */
     @Override
     public Object doProcess(RuntimeLocation location, String operator, Object[] args, Hints option) throws QueryRuntimeException {
         if (args == null) {
@@ -48,6 +48,6 @@ abstract class AbstractDOP implements OperatorProcess {
         return new QueryRuntimeException(location, fstDataType + " and " + secDataType + " , Cannot be used as '" + operator + "' -> " + message);
     }
 
-    /**执行运算*/
+    /** 执行运算 */
     public abstract Object doDyadicProcess(RuntimeLocation location, String operator, Object fstObject, Object secObject, Hints option) throws QueryRuntimeException;
 }

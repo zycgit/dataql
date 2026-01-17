@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.runtime.inset;
+import java.util.function.Supplier;
 import net.hasor.dataql.runtime.InsetProcess;
 import net.hasor.dataql.runtime.InsetProcessContext;
 import net.hasor.dataql.runtime.InstSequence;
@@ -21,17 +22,14 @@ import net.hasor.dataql.runtime.mem.DataHeap;
 import net.hasor.dataql.runtime.mem.DataStack;
 import net.hasor.dataql.runtime.mem.EnvStack;
 
-import java.util.function.Supplier;
-
 /**
  * LOAD    // 从指定深度的堆中加载n号元素到栈（例：LOAD 1 ,1 ）
- *         - 参数说明：共2参数；参数1：堆深度；参数2：元素序号；
- *         - 栈行为：消费0，产出1
- *         - 堆行为：取出数据（不删除）
- *
- * @see net.hasor.dataql.runtime.inset.STORE
+ * - 参数说明：共2参数；参数1：堆深度；参数2：元素序号；
+ * - 栈行为：消费0，产出1
+ * - 堆行为：取出数据（不删除）
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-19
+ * @see net.hasor.dataql.runtime.inset.STORE
  */
 class LOAD implements InsetProcess {
     @Override
