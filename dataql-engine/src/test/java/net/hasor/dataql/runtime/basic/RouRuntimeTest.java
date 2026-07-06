@@ -203,7 +203,7 @@ public class RouRuntimeTest extends AbstractTestResource implements HintValue {
 
     @Test
     public void compilerVar_1_Test() throws Exception {
-        CompilerArguments arguments = CompilerArguments.DEFAULT;
+        CompilerArguments arguments = CompilerArguments.DEFAULT.copyAsNew();
         arguments.getCompilerVar().add("list");
         //
         QueryModel queryModel = QueryHelper.queryParser("return list[2]");

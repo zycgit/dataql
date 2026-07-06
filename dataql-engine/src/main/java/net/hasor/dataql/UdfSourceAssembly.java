@@ -24,6 +24,7 @@ import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import net.hasor.cobble.BeanUtils;
+import net.hasor.cobble.ClassUtils;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.convert.ConverterUtils;
 import net.hasor.cobble.function.ESupplier;
@@ -37,11 +38,7 @@ import net.hasor.dataql.domain.DataModel;
  */
 public interface UdfSourceAssembly extends UdfSource {
     default <T> T get(Class<? extends T> targetType) {
-        try {
-            return targetType.newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+        return ClassUtils.newInstance(targetType);
     }
 
     default Predicate<Method> getPredicate(Class<?> targetType) {
