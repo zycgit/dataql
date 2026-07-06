@@ -16,6 +16,8 @@
 package net.hasor.dataql.parser;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 import net.hasor.dataql.parser.DataQLParser.*;
@@ -859,9 +861,20 @@ public class DefaultDataQLVisitor<T> extends AbstractParseTreeVisitor<T> impleme
         FragmentVariable fragmentVariable = code(new FragmentVariable(fragmentNameToken, fragmentStringToken, isBatch), ctx);
         ExtParamsContext paramsContext = ctx.extParams();
         if (paramsContext != null) {
-            for (TerminalNode terminalNode : paramsContext.IDENTIFIER()) {
-                StringToken paramNameToken = code(new StringToken(fixIdentifier(terminalNode)), terminalNode);
-                fragmentVariable.getParamList().add(paramNameToken);
+            this.instStack.push(fragmentVariable);              // sentinel
+            for (ExtParamContext paramCtx : paramsContext.extParam()) {
+                paramCtx.accept(this);
+            }
+
+            // pop FragmentParam in reverse, add to fragmentVariable
+            List<FragmentVariable.FragmentParam> list = new ArrayList<>();
+            while (this.instStack.peek() instanceof FragmentVariable.FragmentParam) {
+                list.add((FragmentVariable.FragmentParam) this.instStack.pop());
+            }
+            this.instStack.pop(); // pop sentinel
+            Collections.reverse(list);
+            for (FragmentVariable.FragmentParam p : list) {
+                fragmentVariable.getParamList().add(p);
             }
         }
         this.instStack.push(fragmentVariable);
@@ -872,7 +885,21 @@ public class DefaultDataQLVisitor<T> extends AbstractParseTreeVisitor<T> impleme
     public T visitExtParams(ExtParamsContext ctx) {
         return null;
     }
-
+    @Override
+    public T visitExtParam(ExtParamContext ctx) {
+        if (ctx.IDENTIFIER() != null) {
+            StringToken nameToken = code(new StringToken(fixIdentifier(ctx.IDENTIFIER())), ctx.IDENTIFIER());
+            Expression valueExpr = null;
+            if (ctx.expr() != null) {
+                visit(ctx.expr());
+                if (this.instStack.peek() instanceof Expression) {
+                    valueExpr = (Expression) this.instStack.pop();
+                }
+            }
+            this.instStack.push(new FragmentVariable.FragmentParam(nameToken, valueExpr));
+        }
+        return null;
+    }
     private SpecialType specialType(TerminalNode rou, SpecialType defaultType) {
         if (rou == null) {
             return defaultType;

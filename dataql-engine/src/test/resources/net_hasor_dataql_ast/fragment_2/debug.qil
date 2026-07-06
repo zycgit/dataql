@@ -57,9 +57,9 @@
 
 [1]
   #00  LINE      1, 22, 1, 30
-  #01  LOCAL     0, 0, itemCode
+  #01  LOCAL     0, itemCode
   #02  LINE      1, 31, 1, 37
-  #03  LOCAL     1, 1, status
+  #03  LOCAL     1, status
   #04  LINE      1, 16, 1, 19
   #05  M_FRAG    true, sql
   #06  NEW_O

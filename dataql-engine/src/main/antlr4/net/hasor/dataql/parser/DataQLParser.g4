@@ -102,4 +102,5 @@ expr            : (primitiveValue | funcCall | routeMapping)                    
 
 /* 外部语句块块 */
 extBlock        : AT IDENTIFIER (LSBT RSBT)?  LBT extParams? RBT '<%' CHAR* '%>';
-extParams       : IDENTIFIER (COMMA IDENTIFIER)*;
+extParams       : extParam (COMMA extParam)*;
+extParam        : IDENTIFIER (ASS expr)?;

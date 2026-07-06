@@ -1,0 +1,89 @@
+[0]
+  #00  LINE      1, 34, 1, 39
+  #01  LDC_S     abc
+  #02  LINE      1, 50, 1, 54
+  #03  LDC_B     true
+  #04  LINE      1, 74, 1, 76
+  #05  LDC_D     10
+  #06  LINE      1, 85, 1, 86
+  #07  LDC_D     1
+  #08  LINE      1, 14, 1, 151
+  #09  M_REF     1
+  #10  LINE      1, 4, 1, 11
+  #11  STORE     0
+  #12  LINE      3, 7, 3, 14
+  #13  LOAD      0, 0
+  #14  LINE      3, 7, 3, 39
+  #15  M_DEF
+  #16  LINE      3, 15, 3, 18
+  #17  LDC_S     X
+  #18  LINE      3, 20, 3, 25
+  #19  LDC_B     false
+  #20  LINE      3, 27, 3, 31
+  #21  LDC_B     true
+  #22  LINE      3, 33, 3, 35
+  #23  LDC_D     20
+  #24  LINE      3, 37, 3, 38
+  #25  LDC_D     2
+  #26  LINE      3, 7, 3, 39
+  #27  CALL      5
+  #28  CAST_I
+  #29  E_PUSH
+  #30  LINE      3, 43, 5, 1
+  #31  NEW_A
+  #32  LABEL     32
+  #33  LINE      3, 43, 5, 1
+  #34  E_LOAD    #
+  #35  GET       next
+  #36  IF        57
+  #37  LINE      4, 4, 4, 28
+  #38  E_LOAD    #
+  #39  GET       data
+  #40  E_PUSH
+  #41  NEW_O
+  #42  LINE      4, 6, 4, 10
+  #43  E_LOAD    #
+  #44  GET       id
+  #45  PUT       id
+  #46  LINE      4, 12, 4, 18
+  #47  E_LOAD    #
+  #48  GET       name
+  #49  PUT       name
+  #50  LINE      4, 20, 4, 26
+  #51  E_LOAD    #
+  #52  GET       code
+  #53  PUT       code
+  #54  E_POP
+  #55  PUSH
+  #56  GOTO      32
+  #57  LABEL     57
+  #58  E_POP
+  #59  LINE      3, 0, 5, 1
+  #60  RETURN    0
+
+[1]
+  #00  LINE      1, 23, 1, 31
+  #01  LOCAL     0, itemCode
+  #02  LINE      1, 41, 1, 47
+  #03  LOCAL     1, status
+  #04  LINE      1, 56, 1, 61
+  #05  LOCAL     2, extra
+  #06  LINE      1, 63, 1, 71
+  #07  LOCAL     3, pageSize
+  #08  LINE      1, 78, 1, 82
+  #09  LOCAL     4, page
+  #10  LINE      1, 16, 1, 22
+  #11  M_FRAG    false, insert
+  #12  NEW_O
+  #13  PUT       itemCode
+  #14  PUT       status
+  #15  LINE      1, 56, 1, 61
+  #16  LOAD      0, 2
+  #17  PUT       extra
+  #18  PUT       pageSize
+  #19  PUT       page
+  #20  LINE      1, 90, 1, 149
+  #21  LDC_S      INSERT INTO users (name, age) VALUES (:itemCode, :status)
+  #22  LINE      1, 14, 1, 151
+  #23  CALL      2
+  #24  RETURN    0

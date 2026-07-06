@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 package net.hasor.dataql.compiler.cc;
-import java.util.List;
 import net.hasor.dataql.compiler.qil.CompilerContext;
 import net.hasor.dataql.compiler.qil.InstCompiler;
 import net.hasor.dataql.compiler.qil.InstQueue;
-import net.hasor.dataql.parser.ast.token.StringToken;
 import net.hasor.dataql.parser.ast.value.FragmentVariable;
+import net.hasor.dataql.parser.ast.value.FragmentVariable.FragmentParam;
 import static net.hasor.dataql.compiler.qil.CompilerContext.ContainsIndex;
 
 /**
- * Fragment 片段
+ * Fragment 片段（支持 `@@type(name=val, ...)<% body %>` 语法）。
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-03-23
  */
@@ -31,41 +30,49 @@ public class FragmentVariableInstCompiler implements InstCompiler<FragmentVariab
     @Override
     public void doCompiler(FragmentVariable astInst, InstQueue queue, CompilerContext compilerContext) {
         InstQueue newMethodInst = queue.newMethodInst();
-        List<StringToken> paramList = astInst.getParamList();
         boolean isBatch = astInst.isBatchMode();
         compilerContext.newFrame();
-        // .LOCAL 变量表
-        for (int i = 0; i < paramList.size(); i++) {
-            StringToken paramToken = paramList.get(i);
-            String name = paramToken.getValue();
-            int index = compilerContext.push(name);     //将变量名压栈，并返回栈中的位置
-            instLocation(newMethodInst, paramToken);
-            newMethodInst.inst(LOCAL, i, index, name);  //为栈中某个位置的变量命名
+
+        // 1. LOCAL 变量表：声明所有参数名
+        for (FragmentParam param : astInst.getParamList()) {
+            String name = param.name().getValue();
+            int index = compilerContext.push(name); //将变量名压栈，并返回栈中的位置
+            instLocation(newMethodInst, param.name());
+            newMethodInst.inst(LOCAL, index, name); //为栈中某个位置的变量命名
         }
-        // .声明片段入口
-        StringToken fragmentName = astInst.getFragmentName();
-        instLocation(newMethodInst, fragmentName);
-        newMethodInst.inst(M_FRAG, isBatch, fragmentName.getValue());
-        //  .加载入参变量
+
+        // 2. M_FRAG 片段入口
+        instLocation(newMethodInst, astInst.getFragmentName());
+        newMethodInst.inst(M_FRAG, isBatch, astInst.getFragmentName().getValue());
+
+        // 3. 构建 params map
         newMethodInst.inst(NEW_O);
-        for (StringToken stringToken : paramList) {
-            String name = stringToken.getValue();
-            ContainsIndex index = compilerContext.containsWithTree(name);
-            instLocation(newMethodInst, stringToken);
-            newMethodInst.inst(LOAD, index.depth, index.index);
-            newMethodInst.inst(PUT, name);
+        for (FragmentParam param : astInst.getParamList()) {
+            String name = param.name().getValue();
+            if (param.hasValue()) {
+                // @@type(name = value) — 编译 value 表达式
+                compilerContext.findInstCompilerByInst(param.value()).doCompiler(queue);
+                newMethodInst.inst(PUT, name);
+            } else {
+                // @@type(name) — 从外层作用域加载同名变量
+                ContainsIndex index = compilerContext.containsWithTree(name);
+                instLocation(newMethodInst, param.name());
+                newMethodInst.inst(LOAD, index.depth, index.index);
+                newMethodInst.inst(PUT, name);
+            }
         }
-        // .最后一个参数是的片段内容
-        StringToken fragmentToken = astInst.getFragmentString();
-        instLocation(newMethodInst, fragmentToken);
-        newMethodInst.inst(LDC_S, fragmentToken.getValue());
-        // .执行函数调用
+
+        // 4. 片段内容作为最后一个参数
+        instLocation(newMethodInst, astInst.getFragmentString());
+        newMethodInst.inst(LDC_S, astInst.getFragmentString().getValue());
+
+        // 5. 调用 FragmentProcess
         instLocation(newMethodInst, astInst);
         newMethodInst.inst(CALL, 2);
         newMethodInst.inst(RETURN, 0);
         compilerContext.dropFrame();
-        //
-        // .指向函数的指针
+
+        // 6. M_REF 指向函数
         instLocation(queue, astInst);
         queue.inst(M_REF, newMethodInst.getName());
     }

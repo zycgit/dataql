@@ -1,0 +1,65 @@
+[0]
+  #00  LINE      1
+  #01  LDC_S     abc
+  #02  LDC_B     true
+  #03  LDC_D     10
+  #04  LDC_D     1
+  #05  M_REF     1
+  #06  STORE     0
+  #07  LINE      3
+  #08  LOAD      0, 0
+  #09  M_DEF
+  #10  LDC_S     X
+  #11  LDC_B     false
+  #12  LDC_B     true
+  #13  LDC_D     20
+  #14  LDC_D     2
+  #15  CALL      5
+  #16  CAST_I
+  #17  E_PUSH
+  #18  NEW_A
+  #19  LABEL     19
+  #20  LINE      3
+  #21  E_LOAD    #
+  #22  GET       next
+  #23  IF        41
+  #24  LINE      4
+  #25  E_LOAD    #
+  #26  GET       data
+  #27  E_PUSH
+  #28  NEW_O
+  #29  E_LOAD    #
+  #30  GET       id
+  #31  PUT       id
+  #32  E_LOAD    #
+  #33  GET       name
+  #34  PUT       name
+  #35  E_LOAD    #
+  #36  GET       code
+  #37  PUT       code
+  #38  E_POP
+  #39  PUSH
+  #40  GOTO      19
+  #41  LABEL     41
+  #42  E_POP
+  #43  LINE      3
+  #44  RETURN    0
+
+[1]
+  #00  LINE      1
+  #01  LOCAL     0, itemCode
+  #02  LOCAL     1, status
+  #03  LOCAL     2, extra
+  #04  LOCAL     3, pageSize
+  #05  LOCAL     4, page
+  #06  M_FRAG    false, insert
+  #07  NEW_O
+  #08  PUT       itemCode
+  #09  PUT       status
+  #10  LOAD      0, 2
+  #11  PUT       extra
+  #12  PUT       pageSize
+  #13  PUT       page
+  #14  LDC_S      INSERT INTO users (name, age) VALUES (:itemCode, :status)
+  #15  CALL      2
+  #16  RETURN    0

@@ -23,15 +23,15 @@ import net.hasor.dataql.parser.ast.token.StringToken;
 import net.hasor.dataql.parser.location.BlockLocation;
 
 /**
- * var指令
+ * 外部片段调用（@@type(params)<% body %>）
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-03-23
  */
 public class FragmentVariable extends BlockLocation implements Inst, Variable {
-    private final StringToken       fragmentName;
-    private final List<StringToken> paramList = new ArrayList<>();
-    private final StringToken       fragmentString;
-    private final boolean           batchMode;
+    private final StringToken         fragmentName;
+    private final List<FragmentParam> paramList = new ArrayList<>();
+    private final StringToken         fragmentString;
+    private final boolean             batchMode;
 
     public FragmentVariable(StringToken fragmentName, StringToken fragmentString, boolean batchMode) {
         this.fragmentName = fragmentName;
@@ -47,12 +47,20 @@ public class FragmentVariable extends BlockLocation implements Inst, Variable {
         return fragmentString;
     }
 
-    public List<StringToken> getParamList() {
+    public boolean isBatchMode() {
+        return this.batchMode;
+    }
+
+    public List<FragmentParam> getParamList() {
         return paramList;
     }
 
-    public boolean isBatchMode() {
-        return this.batchMode;
+    /** 参数项：name + 可选的默认值表达式 */
+    public record FragmentParam(StringToken name, Expression value) {
+
+        public boolean hasValue() {
+            return value != null;
+        }
     }
 
     @Override
@@ -60,6 +68,11 @@ public class FragmentVariable extends BlockLocation implements Inst, Variable {
         astVisitor.visitInst(new InstVisitorContext(this) {
             @Override
             public void visitChildren(AstVisitor astVisitor) {
+                for (FragmentParam param : paramList) {
+                    if (param.value() != null) {
+                        param.value().accept(astVisitor);
+                    }
+                }
             }
         });
     }
@@ -70,14 +83,20 @@ public class FragmentVariable extends BlockLocation implements Inst, Variable {
         if (batchMode) {
             writer.write("[]");
         }
+
         writer.write("(");
         for (int i = 0; i < this.paramList.size(); i++) {
-            if (i == 0) {
-                writer.write(this.paramList.get(i).getValue());
-            } else {
-                writer.write("," + this.paramList.get(i).getValue());
+            FragmentParam p = this.paramList.get(i);
+            if (i > 0) {
+                writer.write(", ");
+            }
+
+            writer.write(p.name().getValue());
+            if (p.hasValue()) {
+                writer.write(" = ");
+                p.value().doFormat(depth, formatOption, writer);
             }
         }
-        writer.write(") <%" + this.fragmentString.getValue() + "%>");
+        writer.write(")<%" + this.fragmentString.getValue() + "%>");
     }
 }
