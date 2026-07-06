@@ -25,6 +25,7 @@ import net.hasor.cobble.logging.Logger;
 import net.hasor.cobble.logging.LoggerFactory;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.sqlproc.ColumnCaseType;
+import net.hasor.dataql.sqlproc.OpenPackageType;
 import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dialect.*;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
@@ -157,7 +158,9 @@ public abstract class AbstractStatementExecute {
         String[] bindOut;
         boolean usingMultipleResultFetch = false;
         String caseTypeStr = SqlHintNames.getValue(hints, SqlHintNames.FRAGMENT_SQL_COLUMN_CASE);
+        String openPackageStr = SqlHintNames.getValue(hints, SqlHintNames.FRAGMENT_SQL_OPEN_PACKAGE);
         ColumnCaseType caseType = ColumnCaseType.valueOfCode(caseTypeStr);
+        OpenPackageType openPackage = OpenPackageType.valueOfCode(openPackageStr);
 
         if (config instanceof DqlConfig) {
             bindOut = ((DqlConfig) config).getBindOut();
@@ -172,7 +175,7 @@ public abstract class AbstractStatementExecute {
         if (usingMultipleResultFetch) {
             Map<String, Object> result = new HashMap<>();
             Map<String, Object> tempResult = new HashMap<>();
-            this.fetchMultipleResult(retVal, oriSql, stat, caseType, tempResult);
+            this.fetchMultipleResult(retVal, oriSql, stat, caseType, openPackage, tempResult);
             for (String argName : bindOut) {
                 if (tempResult.containsKey(argName)) {
                     result.put(argName, tempResult.get(argName));
@@ -194,13 +197,13 @@ public abstract class AbstractStatementExecute {
                         return Collections.emptyList();
                     }
 
-                    List<?> objects = this.extractor.extractData(caseType, rs);
+                    List<Map<String, Object>> objects = this.extractor.extractData(caseType, rs);
                     if (pageResult) {
                         PageResult<?> page = new PageResult<>(oriPageInfo, objects);
                         page.setTotalCount(newPageCnt);
                         return page;
                     } else {
-                        return objects;
+                        return this.convertResult(openPackage, objects);
                     }
                 }
             } else {
@@ -209,7 +212,23 @@ public abstract class AbstractStatementExecute {
         }
     }
 
-    protected void fetchMultipleResult(boolean retVal, SqlBuilder oriSql, Statement cs, ColumnCaseType caseType, Map<String, Object> resultMap) throws SQLException {
+    protected Object convertResult(OpenPackageType openPackage, List<Map<String, Object>> mapList) {
+        if (openPackage == OpenPackageType.Off || (mapList != null && mapList.size() > 1)) {
+            return mapList;
+        }
+        if (mapList == null || mapList.isEmpty()) {
+            return openPackage == OpenPackageType.Column ? null : Collections.emptyMap();
+        }
+
+        Map<String, Object> rowObject = mapList.get(0);
+        if (openPackage == OpenPackageType.Column && rowObject != null && rowObject.size() == 1) {
+            return rowObject.values().iterator().next();
+        }
+
+        return rowObject;
+    }
+
+    protected void fetchMultipleResult(boolean retVal, SqlBuilder oriSql, Statement cs, ColumnCaseType caseType, OpenPackageType openPackage, Map<String, Object> resultMap) throws SQLException {
         // fetch ResultSet -- first ResultSet
         int resultIndex = 1;
         String resultName;
@@ -217,7 +236,7 @@ public abstract class AbstractStatementExecute {
         if (retVal) {
             try (ResultSet rs = cs.getResultSet()) {
                 resultName = "#result-set-" + resultIndex;
-                resultValue = this.extractor.extractData(caseType, rs);
+                resultValue = this.convertResult(openPackage, this.extractor.extractData(caseType, rs));
             }
         } else {
             resultName = "#update-count-" + resultIndex;
@@ -232,7 +251,7 @@ public abstract class AbstractStatementExecute {
             if (updateCount == -1) {
                 resultName = "#result-set-" + resultIndex;
                 try (ResultSet rs = cs.getResultSet()) {
-                    resultValue = this.extractor.extractData(caseType, rs);
+                    resultValue = this.convertResult(openPackage, this.extractor.extractData(caseType, rs));
                 }
             } else {
                 resultName = "#update-count-" + resultIndex;

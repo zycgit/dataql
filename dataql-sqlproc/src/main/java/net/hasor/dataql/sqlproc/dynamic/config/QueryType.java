@@ -36,19 +36,23 @@ public enum QueryType {
     Call("call"),
     ;
 
-    private final String xmlTag;
+    private final String tagString;
 
-    public String getXmlTag() {
-        return this.xmlTag;
+    public String getTagString() {
+        return this.tagString;
     }
 
-    QueryType(String xmlTag) {
-        this.xmlTag = xmlTag;
+    QueryType(String tagString) {
+        this.tagString = tagString;
     }
 
     public static QueryType valueOfTag(String xmlTag) {
+        if (StringUtils.isBlank(xmlTag)) {
+            return null;
+        }
+
         for (QueryType tableType : QueryType.values()) {
-            if (StringUtils.equalsIgnoreCase(tableType.xmlTag, xmlTag)) {
+            if (StringUtils.startsWithIgnoreCase(xmlTag, tableType.tagString)) {
                 return tableType;
             }
         }

@@ -81,6 +81,10 @@ public enum SqlHintNames {
         return this.defaultVal;
     }
 
+    public boolean matchKey(String optionKey) {
+        return this.name().equals(optionKey) || (this.shortName != null && this.shortName.equals(optionKey));
+    }
+
     SqlHintNames(String defaultVal) {
         this(null, defaultVal);
     }

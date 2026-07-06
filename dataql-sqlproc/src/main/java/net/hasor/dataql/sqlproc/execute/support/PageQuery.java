@@ -1,21 +1,135 @@
-//    /** 执行 SQL */
-//    protected <T> T executeSQL(boolean batch, String sourceName, String sqlString, ExecuteProxy execute, Map<String, Object> params, Page page) throws SQLException {
-//        if (this.spiTrigger.hasSpi(FxSqlCheckChainSpi.class)) {
-//            final FxSqlInfo fxSqlInfo = new FxSqlInfo(batch, sourceName, sqlString, paramArrays);
-//            final AtomicBoolean doExit = new AtomicBoolean(false);
-//            this.spiTrigger.chainSpi(FxSqlCheckChainSpi.class, (listener, lastResult) -> {
-//                if (doExit.get()) {
-//                    return lastResult;
-//                }
-//                int doCheck = listener.doCheck(fxSqlInfo);
-//                if (doCheck == FxSqlCheckChainSpi.EXIT) {
-//                    doExit.set(true);
-//                }
-//                return lastResult;
-//            }, fxSqlInfo);
-//            //
-//            return sqlQuery.doQuery(fxSqlInfo.getQueryString(), fxSqlInfo.getQueryParams(), this.getJdbcTemplate(sourceName));
-//        } else {
-//            return sqlQuery.doQuery(sqlString, paramArrays, this.getJdbcTemplate(sourceName));
-//        }
-//    }
+/*
+ * Copyright 2015-2022 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package net.hasor.dataql.sqlproc.execute.support;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Map;
+import net.hasor.cobble.convert.ConverterUtils;
+import net.hasor.cobble.function.EFunction;
+import net.hasor.dataql.Hints;
+import net.hasor.dataql.UdfSourceAssembly;
+import net.hasor.dataql.sqlproc.SqlHintNames;
+import net.hasor.dataql.sqlproc.dialect.PageObject;
+import net.hasor.dataql.sqlproc.dialect.PageResult;
+import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
+import net.hasor.dataql.sqlproc.execute.RootStatement;
+
+/**
+ * 延迟分页查询对象，实现 {@link UdfSourceAssembly} 使其可在 DataQL 脚本中调用。
+ *
+ * <pre>{@code
+ *   // DataQL 脚本中：
+ *   var pageQuery = sqlFragment.runFragment(hints, params, "SELECT * FROM users");
+ *   pageQuery.setPageInfo({ "pageSize": 10, "currentPage": 1 });
+ *   return pageQuery.data();
+ * }</pre>
+ */
+public class PageQuery implements UdfSourceAssembly {
+    private final EFunction<String, Connection, SQLException> connection;
+    private final Hints                                       hints;
+    private final SqlConfig                                   sqlConfig;
+    private final Map<String, Object>                         params;
+    private final RootStatement                               rootStatement;
+    private final PageObject                                  pageInfo;
+    private       PageResult<Object>                          pageResult;
+
+    public PageQuery(EFunction<String, Connection, SQLException> connection, Hints hints, SqlConfig sqlConfig, Map<String, Object> params, RootStatement rootStatement, PageObject pageInfo) {
+        this.connection = connection;
+        this.hints = hints;
+        this.sqlConfig = sqlConfig;
+        this.params = params;
+        this.rootStatement = rootStatement;
+        this.pageInfo = pageInfo;
+    }
+
+    // ----------------------------------------------------------------
+    // Page navigation
+    // ----------------------------------------------------------------
+
+    public long firstPage() {
+        this.pageInfo.firstPage();
+        return this.pageInfo.getCurrentPage();
+    }
+
+    public long previousPage() {
+        this.pageInfo.previousPage();
+        return this.pageInfo.getCurrentPage();
+    }
+
+    public long nextPage() {
+        this.pageInfo.nextPage();
+        return this.pageInfo.getCurrentPage();
+    }
+
+    public long lastPage() {
+        this.pageInfo.lastPage();
+        return this.pageInfo.getCurrentPage();
+    }
+
+    // ----------------------------------------------------------------
+    // Page info
+    // ----------------------------------------------------------------
+
+    /** 获取分页信息（首次调用时自动执行 count 查询获取总记录数） */
+    public Map<String, Object> pageInfo() throws SQLException {
+        if (this.pageInfo.getTotalCount() <= 0) {
+            fetchData();
+            this.pageInfo.setTotalCount(this.pageResult.getTotalCount());
+        }
+        return this.pageInfo.toPageInfo();
+    }
+
+    /** 设置分页参数，支持 pageSize / currentPage / totalCount */
+    public boolean setPageInfo(Map<String, Object> info) {
+        if (info == null || info.isEmpty()) {
+            return false;
+        }
+        Object currentPage = info.get("currentPage");
+        Object pageSize = info.get("pageSize");
+        Object totalCount = info.get("totalCount");
+        if (currentPage == null && pageSize == null) {
+            return false;
+        }
+        if (currentPage != null) {
+            this.pageInfo.setCurrentPage((Integer) ConverterUtils.convert(Integer.TYPE, currentPage));
+        }
+        if (pageSize != null) {
+            this.pageInfo.setPageSize((Integer) ConverterUtils.convert(Integer.TYPE, pageSize));
+        }
+        if (totalCount != null) {
+            this.pageInfo.setTotalCount((Long) ConverterUtils.convert(Long.TYPE, totalCount));
+        }
+        return true;
+    }
+
+    // ----------------------------------------------------------------
+    // Data fetch
+    // ----------------------------------------------------------------
+
+    /** 获取当前页数据（触发实际 SQL 执行） */
+    public Object data() throws SQLException {
+        fetchData();
+        return this.pageResult.getData();
+    }
+
+    private void fetchData() throws SQLException {
+        String sourceName = SqlHintNames.getValue(hints, SqlHintNames.FRAGMENT_SQL_DATA_SOURCE);
+        try (Connection conn = this.connection.eApply(sourceName)) {
+            this.pageResult = (PageResult<Object>) this.rootStatement.execute(conn, this.hints, this.sqlConfig, this.params, this.pageInfo, true);
+        }
+    }
+}

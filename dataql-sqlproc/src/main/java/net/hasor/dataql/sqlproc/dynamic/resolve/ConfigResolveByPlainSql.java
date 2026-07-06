@@ -25,7 +25,7 @@ import net.hasor.dataql.sqlproc.dynamic.segment.PlanDynamicSql;
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2021-06-05
  */
-public class ConfigResolveByPlanSql extends ConfigResolve {
+public class ConfigResolveByPlainSql extends ConfigResolve {
     @Override
     public SqlConfig parseConfig(String fragmentName, Hints hint, String config) {
         QueryType queryType = QueryType.valueOfTag(fragmentName.toLowerCase().trim());

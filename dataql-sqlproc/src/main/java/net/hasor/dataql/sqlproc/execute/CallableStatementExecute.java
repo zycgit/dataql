@@ -19,6 +19,7 @@ import java.util.Map;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.sqlproc.ColumnCaseType;
+import net.hasor.dataql.sqlproc.OpenPackageType;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
 import net.hasor.dataql.sqlproc.dialect.Page;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
@@ -83,12 +84,12 @@ public class CallableStatementExecute extends AbstractStatementExecute {
     }
 
     @Override
-    protected void fetchMultipleResult(boolean retVal, SqlBuilder oriSql, Statement cs, ColumnCaseType caseType, Map<String, Object> resultMap) throws SQLException {
+    protected void fetchMultipleResult(boolean retVal, SqlBuilder oriSql, Statement cs, ColumnCaseType caseType, OpenPackageType openPackage, Map<String, Object> resultMap) throws SQLException {
         Object[] sqlArgs = oriSql.getArgs();
         // fetch output
         for (int i = 1; i <= sqlArgs.length; i++) {
             Object arg = sqlArgs[i - 1];
-            if (!(arg instanceof SqlArg)) {
+            if (!(arg instanceof SqlArg sqlArg)) {
                 continue;
             }
             SqlMode sqlMode = ((SqlArg) arg).getSqlMode();
@@ -96,7 +97,6 @@ public class CallableStatementExecute extends AbstractStatementExecute {
                 continue;
             }
 
-            SqlArg sqlArg = (SqlArg) arg;
             String asName = sqlArg.getAsName();
             String argName = sqlArg.getName();
             String name;
@@ -110,7 +110,7 @@ public class CallableStatementExecute extends AbstractStatementExecute {
 
             if (sqlArg.getSqlMode() == SqlMode.Cursor) {
                 ResultSet rs = (ResultSet) ((CallableStatement) cs).getObject(i);
-                Object resultValue = this.extractor.extractData(caseType, rs);
+                Object resultValue = this.convertResult(openPackage, this.extractor.extractData(caseType, rs));
                 resultMap.put(name, resultValue);
             } else {
                 TypeHandlerRegistry registry = this.context.getTypeRegistry();
@@ -119,6 +119,6 @@ public class CallableStatementExecute extends AbstractStatementExecute {
             }
         }
 
-        super.fetchMultipleResult(retVal, oriSql, cs, caseType, resultMap);
+        super.fetchMultipleResult(retVal, oriSql, cs, caseType, openPackage, resultMap);
     }
 }

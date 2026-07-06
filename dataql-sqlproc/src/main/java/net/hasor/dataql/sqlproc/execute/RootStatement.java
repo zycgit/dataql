@@ -44,17 +44,12 @@ public class RootStatement {
     }
 
     private AbstractStatementExecute createExecute(StatementType statementType, QueryContext context) {
-        switch (statementType) {
-            case Statement:
-                return new StatementExecute(context);
-            case Prepared:
-                return new PreparedStatementExecute(context);
-            case Callable:
-                return new CallableStatementExecute(context);
-            default: {
-                throw new UnsupportedOperationException("statementType '" + statementType.name() + "' Unsupported.");
-            }
-        }
+        return switch (statementType) {
+            case Statement -> new StatementExecute(context);
+            case Prepared -> new PreparedStatementExecute(context);
+            case Callable -> new CallableStatementExecute(context);
+            default -> throw new UnsupportedOperationException("statementType '" + statementType.name() + "' Unsupported.");
+        };
     }
 
     public Object execute(Connection conn, Hints hints, SqlConfig config, Map<String, Object> data, Page pageInfo, boolean pageResult) throws SQLException {

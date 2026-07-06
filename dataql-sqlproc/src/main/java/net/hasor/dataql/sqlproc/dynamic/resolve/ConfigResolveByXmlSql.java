@@ -239,6 +239,7 @@ public class ConfigResolveByXmlSql extends ConfigResolve {
         cfg.setHint(SqlHintNames.FRAGMENT_SQL_TIMEOUT.getShortName(), getNodeAttributeValue(curXmlNode, "timeout"));
         cfg.setHint(SqlHintNames.FRAGMENT_SQL_FETCH_SIZE.getShortName(), getNodeAttributeValue(curXmlNode, "fetchSize"));
         cfg.setHint(SqlHintNames.FRAGMENT_SQL_RESULT_SET_TYPE.getShortName(), getNodeAttributeValue(curXmlNode, "resultSetType"));
+        cfg.setHint(SqlHintNames.FRAGMENT_SQL_KEY_PROPERTY.getShortName(), getNodeAttributeValue(curXmlNode, "keyProperty"));
         cfg.setHint(SqlHintNames.FRAGMENT_SQL_KEY_COLUMN.getShortName(), getNodeAttributeValue(curXmlNode, "keyColumn"));
         cfg.setHint(SqlHintNames.FRAGMENT_SQL_ORDER.getShortName(), getNodeAttributeValue(curXmlNode, "order"));
 

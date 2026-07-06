@@ -15,8 +15,6 @@
  */
 package net.hasor.dataql.sqlproc.dynamic.resolve;
 import net.hasor.dataql.Hints;
-import net.hasor.dataql.sqlproc.ConfigFormatType;
-import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
 
 /**
@@ -25,20 +23,14 @@ import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
  * @version : 2021-06-05
  */
 public class ConfigResolveRoot {
-    private final ConfigResolveByPlanSql planSql = new ConfigResolveByPlanSql();
-    private final ConfigResolveByXmlSql  xmlSql  = new ConfigResolveByXmlSql();
+    private final ConfigResolveByPlainSql planSql = new ConfigResolveByPlainSql();
+    private final ConfigResolveByXmlSql   xmlSql  = new ConfigResolveByXmlSql();
 
-    public SqlConfig parseConfig(String fragmentName, Hints hint, String config) {
-        String formatStr = SqlHintNames.getValue(hint, SqlHintNames.FRAGMENT_SQL_FORMAT);
-        ConfigFormatType formatType = ConfigFormatType.valueOfCode(formatStr);
+    public SqlConfig parseXmlConfig(String fragmentName, Hints hint, String config) {
+        return this.xmlSql.parseConfig(fragmentName, hint, config);
+    }
 
-        switch (formatType) {
-            case Xml:
-                return this.xmlSql.parseConfig(fragmentName, hint, config);
-            case Text:
-                return this.planSql.parseConfig(fragmentName, hint, config);
-            default:
-                throw new UnsupportedOperationException("fragment '" + fragmentName + "' formatType " + formatStr + " Unsupported.");
-        }
+    public SqlConfig parsePlainConfig(String fragmentName, Hints hint, String config) {
+        return this.planSql.parseConfig(fragmentName, hint, config);
     }
 }
