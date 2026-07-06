@@ -1,12 +1,13 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.sql.PreparedStatement;
+import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.sql.ResultSet;
 import java.time.LocalTime;
 import net.hasor.dataql.sqlproc.types.time.LocalTimeTypeHandler;
 import org.junit.Test;
 
-public class LocalTimeTypeHandlerTest extends AbstractHandlerTest {
+public class LocalTimeTypeHandlerTest extends AbstractSqlProcTest {
     @Test
     public void testLocalTime() throws Throwable {
         LocalTime val = LocalTime.now();

@@ -1,6 +1,7 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.sql.CallableStatement;
+import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
@@ -10,7 +11,7 @@ import java.util.Map;
 import net.hasor.dataql.sqlproc.types.time.SqlTimestampAsInstantTypeHandler;
 import org.junit.Test;
 
-public class SqlTimestampAsInstantTypeHandlerTest extends AbstractHandlerTest {
+public class SqlTimestampAsInstantTypeHandlerTest extends AbstractSqlProcTest {
     @Test
     public void testSqlTimestampAsInstant() throws Throwable {
         SqlTimestampAsInstantTypeHandler handler = new SqlTimestampAsInstantTypeHandler();

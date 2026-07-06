@@ -1,6 +1,7 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.lang.reflect.Proxy;
+import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,7 +13,7 @@ import java.util.Map;
 import net.hasor.dataql.sqlproc.types.time.*;
 import org.junit.Test;
 
-public class TimeTypeHandlerTest extends AbstractHandlerTest {
+public class TimeTypeHandlerTest extends AbstractSqlProcTest {
 
     @Test
     public void testSqlDateTypeHandler_CallableStatement() throws Throwable {

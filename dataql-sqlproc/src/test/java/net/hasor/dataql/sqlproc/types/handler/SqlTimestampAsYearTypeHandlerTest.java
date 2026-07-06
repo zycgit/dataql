@@ -1,11 +1,12 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.sql.PreparedStatement;
+import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.sql.ResultSet;
 import net.hasor.dataql.sqlproc.types.time.SqlTimestampAsYearTypeHandler;
 import org.junit.Test;
 
-public class SqlTimestampAsYearTypeHandlerTest extends AbstractHandlerTest {
+public class SqlTimestampAsYearTypeHandlerTest extends AbstractSqlProcTest {
     @Test
     public void testYear() throws Throwable {
         java.time.Year val = java.time.Year.now();

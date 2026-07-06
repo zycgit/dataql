@@ -13,15 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.execute.reader;
-import net.hasor.cobble.ResourcesUtils;
-import net.hasor.cobble.StringUtils;
-import net.hasor.dataql.Hints;
-import net.hasor.dataql.sqlproc.ColumnCaseType;
-import net.hasor.dataql.sqlproc.SqlHintNames;
-import net.hasor.dataql.sqlproc.types.TypeHandler;
-import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
-
+package net.hasor.dataql.sqlproc.execute;
 import java.sql.JDBCType;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -30,24 +22,24 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import net.hasor.cobble.ResourcesUtils;
+import net.hasor.cobble.StringUtils;
+import net.hasor.dataql.sqlproc.ColumnCaseType;
+import net.hasor.dataql.sqlproc.types.TypeHandler;
+import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 
 /**
  * @author 赵永春 (zyc@hasor.net)
  * @since 1.2
  */
-public class ColumnMapRowMapper implements ResultSetExtractor {
+public class MapResultExtractor {
     private final TypeHandlerRegistry typeRegistry;
-    private final ColumnCaseType      caseType;
 
-    public ColumnMapRowMapper(Hints hints, TypeHandlerRegistry typeRegistry) {
-        String caseTypeStr = SqlHintNames.getValue(hints, SqlHintNames.FRAGMENT_SQL_COLUMN_CASE);
-
+    public MapResultExtractor(TypeHandlerRegistry typeRegistry) {
         this.typeRegistry = typeRegistry;
-        this.caseType = ColumnCaseType.valueOfCode(caseTypeStr);
     }
 
-    @Override
-    public List<Map<String, Object>> extractData(ResultSet rs) throws SQLException {
+    public List<Map<String, Object>> extractData(ColumnCaseType caseType, ResultSet rs) throws SQLException {
         ResultSetMetaData rsmd = rs.getMetaData();
         int columnCount = rsmd.getColumnCount();
 
@@ -55,7 +47,7 @@ public class ColumnMapRowMapper implements ResultSetExtractor {
         List<String> colNames = new ArrayList<>();
         Map<String, Integer> colNameIndex = new LinkedHashMap<>();
         for (int i = 1; i <= columnCount; i++) {
-            String key = this.getColumnKey(rsmd, i);
+            String key = this.getColumnKey(caseType, rsmd, i);
             if (colNames.contains(key)) {
                 continue;
             }
@@ -76,13 +68,13 @@ public class ColumnMapRowMapper implements ResultSetExtractor {
         return results;
     }
 
-    protected String getColumnKey(final ResultSetMetaData rsmd, final int index) throws SQLException {
+    protected String getColumnKey(ColumnCaseType caseType, ResultSetMetaData rsmd, final int index) throws SQLException {
         String name = rsmd.getColumnLabel(index);
         if (name == null || name.isEmpty()) {
             name = rsmd.getColumnName(index);
         }
 
-        switch (this.caseType) {
+        switch (caseType) {
             case ColumnCaseHump:
                 return StringUtils.lineToHump(name);
             case ColumnCaseLower:

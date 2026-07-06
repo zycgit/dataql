@@ -1,6 +1,7 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.lang.reflect.Proxy;
+import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,7 +11,7 @@ import net.hasor.dataql.sqlproc.types.bytes.BlobAsBytesWrapTypeHandler;
 import net.hasor.dataql.sqlproc.types.string.ClobAsStringTypeHandler;
 import org.junit.Test;
 
-public class BlobClobTypeHandlerTest extends AbstractHandlerTest {
+public class BlobClobTypeHandlerTest extends AbstractSqlProcTest {
 
     private Clob mockClob(String content) {
         return (Clob) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[] { Clob.class }, (proxy, method, args) -> {

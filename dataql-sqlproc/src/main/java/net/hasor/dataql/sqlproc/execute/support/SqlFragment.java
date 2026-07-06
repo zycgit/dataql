@@ -1,4 +1,4 @@
-///*
+/// *
 // * Copyright 2008-2009 the original author or authors.
 // *
 // * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,7 @@
 // * See the License for the specific language governing permissions and
 // * limitations under the License.
 // */
-//package net.hasor.dataql.sqlproc.execute;
+//package net.hasor.dataql.sqlproc.support;
 //import static net.hasor.dataql.sqlproc.SqlHintNames.*;
 //import static net.hasor.dataql.sqlproc.SqlHintValue.FRAGMENT_SQL_QUERY_BY_PAGE_ENABLE;
 //
@@ -51,7 +51,7 @@
 //import net.hasor.dataql.sqlproc.spi.LookupConnectionListener;
 //import net.hasor.dataql.sqlproc.spi.LookupDataSourceListener;
 //
-///**
+/// **
 // * 支持 SQL 的代码片段执行器。整合了分页、批处理能力。
 // * 已支持的语句有：insert、update、delete、replace、select、create、drop、alter
 // * 已经提供原生：insert、update、delete、replace 语句的批量能力。
@@ -61,13 +61,13 @@
 //@Singleton
 //public class SqlFragment implements FragmentProcess, DynamicContext {
 //    @Inject
-//    protected AppContext              appContext;
+//    protected     AppContext                appContext;
 //    @Inject
-//    protected SpiTrigger              spiTrigger;
-//    private DataSource                defaultDataSource;
-//    private Map<String, DataSource>   dataSourceMap;
-//    private Map<String, ExecuteProxy> procDynamicCache;
-//    private final ProcSqlParser       sqlParser = new ProcSqlParser();
+//    protected     SpiTrigger                spiTrigger;
+//    private       DataSource                defaultDataSource;
+//    private       Map<String, DataSource>   dataSourceMap;
+//    private       Map<String, ExecuteProxy> procDynamicCache;
+//    private final ProcSqlParser             sqlParser = new ProcSqlParser();
 //
 //    @PostConstruct
 //    public void init() {

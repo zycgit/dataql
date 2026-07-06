@@ -1,6 +1,7 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.sql.CallableStatement;
+import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.HashMap;
@@ -8,7 +9,7 @@ import java.util.Map;
 import net.hasor.dataql.sqlproc.types.number.IntegerTypeHandler;
 import org.junit.Test;
 
-public class IntegerTypeHandlerTest extends AbstractHandlerTest {
+public class IntegerTypeHandlerTest extends AbstractSqlProcTest {
 
     @Test
     public void testIntegerTypeHandler_CallableStatement() throws Throwable {

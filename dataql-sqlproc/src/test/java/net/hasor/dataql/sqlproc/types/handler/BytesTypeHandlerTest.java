@@ -1,6 +1,7 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.sql.CallableStatement;
+import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Arrays;
@@ -10,7 +11,7 @@ import net.hasor.dataql.sqlproc.types.bytes.BytesAsBytesWrapTypeHandler;
 import net.hasor.dataql.sqlproc.types.bytes.BytesTypeHandler;
 import org.junit.Test;
 
-public class BytesTypeHandlerTest extends AbstractHandlerTest {
+public class BytesTypeHandlerTest extends AbstractSqlProcTest {
 
     @Test
     public void testBytesTypeHandler_CallableStatement() throws Throwable {

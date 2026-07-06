@@ -14,11 +14,18 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.execute;
+import java.sql.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import net.hasor.cobble.ArrayUtils;
 import net.hasor.cobble.ExceptionUtils;
 import net.hasor.cobble.logging.Logger;
 import net.hasor.cobble.logging.LoggerFactory;
 import net.hasor.dataql.Hints;
+import net.hasor.dataql.sqlproc.ColumnCaseType;
+import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dialect.*;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
@@ -26,14 +33,7 @@ import net.hasor.dataql.sqlproc.dynamic.config.DmlConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.DqlConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.ExecuteConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
-import net.hasor.dataql.sqlproc.execute.reader.ColumnMapRowMapper;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
-
-import java.sql.*;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 执行器基类
@@ -41,11 +41,13 @@ import java.util.Map;
  * @version 2021-07-20
  */
 public abstract class AbstractStatementExecute {
-    protected static final Logger       logger = LoggerFactory.getLogger(AbstractStatementExecute.class);
-    protected final        QueryContext context;
+    protected static final Logger             logger = LoggerFactory.getLogger(AbstractStatementExecute.class);
+    protected final        QueryContext       context;
+    protected final        MapResultExtractor extractor;
 
     public AbstractStatementExecute(QueryContext context) {
         this.context = context;
+        this.extractor = new MapResultExtractor(context.getTypeRegistry());
     }
 
     protected void doCheck(Connection conn, Hints hints, SqlConfig config, Map<String, Object> data, Page pageInfo) throws SQLException {
@@ -67,7 +69,7 @@ public abstract class AbstractStatementExecute {
         this.doCheck(conn, hints, config, data, pageInfo);
 
         // prepare sql
-        MergedMap<String, Object> dataCtx = null;
+        MergedMap<String, Object> dataCtx;
         if (data instanceof MergedMap) {
             dataCtx = (MergedMap<String, Object>) data;
         } else {
@@ -117,7 +119,7 @@ public abstract class AbstractStatementExecute {
             this.configStatement(stat, config);
 
             boolean retVal = this.executeQuery(stat, config, execSql);
-            return this.fetchResult(retVal, stat, hints, config, oriSql, dataCtx, pageInfo, resultCount, pageResult);
+            return this.fetchResult(retVal, oriSql, stat, hints, config, dataCtx, pageInfo, resultCount, pageResult);
         } catch (SQLException e) {
             logger.error("executeQuery failed, " + ExceptionUtils.getRootCauseMessage(e) + ", " + ExecuteHelper.fmtBoundSql(countSql), e);
             throw e;
@@ -126,7 +128,7 @@ public abstract class AbstractStatementExecute {
 
     protected abstract Statement createStatement(Connection conn, SqlConfig config, BoundSql execSql) throws SQLException;
 
-    protected void configStatement(Statement stat, SqlConfig config) throws SQLException {
+    private void configStatement(Statement stat, SqlConfig config) throws SQLException {
         if (config.getTimeout() > 0) {
             stat.setQueryTimeout(config.getTimeout());
         }
@@ -151,9 +153,11 @@ public abstract class AbstractStatementExecute {
 
     protected abstract boolean executeQuery(Statement stat, SqlConfig config, BoundSql execSql) throws SQLException;
 
-    protected Object fetchResult(boolean retVal, Statement stat, Hints hints, SqlConfig config, SqlBuilder oriSql, Map<String, Object> ctx, Page oriPageInfo, long newPageCnt, boolean pageResult) throws SQLException {
-        String[] bindOut = null;
+    private Object fetchResult(boolean retVal, SqlBuilder oriSql, Statement stat, Hints hints, SqlConfig config, Map<String, Object> ctx, Page oriPageInfo, long newPageCnt, boolean pageResult) throws SQLException {
+        String[] bindOut;
         boolean usingMultipleResultFetch = false;
+        String caseTypeStr = SqlHintNames.getValue(hints, SqlHintNames.FRAGMENT_SQL_COLUMN_CASE);
+        ColumnCaseType caseType = ColumnCaseType.valueOfCode(caseTypeStr);
 
         if (config instanceof DqlConfig) {
             bindOut = ((DqlConfig) config).getBindOut();
@@ -167,10 +171,11 @@ public abstract class AbstractStatementExecute {
 
         if (usingMultipleResultFetch) {
             Map<String, Object> result = new HashMap<>();
-            Map<String, Object> multipleResult = this.multipleResultFetch(oriSql, stat, retVal);
+            Map<String, Object> tempResult = new HashMap<>();
+            this.fetchMultipleResult(retVal, oriSql, stat, caseType, tempResult);
             for (String argName : bindOut) {
-                if (multipleResult.containsKey(argName)) {
-                    result.put(argName, multipleResult.get(argName));
+                if (tempResult.containsKey(argName)) {
+                    result.put(argName, tempResult.get(argName));
                 } else if (ctx.containsKey(argName)) {
                     result.put(argName, ctx.get(argName));
                 } else {
@@ -179,7 +184,6 @@ public abstract class AbstractStatementExecute {
             }
             return result;
         } else {
-
             if (config instanceof DmlConfig) {
                 return stat.getUpdateCount();
             }
@@ -190,9 +194,14 @@ public abstract class AbstractStatementExecute {
                         return Collections.emptyList();
                     }
 
-                    TypeHandlerRegistry typeRegistry = this.context.getTypeRegistry();
-                    List<?> objects = new ColumnMapRowMapper(hints, typeRegistry).extractData(rs);
-                    return pageOrNot(objects, oriPageInfo, newPageCnt, pageResult);
+                    List<?> objects = this.extractor.extractData(caseType, rs);
+                    if (pageResult) {
+                        PageResult<?> page = new PageResult<>(oriPageInfo, objects);
+                        page.setTotalCount(newPageCnt);
+                        return page;
+                    } else {
+                        return objects;
+                    }
                 }
             } else {
                 return stat.getUpdateCount();
@@ -200,15 +209,36 @@ public abstract class AbstractStatementExecute {
         }
     }
 
-    protected Object pageOrNot(List<?> objects, Page oriPageInfo, long newPageCnt, boolean pageResult) {
-        if (pageResult) {
-            PageResult<?> page = new PageResult<>(oriPageInfo, objects);
-            page.setTotalCount(newPageCnt);
-            return page;
+    protected void fetchMultipleResult(boolean retVal, SqlBuilder oriSql, Statement cs, ColumnCaseType caseType, Map<String, Object> resultMap) throws SQLException {
+        // fetch ResultSet -- first ResultSet
+        int resultIndex = 1;
+        String resultName;
+        Object resultValue;
+        if (retVal) {
+            try (ResultSet rs = cs.getResultSet()) {
+                resultName = "#result-set-" + resultIndex;
+                resultValue = this.extractor.extractData(caseType, rs);
+            }
         } else {
-            return objects;
+            resultName = "#update-count-" + resultIndex;
+            resultValue = cs.getUpdateCount();
+        }
+
+        // fetch ResultSet -- more ResultSet
+        resultMap.put(resultName, resultValue);
+        while ((cs.getMoreResults()) || (cs.getUpdateCount() != -1)) {
+            resultIndex++;
+            int updateCount = cs.getUpdateCount();
+            if (updateCount == -1) {
+                resultName = "#result-set-" + resultIndex;
+                try (ResultSet rs = cs.getResultSet()) {
+                    resultValue = this.extractor.extractData(caseType, rs);
+                }
+            } else {
+                resultName = "#update-count-" + resultIndex;
+                resultValue = updateCount;
+            }
+            resultMap.put(resultName, resultValue);
         }
     }
-
-    protected abstract Map<String, Object> multipleResultFetch(SqlBuilder buildSql, Statement stat, boolean retVal) throws SQLException;
 }

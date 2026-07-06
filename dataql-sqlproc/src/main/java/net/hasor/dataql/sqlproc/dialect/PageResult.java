@@ -28,18 +28,19 @@ public class PageResult<T> extends PageObject {
 
     /** 多用于首次分页结果构建 */
     public PageResult() {
-        super(0, 0);
+        super(0, 0, 0);
         this.data = new ArrayList<>();
     }
 
     /** 多用于首次分页结果构建 */
-    public PageResult(long pageSize, long totalCount) {
-        this(pageSize, totalCount, null);
+    public PageResult(long pageNumber, long pageSize) {
+        super(pageNumber, pageSize, 0);
+        this.data = new ArrayList<>();
     }
 
     /** 多用于首次分页结果构建 */
-    public PageResult(long pageSize, long totalCount, List<T> data) {
-        super(pageSize, totalCount);
+    public PageResult(long pageNumber, long pageSize, long totalCount, List<T> data) {
+        super(pageNumber, pageSize, totalCount);
         this.data = data == null ? new ArrayList<>() : data;
     }
 
@@ -50,16 +51,17 @@ public class PageResult<T> extends PageObject {
 
     /** 多用于二次分页结果构建 */
     public PageResult(Page pageInfo, List<T> data) {
-        super(pageInfo.getPageSize(), pageInfo.getTotalCount());
-        this.setCurrentPage(pageInfo.getCurrentPage());
+        super(pageInfo.getCurrentPage(), pageInfo.getPageSize(), pageInfo.getTotalCount());
         this.setPageNumberOffset(pageInfo.getPageNumberOffset());
         this.data = data == null ? new ArrayList<>() : data;
     }
 
+    /** 获取分页数据 */
     public List<T> getData() {
         return this.data;
     }
 
+    /** 设置分页数据 */
     public void setData(List<T> data) {
         this.data = data;
     }

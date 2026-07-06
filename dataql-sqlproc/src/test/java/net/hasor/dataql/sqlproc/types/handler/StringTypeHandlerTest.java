@@ -1,6 +1,7 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.sql.CallableStatement;
+import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.HashMap;
@@ -9,7 +10,7 @@ import net.hasor.dataql.sqlproc.types.string.StringAsCharTypeHandler;
 import net.hasor.dataql.sqlproc.types.string.StringTypeHandler;
 import org.junit.Test;
 
-public class StringTypeHandlerTest extends AbstractHandlerTest {
+public class StringTypeHandlerTest extends AbstractSqlProcTest {
 
     @Test
     public void testStringTypeHandler_CallableStatement() throws Throwable {

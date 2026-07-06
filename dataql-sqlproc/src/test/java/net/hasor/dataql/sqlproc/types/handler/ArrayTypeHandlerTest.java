@@ -1,6 +1,7 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.lang.reflect.Proxy;
+import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.sql.Array;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -11,7 +12,7 @@ import net.hasor.dataql.sqlproc.types.array.ArrayTypeHandler;
 import net.hasor.dataql.sqlproc.types.array.PgArrayTypeHandler;
 import org.junit.Test;
 
-public class ArrayTypeHandlerTest extends AbstractHandlerTest {
+public class ArrayTypeHandlerTest extends AbstractSqlProcTest {
 
     private Array mockArray(Object content) {
         return (Array) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[] { Array.class }, (proxy, method, args) -> {

@@ -14,19 +14,16 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.execute;
+import java.sql.*;
+import java.util.Map;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
 import net.hasor.dataql.sqlproc.dialect.Page;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
-import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
 import net.hasor.dataql.sqlproc.dynamic.config.DqlConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.ResultSetType;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
-import net.hasor.dataql.sqlproc.execute.reader.PreparedMultipleResultSetExtractor;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
-
-import java.sql.*;
-import java.util.Map;
 
 /**
  * 负责参数化SQL调用的执行器
@@ -71,29 +68,6 @@ public class PreparedStatementExecute extends AbstractStatementExecute {
         } catch (SQLException e) {
             logger.error("executeQuery failed, " + ExecuteHelper.fmtBoundSql(execSql), e);
             throw e;
-        }
-    }
-
-    @Override
-    protected Map<String, Object> multipleResultFetch(SqlBuilder buildSql, Statement stat, boolean retVal) throws SQLException {
-        return new StatementPreparedMultipleResultSetExtractor(buildSql).fetchResult(retVal, stat);
-    }
-
-    private static class StatementPreparedMultipleResultSetExtractor extends PreparedMultipleResultSetExtractor {
-        public StatementPreparedMultipleResultSetExtractor(SqlBuilder buildSql) {
-            super(buildSql);
-        }
-
-        public Map<String, Object> fetchResult(boolean retVal, Statement s) throws SQLException {
-            try {
-                Map<String, Object> resultsMap = createResultsMap();
-                this.beforeFetchResult(s, resultsMap);
-                this.fetchResult(retVal, s, resultsMap);
-                this.afterFetchResult(s, resultsMap);
-                return resultsMap;
-            } finally {
-                this.afterStatement(s);
-            }
         }
     }
 }

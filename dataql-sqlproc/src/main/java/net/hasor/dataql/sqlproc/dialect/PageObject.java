@@ -34,9 +34,18 @@ public class PageObject implements Page {
     public PageObject() {
     }
 
-    public PageObject(long pageSize, long totalCount) {
+    public PageObject(long pageNumber, long pageSize) {
+        this.currentPage = pageNumber;
+        this.pageSize = pageSize;
+        this.totalCount = 0;
+        this.refreshTotalCount = true;
+    }
+
+    public PageObject(long pageNumber, long pageSize, long totalCount) {
+        this.currentPage = pageNumber;
         this.pageSize = pageSize;
         this.totalCount = totalCount;
+        this.refreshTotalCount = totalCount <= 0;
     }
 
     /** 获取分页的页大小 */
@@ -132,5 +141,34 @@ public class PageObject implements Page {
     /** 设置记录总数 */
     public void setTotalCount(long totalCount) {
         this.totalCount = totalCount;
+    }
+
+    /**
+     * 创建分页对象（偏移量为0）
+     * @param pageNumber 当前页码
+     * @param pageSize 每页记录数
+     * @return 分页对象
+     */
+    public static Page of(int pageNumber, int pageSize) {
+        Page pageInfo = new PageObject();
+        pageInfo.setPageNumberOffset(0);
+        pageInfo.setPageSize(pageSize);
+        pageInfo.setCurrentPage(pageNumber);
+        return pageInfo;
+    }
+
+    /**
+     * 创建分页对象（自定义页码偏移量）
+     * @param pageNumber 当前页码
+     * @param pageSize 每页记录数
+     * @param pageNumberOffset 页码偏移量
+     * @return 分页对象
+     */
+    public static Page of(int pageNumber, int pageSize, int pageNumberOffset) {
+        Page pageInfo = new PageObject();
+        pageInfo.setPageNumberOffset(pageNumberOffset);
+        pageInfo.setPageSize(pageSize);
+        pageInfo.setCurrentPage(pageNumber);
+        return pageInfo;
     }
 }

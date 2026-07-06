@@ -1,12 +1,11 @@
 package net.hasor.dataql.sqlproc.execute;
+import java.io.StringReader;
+import java.util.List;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.io.IOUtils;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
 import net.hasor.dataql.sqlproc.dialect.Page;
 import net.hasor.dataql.sqlproc.dynamic.SqlArg;
-
-import java.io.StringReader;
-import java.util.List;
 
 class ExecuteHelper {
     public static boolean usingPage(Page pageInfo) {

@@ -1,12 +1,13 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.sql.PreparedStatement;
+import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.sql.ResultSet;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 import net.hasor.dataql.sqlproc.types.UnknownTypeHandler;
 import org.junit.Test;
 
-public class UnknownTypeHandlerTest extends AbstractHandlerTest {
+public class UnknownTypeHandlerTest extends AbstractSqlProcTest {
     @Test
     public void testUnknown() throws Throwable {
         UnknownTypeHandler handler = new UnknownTypeHandler(TypeHandlerRegistry.DEFAULT);

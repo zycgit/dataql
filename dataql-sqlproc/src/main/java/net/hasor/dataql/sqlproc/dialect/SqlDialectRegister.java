@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dialect;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Map;
+import net.hasor.cobble.ClassUtils;
 import net.hasor.cobble.ResourcesUtils;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.ref.LinkedCaseInsensitiveMap;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dialect.provider.*;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Map;
 
 /**
  * 方言管理器
@@ -96,7 +96,7 @@ public class SqlDialectRegister {
         }
         if (aClass != null) {
             try {
-                dialect = (PageDialect) aClass.newInstance();
+                dialect = ClassUtils.newInstance(aClass);
             } catch (Exception e) {
                 throw new IllegalStateException("load dialect '" + aClass.getName() + "' failed, " + e.getMessage(), e);
             }

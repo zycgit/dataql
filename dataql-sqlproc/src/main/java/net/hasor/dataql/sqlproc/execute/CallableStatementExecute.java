@@ -14,22 +14,21 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.execute;
-import net.hasor.cobble.ArrayUtils;
+import java.sql.*;
+import java.util.Map;
+import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.Hints;
+import net.hasor.dataql.sqlproc.ColumnCaseType;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
 import net.hasor.dataql.sqlproc.dialect.Page;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
+import net.hasor.dataql.sqlproc.dynamic.SqlArg;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
+import net.hasor.dataql.sqlproc.dynamic.SqlMode;
 import net.hasor.dataql.sqlproc.dynamic.config.DqlConfig;
-import net.hasor.dataql.sqlproc.dynamic.config.ExecuteConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.ResultSetType;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
-import net.hasor.dataql.sqlproc.execute.reader.CallableMultipleResultSetExtractor;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
-
-import java.sql.*;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 负责存储过程调用的执行器
@@ -84,55 +83,42 @@ public class CallableStatementExecute extends AbstractStatementExecute {
     }
 
     @Override
-    protected Map<String, Object> multipleResultFetch(SqlBuilder buildSql, Statement stat, boolean retVal) throws SQLException {
-        return new StatementCallableMultipleResultSetExtractor(buildSql).fetchResult(retVal, stat);
-    }
+    protected void fetchMultipleResult(boolean retVal, SqlBuilder oriSql, Statement cs, ColumnCaseType caseType, Map<String, Object> resultMap) throws SQLException {
+        Object[] sqlArgs = oriSql.getArgs();
+        // fetch output
+        for (int i = 1; i <= sqlArgs.length; i++) {
+            Object arg = sqlArgs[i - 1];
+            if (!(arg instanceof SqlArg)) {
+                continue;
+            }
+            SqlMode sqlMode = ((SqlArg) arg).getSqlMode();
+            if (sqlMode == null || !sqlMode.isOut()) {
+                continue;
+            }
 
-    protected Object fetchResult(boolean retVal, Statement stat, SqlConfig config, SqlBuilder oriSql, Map<String, Object> ctx, Page oriPageInfo, long newPageCnt, boolean pageResult) throws SQLException {
-        String[] bindOut = null;
-
-        if (config instanceof DqlConfig) {
-            bindOut = ((DqlConfig) config).getBindOut();
-        } else if (config instanceof ExecuteConfig) {
-            bindOut = ((ExecuteConfig) config).getBindOut();
-        } else {
-            bindOut = ArrayUtils.EMPTY_STRING_ARRAY;
-        }
-
-        Map<String, Object> result = new HashMap<>();
-        Map<String, Object> multipleResult = this.multipleResultFetch(oriSql, stat, retVal);
-
-        if (bindOut.length == 0) {
-            return multipleResult;
-        }
-
-        for (String argName : bindOut) {
-            if (multipleResult.containsKey(argName)) {
-                result.put(argName, multipleResult.get(argName));
-            } else if (ctx.containsKey(argName)) {
-                result.put(argName, ctx.get(argName));
+            SqlArg sqlArg = (SqlArg) arg;
+            String asName = sqlArg.getAsName();
+            String argName = sqlArg.getName();
+            String name;
+            if (StringUtils.isNotBlank(asName)) {
+                name = asName;
+            } else if (StringUtils.isNotBlank(argName)) {
+                name = argName;
             } else {
-                result.put(argName, null);
+                name = "#out-" + i;
+            }
+
+            if (sqlArg.getSqlMode() == SqlMode.Cursor) {
+                ResultSet rs = (ResultSet) ((CallableStatement) cs).getObject(i);
+                Object resultValue = this.extractor.extractData(caseType, rs);
+                resultMap.put(name, resultValue);
+            } else {
+                TypeHandlerRegistry registry = this.context.getTypeRegistry();
+                Object resultValue = registry.getParameterValue((CallableStatement) cs, i, sqlArg);
+                resultMap.put(name, resultValue);
             }
         }
-        return result;
-    }
 
-    private static class StatementCallableMultipleResultSetExtractor extends CallableMultipleResultSetExtractor {
-        public StatementCallableMultipleResultSetExtractor(SqlBuilder buildSql) {
-            super(buildSql);
-        }
-
-        public Map<String, Object> fetchResult(boolean retVal, Statement s) throws SQLException {
-            try {
-                Map<String, Object> resultsMap = createResultsMap();
-                this.beforeFetchResult(s, resultsMap);
-                this.fetchResult(retVal, s, resultsMap);
-                this.afterFetchResult(s, resultsMap);
-                return resultsMap;
-            } finally {
-                this.afterStatement(s);
-            }
-        }
+        super.fetchMultipleResult(retVal, oriSql, cs, caseType, resultMap);
     }
 }

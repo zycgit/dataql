@@ -1,6 +1,7 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.math.BigDecimal;
+import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.math.BigInteger;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -10,7 +11,7 @@ import java.util.Map;
 import net.hasor.dataql.sqlproc.types.number.BigIntegerTypeHandler;
 import org.junit.Test;
 
-public class BigIntegerTypeHandlerTest extends AbstractHandlerTest {
+public class BigIntegerTypeHandlerTest extends AbstractSqlProcTest {
 
     @Test
     public void testBigIntegerTypeHandler_CallableStatement() throws Throwable {

@@ -390,7 +390,7 @@ public class DynamicParsed {
     }
 
     private static void parserValue(PlanDynamicSql fxQuery, String content) {
-        String[] testSplit = content.split(",");
+        String[] testSplit = StringUtils.split(content, ",");
         if (testSplit.length > 10 || testSplit.length == 0) {
             throw new IllegalArgumentException("analysisSQL failed, format error -> '#{valueExpr [,mode= IN|OUT|INOUT] [,jdbcType=INT] [,javaType=java.lang.String] [,typeHandler=YouTypeHandlerClassName]}'");
         }
