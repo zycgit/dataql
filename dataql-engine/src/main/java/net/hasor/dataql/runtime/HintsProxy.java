@@ -18,14 +18,14 @@ import java.util.Objects;
 import net.hasor.dataql.Hints;
 
 /**
- * 用于封装 Hint。
+ * Hints 代理基类。
  * @author 赵永春 (zyc@hasor.net)
- * @version : 2017-03-23
+ * @version : 2026-07-09
  */
-public class HintsReadOnly implements Hints {
-    private final Hints target;
+public class HintsProxy implements Hints {
+    protected final Hints target;
 
-    public HintsReadOnly(Hints target) {
+    public HintsProxy(Hints target) {
         this.target = Objects.requireNonNull(target, "target is null.");
     }
 
@@ -41,21 +41,21 @@ public class HintsReadOnly implements Hints {
 
     @Override
     public void removeHint(String optionKey) {
-        throw new UnsupportedOperationException("readOnly.");
+        this.target.removeHint(optionKey);
     }
 
     @Override
     public void setHint(String hintName, String value) {
-        throw new UnsupportedOperationException("readOnly.");
+        this.target.setHint(hintName, value);
     }
 
     @Override
     public void setHint(String hintName, Number value) {
-        throw new UnsupportedOperationException("readOnly.");
+        this.target.setHint(hintName, value);
     }
 
     @Override
     public void setHint(String hintName, boolean value) {
-        throw new UnsupportedOperationException("readOnly.");
+        this.target.setHint(hintName, value);
     }
 }
