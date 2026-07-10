@@ -1,18 +1,18 @@
-package net.hasor.dataql.sqlproc.execute;
-
-import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
-import net.hasor.dataql.sqlproc.ColumnCaseType;
-import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
-import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
-import org.junit.Test;
+package net.hasor.dataql.sqlproc.execute.utils;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.Assert.*;
+import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
+import net.hasor.dataql.sqlproc.ColumnCaseType;
+import net.hasor.dataql.sqlproc.execute.MapResultExtractor;
+import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
+import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class MapResultExtractorTest extends AbstractSqlProcTest {
 
@@ -26,7 +26,7 @@ public class MapResultExtractorTest extends AbstractSqlProcTest {
     }
 
     @Test
-    public void testExtractDefaultCase() throws SQLException {
+    public void extractDefaultCase() throws SQLException {
         try (Connection conn = newExtractConnection()) {
             ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM test_tbl");
             MapResultExtractor extractor = new MapResultExtractor(TypeHandlerRegistry.DEFAULT);
@@ -38,7 +38,7 @@ public class MapResultExtractorTest extends AbstractSqlProcTest {
     }
 
     @Test
-    public void testExtractLowerCase() throws SQLException {
+    public void extractLowerCase() throws SQLException {
         try (Connection conn = newExtractConnection()) {
             ResultSet rs = conn.createStatement().executeQuery("SELECT first_name, last_name FROM test_tbl");
             MapResultExtractor extractor = new MapResultExtractor(TypeHandlerRegistry.DEFAULT);
@@ -49,7 +49,7 @@ public class MapResultExtractorTest extends AbstractSqlProcTest {
     }
 
     @Test
-    public void testExtractUpperCase() throws SQLException {
+    public void extractUpperCase() throws SQLException {
         try (Connection conn = newExtractConnection()) {
             ResultSet rs = conn.createStatement().executeQuery("SELECT first_name FROM test_tbl");
             MapResultExtractor extractor = new MapResultExtractor(TypeHandlerRegistry.DEFAULT);
@@ -60,7 +60,7 @@ public class MapResultExtractorTest extends AbstractSqlProcTest {
     }
 
     @Test
-    public void testExtractHumpCase() throws SQLException {
+    public void extractHumpCase() throws SQLException {
         try (Connection conn = newExtractConnection()) {
             ResultSet rs = conn.createStatement().executeQuery("SELECT first_name, last_name FROM test_tbl");
             MapResultExtractor extractor = new MapResultExtractor(TypeHandlerRegistry.DEFAULT);
@@ -70,7 +70,7 @@ public class MapResultExtractorTest extends AbstractSqlProcTest {
     }
 
     @Test
-    public void testEmptyResultSet() throws SQLException {
+    public void emptyResultSet() throws SQLException {
         try (Connection conn = newExtractConnection()) {
             ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM test_tbl WHERE id = 999");
             MapResultExtractor extractor = new MapResultExtractor(TypeHandlerRegistry.DEFAULT);
@@ -80,7 +80,7 @@ public class MapResultExtractorTest extends AbstractSqlProcTest {
     }
 
     @Test
-    public void testDuplicateColumnNames() throws SQLException {
+    public void duplicateColumns() throws SQLException {
         try (Connection conn = newExtractConnection()) {
             ResultSet rs = conn.createStatement().executeQuery("SELECT id, id, first_name FROM test_tbl");
             MapResultExtractor extractor = new MapResultExtractor(TypeHandlerRegistry.DEFAULT);

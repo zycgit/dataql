@@ -13,31 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.internal;
-import net.hasor.dbvisitor.jdbc.SqlProvider;
+package net.hasor.dbvisitor.provider;
+import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
 
-import java.sql.SQLException;
+import javax.sql.DataSource;
+import java.util.function.Supplier;
 
 /**
- * JDBC 执行异常
  * @author 赵永春 (zyc@hasor.net)
- * @version 2013-10-14
+ * @version 2017-07-12
  */
-public class UncategorizedSQLException extends SQLException implements SqlProvider {
-    private final String sql;
+public class JdbcTemplateProvider implements Supplier<JdbcTemplate> {
+    private final Supplier<DataSource> dataSource;
 
-    public UncategorizedSQLException(String sql, String message, SQLException ex) {
-        super(message, ex);
-        this.sql = sql;
+    public JdbcTemplateProvider(DataSource dataSource) {
+        this(() -> dataSource);
     }
 
-    public UncategorizedSQLException(String sql, String message) {
-        super(message);
-        this.sql = sql;
+    public JdbcTemplateProvider(Supplier<DataSource> dataSource) {
+        this.dataSource = dataSource;
     }
 
-    @Override
-    public String getSql() {
-        return this.sql;
+    public JdbcTemplate get() {
+        return new JdbcTemplate(this.dataSource.get());
     }
 }

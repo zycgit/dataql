@@ -1,7 +1,6 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.sql.CallableStatement;
-import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.sql.JDBCType;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,7 +9,7 @@ import java.util.Map;
 import net.hasor.dataql.sqlproc.types.bool.BooleanTypeHandler;
 import org.junit.Test;
 
-public class BooleanTypeHandlerTest extends AbstractSqlProcTest {
+public class BooleanTypeHandlerTest extends TypeHandlerMockSupport {
 
     @Test
     public void testBooleanTypeHandler_CallableStatement() throws Throwable {

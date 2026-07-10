@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic.config;
-
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
 import net.hasor.cobble.CollectionUtils;
 import net.hasor.dataql.runtime.HintsSet;
 import net.hasor.dataql.sqlproc.dynamic.SqlArg;
@@ -25,10 +27,6 @@ import net.hasor.dataql.sqlproc.dynamic.resolve.ConfigResolveByXmlSql;
 import net.hasor.dataql.sqlproc.dynamic.rule.TestQueryContext;
 import net.hasor.dataql.sqlproc.utils.UserInfo;
 import org.junit.Test;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
 
 /**
  * @author 赵永春 (zyc@hasor.net)
@@ -182,6 +180,8 @@ public class DynamicXmlMapperTest {
         assert ((SqlArg) sqlBuilder1.getArgs()[1]).getValue().equals("loginName");
 
         SelectKeyConfig keyConfig = ((InsertConfig) sqlConfig).getSelectKey();
+        assert keyConfig.getKeyProperty().equals("id");
+        assert keyConfig.getOrder().equals("AFTER");
         SqlBuilder sqlBuilder2 = keyConfig.buildQuery(ctx, context);
         assert sqlBuilder2.getSqlString().trim().equals("SELECT LAST_INSERT_ID()");
         assert sqlBuilder2.getArgs().length == 0;

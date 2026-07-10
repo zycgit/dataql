@@ -1,7 +1,6 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.sql.CallableStatement;
-import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
@@ -11,7 +10,7 @@ import java.util.Map;
 import net.hasor.dataql.sqlproc.types.time.LocalDateTimeAsLocalDateTypeHandler;
 import org.junit.Test;
 
-public class LocalDateTimeAsLocalDateTypeHandlerTest extends AbstractSqlProcTest {
+public class LocalDateTimeAsLocalDateTypeHandlerTest extends TypeHandlerMockSupport {
     @Test
     public void testLocalDateTimeAsLocalDate() throws Throwable {
         LocalDateTimeAsLocalDateTypeHandler handler = new LocalDateTimeAsLocalDateTypeHandler();

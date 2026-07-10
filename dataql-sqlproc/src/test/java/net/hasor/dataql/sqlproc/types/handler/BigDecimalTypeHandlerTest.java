@@ -1,7 +1,6 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.math.BigDecimal;
-import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,7 +10,7 @@ import net.hasor.dataql.sqlproc.types.number.BigDecimalTypeHandler;
 import net.hasor.dataql.sqlproc.types.number.PgMoneyAsBigDecimalTypeHandler;
 import org.junit.Test;
 
-public class BigDecimalTypeHandlerTest extends AbstractSqlProcTest {
+public class BigDecimalTypeHandlerTest extends TypeHandlerMockSupport {
 
     @Test
     public void testPgMoneyAsBigDecimalTypeHandler_CallableStatement() throws Throwable {

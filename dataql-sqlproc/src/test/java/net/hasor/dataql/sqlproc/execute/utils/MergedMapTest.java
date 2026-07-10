@@ -13,18 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.execute;
-
-import org.junit.Test;
+package net.hasor.dataql.sqlproc.execute.utils;
 
 import java.util.*;
-
-import static org.junit.Assert.*;
+import net.hasor.dataql.sqlproc.execute.MergedMap;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class MergedMapTest {
 
     @Test
-    public void testEmpty() {
+    public void empty() {
         MergedMap<String, Object> map = new MergedMap<>();
         assertTrue(map.isEmpty());
         assertEquals(0, map.size());
@@ -34,7 +36,7 @@ public class MergedMapTest {
     }
 
     @Test
-    public void testPutAndGet() {
+    public void putAndGet() {
         MergedMap<String, Object> map = new MergedMap<>();
         map.put("a", 1);
         assertEquals(1, map.size());
@@ -45,7 +47,7 @@ public class MergedMapTest {
     }
 
     @Test
-    public void testPutOverride() {
+    public void putOverride() {
         MergedMap<String, Object> map = new MergedMap<>();
         map.put("a", 1);
         assertEquals(1, map.put("a", 2));
@@ -54,7 +56,7 @@ public class MergedMapTest {
     }
 
     @Test
-    public void testAppendMap() {
+    public void appendMap() {
         MergedMap<String, Object> map = new MergedMap<>();
         Map<String, Object> sub = new HashMap<>();
         sub.put("b", 2);
@@ -68,7 +70,7 @@ public class MergedMapTest {
     }
 
     @Test
-    public void testAppendMapWithLock() {
+    public void appendMapWithLock() {
         MergedMap<String, Object> map = new MergedMap<>();
         Map<String, Object> sub = new HashMap<>();
         sub.put("x", 10);
@@ -84,7 +86,7 @@ public class MergedMapTest {
     }
 
     @Test
-    public void testClearWithLock() {
+    public void clearLocked() {
         MergedMap<String, Object> map = new MergedMap<>();
         Map<String, Object> sub = new LinkedHashMap<>();
         sub.put("x", 10);
@@ -98,7 +100,7 @@ public class MergedMapTest {
     }
 
     @Test
-    public void testClearWithoutLock() {
+    public void clearUnlocked() {
         MergedMap<String, Object> map = new MergedMap<>();
         Map<String, Object> sub = new HashMap<>();
         sub.put("x", 10);
@@ -109,7 +111,7 @@ public class MergedMapTest {
     }
 
     @Test
-    public void testRemove() {
+    public void remove() {
         MergedMap<String, Object> map = new MergedMap<>();
         map.put("a", 1);
         assertEquals(1, map.remove("a"));
@@ -118,7 +120,7 @@ public class MergedMapTest {
     }
 
     @Test
-    public void testRemoveFromSubMap() {
+    public void removeFromSubMap() {
         MergedMap<String, Object> map = new MergedMap<>();
         Map<String, Object> sub = new HashMap<>();
         sub.put("b", 2);
@@ -129,7 +131,7 @@ public class MergedMapTest {
     }
 
     @Test
-    public void testPutAll() {
+    public void putAll() {
         MergedMap<String, Object> map = new MergedMap<>();
         Map<String, Object> src = new HashMap<>();
         src.put("a", 1);
@@ -142,7 +144,7 @@ public class MergedMapTest {
     }
 
     @Test
-    public void testKeySet() {
+    public void keySet() {
         MergedMap<String, Object> map = new MergedMap<>();
         map.put("a", 1);
         Map<String, Object> sub = new HashMap<>();
@@ -156,7 +158,7 @@ public class MergedMapTest {
     }
 
     @Test
-    public void testValues() {
+    public void values() {
         MergedMap<String, Object> map = new MergedMap<>();
         map.put("a", 1);
         Map<String, Object> sub = new HashMap<>();
@@ -170,7 +172,7 @@ public class MergedMapTest {
     }
 
     @Test
-    public void testEntrySet() {
+    public void entrySet() {
         MergedMap<String, Object> map = new MergedMap<>();
         map.put("a", 1);
         Map<String, Object> sub = new HashMap<>();
@@ -188,7 +190,7 @@ public class MergedMapTest {
     }
 
     @Test
-    public void testPutIntoSubMap() {
+    public void putIntoSubMap() {
         MergedMap<String, Object> map = new MergedMap<>();
         Map<String, Object> sub = new HashMap<>();
         sub.put("b", 2);
@@ -201,14 +203,14 @@ public class MergedMapTest {
     }
 
     @Test
-    public void testNullAppend() {
+    public void appendNull() {
         MergedMap<String, Object> map = new MergedMap<>();
         map.appendMap(null, false);
         assertTrue(map.isEmpty());
     }
 
     @Test
-    public void testMultipleSubMaps() {
+    public void multipleSubMaps() {
         MergedMap<String, Object> map = new MergedMap<>();
         map.put("root", 0);
 
@@ -227,7 +229,7 @@ public class MergedMapTest {
     }
 
     @Test
-    public void testOverrideFromParent() {
+    public void overrideFromParent() {
         MergedMap<String, Object> map = new MergedMap<>();
         map.put("shared", "parent");
 
@@ -240,7 +242,7 @@ public class MergedMapTest {
     }
 
     @Test
-    public void testRemoveNonExistent() {
+    public void removeNonExistent() {
         MergedMap<String, Object> map = new MergedMap<>();
         assertNull(map.remove("nonexistent"));
     }

@@ -1,7 +1,6 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.sql.CallableStatement;
-import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
@@ -12,7 +11,7 @@ import java.util.Map;
 import net.hasor.dataql.sqlproc.types.time.SqlTimestampAsYearMonthTypeHandler;
 import org.junit.Test;
 
-public class SqlTimestampAsYearMonthTypeHandlerTest extends AbstractSqlProcTest {
+public class SqlTimestampAsYearMonthTypeHandlerTest extends TypeHandlerMockSupport {
     @Test
     public void testSqlTimestampAsYearMonthTypeHandler() throws Throwable {
         SqlTimestampAsYearMonthTypeHandler handler = new SqlTimestampAsYearMonthTypeHandler();

@@ -1,12 +1,11 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.sql.PreparedStatement;
-import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.sql.ResultSet;
 import net.hasor.dataql.sqlproc.types.ObjectTypeHandler;
 import org.junit.Test;
 
-public class ObjectTypeHandlerTest extends AbstractSqlProcTest {
+public class ObjectTypeHandlerTest extends TypeHandlerMockSupport {
     @Test
     public void testObject() throws Throwable {
         String val = "testObject";

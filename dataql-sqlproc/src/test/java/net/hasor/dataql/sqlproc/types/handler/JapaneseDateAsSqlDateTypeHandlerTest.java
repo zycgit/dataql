@@ -1,7 +1,6 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.sql.CallableStatement;
-import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
@@ -11,7 +10,7 @@ import java.util.Map;
 import net.hasor.dataql.sqlproc.types.time.JapaneseDateAsSqlDateTypeHandler;
 import org.junit.Test;
 
-public class JapaneseDateAsSqlDateTypeHandlerTest extends AbstractSqlProcTest {
+public class JapaneseDateAsSqlDateTypeHandlerTest extends TypeHandlerMockSupport {
 
     @Test
     public void testJapaneseDateAsSqlDate() throws Throwable {
@@ -31,7 +30,7 @@ public class JapaneseDateAsSqlDateTypeHandlerTest extends AbstractSqlProcTest {
         JapaneseDateAsSqlDateTypeHandler handler = new JapaneseDateAsSqlDateTypeHandler();
 
         // Static helpers
-        assert JapaneseDateAsSqlDateTypeHandler.toJapaneseDate((java.sql.Date) null) == null;
+        assert JapaneseDateAsSqlDateTypeHandler.toJapaneseDate(null) == null;
         assert JapaneseDateAsSqlDateTypeHandler.toJapaneseDate((java.util.Date) null) == null;
 
         java.sql.Date sqlDate = java.sql.Date.valueOf(LocalDate.of(2023, 1, 1));

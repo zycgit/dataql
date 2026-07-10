@@ -1,12 +1,11 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.sql.PreparedStatement;
-import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.sql.ResultSet;
 import net.hasor.dataql.sqlproc.types.time.SqlTimestampAsMonthTypeHandler;
 import org.junit.Test;
 
-public class SqlTimestampAsMonthTypeHandlerTest extends AbstractSqlProcTest {
+public class SqlTimestampAsMonthTypeHandlerTest extends TypeHandlerMockSupport {
     @Test
     public void testMonth() throws Throwable {
         java.time.Month val = java.time.Month.MAY;

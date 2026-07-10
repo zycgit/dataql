@@ -7,40 +7,42 @@ import java.util.List;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.function.EFunction;
 import net.hasor.cobble.io.IOUtils;
+import net.hasor.dataql.HintNames;
 import net.hasor.dataql.Hints;
+import net.hasor.dataql.runtime.HintsProxy;
+import net.hasor.dataql.sqlproc.ConfigFormatType;
+import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
 
 /**
- * 通用 SQL FragmentProcess（@@execute），自动推断查询类型，同时支持 @@type 前缀显式覆盖。
+ * SQL FragmentProcess 实现。通过 {@link #inferQueryType(String)} 自动推断查询类型，
+ * 同时支持 @@type 前缀显式覆盖。
  */
 public class ExecuteFragmentProcess extends AbstractSqlFragment {
-    public ExecuteFragmentProcess(EFunction<String, Connection, SQLException> c) {
-        this("execute", c);
-    }
-
-    public ExecuteFragmentProcess(String fragmentCommand, EFunction<String, Connection, SQLException> c) {
-        super(fragmentCommand, c);
+    public ExecuteFragmentProcess(EFunction<String, Connection, SQLException> c, QueryContext queryContext) {
+        super(c, queryContext);
     }
 
     @Override
     protected QueryType queryType(String fragmentString, Hints hints) {
-        QueryType explicit = parseExplicitType(fragmentString);
-        return explicit != null ? explicit : inferQueryType(fragmentString);
+        FragmentBody fragmentBody = parseFragmentBody(fragmentString);
+        return fragmentBody.queryType != null ? fragmentBody.queryType : inferQueryType(fragmentString);
     }
 
     @Override
     protected SqlConfig buildConfig(String fragmentString, Hints hints) {
-        return this.buildConfig("execute", fragmentString, hints);
-    }
-
-    @Override
-    protected SqlConfig buildConfig(String fragmentCommand, String fragmentString, Hints hints) {
-        if (parseExplicitType(fragmentString) != null) {
-            return super.buildConfig(fragmentCommand, stripAtPrefix(fragmentString), hints);
-        } else {
-            return super.buildConfig(fragmentCommand, fragmentString, hints);
+        FragmentBody fragmentBody = parseFragmentBody(fragmentString);
+        if (fragmentBody.queryType != null) {
+            return super.buildConfig(fragmentBody.fragmentString, typeHints(hints, fragmentBody.queryType));
         }
+
+        Object hintValue = hints.getHint(HintNames.FRAGMENT_TYPE.name());
+        if (hintValue != null && StringUtils.isNotBlank(hintValue.toString())) {
+            return super.buildConfig(fragmentString, hints);
+        }
+
+        return super.buildConfig(fragmentString, typeHints(hints, inferQueryType(fragmentString)));
     }
 
     // ----------------------------------------------------------------
@@ -48,27 +50,32 @@ public class ExecuteFragmentProcess extends AbstractSqlFragment {
     // ----------------------------------------------------------------
 
     public static QueryType parseExplicitType(String fragmentString) {
-        if (fragmentString == null || !fragmentString.contains("@@")) {
-            return null;
-        }
-
-        int idx = fragmentString.indexOf("@@");
-        StringBuilder sb = new StringBuilder();
-        for (int i = idx + 2; i < fragmentString.length() && Character.isJavaIdentifierPart(fragmentString.charAt(i)); i++) {
-            sb.append(fragmentString.charAt(i));
-        }
-
-        return sb.isEmpty() ? null : QueryType.valueOfTag(sb.toString());
+        return parseFragmentBody(fragmentString).queryType;
     }
 
-    private static String stripAtPrefix(String s) {
-        int idx = s.indexOf("@@");
-        int end = idx + 2;
-        while (end < s.length() && Character.isJavaIdentifierPart(s.charAt(end))) {
-            end++;
+    private static FragmentBody parseFragmentBody(String fragmentString) {
+        if (fragmentString == null) {
+            return new FragmentBody(null, null);
         }
 
-        return s.substring(end).stripLeading();
+        String fragmentBody = fragmentString.stripLeading();
+        if (!fragmentBody.startsWith("@@")) {
+            return new FragmentBody(null, fragmentString);
+        }
+
+        int idx = 2;
+        StringBuilder sb = new StringBuilder();
+        for (int i = idx; i < fragmentBody.length() && Character.isJavaIdentifierPart(fragmentBody.charAt(i)); i++) {
+            sb.append(fragmentBody.charAt(i));
+        }
+
+        QueryType queryType = sb.isEmpty() ? null : QueryType.valueOfTag(sb.toString());
+        if (queryType == null) {
+            return new FragmentBody(null, fragmentString);
+        }
+
+        String sqlBody = fragmentBody.substring(idx + sb.length()).stripLeading();
+        return new FragmentBody(queryType, sqlBody);
     }
 
     public static QueryType inferQueryType(String fragmentString) {
@@ -106,19 +113,49 @@ public class ExecuteFragmentProcess extends AbstractSqlFragment {
             if (StringUtils.isBlank(line))
                 continue;
 
-            String lower = line.toLowerCase();
-            if (lower.startsWith("insert") || lower.startsWith("replace"))
-                return QueryType.Insert;
-            if (lower.startsWith("update"))
-                return QueryType.Update;
-            if (lower.startsWith("delete"))
-                return QueryType.Delete;
-            if (lower.startsWith("select") || lower.startsWith("with"))
-                return QueryType.Select;
-            if (lower.startsWith("call") || lower.startsWith("exec") || lower.startsWith("{call"))
-                return QueryType.Call;
-            return QueryType.Execute;
+            return valueOfSql(line);
         }
         return QueryType.Execute;
+    }
+
+    private Hints typeHints(Hints hints, QueryType queryType) {
+        Object hintValue = hints.getHint(HintNames.FRAGMENT_TYPE.name());
+        String fragmentType = hintValue == null ? null : hintValue.toString();
+        ConfigFormatType formatType = this.resolveFormatType(fragmentType);
+        String proxyFragmentType = queryType.getTagString() + (formatType == ConfigFormatType.Xml ? "Xml" : "Sql");
+        return new HintsProxy(hints) {
+            @Override
+            public Object getHint(String optionKey) {
+                if (HintNames.FRAGMENT_TYPE.name().equals(optionKey)) {
+                    return proxyFragmentType;
+                }
+                return super.getHint(optionKey);
+            }
+        };
+    }
+
+    private static QueryType valueOfSql(String sqlString) {
+        String lower = sqlString.toLowerCase();
+        if (lower.startsWith("insert") || lower.startsWith("replace"))
+            return QueryType.Insert;
+        if (lower.startsWith("update"))
+            return QueryType.Update;
+        if (lower.startsWith("delete"))
+            return QueryType.Delete;
+        if (lower.startsWith("select") || lower.startsWith("with"))
+            return QueryType.Select;
+        if (lower.startsWith("call") || lower.startsWith("exec") || lower.startsWith("{call"))
+            return QueryType.Call;
+        return QueryType.Execute;
+    }
+
+    private static class FragmentBody {
+        private final QueryType queryType;
+        private final String    fragmentString;
+
+        private FragmentBody(QueryType queryType, String fragmentString) {
+            this.queryType = queryType;
+            this.fragmentString = fragmentString;
+        }
     }
 }

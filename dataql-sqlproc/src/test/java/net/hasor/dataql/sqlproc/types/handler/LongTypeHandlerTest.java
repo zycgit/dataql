@@ -1,7 +1,6 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.sql.CallableStatement;
-import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.HashMap;
@@ -9,7 +8,7 @@ import java.util.Map;
 import net.hasor.dataql.sqlproc.types.number.LongTypeHandler;
 import org.junit.Test;
 
-public class LongTypeHandlerTest extends AbstractSqlProcTest {
+public class LongTypeHandlerTest extends TypeHandlerMockSupport {
 
     @Test
     public void testLongTypeHandler_CallableStatement() throws Throwable {

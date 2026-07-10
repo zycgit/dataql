@@ -1,13 +1,12 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.sql.CallableStatement;
-import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.util.HashMap;
 import java.util.Map;
 import net.hasor.dataql.sqlproc.types.time.SqlTimeTypeHandler;
 import org.junit.Test;
 
-public class SqlTimeTypeHandlerTest extends AbstractSqlProcTest {
+public class SqlTimeTypeHandlerTest extends TypeHandlerMockSupport {
     @Test
     public void testSqlTimeTypeHandler_CallableStatement() throws Throwable {
         SqlTimeTypeHandler handler = new SqlTimeTypeHandler();

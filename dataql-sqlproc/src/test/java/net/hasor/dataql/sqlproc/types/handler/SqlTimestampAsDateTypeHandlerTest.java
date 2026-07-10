@@ -1,7 +1,6 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.sql.CallableStatement;
-import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
@@ -10,7 +9,7 @@ import java.util.Map;
 import net.hasor.dataql.sqlproc.types.time.SqlTimestampAsDateTypeHandler;
 import org.junit.Test;
 
-public class SqlTimestampAsDateTypeHandlerTest extends AbstractSqlProcTest {
+public class SqlTimestampAsDateTypeHandlerTest extends TypeHandlerMockSupport {
     @Test
     public void testSqlTimestampAsDateTypeHandler_CallableStatement() throws Throwable {
         SqlTimestampAsDateTypeHandler handler = new SqlTimestampAsDateTypeHandler(); // Uses getTimestamp usually

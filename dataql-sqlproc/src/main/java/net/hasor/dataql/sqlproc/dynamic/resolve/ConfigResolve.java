@@ -15,6 +15,7 @@
  */
 package net.hasor.dataql.sqlproc.dynamic.resolve;
 import net.hasor.dataql.Hints;
+import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dynamic.config.*;
 import net.hasor.dataql.sqlproc.dynamic.logic.ArrayDynamicSql;
 
@@ -24,22 +25,28 @@ import net.hasor.dataql.sqlproc.dynamic.logic.ArrayDynamicSql;
  * @version : 2021-06-05
  */
 public abstract class ConfigResolve {
+    public static final SqlHintNames[] CONFIG_HINTS = new SqlHintNames[] { //
+            SqlHintNames.FRAGMENT_SQL_STATEMENT,       //
+            SqlHintNames.FRAGMENT_SQL_TIMEOUT,         //
+            SqlHintNames.FRAGMENT_SQL_FETCH_SIZE,      //
+            SqlHintNames.FRAGMENT_SQL_RESULT_SET_TYPE, //
+            SqlHintNames.FRAGMENT_SQL_BIND_OUT,        //
+            SqlHintNames.FRAGMENT_SQL_KEY_GENERATED,   //
+            SqlHintNames.FRAGMENT_SQL_KEY_PROPERTY,    //
+            SqlHintNames.FRAGMENT_SQL_KEY_COLUMN,      //
+            SqlHintNames.FRAGMENT_SQL_ORDER            //
+    };
+
     public abstract SqlConfig parseConfig(String fragmentName, Hints hint, String config);
 
     protected SqlConfig createConfig(QueryType queryType, Hints hint, ArrayDynamicSql dynamicSql) {
-        switch (queryType) {
-            case Insert:
-                return new InsertConfig(dynamicSql, hint);
-            case Delete:
-                return new DeleteConfig(dynamicSql, hint);
-            case Update:
-                return new UpdateConfig(dynamicSql, hint);
-            case Execute:
-                return new ExecuteConfig(dynamicSql, hint);
-            case Select:
-                return new SelectConfig(dynamicSql, hint);
-            default:
-                throw new UnsupportedOperationException("queryType '" + queryType.name() + "' Unsupported.");
-        }
+        return switch (queryType) {
+            case Insert -> new InsertConfig(dynamicSql, hint);
+            case Delete -> new DeleteConfig(dynamicSql, hint);
+            case Update -> new UpdateConfig(dynamicSql, hint);
+            case Execute, Call -> new ExecuteConfig(dynamicSql, hint);
+            case Select -> new SelectConfig(dynamicSql, hint);
+            default -> throw new UnsupportedOperationException("queryType '" + queryType.name() + "' Unsupported.");
+        };
     }
 }

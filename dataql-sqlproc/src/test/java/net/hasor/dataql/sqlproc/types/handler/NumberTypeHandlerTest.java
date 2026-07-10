@@ -1,13 +1,12 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.sql.CallableStatement;
-import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.util.HashMap;
 import java.util.Map;
 import net.hasor.dataql.sqlproc.types.number.NumberTypeHandler;
 import org.junit.Test;
 
-public class NumberTypeHandlerTest extends AbstractSqlProcTest {
+public class NumberTypeHandlerTest extends TypeHandlerMockSupport {
 
     @Test(expected = java.sql.SQLException.class)
     public void testSetParameter() throws Throwable {

@@ -15,26 +15,26 @@
  */
 package net.hasor.dataql.sqlproc;
 
-import net.hasor.dataql.sqlproc.dynamic.DynamicSql;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.UUID;
+import net.hasor.dataql.runtime.HintsSet;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
-import net.hasor.dataql.sqlproc.dynamic.rule.SqlRule;
-import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
+import net.hasor.dataql.sqlproc.dynamic.config.InsertConfig;
+import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
+import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
+import net.hasor.dataql.sqlproc.dynamic.config.StatementType;
+import net.hasor.dataql.sqlproc.dynamic.resolve.ConfigResolveRoot;
+import net.hasor.dataql.sqlproc.execute.SqlQueryContext;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
 import org.junit.After;
 import org.junit.Before;
 
-import java.lang.reflect.Proxy;
-import java.sql.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.function.Consumer;
-
 /**
  * 统一的 SQL 相关测试基类，提供：
  *   - H2 连接生命周期管理 ({@link #conn})
- *   - JDBC mock 工具 (CallableStatement / PreparedStatement / ResultSet)
  *   - {@link QueryContext} 工厂方法
  *   - 便捷的 H2 连接创建方法
  */
@@ -61,8 +61,7 @@ public abstract class AbstractSqlProcTest {
 
     /** 创建一个独立的 H2 内存连接（不会影响 {@link #conn}），不使用预置的 tb_h2_types 表。 */
     protected Connection newH2Connection() throws SQLException {
-        return DriverManager.getConnection(
-                "jdbc:h2:mem:test_" + UUID.randomUUID().toString().substring(0, 8), "sa", "");
+        return DriverManager.getConnection("jdbc:h2:mem:test_" + UUID.randomUUID().toString().substring(0, 8), "sa", "");
     }
 
     /** 创建一个包含 users 表的 H2 连接。 */
@@ -81,68 +80,95 @@ public abstract class AbstractSqlProcTest {
         }
     }
 
-    // ----------------------------------------------------------------
-    // JDBC mock helpers
-    // ----------------------------------------------------------------
-
-    /** 创建一个 mock CallableStatement，根据传入的 Map 返回 getXxx 的结果。 */
-    @SuppressWarnings("unchecked")
-    protected CallableStatement mockCallableStatement(Map<String, Object> returnValues) {
-        return (CallableStatement) Proxy.newProxyInstance(
-                getClass().getClassLoader(), new Class[]{CallableStatement.class},
-                (proxy, method, args) -> {
-                    String name = method.getName();
-                    if (name.startsWith("get") && args != null && args.length > 0) {
-                        Object val = returnValues.get(name);
-                        if (val != null) return val;
-                        if ("getObject".equals(name)) return returnValues.get("default");
-                    }
-                    if ("wasNull".equals(name)) {
-                        return returnValues.getOrDefault("wasNull", false);
-                    }
-                    return null;
-                });
-    }
-
-    /** 创建一个 mock PreparedStatement，将 setXxx 参数捕获到 captured Map 中。 */
-    protected PreparedStatement mockPreparedStatement(Map<Integer, Object> captured) {
-        return (PreparedStatement) Proxy.newProxyInstance(
-                getClass().getClassLoader(), new Class[]{PreparedStatement.class},
-                (proxy, method, args) -> {
-                    if (method.getName().startsWith("set") && args.length >= 2) {
-                        captured.put((Integer) args[0], args[1]);
-                    }
-                    return null;
-                });
-    }
-
-    /** 创建一个 mock ResultSet，根据传入的 Map 返回 getXxx 的结果。 */
-    protected ResultSet mockResultSet(Map<String, Object> values) {
-        return (ResultSet) Proxy.newProxyInstance(
-                getClass().getClassLoader(), new Class[]{ResultSet.class},
-                (proxy, method, args) -> {
-                    String name = method.getName();
-                    if (name.startsWith("get")) {
-                        if (values.containsKey(name)) return values.get(name);
-                        if (values.containsKey("default")) return values.get("default");
-                    }
-                    if ("wasNull".equals(name)) return values.getOrDefault("wasNull", false);
-                    return null;
-                });
-    }
-
-    // ----------------------------------------------------------------
-    // QueryContext
-    // ----------------------------------------------------------------
-
-    /** 创建一个最小实现的 QueryContext，可用于无需规则/宏的动态 SQL 编译。 */
+    /** 创建 SQL 执行测试使用的 QueryContext。 */
     protected QueryContext newQueryContext() {
-        return new QueryContext() {
-            public TypeHandlerRegistry getTypeRegistry() { return TypeHandlerRegistry.DEFAULT; }
-            public ClassLoader getClassLoader() { return getClass().getClassLoader(); }
-            public SqlRule findRule(String ruleName) { return null; }
-            public DynamicSql findMacro(String name) { return null; }
-            public Class<?> loadClass(String typeName) throws ClassNotFoundException { return Class.forName(typeName); }
-        };
+        return new SqlQueryContext();
+    }
+
+    // ----------------------------------------------------------------
+    // SqlConfig helpers
+    // ----------------------------------------------------------------
+
+    protected HintsSet hints() {
+        return new HintsSet();
+    }
+
+    protected HintsSet hints(String key, String value) {
+        HintsSet hints = hints();
+        hints.setHint(key, value);
+        return hints;
+    }
+
+    protected HintsSet hints(String key, Number value) {
+        HintsSet hints = hints();
+        hints.setHint(key, value);
+        return hints;
+    }
+
+    protected HintsSet hints(String key, boolean value) {
+        HintsSet hints = hints();
+        hints.setHint(key, value);
+        return hints;
+    }
+
+    protected HintsSet statementHints(StatementType statementType) {
+        HintsSet hints = hints();
+        if (statementType != null && statementType != StatementType.Prepared) {
+            hints.setHint("statementType", statementType.getValue());
+        }
+        return hints;
+    }
+
+    protected SqlConfig sqlConfig(QueryType type, String sql) {
+        return sqlConfig(type, hints(), sql);
+    }
+
+    protected SqlConfig sqlConfig(QueryType type, HintsSet hints, String sql) {
+        return new ConfigResolveRoot().parsePlainConfig(type.getTagString(), hints, sql);
+    }
+
+    protected SqlConfig xmlConfig(QueryType type, String xml) {
+        return xmlConfig(type, hints(), xml);
+    }
+
+    protected SqlConfig xmlConfig(QueryType type, HintsSet hints, String xml) {
+        return new ConfigResolveRoot().parseXmlConfig(type.getTagString(), hints, xml);
+    }
+
+    protected SqlConfig usersSelectConfig() {
+        return usersSelectConfig(null);
+    }
+
+    protected SqlConfig usersSelectConfig(StatementType statementType) {
+        return sqlConfig(QueryType.Select, statementHints(statementType), "SELECT id, name, age FROM users");
+    }
+
+    protected SqlConfig aliceSelectConfig() {
+        return sqlConfig(QueryType.Select, "SELECT id, name, age FROM users WHERE name = 'Alice'");
+    }
+
+    protected SqlConfig insertUserConfig() {
+        return sqlConfig(QueryType.Insert, "INSERT INTO users (name, age) VALUES ('Test', 99)");
+    }
+
+    protected SqlConfig updateAliceConfig() {
+        return sqlConfig(QueryType.Update, "UPDATE users SET age = 100 WHERE name = 'Alice'");
+    }
+
+    protected SqlConfig deleteNoUserConfig() {
+        return sqlConfig(QueryType.Delete, "DELETE FROM users WHERE id > 100");
+    }
+
+    protected InsertConfig insertWithSelectKeyConfig(String selectKeySql, String keyProperty, String keyColumn, String order) {
+        StringBuilder xml = new StringBuilder();
+        xml.append("INSERT INTO users (name, age) VALUES ('Test', 99)");
+        xml.append("<selectKey keyProperty=\"").append(keyProperty).append("\"");
+        if (keyColumn != null) {
+            xml.append(" keyColumn=\"").append(keyColumn).append("\"");
+        }
+        xml.append(" order=\"").append(order).append("\">");
+        xml.append(selectKeySql);
+        xml.append("</selectKey>");
+        return (InsertConfig) xmlConfig(QueryType.Insert, xml.toString());
     }
 }

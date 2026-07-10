@@ -1,7 +1,6 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.sql.CallableStatement;
-import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.OffsetDateTime;
@@ -11,7 +10,7 @@ import java.util.Map;
 import net.hasor.dataql.sqlproc.types.time.OffsetDateTimeAsZonedDateTimeTypeHandler;
 import org.junit.Test;
 
-public class OffsetDateTimeAsZonedDateTimeTypeHandlerTest extends AbstractSqlProcTest {
+public class OffsetDateTimeAsZonedDateTimeTypeHandlerTest extends TypeHandlerMockSupport {
     @Test
     public void testOffsetDateTimeAsZonedDateTime() throws Throwable {
         OffsetDateTimeAsZonedDateTimeTypeHandler handler = new OffsetDateTimeAsZonedDateTimeTypeHandler();
