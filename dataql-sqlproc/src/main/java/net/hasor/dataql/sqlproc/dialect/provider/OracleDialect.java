@@ -36,13 +36,10 @@ public class OracleDialect extends AbstractDialect {
         String sqlString = boundSql.getSqlString();
         List<Object> paramArrays = new ArrayList<>(Arrays.asList(boundSql.getArgs()));
 
-        StringBuilder sqlBuilder = new StringBuilder();
-        sqlBuilder.append("SELECT * FROM ( SELECT TMP.*, ROWNUM ROW_ID FROM ( ");
-        sqlBuilder.append(sqlString);
-        sqlBuilder.append(" ) TMP WHERE ROWNUM <= ? ) WHERE ROW_ID > ?");
+        String sqlBuilder = "SELECT * FROM ( SELECT TMP.*, ROWNUM ROW_ID FROM ( " + sqlString + " ) TMP WHERE ROWNUM <= ? ) WHERE ROW_ID > ?";
 
         paramArrays.add(start + limit);
         paramArrays.add(start);
-        return new BoundSql.BoundSqlObj(sqlBuilder.toString(), paramArrays.toArray());
+        return new BoundSql.BoundSqlObj(sqlBuilder, paramArrays.toArray());
     }
 }

@@ -21,7 +21,7 @@ import java.util.Map;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.convert.ConverterBean;
 import net.hasor.cobble.ref.BeanMap;
-import net.hasor.dataql.Hints;
+import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.sqlproc.dynamic.config.SelectKeyConfig;
 
 /**

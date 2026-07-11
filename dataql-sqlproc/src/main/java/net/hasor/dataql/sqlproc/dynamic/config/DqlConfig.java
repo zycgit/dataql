@@ -16,7 +16,7 @@
 package net.hasor.dataql.sqlproc.dynamic.config;
 import net.hasor.cobble.ArrayUtils;
 import net.hasor.cobble.StringUtils;
-import net.hasor.dataql.Hints;
+import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dynamic.logic.ArrayDynamicSql;
 

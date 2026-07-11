@@ -14,20 +14,39 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.execute;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Objects;
+import java.util.ServiceLoader;
 import net.hasor.cobble.ClassUtils;
+import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.sqlproc.dynamic.DynamicSql;
 import net.hasor.dataql.sqlproc.dynamic.MacroRegistry;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.rule.RuleRegistry;
 import net.hasor.dataql.sqlproc.dynamic.rule.SqlRule;
+import net.hasor.dataql.sqlproc.spi.LookupConnectionListener;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 
 public class SqlQueryContext implements QueryContext {
-    private TypeHandlerRegistry typeRegistry  = TypeHandlerRegistry.DEFAULT;
+    private final ConnectionFinder    connection;
+    private       TypeHandlerRegistry typeRegistry  = TypeHandlerRegistry.DEFAULT;
     private MacroRegistry       macroRegistry = new MacroRegistry();
     private RuleRegistry        ruleRegistry  = new RuleRegistry();
     private ClassLoader         classLoader   = SqlQueryContext.class.getClassLoader();
+
+    public SqlQueryContext() {
+        this(SqlQueryContext::lookupConnection);
+    }
+
+    public SqlQueryContext(ConnectionFinder connection) {
+        this.connection = Objects.requireNonNull(connection, "connectionFinder is null.");
+    }
+
+    @Override
+    public Connection findConnection(String sourceName, Hints hints) throws SQLException {
+        return this.connection.findConnection(sourceName, hints);
+    }
 
     public MacroRegistry getMacroRegistry() {
         return this.macroRegistry;
@@ -80,5 +99,20 @@ public class SqlQueryContext implements QueryContext {
 
     public void addMacro(String name, String segment) {
         this.macroRegistry.register(name, segment);
+    }
+
+    private static Connection lookupConnection(String sourceName, Hints hints) throws SQLException {
+        for (LookupConnectionListener listener : ServiceLoader.load(LookupConnectionListener.class)) {
+            Connection connection = listener.lookUp(sourceName);
+            if (connection != null) {
+                return connection;
+            }
+        }
+        throw new SQLException("connection '" + sourceName + "' not configured");
+    }
+
+    @FunctionalInterface
+    public interface ConnectionFinder {
+        Connection findConnection(String sourceName, Hints hints) throws SQLException;
     }
 }

@@ -19,17 +19,17 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
 import net.hasor.cobble.convert.ConverterUtils;
-import net.hasor.cobble.function.EFunction;
-import net.hasor.dataql.Hints;
-import net.hasor.dataql.UdfSourceAssembly;
+import net.hasor.dataql.domain.Hints;
+import net.hasor.dataql.host.function.AbstractUdfSource;
 import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dialect.PageObject;
 import net.hasor.dataql.sqlproc.dialect.PageResult;
+import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
 import net.hasor.dataql.sqlproc.execute.RootStatement;
 
 /**
- * 延迟分页查询对象，实现 {@link UdfSourceAssembly} 使其可在 DataQL 脚本中调用。
+ * 延迟分页查询对象，继承 {@link AbstractUdfSource} 使其可在 DataQL 脚本中调用。
  *
  * <pre>{@code
  *   // DataQL 脚本中：
@@ -38,22 +38,27 @@ import net.hasor.dataql.sqlproc.execute.RootStatement;
  *   return pageQuery.data();
  * }</pre>
  */
-public class PageQuery implements UdfSourceAssembly {
-    private final EFunction<String, Connection, SQLException> connection;
-    private final Hints                                       hints;
-    private final SqlConfig                                   sqlConfig;
-    private final Map<String, Object>                         params;
-    private final RootStatement                               rootStatement;
-    private final PageObject                                  pageInfo;
-    private       PageResult<Object>                          pageResult;
+public class PageQuery extends AbstractUdfSource {
+    private final QueryContext        queryContext;
+    private final Hints               hints;
+    private final SqlConfig           sqlConfig;
+    private final Map<String, Object> params;
+    private final RootStatement       rootStatement;
+    private final PageObject          pageInfo;
+    private       PageResult<Object>  pageResult;
 
-    public PageQuery(EFunction<String, Connection, SQLException> connection, Hints hints, SqlConfig sqlConfig, Map<String, Object> params, RootStatement rootStatement, PageObject pageInfo) {
-        this.connection = connection;
+    public PageQuery(QueryContext queryContext, Hints hints, SqlConfig sqlConfig, Map<String, Object> params, RootStatement rootStatement, PageObject pageInfo) {
+        this.queryContext = queryContext;
         this.hints = hints;
         this.sqlConfig = sqlConfig;
         this.params = params;
         this.rootStatement = rootStatement;
         this.pageInfo = pageInfo;
+    }
+
+    @Override
+    public <T> T get(Class<? extends T> targetType) {
+        return targetType.cast(this);
     }
 
     // ----------------------------------------------------------------
@@ -128,7 +133,7 @@ public class PageQuery implements UdfSourceAssembly {
 
     private void fetchData() throws SQLException {
         String sourceName = SqlHintNames.getValue(hints, SqlHintNames.FRAGMENT_SQL_DATA_SOURCE);
-        try (Connection conn = this.connection.eApply(sourceName)) {
+        try (Connection conn = this.queryContext.findConnection(sourceName, this.hints)) {
             this.pageResult = (PageResult<Object>) this.rootStatement.execute(conn, this.hints, this.sqlConfig, this.params, this.pageInfo, true);
         }
     }

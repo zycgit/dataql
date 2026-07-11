@@ -21,16 +21,7 @@ import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
 import net.hasor.dataql.sqlproc.dynamic.rule.ArgRule;
 
-public class PositionSqlSegment implements SqlSegment {
-    private final int position;
-
-    public PositionSqlSegment(int position) {
-        this.position = position;
-    }
-
-    public int getPosition() {
-        return this.position;
-    }
+public record PositionSqlSegment(int position) implements SqlSegment {
 
     @Override
     public void buildQuery(SqlArgSource data, QueryContext context, SqlBuilder sqlBuilder) throws SQLException {

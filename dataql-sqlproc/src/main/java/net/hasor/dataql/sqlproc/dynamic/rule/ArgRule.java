@@ -82,7 +82,7 @@ public class ArgRule implements SqlRule {
 
         boolean noExpr = StringUtils.contains(testSplit[0], "=");
         String expr = noExpr ? "" : testSplit[0];
-        Map<String, String> config = ArgRule.INSTANCE.parserConfig(testSplit, noExpr ? 0 : 1, testSplit.length);
+        Map<String, String> config = parserConfig(testSplit, noExpr ? 0 : 1, testSplit.length);
 
         this.executeRule(data, context, sqlBuilder, expr, config);
     }

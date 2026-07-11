@@ -21,7 +21,7 @@ import net.hasor.cobble.ClassUtils;
 import net.hasor.cobble.ResourcesUtils;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.ref.LinkedCaseInsensitiveMap;
-import net.hasor.dataql.Hints;
+import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dialect.provider.*;
 

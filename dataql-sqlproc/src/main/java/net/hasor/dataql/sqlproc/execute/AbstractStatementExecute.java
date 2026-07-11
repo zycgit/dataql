@@ -23,7 +23,7 @@ import net.hasor.cobble.ArrayUtils;
 import net.hasor.cobble.ExceptionUtils;
 import net.hasor.cobble.logging.Logger;
 import net.hasor.cobble.logging.LoggerFactory;
-import net.hasor.dataql.Hints;
+import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.sqlproc.ColumnCaseType;
 import net.hasor.dataql.sqlproc.OpenPackageType;
 import net.hasor.dataql.sqlproc.SqlHintNames;
@@ -34,6 +34,8 @@ import net.hasor.dataql.sqlproc.dynamic.config.DmlConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.DqlConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.ExecuteConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
+import net.hasor.dataql.sqlproc.spi.FxSqlInfo;
+import net.hasor.dataql.sqlproc.spi.SqlExecutionInterceptor;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 
 /**
@@ -42,13 +44,15 @@ import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
  * @version 2021-07-20
  */
 public abstract class AbstractStatementExecute {
-    protected static final Logger             logger = LoggerFactory.getLogger(AbstractStatementExecute.class);
-    protected final        QueryContext       context;
-    protected final        MapResultExtractor extractor;
+    protected static final Logger                        logger = LoggerFactory.getLogger(AbstractStatementExecute.class);
+    protected final        QueryContext                  context;
+    protected final        MapResultExtractor            extractor;
+    private final          List<SqlExecutionInterceptor> executionInterceptors;
 
     public AbstractStatementExecute(QueryContext context) {
         this.context = context;
         this.extractor = new MapResultExtractor(context.getTypeRegistry());
+        this.executionInterceptors = SqlExecutionChain.load(context.getClassLoader());
     }
 
     protected void doCheck(Connection conn, Hints hints, SqlConfig config, Map<String, Object> data, Page pageInfo) throws SQLException {
@@ -97,21 +101,39 @@ public abstract class AbstractStatementExecute {
             resultCount = pageInfo.getTotalCount(); // old value
         }
 
+        String sourceName = SqlHintNames.getValue(hints, SqlHintNames.FRAGMENT_SQL_DATA_SOURCE);
+
         // query count
         if (countSql != null && pageResult) {
-            try (PreparedStatement stat = conn.prepareStatement(countSql.getSqlString())) {
-                if (logger.isTraceEnabled()) {
-                    logger.trace(ExecuteHelper.fmtBoundSql(countSql).toString());
-                }
-                this.configStatement(stat, config);
-                resultCount = this.executeCount(stat, countSql.getArgs());
-            } catch (SQLException e) {
-                logger.error("executeCount failed, " + ExceptionUtils.getRootCauseMessage(e) + ", " + ExecuteHelper.fmtBoundSql(countSql), e);
-                throw e;
+            BoundSql finalCountSql = countSql;
+            FxSqlInfo countInfo = new FxSqlInfo(false, sourceName, finalCountSql.getSqlString(), finalCountSql.getArgs());
+            Object countResult = SqlExecutionChain.execute(this.executionInterceptors, countInfo, () -> this.executeCountSql(conn, config, finalCountSql));
+            if (!(countResult instanceof Number)) {
+                throw new SQLException("Count SQL interceptor result must be a Number.");
             }
+            resultCount = ((Number) countResult).longValue();
         }
 
-        // query data
+        BoundSql finalExecSql = execSql;
+        long finalResultCount = resultCount;
+        FxSqlInfo sqlInfo = new FxSqlInfo(false, sourceName, finalExecSql.getSqlString(), finalExecSql.getArgs());
+        return SqlExecutionChain.execute(this.executionInterceptors, sqlInfo, () -> this.executeSql(conn, hints, config, dataCtx, pageInfo, pageResult, oriSql, finalExecSql, finalResultCount));
+    }
+
+    private Object executeCountSql(Connection conn, SqlConfig config, BoundSql countSql) throws SQLException {
+        try (PreparedStatement stat = conn.prepareStatement(countSql.getSqlString())) {
+            if (logger.isTraceEnabled()) {
+                logger.trace(ExecuteHelper.fmtBoundSql(countSql).toString());
+            }
+            this.configStatement(stat, config);
+            return this.executeCount(stat, countSql.getArgs());
+        } catch (SQLException e) {
+            logger.error("executeCount failed, " + ExceptionUtils.getRootCauseMessage(e) + ", " + ExecuteHelper.fmtBoundSql(countSql), e);
+            throw e;
+        }
+    }
+
+    private Object executeSql(Connection conn, Hints hints, SqlConfig config, Map<String, Object> dataCtx, Page pageInfo, boolean pageResult, SqlBuilder oriSql, BoundSql execSql, long resultCount) throws SQLException {
         try (Statement stat = this.createStatement(conn, config, execSql)) {
             if (logger.isTraceEnabled()) {
                 logger.trace(ExecuteHelper.fmtBoundSql(execSql).toString());
@@ -122,7 +144,7 @@ public abstract class AbstractStatementExecute {
             boolean retVal = this.executeQuery(stat, config, execSql);
             return this.fetchResult(retVal, oriSql, stat, hints, config, dataCtx, pageInfo, resultCount, pageResult);
         } catch (SQLException e) {
-            logger.error("executeQuery failed, " + ExceptionUtils.getRootCauseMessage(e) + ", " + ExecuteHelper.fmtBoundSql(countSql), e);
+            logger.error("executeQuery failed, " + ExceptionUtils.getRootCauseMessage(e) + ", " + ExecuteHelper.fmtBoundSql(execSql), e);
             throw e;
         }
     }

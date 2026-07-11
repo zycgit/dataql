@@ -363,8 +363,7 @@ public final class TypeHandlerRegistry {
             return;
         }
 
-        if (value instanceof SqlArg) {
-            SqlArg arg = (SqlArg) value;
+        if (value instanceof SqlArg arg) {
             Integer argType = arg.getJdbcType();
             TypeHandler argHandler = arg.getTypeHandler();
             Object argValue = arg.getValue();
@@ -631,10 +630,6 @@ public final class TypeHandlerRegistry {
         }
 
         int modifiers = javaType.getModifiers();
-        if (javaType.isInterface() || Modifier.isAbstract(modifiers)) {
-            return true;
-        } else {
-            return false;
-        }
+        return javaType.isInterface() || Modifier.isAbstract(modifiers);
     }
 }

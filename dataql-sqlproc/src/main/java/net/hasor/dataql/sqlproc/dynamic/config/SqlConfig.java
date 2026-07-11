@@ -17,7 +17,7 @@ package net.hasor.dataql.sqlproc.dynamic.config;
 import java.sql.SQLException;
 import java.util.Objects;
 import net.hasor.cobble.StringUtils;
-import net.hasor.dataql.Hints;
+import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dynamic.DynamicSql;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;

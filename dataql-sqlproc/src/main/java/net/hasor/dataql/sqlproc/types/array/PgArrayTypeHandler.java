@@ -108,7 +108,7 @@ public class PgArrayTypeHandler extends ArrayTypeHandler {
         }
     }
 
-    public static interface PostgresReadArrayHandler {
+    public interface PostgresReadArrayHandler {
         Object readElement(ResultSet rs) throws SQLException;
     }
 }

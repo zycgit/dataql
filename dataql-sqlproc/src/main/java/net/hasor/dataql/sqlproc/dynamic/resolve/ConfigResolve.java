@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic.resolve;
-import net.hasor.dataql.Hints;
+import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dynamic.config.*;
 import net.hasor.dataql.sqlproc.dynamic.logic.ArrayDynamicSql;

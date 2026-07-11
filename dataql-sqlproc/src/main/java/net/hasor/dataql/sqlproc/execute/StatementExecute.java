@@ -19,7 +19,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
-import net.hasor.dataql.Hints;
+import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
 import net.hasor.dataql.sqlproc.dialect.Page;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;

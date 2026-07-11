@@ -18,7 +18,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import net.hasor.dataql.Hints;
+import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.sqlproc.dialect.Page;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.config.InsertConfig;

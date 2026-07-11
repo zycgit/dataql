@@ -15,7 +15,7 @@
  */
 package net.hasor.dataql.sqlproc;
 
-import net.hasor.dataql.Hints;
+import net.hasor.dataql.domain.Hints;
 import static net.hasor.dataql.sqlproc.SqlHintValue.*;
 
 /**
@@ -97,9 +97,8 @@ public enum SqlHintNames {
     public static String getValue(Hints hint, SqlHintNames hintName) {
         Object value = hint.getHint(hintName.getShortName());
         if (value == null) {
-            return (String) hint.getOrDefault(hintName.name(), hintName.getDefaultVal());
-        } else {
-            return (String) value;
+            value = hint.getOrDefault(hintName.name(), hintName.getDefaultVal());
         }
+        return value == null ? null : value.toString();
     }
 }

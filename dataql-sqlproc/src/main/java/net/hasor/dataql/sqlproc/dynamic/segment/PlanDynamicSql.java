@@ -29,7 +29,7 @@ import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
  * @version 2021-06-05
  */
 public class PlanDynamicSql implements Cloneable, DynamicSql {
-    private final StringBuilder    queryStringOri  = new StringBuilder("");
+    private final StringBuilder    queryStringOri  = new StringBuilder();
     private final List<SqlSegment> queryStringPlan = new LinkedList<>();
     private       boolean          haveInjection   = false;
 
@@ -162,7 +162,7 @@ public class PlanDynamicSql implements Cloneable, DynamicSql {
         List<Integer> result = new ArrayList<>();
         for (SqlSegment segment : this.queryStringPlan) {
             if (segment instanceof PositionSqlSegment) {
-                result.add(((PositionSqlSegment) segment).getPosition());
+                result.add(((PositionSqlSegment) segment).position());
             }
         }
         return result;
@@ -209,22 +209,7 @@ public class PlanDynamicSql implements Cloneable, DynamicSql {
         return clone;
     }
 
-    public static class NameInfo {
-        private final String              expr;
-        private final Map<String, String> config;
-
-        public NameInfo(String expr, Map<String, String> config) {
-            this.expr = expr;
-            this.config = config;
-        }
-
-        public String getExpr() {
-            return this.expr;
-        }
-
-        public Map<String, String> getConfig() {
-            return this.config;
-        }
+    public record NameInfo(String expr, Map<String, String> config) {
     }
 
     public static class RuleInfo {

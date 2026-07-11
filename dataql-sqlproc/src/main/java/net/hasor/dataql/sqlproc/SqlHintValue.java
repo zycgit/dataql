@@ -1,5 +1,5 @@
 package net.hasor.dataql.sqlproc;
-import net.hasor.dataql.HintValue;
+import net.hasor.dataql.domain.HintValue;
 
 public interface SqlHintValue extends HintValue {
     /**

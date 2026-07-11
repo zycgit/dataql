@@ -17,7 +17,7 @@ package net.hasor.dataql.sqlproc.execute;
 import java.sql.*;
 import java.util.Map;
 import net.hasor.cobble.StringUtils;
-import net.hasor.dataql.Hints;
+import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.sqlproc.ColumnCaseType;
 import net.hasor.dataql.sqlproc.OpenPackageType;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
@@ -92,7 +92,7 @@ public class CallableStatementExecute extends AbstractStatementExecute {
             if (!(arg instanceof SqlArg sqlArg)) {
                 continue;
             }
-            SqlMode sqlMode = ((SqlArg) arg).getSqlMode();
+            SqlMode sqlMode = sqlArg.getSqlMode();
             if (sqlMode == null || !sqlMode.isOut()) {
                 continue;
             }

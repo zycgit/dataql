@@ -12,10 +12,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import net.hasor.cobble.StringUtils;
-import net.hasor.cobble.function.EFunction;
-import net.hasor.dataql.FragmentProcess;
-import net.hasor.dataql.HintNames;
-import net.hasor.dataql.Hints;
+import net.hasor.dataql.domain.HintNames;
+import net.hasor.dataql.domain.Hints;
+import net.hasor.dataql.kernel.FragmentProcess;
 import net.hasor.dataql.sqlproc.ConfigFormatType;
 import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dialect.PageObject;
@@ -35,14 +34,14 @@ import static net.hasor.dataql.sqlproc.SqlHintValue.FRAGMENT_SQL_QUERY_BY_PAGE_E
  * 注入 Hints，子类覆写 {@link #queryType(String, Hints)} 读取即可。
  */
 public abstract class AbstractSqlFragment implements FragmentProcess {
-    protected final EFunction<String, Connection, SQLException> connection;
-    private final   ConfigResolveRoot                           configResolve = new ConfigResolveRoot();
-    private final   Map<String, SqlConfig>                      configCache   = new ConcurrentHashMap<>();
-    private final   RootStatement                               rootStatement;
+    private final ConfigResolveRoot      configResolve = new ConfigResolveRoot();
+    private final Map<String, SqlConfig> configCache   = new ConcurrentHashMap<>();
+    private final RootStatement          rootStatement;
+    private final QueryContext           queryContext;
 
-    protected AbstractSqlFragment(EFunction<String, Connection, SQLException> connection, QueryContext queryContext) {
-        this.connection = Objects.requireNonNull(connection, "connection is null");
-        this.rootStatement = new RootStatement(Objects.requireNonNull(queryContext, "queryContext is null"));
+    protected AbstractSqlFragment(QueryContext queryContext) {
+        this.queryContext = Objects.requireNonNull(queryContext, "queryContext is null");
+        this.rootStatement = new RootStatement(this.queryContext);
     }
 
     protected abstract QueryType queryType(String fragmentString, Hints hints);
@@ -112,7 +111,7 @@ public abstract class AbstractSqlFragment implements FragmentProcess {
 
     protected Object noPageFragment(Hints hints, Map<String, Object> params, SqlConfig config) throws SQLException {
         String sourceName = SqlHintNames.getValue(hints, FRAGMENT_SQL_DATA_SOURCE);
-        try (Connection conn = this.connection.eApply(sourceName)) {
+        try (Connection conn = this.queryContext.findConnection(sourceName, hints)) {
             return this.rootStatement.execute(conn, hints, config, params, null, false);
         }
     }
@@ -124,6 +123,6 @@ public abstract class AbstractSqlFragment implements FragmentProcess {
             page.setPageNumberOffset(Integer.parseInt(offsetStr));
         }
 
-        return new PageQuery(this.connection, hints, config, params, this.rootStatement, page);
+        return new PageQuery(this.queryContext, hints, config, params, this.rootStatement, page);
     }
 }

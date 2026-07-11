@@ -20,8 +20,8 @@ import java.io.StringReader;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import net.hasor.dataql.Hints;
-import net.hasor.dataql.runtime.HintsSet;
+import net.hasor.dataql.domain.Hints;
+import net.hasor.dataql.domain.HintsSet;
 import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dynamic.config.InsertConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
@@ -67,8 +67,7 @@ public class ConfigResolveByXmlSql extends ConfigResolve {
             SqlConfig sqlConfig = super.createConfig(queryType, hint, dynamicSql);
 
             // find selectKey
-            if (sqlConfig instanceof InsertConfig) {
-                InsertConfig insertConfig = (InsertConfig) sqlConfig;
+            if (sqlConfig instanceof InsertConfig insertConfig) {
                 SelectKeyConfig keyConfig = null;
                 for (int i = 0, len = rootNodes.getLength(); i < len; i++) {
                     Node node = rootNodes.item(i);
@@ -203,11 +202,10 @@ public class ConfigResolveByXmlSql extends ConfigResolve {
 
     /** passer &lt;when&gt; xmlNode */
     protected void parseWhenSqlNode(ArrayDynamicSql parentSqlNode, Node curXmlNode) {
-        if (!(parentSqlNode instanceof ChooseDynamicSql)) {
+        if (!(parentSqlNode instanceof ChooseDynamicSql chooseSqlNode)) {
             throw new UnsupportedOperationException("the tag `<when>` parent tag must be `<choose>`");
         }
         String test = getNodeAttributeValue(curXmlNode, "test");
-        ChooseDynamicSql chooseSqlNode = (ChooseDynamicSql) parentSqlNode;
 
         ArrayDynamicSql parent = new ArrayDynamicSql();
         chooseSqlNode.addThen(test, parent);
@@ -216,10 +214,9 @@ public class ConfigResolveByXmlSql extends ConfigResolve {
 
     /** passer &lt;otherwise&gt; xmlNode */
     protected void parseOtherwiseSqlNode(ArrayDynamicSql parentSqlNode, Node curXmlNode) {
-        if (!(parentSqlNode instanceof ChooseDynamicSql)) {
+        if (!(parentSqlNode instanceof ChooseDynamicSql chooseSqlNode)) {
             throw new UnsupportedOperationException("the tag `<otherwise>` parent tag must be `<choose>`");
         }
-        ChooseDynamicSql chooseSqlNode = (ChooseDynamicSql) parentSqlNode;
 
         ArrayDynamicSql parent = new ArrayDynamicSql();
         chooseSqlNode.setDefaultNode(parent);

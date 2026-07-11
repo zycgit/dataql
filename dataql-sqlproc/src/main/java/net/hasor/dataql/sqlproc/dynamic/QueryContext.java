@@ -15,10 +15,15 @@
  */
 package net.hasor.dataql.sqlproc.dynamic;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.sqlproc.dynamic.rule.SqlRule;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 
 public interface QueryContext {
+
+    Connection findConnection(String sourceName, Hints hints) throws SQLException;
 
     SqlRule findRule(String ruleName);
 

@@ -15,16 +15,13 @@
  */
 package net.hasor.dataql.sqlproc.execute.support;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import net.hasor.cobble.function.EFunction;
-import net.hasor.dataql.Hints;
+import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
 
 public class UpdateFragmentProcess extends AbstractSqlFragment {
-    public UpdateFragmentProcess(EFunction<String, Connection, SQLException> c, QueryContext queryContext) {
-        super(c, queryContext);
+    public UpdateFragmentProcess(QueryContext queryContext) {
+        super(queryContext);
     }
 
     @Override

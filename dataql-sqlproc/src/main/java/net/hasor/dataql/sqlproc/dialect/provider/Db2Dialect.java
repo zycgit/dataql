@@ -24,16 +24,13 @@ import net.hasor.dataql.sqlproc.dialect.BoundSql;
 public class Db2Dialect extends AbstractDialect {
     @Override
     public BoundSql pageSql(BoundSql boundSql, long start, long limit) {
-        StringBuilder sqlBuilder = new StringBuilder();
-        sqlBuilder.append("SELECT * FROM (SELECT TMP_PAGE.*,ROWNUMBER() OVER() AS ROW_ID FROM ( ");
-        sqlBuilder.append(boundSql.getSqlString());
-        sqlBuilder.append(" ) AS TMP_PAGE) TMP_PAGE WHERE ROW_ID BETWEEN ? AND ?");
+        String sqlBuilder = "SELECT * FROM (SELECT TMP_PAGE.*,ROWNUMBER() OVER() AS ROW_ID FROM ( " + boundSql.getSqlString() + " ) AS TMP_PAGE) TMP_PAGE WHERE ROW_ID BETWEEN ? AND ?";
 
         Object[] paramArray = boundSql.getArgs();
         Object[] destArgs = new Object[paramArray.length + 2];
         System.arraycopy(paramArray, 0, destArgs, 0, paramArray.length);
         destArgs[paramArray.length] = start;
         destArgs[paramArray.length + 1] = limit;
-        return new BoundSql.BoundSqlObj(sqlBuilder.toString(), destArgs);
+        return new BoundSql.BoundSqlObj(sqlBuilder, destArgs);
     }
 }

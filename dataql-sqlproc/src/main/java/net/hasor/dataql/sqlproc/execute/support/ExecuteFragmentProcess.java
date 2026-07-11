@@ -1,15 +1,12 @@
 package net.hasor.dataql.sqlproc.execute.support;
 import java.io.IOException;
 import java.io.StringReader;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 import net.hasor.cobble.StringUtils;
-import net.hasor.cobble.function.EFunction;
 import net.hasor.cobble.io.IOUtils;
-import net.hasor.dataql.HintNames;
-import net.hasor.dataql.Hints;
-import net.hasor.dataql.runtime.HintsProxy;
+import net.hasor.dataql.domain.HintNames;
+import net.hasor.dataql.domain.Hints;
+import net.hasor.dataql.domain.HintsProxy;
 import net.hasor.dataql.sqlproc.ConfigFormatType;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
@@ -20,8 +17,8 @@ import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
  * 同时支持 @@type 前缀显式覆盖。
  */
 public class ExecuteFragmentProcess extends AbstractSqlFragment {
-    public ExecuteFragmentProcess(EFunction<String, Connection, SQLException> c, QueryContext queryContext) {
-        super(c, queryContext);
+    public ExecuteFragmentProcess(QueryContext queryContext) {
+        super(queryContext);
     }
 
     @Override
@@ -149,13 +146,6 @@ public class ExecuteFragmentProcess extends AbstractSqlFragment {
         return QueryType.Execute;
     }
 
-    private static class FragmentBody {
-        private final QueryType queryType;
-        private final String    fragmentString;
-
-        private FragmentBody(QueryType queryType, String fragmentString) {
-            this.queryType = queryType;
-            this.fragmentString = fragmentString;
-        }
+    private record FragmentBody(QueryType queryType, String fragmentString) {
     }
 }
