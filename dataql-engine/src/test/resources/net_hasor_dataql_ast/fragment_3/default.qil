@@ -47,11 +47,11 @@
 
 [1]
   #00  LINE      1
-  #01  LOCAL     0, itemCode
-  #02  LOCAL     1, status
-  #03  LOCAL     2, extra
-  #04  LOCAL     3, pageSize
-  #05  LOCAL     4, page
+  #01  LOCAL     0, 0, itemCode
+  #02  LOCAL     1, 1, status
+  #03  LOCAL     2, 2, extra
+  #04  LOCAL     3, 3, pageSize
+  #05  LOCAL     4, 4, page
   #06  M_FRAG    false, insert
   #07  NEW_O
   #08  PUT       itemCode

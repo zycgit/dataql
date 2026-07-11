@@ -34,11 +34,12 @@ public class FragmentVariableInstCompiler implements InstCompiler<FragmentVariab
         compilerContext.newFrame();
 
         // 1. LOCAL 变量表：声明所有参数名
-        for (FragmentParam param : astInst.getParamList()) {
+        for (int i = 0; i < astInst.getParamList().size(); i++) {
+            FragmentParam param = astInst.getParamList().get(i);
             String name = param.name().getValue();
             int index = compilerContext.push(name); //将变量名压栈，并返回栈中的位置
             instLocation(newMethodInst, param.name());
-            newMethodInst.inst(LOCAL, index, name); //为栈中某个位置的变量命名
+            newMethodInst.inst(LOCAL, i, index, name); //为栈中某个位置的变量命名
         }
 
         // 2. M_FRAG 片段入口

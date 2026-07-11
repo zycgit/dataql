@@ -41,11 +41,11 @@
   #39  RETURN    0
 
 [1]
-  #00  LOCAL     0, itemCode
-  #01  LOCAL     1, status
-  #02  LOCAL     2, extra
-  #03  LOCAL     3, pageSize
-  #04  LOCAL     4, page
+  #00  LOCAL     0, 0, itemCode
+  #01  LOCAL     1, 1, status
+  #02  LOCAL     2, 2, extra
+  #03  LOCAL     3, 3, pageSize
+  #04  LOCAL     4, 4, page
   #05  M_FRAG    false, insert
   #06  NEW_O
   #07  PUT       itemCode

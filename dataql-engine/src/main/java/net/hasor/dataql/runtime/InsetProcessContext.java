@@ -37,8 +37,7 @@ public class InsetProcessContext implements CustomizeScope {
 
     InsetProcessContext(CustomizeScope customizeScope, Finder finder) {
         if (finder == null) {
-            finder = new Finder() {
-            };
+            finder = Finder.DEFAULT;
         }
         this.customizeScope = customizeScope;
         this.finder = finder;
@@ -88,10 +87,7 @@ public class InsetProcessContext implements CustomizeScope {
     }
 
     public Object loadObject(String udfType) throws ClassNotFoundException {
-        // .确定ClassLoader
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        Class<?> loadClass = classLoader.loadClass(udfType);
-        return this.finder.findBean(loadClass);
+        return this.finder.findBean(udfType);
     }
 
     public FragmentProcess findFragmentProcess(String fragmentType) {

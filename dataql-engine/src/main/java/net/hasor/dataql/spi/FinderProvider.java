@@ -13,23 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql;
+package net.hasor.dataql.spi;
 import net.hasor.dataql.service.DefaultFinder;
 
 /**
- * 资源加载器
+ * Finder 扩展注册接口。第三方扩展包可以通过 {@link java.util.ServiceLoader}
+ * 发布该接口实现，将自身提供的 import 资源、FragmentProcess 等能力注册到默认 Finder 中。
  * @author 赵永春 (zyc@hasor.net)
- * @version : 2019-12-11
+ * @version : 2026-07-10
  */
-public interface Finder {
-    /** 默认实现 */
-    Finder DEFAULT = new DefaultFinder();
-
-    /** 负责处理 <code>import 'net.hasor.dataql.sdk.CollectionUdfSource' as collect;</code>方式的资源的加载。 */
-    Object findBean(String beanName) throws ClassNotFoundException;
-
-    /** 负责处理 <code>import 'net.hasor.dataql.sdk.CollectionUdfSource' as collect;</code>方式的资源的加载。 */
-    Object findBean(Class<?> beanType);
-
-    FragmentProcess findFragmentProcess(String fragmentType);
+public interface FinderProvider {
+    /** 将扩展能力注册到 Finder。 */
+    void loadTo(DefaultFinder finder);
 }

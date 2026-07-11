@@ -17,7 +17,10 @@ package net.hasor.dataql.service;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
+import net.hasor.cobble.loader.ResourceLoader;
+import net.hasor.cobble.loader.providers.ClassPathResourceLoader;
 import net.hasor.dataql.DataQL;
 import net.hasor.dataql.Finder;
 import net.hasor.dataql.Query;
@@ -38,17 +41,27 @@ public class DataQLContext extends HintsSet implements DataQL {
     private final CompilerArguments        useArguments   = CompilerArguments.DEFAULT.copyAsNew();
     private final Map<String, Supplier<?>> compilerVarMap = new HashMap<>();
     private final Finder                   finder;
+    private final ResourceLoader           resourceLoader;
 
     public DataQLContext() {
-        this(Finder.DEFAULT);
+        this(Finder.DEFAULT, ClassPathResourceLoader.INSTANCE);
     }
 
     public DataQLContext(Finder finder) {
+        this(finder, ClassPathResourceLoader.INSTANCE);
+    }
+
+    public DataQLContext(Finder finder, ResourceLoader resourceLoader) {
         this.finder = (finder != null) ? finder : Finder.DEFAULT;
+        this.resourceLoader = Objects.requireNonNull(resourceLoader, "resourceLoader is null.");
     }
 
     public Finder getFinder() {
         return this.finder;
+    }
+
+    public ResourceLoader getResourceLoader() {
+        return this.resourceLoader;
     }
 
     public DataQL addShareVar(String name, Class<?> implementation) {
@@ -77,7 +90,7 @@ public class DataQLContext extends HintsSet implements DataQL {
     public QIL compilerQuery(QueryModel queryModel) throws IOException {
         CompilerArguments compilerArguments = this.useArguments.copyAsNew();
         compilerArguments.getCompilerVar().addAll(this.compilerVarMap.keySet());
-        return QueryHelper.queryCompiler(queryModel, compilerArguments, getFinder());
+        return QueryHelper.queryCompiler(queryModel, compilerArguments, this.resourceLoader);
     }
 
     @Override

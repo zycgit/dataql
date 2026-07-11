@@ -1,4 +1,5 @@
 package net.hasor.dataql.extend;
+import net.hasor.dataql.Finder;
 import net.hasor.dataql.QueryResult;
 import net.hasor.dataql.Udf;
 import net.hasor.dataql.domain.DataModel;
@@ -10,6 +11,12 @@ import org.junit.Test;
 import javax.script.*;
 
 public class Jsr223Test {
+    @Test
+    public void jar223_defaultFinder() {
+        DataQLScriptEngine scriptEngine = (DataQLScriptEngine) new ScriptEngineManager().getEngineByName("dataql");
+        assert scriptEngine.getFinder() == Finder.DEFAULT;
+    }
+
     @Test
     public void jar223_1() throws ScriptException {
         ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByName("dataql");

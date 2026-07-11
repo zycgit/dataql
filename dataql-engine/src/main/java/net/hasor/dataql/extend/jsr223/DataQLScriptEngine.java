@@ -19,6 +19,8 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.Objects;
 import javax.script.*;
+import net.hasor.cobble.loader.ResourceLoader;
+import net.hasor.cobble.loader.providers.ClassPathResourceLoader;
 import net.hasor.dataql.Finder;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.compiler.qil.QIL;
@@ -36,6 +38,7 @@ public class DataQLScriptEngine extends AbstractScriptEngine implements ScriptEn
     private final HintsSet                  optionSet = new HintsSet();
     private final DataQLScriptEngineFactory engineFactory;
     private       Finder                    finder    = Finder.DEFAULT;
+    private       ResourceLoader            resourceLoader = ClassPathResourceLoader.INSTANCE;
 
     DataQLScriptEngine(DataQLScriptEngineFactory engineFactory) {
         this.engineFactory = engineFactory;
@@ -79,6 +82,14 @@ public class DataQLScriptEngine extends AbstractScriptEngine implements ScriptEn
     public void setFinder(Finder finder) {
         this.finder = Objects.requireNonNull(finder, "finder is null.");
     }
+
+    public ResourceLoader getResourceLoader() {
+        return this.resourceLoader;
+    }
+
+    public void setResourceLoader(ResourceLoader resourceLoader) {
+        this.resourceLoader = Objects.requireNonNull(resourceLoader, "resourceLoader is null.");
+    }
     // -------------------------------------------------------------------------------------------- ScriptEngine
 
     @Override
@@ -104,7 +115,7 @@ public class DataQLScriptEngine extends AbstractScriptEngine implements ScriptEn
             QueryModel queryModel = QueryHelper.queryParser(queryString);
             CompilerArguments compilerArguments = CompilerArguments.DEFAULT.copyAsNew();
             compilerArguments.getCompilerVar().addAll(global.keySet());
-            QIL compilerQIL = QueryHelper.queryCompiler(queryModel, compilerArguments, this.getFinder());
+            QIL compilerQIL = QueryHelper.queryCompiler(queryModel, compilerArguments, this.resourceLoader);
             return new DataQLCompiledScript(compilerQIL, this);
         } catch (IOException e) {
             throw new ScriptException(e);

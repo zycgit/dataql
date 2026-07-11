@@ -15,8 +15,8 @@
  */
 package net.hasor.dataql.compiler;
 import net.hasor.cobble.StringUtils;
+import net.hasor.cobble.loader.providers.ClassPathResourceLoader;
 import net.hasor.dataql.AbstractTestResource;
-import net.hasor.dataql.Finder;
 import net.hasor.dataql.compiler.qil.QIL;
 import net.hasor.dataql.parser.QueryModel;
 import net.hasor.dataql.runtime.CompilerArguments;
@@ -42,9 +42,9 @@ public class CompilerTest extends AbstractTestResource {
     private void qilTest(String testCase) throws IOException {
         String query1 = getScript("/net_hasor_dataql_ast/" + testCase + "/ast.ql");
         QueryModel queryModel = QueryHelper.queryParser(query1);
-        QIL qilFast = QueryHelper.queryCompiler(queryModel, arguments(CodeLocationEnum.NONE), Finder.DEFAULT);
-        QIL qilDefault = QueryHelper.queryCompiler(queryModel, arguments(CodeLocationEnum.LINE), Finder.DEFAULT);
-        QIL qilDebug = QueryHelper.queryCompiler(queryModel, arguments(CodeLocationEnum.TERM), Finder.DEFAULT);
+        QIL qilFast = QueryHelper.queryCompiler(queryModel, arguments(CodeLocationEnum.NONE), ClassPathResourceLoader.INSTANCE);
+        QIL qilDefault = QueryHelper.queryCompiler(queryModel, arguments(CodeLocationEnum.LINE), ClassPathResourceLoader.INSTANCE);
+        QIL qilDebug = QueryHelper.queryCompiler(queryModel, arguments(CodeLocationEnum.TERM), ClassPathResourceLoader.INSTANCE);
         //
         String qilStringFast1 = qilFast.toString();
         String qilStringDefault1 = qilDefault.toString();

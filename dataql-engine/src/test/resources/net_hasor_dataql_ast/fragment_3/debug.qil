@@ -63,15 +63,15 @@
 
 [1]
   #00  LINE      1, 23, 1, 31
-  #01  LOCAL     0, itemCode
+  #01  LOCAL     0, 0, itemCode
   #02  LINE      1, 41, 1, 47
-  #03  LOCAL     1, status
+  #03  LOCAL     1, 1, status
   #04  LINE      1, 56, 1, 61
-  #05  LOCAL     2, extra
+  #05  LOCAL     2, 2, extra
   #06  LINE      1, 63, 1, 71
-  #07  LOCAL     3, pageSize
+  #07  LOCAL     3, 3, pageSize
   #08  LINE      1, 78, 1, 82
-  #09  LOCAL     4, page
+  #09  LOCAL     4, 4, page
   #10  LINE      1, 16, 1, 22
   #11  M_FRAG    false, insert
   #12  NEW_O

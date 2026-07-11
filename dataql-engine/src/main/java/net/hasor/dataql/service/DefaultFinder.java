@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 package net.hasor.dataql.service;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
-import net.hasor.cobble.ResourcesUtils;
-import net.hasor.cobble.io.input.AutoCloseInputStream;
+import net.hasor.cobble.ClassUtils;
 import net.hasor.cobble.ref.LinkedCaseInsensitiveMap;
 import net.hasor.dataql.Finder;
 import net.hasor.dataql.FragmentProcess;
+import net.hasor.dataql.spi.FinderProvider;
 
 /**
  * 资源加载器
@@ -31,36 +30,47 @@ import net.hasor.dataql.FragmentProcess;
  * @version : 2019-12-11
  */
 public class DefaultFinder implements Finder {
-    private       Finder                   parent;
+    private final Finder                   parent;
     private final ClassLoader              classLoader;
     private final Map<String, Supplier<?>> fragmentMap      = new LinkedCaseInsensitiveMap<>();
     private final Map<String, Supplier<?>> importPrepareMap = new ConcurrentHashMap<>();
 
     public DefaultFinder() {
-        this(Thread.currentThread().getContextClassLoader(), Finder.DEFAULT);
+        this(Thread.currentThread().getContextClassLoader(), null);
     }
 
     public DefaultFinder(ClassLoader classLoader, Finder parent) {
         this.classLoader = classLoader;
-        this.parent = (parent != null) ? parent : Finder.DEFAULT;
+        this.parent = parent;
+        this.loadFinderProviders();
+    }
+
+    private void loadFinderProviders() {
+        ServiceLoader<FinderProvider> serviceLoader;
+        if (this.classLoader != null) {
+            serviceLoader = ServiceLoader.load(FinderProvider.class, this.classLoader);
+        } else {
+            serviceLoader = ServiceLoader.load(FinderProvider.class);
+        }
+        serviceLoader.forEach(provider -> provider.loadTo(this));
     }
 
     public Finder getParent() {
         return this.parent;
     }
 
-    public void setParent(Finder parent) {
-        this.parent = parent;
-    }
-
-    /** 负责处理 <code>import @"/net/hasor/demo.ql" as demo;</code>方式中 ‘/net/hasor/demo.ql’ 资源的加载 */
     @Override
-    public InputStream findResource(String resourceName) throws IOException {
-        if (this.classLoader != null) {
-            return new AutoCloseInputStream(ResourcesUtils.getResourceAsStream(this.classLoader, resourceName));
-        } else {
-            return new AutoCloseInputStream(ResourcesUtils.getResourceAsStream(resourceName));
+    public Object findBean(String beanName) throws ClassNotFoundException {
+        Supplier<?> supplier = this.importPrepareMap.get(beanName);
+        if (supplier != null) {
+            return supplier.get();
         }
+        if (this.parent != null) {
+            return this.parent.findBean(beanName);
+        }
+        ClassLoader useClassLoader = this.classLoader != null ? this.classLoader : Thread.currentThread().getContextClassLoader();
+        Class<?> beanType = useClassLoader != null ? useClassLoader.loadClass(beanName) : Class.forName(beanName);
+        return this.findBean(beanType);
     }
 
     @Override
@@ -68,7 +78,7 @@ public class DefaultFinder implements Finder {
         String typeName = beanType.getName();
         if (!this.importPrepareMap.containsKey(typeName)) {
             this.importPrepareMap.put(typeName, () -> {
-                return this.parent.findBean(beanType);
+                return this.parent != null ? this.parent.findBean(beanType) : ClassUtils.newInstance(beanType);
             });
         }
         return this.importPrepareMap.get(typeName).get();
@@ -82,7 +92,10 @@ public class DefaultFinder implements Finder {
             process = (FragmentProcess) supplier.get();
         }
         if (process == null) {
-            return this.parent.findFragmentProcess(fragmentType);
+            if (this.parent != null) {
+                return this.parent.findFragmentProcess(fragmentType);
+            }
+            throw new UnsupportedOperationException(fragmentType + " fragment undefine.");
         }
         return process;
     }

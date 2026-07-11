@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 package net.hasor.dataql.compiler.qil;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
+import net.hasor.cobble.loader.ResourceLoader;
+import net.hasor.dataql.compiler.cc.*;
 import net.hasor.dataql.parser.ast.Inst;
+import net.hasor.dataql.parser.ast.expr.*;
+import net.hasor.dataql.parser.ast.fmt.ListFormat;
+import net.hasor.dataql.parser.ast.fmt.ObjectFormat;
+import net.hasor.dataql.parser.ast.inst.*;
+import net.hasor.dataql.parser.ast.value.*;
 
 /**
  * 编译期的编译上下文。
@@ -26,17 +31,21 @@ import net.hasor.dataql.parser.ast.Inst;
  */
 public class CompilerContext {
     private       Map<String, Integer> loadedImport = new HashMap<>();
-    private final CompilerEnvironment  compilerEnvironment;
-    private final Stack<List<String>>  dataStack    = new Stack<List<String>>() {{
+    private final ResourceLoader       resourceLoader;
+    private final Stack<List<String>>  dataStack    = new Stack<>() {{
         push(new ArrayList<>());
     }};
 
-    public CompilerContext(CompilerEnvironment compilerEnvironment) {
-        this.compilerEnvironment = compilerEnvironment;
+    public CompilerContext(ResourceLoader resourceLoader) {
+        this.resourceLoader = Objects.requireNonNull(resourceLoader, "resourceLoader is null.");
     }
 
-    public InputStream findResource(String resourceName) throws IOException {
-        return this.compilerEnvironment.findResource(resourceName);
+    public ResourceLoader getResourceLoader() {
+        return this.resourceLoader;
+    }
+
+    public <T extends Inst> InstCompiler<T> findInstCompilerByType(Class<T> instType) {
+        return (InstCompiler<T>) Objects.requireNonNull(typeMappingToInstCompiler.get(instType), "not found " + instType.getName() + " InstCompiler.");
     }
 
     public <T extends Inst> InstCompilerExecutor findInstCompilerByInst(T instObject) {
@@ -45,7 +54,7 @@ public class CompilerContext {
     }
 
     public <T extends Inst> InstCompilerExecutor findInstCompilerByInst(T instObject, Class<T> instClass) {
-        InstCompiler<T> instCompiler = this.compilerEnvironment.findInstCompilerByType(instClass);
+        InstCompiler<T> instCompiler = this.findInstCompilerByType(instClass);
         return queue -> instCompiler.doCompiler(instObject, queue, CompilerContext.this);
     }
 
@@ -109,10 +118,40 @@ public class CompilerContext {
     }
 
     public CompilerContext createSegregate() {
-        CompilerContext compilerContext = new CompilerContext(this.compilerEnvironment);
+        CompilerContext compilerContext = new CompilerContext(this.resourceLoader);
         compilerContext.loadedImport = this.loadedImport;
         return compilerContext;
     }
+
+    private static final Map<Class<?>, InstCompiler<?>> typeMappingToInstCompiler = new HashMap<Class<?>, InstCompiler<?>>() {{
+        put(RootBlockSet.class, new RootBlockSetInstCompiler());
+        put(InstSet.class, new InstSetInstCompiler());
+        put(HintInst.class, new HintInstCompiler());
+        put(ImportInst.class, new ImportInstCompiler());
+        put(ExitInst.class, new ExitInstCompiler());
+        put(ReturnInst.class, new ReturnInstCompiler());
+        put(ThrowInst.class, new ThrowInstCompiler());
+        put(VarInst.class, new VarInstCompiler());
+        put(RunInst.class, new RunInstCompiler());
+        put(AssertInst.class, new AssertInstCompiler());
+        put(SwitchInst.class, new SwitchInstCompiler());
+        put(AtomExpression.class, new AtomExprInstCompiler());
+        put(UnaryExpression.class, new UnaryExprInstCompiler());
+        put(DyadicExpression.class, new DyadicExprInstCompiler());
+        put(TernaryExpression.class, new TernaryExprInstCompiler());
+        put(PrivilegeExpression.class, new PrivilegeExprInstCompiler());
+        put(PrimitiveVariable.class, new PrimitiveVariableInstCompiler());
+        put(LambdaVariable.class, new LambdaVariableInstCompiler());
+        put(ListVariable.class, new ListVariableInstCompiler());
+        put(ObjectVariable.class, new ObjectVariableInstCompiler());
+        put(ObjectFormat.class, new ObjectFormatInstCompiler());
+        put(ListFormat.class, new ListFormatInstCompiler());
+        put(FragmentVariable.class, new FragmentVariableInstCompiler());
+        put(SubscriptRouteVariable.class, new SubscriptRouteVariableInstCompiler());
+        put(NameRouteVariable.class, new NameRouteVariableInstCompiler());
+        put(EnterRouteVariable.class, new EnterRouteVariableInstCompiler());
+        put(FunCallRouteVariable.class, new FunCallRouteVariableInstCompiler());
+    }};
 
     public static class ContainsIndex {
         public int depth = -1;// <- 预先设置为无效值

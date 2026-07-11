@@ -73,7 +73,7 @@ public class ImportInstCompiler implements InstCompiler<ImportInst> {
         // .parser资源
         RootBlockSet queryModel = null;
         try {
-            InputStream inputStream = Objects.requireNonNull(compilerContext.findResource(importName), "import resource '" + importName + "' not found.");
+            InputStream inputStream = Objects.requireNonNull(compilerContext.getResourceLoader().getResourceAsStream(importName), "import resource '" + importName + "' not found.");
             queryModel = (RootBlockSet) QueryHelper.queryParser(inputStream);
         } catch (Exception e) {
             throw ExceptionUtils.toRuntime(e, throwable -> new QueryCompilerException("import compiler failed -> parser failed.", throwable));

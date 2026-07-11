@@ -1,4 +1,5 @@
 package net.hasor.dataql.runtime.basic;
+import net.hasor.cobble.loader.providers.ClassPathResourceLoader;
 import net.hasor.dataql.*;
 import net.hasor.dataql.compiler.qil.QIL;
 import net.hasor.dataql.domain.*;
@@ -207,7 +208,7 @@ public class RouRuntimeTest extends AbstractTestResource implements HintValue {
         arguments.getCompilerVar().add("list");
         //
         QueryModel queryModel = QueryHelper.queryParser("return list[2]");
-        QIL qil = QueryHelper.queryCompiler(queryModel, arguments, Finder.DEFAULT);
+        QIL qil = QueryHelper.queryCompiler(queryModel, arguments, ClassPathResourceLoader.INSTANCE);
         Query query = QueryHelper.createQuery(qil, Finder.DEFAULT);
         //
         query.addShareVar("list", Arrays.asList("a", "b", "c", "d"));

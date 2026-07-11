@@ -20,6 +20,7 @@ import net.hasor.dataql.HintNames;
 import net.hasor.dataql.Hints;
 import net.hasor.dataql.Udf;
 import net.hasor.dataql.parser.location.RuntimeLocation;
+import net.hasor.dataql.runtime.HintsProxy;
 import net.hasor.dataql.runtime.QueryRuntimeException;
 
 /**
@@ -44,6 +45,15 @@ public class RefFragmentCall implements Udf {
     public Object call(Hints readOnly, Object... params) throws Throwable {
         String fragmentString = params[1].toString();
         Map<String, Object> fragmentParams = (Map<String, Object>) params[0];
+        Hints fragmentHints = new HintsProxy(readOnly) {
+            @Override
+            public Object getHint(String optionKey) {
+                if (HintNames.FRAGMENT_TYPE.name().equals(optionKey)) {
+                    return fragmentType;
+                }
+                return super.getHint(optionKey);
+            }
+        };
         if (this.isBach) {
             List<Map<String, Object>> fragmentParamsArray = new ArrayList<>();
             Map<String, Integer> argsLengthMap = new TreeMap<>();
@@ -93,11 +103,9 @@ public class RefFragmentCall implements Udf {
                 throw new QueryRuntimeException(this.location, "batch fragment,All args must have the same length -> [" + strBuild.toString() + "]");
             }
             //
-            readOnly.setHint(HintNames.FRAGMENT_TYPE.name(), this.fragmentType);
-            return this.fragmentProcess.batchRunFragment(readOnly, fragmentParamsArray, fragmentString);
+            return this.fragmentProcess.batchRunFragment(fragmentHints, fragmentParamsArray, fragmentString);
         } else {
-            readOnly.setHint(HintNames.FRAGMENT_TYPE.name(), this.fragmentType);
-            return this.fragmentProcess.runFragment(readOnly, fragmentParams, fragmentString);
+            return this.fragmentProcess.runFragment(fragmentHints, fragmentParams, fragmentString);
         }
     }
 }

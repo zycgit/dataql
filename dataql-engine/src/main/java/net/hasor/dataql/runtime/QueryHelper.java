@@ -21,6 +21,8 @@ import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import net.hasor.cobble.loader.ResourceLoader;
+import net.hasor.cobble.loader.providers.ClassPathResourceLoader;
 import net.hasor.dataql.Finder;
 import net.hasor.dataql.Query;
 import net.hasor.dataql.compiler.qil.*;
@@ -36,6 +38,8 @@ import org.antlr.v4.runtime.CommonTokenStream;
  * @version : 2017-07-03
  */
 public class QueryHelper {
+    private static final ResourceLoader DEFAULT_RESOURCE_LOADER = ClassPathResourceLoader.INSTANCE;
+
     /**
      * 解析 DataQL 执行脚本
      * @param queryString 脚本字符串
@@ -84,38 +88,38 @@ public class QueryHelper {
     /**
      * 解析并编译 DataQL 执行脚本
      * @param queryString 脚本字符串
-     * @param importFinder import 导入用到的资源加载器。
+     * @param resourceLoader import 导入用到的资源加载器。
      */
-    public static QIL queryCompiler(String queryString, Finder importFinder) throws IOException {
-        return queryCompiler(queryParser(queryString), CompilerArguments.DEFAULT, importFinder);
+    public static QIL queryCompiler(String queryString, ResourceLoader resourceLoader) throws IOException {
+        return queryCompiler(queryParser(queryString), CompilerArguments.DEFAULT, resourceLoader);
     }
 
     /**
      * 解析并编译 DataQL 执行脚本
      * @param queryReader 脚本输入流
-     * @param importFinder import 导入用到的资源加载器。
+     * @param resourceLoader import 导入用到的资源加载器。
      */
-    public static QIL queryCompiler(Reader queryReader, Finder importFinder) throws IOException {
-        return queryCompiler(queryParser(queryReader), CompilerArguments.DEFAULT, importFinder);
+    public static QIL queryCompiler(Reader queryReader, ResourceLoader resourceLoader) throws IOException {
+        return queryCompiler(queryParser(queryReader), CompilerArguments.DEFAULT, resourceLoader);
     }
 
     /**
      * 解析并编译 DataQL 执行脚本
      * @param queryInput 脚本输入流，使用 UTF-8 字符集
-     * @param importFinder import 导入用到的资源加载器。
+     * @param resourceLoader import 导入用到的资源加载器。
      */
-    public static QIL queryCompiler(InputStream queryInput, Finder importFinder) throws IOException {
-        return queryCompiler(queryParser(queryInput, StandardCharsets.UTF_8), CompilerArguments.DEFAULT, importFinder);
+    public static QIL queryCompiler(InputStream queryInput, ResourceLoader resourceLoader) throws IOException {
+        return queryCompiler(queryParser(queryInput, StandardCharsets.UTF_8), CompilerArguments.DEFAULT, resourceLoader);
     }
 
     /**
      * 解析并编译 DataQL 执行脚本
      * @param queryInput 脚本输入流
      * @param charset 读取字节流使用的字符集
-     * @param importFinder import 导入用到的资源加载器。
+     * @param resourceLoader import 导入用到的资源加载器。
      */
-    public static QIL queryCompiler(InputStream queryInput, Charset charset, Finder importFinder) throws IOException {
-        return queryCompiler(queryParser(queryInput, charset), CompilerArguments.DEFAULT, importFinder);
+    public static QIL queryCompiler(InputStream queryInput, Charset charset, ResourceLoader resourceLoader) throws IOException {
+        return queryCompiler(queryParser(queryInput, charset), CompilerArguments.DEFAULT, resourceLoader);
     }
 
     /**
@@ -123,9 +127,9 @@ public class QueryHelper {
      * @param queryModel 解析之后的 DataQL 查询模型。
      * @param compilerArguments 编译参数，编译参数中包含了编译器需要的一些列变量。例如：编译变量，相当于在脚本中预先 执行 var xxx = null;
      * 其意义在于在编译期就把脚本中尚未定义过的变量预先进行声明从而免去通过 ${...} 或类似方式查找变量。
-     * @param importFinder import 导入用到的资源加载器。
+     * @param resourceLoader import 导入用到的资源加载器。
      */
-    public static QIL queryCompiler(QueryModel queryModel, CompilerArguments compilerArguments, Finder importFinder) throws IOException {
+    public static QIL queryCompiler(QueryModel queryModel, CompilerArguments compilerArguments, ResourceLoader resourceLoader) throws IOException {
         RootBlockSet rootBlockSet = null;
         if (queryModel instanceof RootBlockSet) {
             rootBlockSet = (RootBlockSet) queryModel;
@@ -140,7 +144,7 @@ public class QueryHelper {
         }
         //
         InstQueue queue = new InstQueue(compilerArguments);
-        CompilerContext compilerContext = new CompilerContext(new CompilerEnvironment(importFinder));
+        CompilerContext compilerContext = new CompilerContext(resourceLoader);
         Map<String, Integer> compilerVarMap = new HashMap<>();
         compilerVar.forEach(var -> {
             int localIdx = compilerContext.push(var);
@@ -153,27 +157,52 @@ public class QueryHelper {
 
     /** 创建查询实例 */
     public static Query createQuery(String queryString, Finder finder) throws IOException {
-        return createQuery(queryCompiler(queryString, finder), finder);
+        return createQuery(queryString, DEFAULT_RESOURCE_LOADER, finder);
+    }
+
+    /** 创建查询实例 */
+    public static Query createQuery(String queryString, ResourceLoader resourceLoader, Finder finder) throws IOException {
+        return createQuery(queryCompiler(queryString, resourceLoader), finder);
     }
 
     /** 创建查询实例 */
     public static Query createQuery(Reader queryReader, Finder finder) throws IOException {
-        return createQuery(queryCompiler(queryReader, finder), finder);
+        return createQuery(queryReader, DEFAULT_RESOURCE_LOADER, finder);
+    }
+
+    /** 创建查询实例 */
+    public static Query createQuery(Reader queryReader, ResourceLoader resourceLoader, Finder finder) throws IOException {
+        return createQuery(queryCompiler(queryReader, resourceLoader), finder);
     }
 
     /** 创建查询实例 */
     public static Query createQuery(InputStream queryInput, Finder finder) throws IOException {
-        return createQuery(queryCompiler(queryInput, finder), finder);
+        return createQuery(queryInput, DEFAULT_RESOURCE_LOADER, finder);
+    }
+
+    /** 创建查询实例 */
+    public static Query createQuery(InputStream queryInput, ResourceLoader resourceLoader, Finder finder) throws IOException {
+        return createQuery(queryCompiler(queryInput, resourceLoader), finder);
     }
 
     /** 创建查询实例 */
     public static Query createQuery(InputStream inputStream, Charset charset, Finder finder) throws IOException {
-        return createQuery(queryCompiler(inputStream, charset, finder), finder);
+        return createQuery(inputStream, charset, DEFAULT_RESOURCE_LOADER, finder);
+    }
+
+    /** 创建查询实例 */
+    public static Query createQuery(InputStream inputStream, Charset charset, ResourceLoader resourceLoader, Finder finder) throws IOException {
+        return createQuery(queryCompiler(inputStream, charset, resourceLoader), finder);
     }
 
     /** 创建查询实例 */
     public static Query createQuery(QueryModel queryModel, CompilerArguments compilerArguments, Finder finder) throws IOException {
-        return createQuery(queryCompiler(queryModel, compilerArguments, finder), finder);
+        return createQuery(queryModel, compilerArguments, DEFAULT_RESOURCE_LOADER, finder);
+    }
+
+    /** 创建查询实例 */
+    public static Query createQuery(QueryModel queryModel, CompilerArguments compilerArguments, ResourceLoader resourceLoader, Finder finder) throws IOException {
+        return createQuery(queryCompiler(queryModel, compilerArguments, resourceLoader), finder);
     }
 
     /** 创建查询实例 */
