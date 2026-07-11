@@ -20,7 +20,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import net.hasor.cobble.ExceptionUtils;
 import net.hasor.dataql.domain.*;
-import net.hasor.dataql.host.DefaultFinder;
 import net.hasor.dataql.host.function.AbstractUdfSource;
 import net.hasor.dataql.host.function.UdfParams;
 
@@ -200,7 +199,7 @@ public class CollectionUdfSource extends AbstractUdfSource {
         if (maybeCollection != null) {
             initData.addAll(foreach(maybeCollection));
         }
-        return new InnerListStateUdfSource(initData).getUdfResource(DefaultFinder.DEFAULT).get();
+        return new InnerListStateUdfSource(initData).getUdfResource(null).get();
     }
 
     /** 对 List 进行排序 */
@@ -368,7 +367,7 @@ public class CollectionUdfSource extends AbstractUdfSource {
         if (collection != null) {
             initData.putAll(collection);
         }
-        return new InnerMapStateUdfSource(initData).getUdfResource(DefaultFinder.DEFAULT).get();
+        return new InnerMapStateUdfSource(initData).getUdfResource(null).get();
     }
 
     /** 将两个 Map List 进行链接，行为和 sql 中的 left join 相同 */

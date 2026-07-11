@@ -26,7 +26,8 @@ import net.hasor.dataql.compiler.CompilerHelper;
 import net.hasor.dataql.compiler.qil.QIL;
 import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.domain.HintsSet;
-import net.hasor.dataql.host.DefaultFinder;
+import net.hasor.dataql.host.HostConfiguration;
+import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataql.kernel.Finder;
 import net.hasor.dataql.parser.QueryModel;
 
@@ -35,13 +36,15 @@ import net.hasor.dataql.parser.QueryModel;
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-10-19
  */
-public class DataQLScriptEngine extends AbstractScriptEngine implements ScriptEngine, Compilable, Hints {
-    private final HintsSet                  optionSet      = new HintsSet();
-    private final DataQLScriptEngineFactory engineFactory;
-    private       Finder                    finder         = DefaultFinder.DEFAULT;
-    private       ResourceLoader            resourceLoader = ClassPathResourceLoader.INSTANCE;
+public class QueryScriptEngine extends AbstractScriptEngine implements ScriptEngine, Compilable, Hints {
+    private final HintsSet                  optionSet         = new HintsSet();
+    private final QueryScriptEngineFactory  engineFactory;
+    private       Finder                    parentFinder;
+    private       ResourceLoader            resourceLoader    = ClassPathResourceLoader.INSTANCE;
+    private       HostConfiguration         hostConfiguration = new HostConfiguration();
+    private       QueryManager              queryManager      = new QueryManager(this.hostConfiguration);
 
-    DataQLScriptEngine(DataQLScriptEngineFactory engineFactory) {
+    QueryScriptEngine(QueryScriptEngineFactory engineFactory) {
         this.engineFactory = engineFactory;
     }
 
@@ -77,11 +80,14 @@ public class DataQLScriptEngine extends AbstractScriptEngine implements ScriptEn
     }
 
     public Finder getFinder() {
-        return finder;
+        return this.hostConfiguration;
     }
 
     public void setFinder(Finder finder) {
-        this.finder = Objects.requireNonNull(finder, "finder is null.");
+        this.parentFinder = Objects.requireNonNull(finder, "finder is null.");
+        this.hostConfiguration = new HostConfiguration(this.parentFinder);
+        this.hostConfiguration.setResourceLoader(this.resourceLoader);
+        this.queryManager = new QueryManager(this.hostConfiguration);
     }
 
     public ResourceLoader getResourceLoader() {
@@ -90,6 +96,11 @@ public class DataQLScriptEngine extends AbstractScriptEngine implements ScriptEn
 
     public void setResourceLoader(ResourceLoader resourceLoader) {
         this.resourceLoader = Objects.requireNonNull(resourceLoader, "resourceLoader is null.");
+        this.hostConfiguration.setResourceLoader(this.resourceLoader);
+    }
+
+    QueryManager getQueryManager() {
+        return this.queryManager;
     }
     // -------------------------------------------------------------------------------------------- ScriptEngine
 
@@ -117,7 +128,7 @@ public class DataQLScriptEngine extends AbstractScriptEngine implements ScriptEn
             CompilerArguments compilerArguments = CompilerArguments.DEFAULT.copyAsNew();
             compilerArguments.getCompilerVar().addAll(global.keySet());
             QIL compilerQIL = CompilerHelper.queryCompiler(queryModel, compilerArguments, this.resourceLoader);
-            return new DataQLCompiledScript(compilerQIL, this);
+            return new QueryCompiledScript(compilerQIL, this);
         } catch (IOException e) {
             throw new ScriptException(e);
         }

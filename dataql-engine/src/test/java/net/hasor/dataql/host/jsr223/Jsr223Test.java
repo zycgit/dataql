@@ -1,21 +1,24 @@
 package net.hasor.dataql.host.jsr223;
-import net.hasor.dataql.host.DefaultFinder;
+import net.hasor.dataql.host.HostConfiguration;
 import net.hasor.dataql.kernel.Finder;
 import net.hasor.dataql.kernel.QueryResult;
 import net.hasor.dataql.domain.Udf;
 import net.hasor.dataql.domain.DataModel;
 import net.hasor.dataql.domain.ListModel;
 import net.hasor.dataql.domain.ValueModel;
-import net.hasor.dataql.host.jsr223.DataQLScriptEngine;
+import net.hasor.dataql.host.jsr223.QueryScriptEngine;
 import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import javax.script.*;
 
 public class Jsr223Test {
     @Test
     public void jar223_defaultFinder() {
-        DataQLScriptEngine scriptEngine = (DataQLScriptEngine) new ScriptEngineManager().getEngineByName("dataql");
-        assert scriptEngine.getFinder() == DefaultFinder.DEFAULT;
+        QueryScriptEngine scriptEngine = (QueryScriptEngine) new ScriptEngineManager().getEngineByName("dataql");
+        assertNotNull(scriptEngine.getFinder());
+        assertTrue(scriptEngine.getFinder() instanceof HostConfiguration);
     }
 
     @Test
@@ -50,7 +53,7 @@ public class Jsr223Test {
     @Test
     public void jar223_3() throws ScriptException {
         ScriptEngineManager engineManager = new ScriptEngineManager();
-        DataQLScriptEngine scriptEngine = (DataQLScriptEngine) engineManager.getEngineByName("dataql");
+        QueryScriptEngine scriptEngine = (QueryScriptEngine) engineManager.getEngineByName("dataql");
         //
         SimpleScriptContext params = new SimpleScriptContext();
         params.setBindings(scriptEngine.createBindings(), ScriptContext.GLOBAL_SCOPE);
@@ -70,7 +73,7 @@ public class Jsr223Test {
     public void jar223_4() throws ScriptException {
         Udf testUdf = (readOnly, params) -> readOnly.getHint("abc");
         //
-        DataQLScriptEngine scriptEngine = (DataQLScriptEngine) new ScriptEngineManager().getEngineByName("dataql");
+        QueryScriptEngine scriptEngine = (QueryScriptEngine) new ScriptEngineManager().getEngineByName("dataql");
         SimpleScriptContext params = new SimpleScriptContext();
         params.setBindings(scriptEngine.createBindings(), ScriptContext.GLOBAL_SCOPE);// GLOBAL is CompilerVar
         params.setAttribute("foo", testUdf, ScriptContext.GLOBAL_SCOPE);

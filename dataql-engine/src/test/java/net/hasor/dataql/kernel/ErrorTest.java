@@ -1,14 +1,13 @@
 package net.hasor.dataql.kernel;
 import net.hasor.dataql.ConfigOption;
-import net.hasor.dataql.host.DataQL;
+import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataql.AbstractTestResource;
-import net.hasor.dataql.host.DataQL;
 import net.hasor.dataql.domain.DataModel;
 import net.hasor.dataql.domain.ValueModel;
 import net.hasor.dataql.compiler.CompilerArguments;
 import net.hasor.dataql.kernel.QueryRuntimeException;
 import net.hasor.dataql.kernel.ThrowRuntimeException;
-import net.hasor.dataql.host.DataQLContext;
+import net.hasor.dataql.host.QueryManager;
 import net.hasor.test.dataql.udfs.ErrorUdf;
 import org.junit.Test;
 
@@ -20,7 +19,7 @@ public class ErrorTest extends AbstractTestResource {
         qlString = qlString + "return err(a)";
         //
         try {
-            DataQL dataQL = new DataQLContext();
+            QueryManager dataQL = new QueryManager();
             DataModel dataModel = dataQL.createQuery(qlString).execute().getData();
             assert false;
         } catch (Exception e) {
@@ -37,7 +36,7 @@ public class ErrorTest extends AbstractTestResource {
         qlString = qlString + "var abc = err(); return 12345";
         //
         try {
-            DataQL dataQL = new DataQLContext();
+            QueryManager dataQL = new QueryManager();
             dataQL.configOption(ConfigOption.CODE_LOCATION, CompilerArguments.CodeLocationEnum.TERM);
             DataModel dataModel = dataQL.createQuery(qlString).execute().getData();
             assert false;
@@ -56,7 +55,7 @@ public class ErrorTest extends AbstractTestResource {
         qlString = qlString + "return null / dat1";
         //
         try {
-            DataQL dataQL = new DataQLContext();
+            QueryManager dataQL = new QueryManager();
             dataQL.configOption(ConfigOption.CODE_LOCATION, CompilerArguments.CodeLocationEnum.TERM);
             DataModel dataModel = dataQL.createQuery(qlString).execute().getData();
             assert false;

@@ -17,26 +17,15 @@ package net.hasor.dataql.compiler;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.compiler.CompilerHelper;
 import net.hasor.cobble.loader.providers.ClassPathResourceLoader;
-import net.hasor.dataql.compiler.CompilerHelper;
 import net.hasor.dataql.AbstractTestResource;
-import net.hasor.dataql.compiler.CompilerHelper;
 import net.hasor.dataql.compiler.qil.QIL;
-import net.hasor.dataql.compiler.CompilerHelper;
 import net.hasor.dataql.parser.QueryModel;
-import net.hasor.dataql.compiler.CompilerHelper;
 import net.hasor.dataql.compiler.CompilerArguments;
-import net.hasor.dataql.compiler.CompilerHelper;
 import net.hasor.dataql.compiler.CompilerArguments.CodeLocationEnum;
-import net.hasor.dataql.compiler.CompilerHelper;
-import net.hasor.dataql.host.QueryFactory;
-import net.hasor.dataql.compiler.CompilerHelper;
 import org.junit.Test;
-import net.hasor.dataql.compiler.CompilerHelper;
 
 import java.io.IOException;
-import net.hasor.dataql.compiler.CompilerHelper;
 import java.util.List;
-import net.hasor.dataql.compiler.CompilerHelper;
 
 /**
  * 测试用例

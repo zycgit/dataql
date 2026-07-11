@@ -12,4 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-net.hasor.dataql.host.jsr223.QueryScriptEngineFactory
+net.hasor.dataql.host.function.basic.CollectionUdfSource
+net.hasor.dataql.host.function.basic.CompareUdfSource
+net.hasor.dataql.host.function.basic.ConvertUdfSource
+net.hasor.dataql.host.function.basic.DateTimeUdfSource
+net.hasor.dataql.host.function.basic.NumberUdfSource
+net.hasor.dataql.host.function.basic.StateUdfSource
+net.hasor.dataql.host.function.basic.StringUdfSource
+net.hasor.dataql.host.function.encryt.CodecUdfSource

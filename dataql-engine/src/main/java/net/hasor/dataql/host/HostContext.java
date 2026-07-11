@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.domain;
+package net.hasor.dataql.host;
 
-/** SPI factory for a UDF source type. */
-public interface UdfSourceFactory {
+import net.hasor.dataql.kernel.Finder;
 
-    String getResourceName();
-
-    UdfSource create();
+/**
+ * Host 上下文，为 SPI 扩展点（FragmentProcessFactory、UdfSourceFactory）提供宿主环境信息。
+ * 继承 {@link Finder}，SPI 工厂可直接通过上下文进行资源查找。
+ */
+public interface HostContext extends Finder {
 }

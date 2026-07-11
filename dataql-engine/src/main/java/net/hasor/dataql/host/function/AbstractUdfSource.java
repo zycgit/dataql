@@ -17,8 +17,8 @@ import net.hasor.cobble.ClassUtils;
 import net.hasor.cobble.function.ESupplier;
 import net.hasor.dataql.domain.Udf;
 import net.hasor.dataql.domain.UdfSource;
-import net.hasor.dataql.domain.UdfSourceFactory;
 import net.hasor.dataql.host.HostContext;
+import net.hasor.dataql.host.spi.UdfSourceFactory;
 import net.hasor.dataql.kernel.Finder;
 
 /**
@@ -61,7 +61,7 @@ public abstract class AbstractUdfSource implements UdfSource, UdfSourceFactory {
     }
 
     @Override
-    public UdfSource create(HostContext hostContext) {
+    public UdfSource create(HostContext context) {
         return ClassUtils.newInstance(this.getClass());
     }
 }

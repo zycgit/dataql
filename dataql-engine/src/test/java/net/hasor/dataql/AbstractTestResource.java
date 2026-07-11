@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 package net.hasor.dataql;
-import net.hasor.dataql.host.DefaultFinder;
+import net.hasor.dataql.host.HostConfiguration;
+import net.hasor.dataql.host.QueryManager;
 import net.hasor.cobble.ResourcesUtils;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.io.IOUtils;
@@ -25,8 +26,6 @@ import net.hasor.dataql.parser.ast.AstVisitor;
 import net.hasor.dataql.parser.ast.InstVisitorContext;
 import net.hasor.dataql.kernel.Finder;
 import net.hasor.dataql.compiler.CompilerArguments;
-import net.hasor.dataql.host.QueryFactory;
-import net.hasor.dataql.host.QueryFactory;
 import net.hasor.dataql.compiler.CompilerHelper;
 import net.hasor.dataql.host.Query;
 
@@ -66,12 +65,13 @@ public class AbstractTestResource {
 
     protected Query compilerQL(String qlString) throws IOException {
         QueryModel queryModel = CompilerHelper.queryParser(qlString);
-        return QueryFactory.createQuery(queryModel, CompilerArguments.DEFAULT, DefaultFinder.DEFAULT);
+        return new QueryManager().createQuery(queryModel, CompilerArguments.DEFAULT);
     }
 
     protected Query compilerQL(String qlString, Finder finder) throws IOException {
         QueryModel queryModel = CompilerHelper.queryParser(qlString);
-        return QueryFactory.createQuery(queryModel, CompilerArguments.DEFAULT, finder);
+        HostConfiguration configuration = new HostConfiguration(finder);
+        return new QueryManager(configuration.getHostContext()).createQuery(queryModel, CompilerArguments.DEFAULT);
     }
 
     protected List<String> acceptVisitor(QueryModel queryModel) {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.test.dataql.beans;
-import net.hasor.dataql.domain.UdfSourceAssembly;
+import net.hasor.dataql.host.function.AbstractUdfSource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +23,7 @@ import java.util.List;
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2019-12-12
  */
-public class UserOrderUdfSource implements UdfSourceAssembly {
+public class UserOrderUdfSource extends AbstractUdfSource {
     /** user_list */
     public static List<UserBean> userList() {
         return new ArrayList<UserBean>() {{

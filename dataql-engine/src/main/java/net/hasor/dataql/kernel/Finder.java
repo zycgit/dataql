@@ -6,11 +6,15 @@
  */
 package net.hasor.dataql.kernel;
 
-/**
- * 资源加载器
- */
+import net.hasor.cobble.loader.ResourceLoader;
+
+/** 运行期资源查找器。 */
 public interface Finder {
-    /** 默认实现 */
+    /** 获取类加载器。 */
+    ClassLoader getClassLoader();
+
+    /** 获取脚本资源加载器。 */
+    ResourceLoader getResourceLoader();
 
     Object findBean(String beanName) throws ClassNotFoundException;
 

@@ -21,7 +21,6 @@ import net.hasor.dataql.compiler.qil.QIL;
 import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.domain.HintsSet;
 import net.hasor.dataql.host.Query;
-import net.hasor.dataql.host.QueryFactory;
 import net.hasor.dataql.kernel.CustomizeScope;
 import net.hasor.dataql.kernel.QueryResult;
 import net.hasor.dataql.kernel.QueryRuntimeException;
@@ -31,12 +30,12 @@ import net.hasor.dataql.kernel.QueryRuntimeException;
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-10-19
  */
-class DataQLCompiledScript extends CompiledScript implements Hints {
+class QueryCompiledScript extends CompiledScript implements Hints {
     private final QIL                compilerQIL;
     private final HintsSet           optionSet;
-    private final DataQLScriptEngine engine;
+    private final QueryScriptEngine engine;
 
-    public DataQLCompiledScript(QIL compilerQIL, DataQLScriptEngine engine) {
+    public QueryCompiledScript(QIL compilerQIL, QueryScriptEngine engine) {
         this.compilerQIL = compilerQIL;
         this.optionSet = new HintsSet();
         this.optionSet.setHints(engine);
@@ -80,7 +79,7 @@ class DataQLCompiledScript extends CompiledScript implements Hints {
 
     @Override
     public QueryResult eval(ScriptContext context) throws ScriptException {
-        Query query = QueryFactory.createQuery(this.compilerQIL, this.engine.getFinder());
+        Query query = this.engine.getQueryManager().createQuery(this.compilerQIL);
         Bindings globalBindings = context.getBindings(ScriptContext.GLOBAL_SCOPE);
         if (globalBindings != null) {
             globalBindings.forEach(query::addShareVar);

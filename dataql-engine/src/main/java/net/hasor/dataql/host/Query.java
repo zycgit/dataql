@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql;
+package net.hasor.dataql.host;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
-import net.hasor.dataql.runtime.QueryRuntimeException;
+import net.hasor.dataql.domain.Hints;
+import net.hasor.dataql.kernel.CustomizeScope;
+import net.hasor.dataql.kernel.QueryResult;
+import net.hasor.dataql.kernel.QueryRuntimeException;
 
 /**
  * 查询

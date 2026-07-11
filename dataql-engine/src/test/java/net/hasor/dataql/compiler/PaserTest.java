@@ -16,13 +16,9 @@
 package net.hasor.dataql.compiler;
 import net.hasor.dataql.AbstractTestResource;
 import net.hasor.dataql.compiler.CompilerHelper;
-import net.hasor.dataql.host.QueryFactory;
-import net.hasor.dataql.compiler.CompilerHelper;
 import org.junit.Test;
-import net.hasor.dataql.compiler.CompilerHelper;
 
 import java.io.IOException;
-import net.hasor.dataql.compiler.CompilerHelper;
 
 /**
  * 测试用例

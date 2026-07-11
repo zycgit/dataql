@@ -25,7 +25,7 @@ import javax.script.ScriptEngineFactory;
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-10-19
  */
-public class DataQLScriptEngineFactory implements ScriptEngineFactory {
+public class QueryScriptEngineFactory implements ScriptEngineFactory {
     private static final String VERSION       = "2.0";
     private static final String SHORT_NAME    = "dataql";
     private static final String LANGUAGE_NAME = "DataQL";
@@ -112,6 +112,6 @@ public class DataQLScriptEngineFactory implements ScriptEngineFactory {
 
     @Override
     public ScriptEngine getScriptEngine() {
-        return new DataQLScriptEngine(this);
+        return new QueryScriptEngine(this);
     }
 }
