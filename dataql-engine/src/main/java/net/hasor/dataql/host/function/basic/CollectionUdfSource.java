@@ -33,13 +33,13 @@ public class CollectionUdfSource extends AbstractUdfSource {
     /** 集合 或 Map 是否为空 */
     public static boolean isEmpty(Object target) {
         if (target instanceof List) {
-            return ((List) target).isEmpty();
+            return ((List<?>) target).isEmpty();
         }
         if (target instanceof ListModel) {
             return ((ListModel) target).size() == 0;
         }
         if (target instanceof Map) {
-            return ((Map) target).isEmpty();
+            return ((Map<?, ?>) target).isEmpty();
         }
         if (target instanceof ObjectModel) {
             return ((ObjectModel) target).size() == 0;
@@ -57,7 +57,7 @@ public class CollectionUdfSource extends AbstractUdfSource {
             return 0;
         }
         if (target instanceof Map) {
-            return ((Map) target).size();
+            return ((Map<?, ?>) target).size();
         }
         return foreach(target).size();
     }
@@ -86,10 +86,10 @@ public class CollectionUdfSource extends AbstractUdfSource {
         }
         Map<String, Object> finalMap = new LinkedHashMap<>();
         Object[] allParams = dataArrays.allParams();
-        for (int i = 0; i < allParams.length; i++) {
-            Object object = allParams[i];
+        for (Object allParam : allParams) {
+            Object object = allParam;
             if (object instanceof Map) {
-                ((Map) object).forEach((o, o2) -> {
+                ((Map<?, ?>) object).forEach((o, o2) -> {
                     finalMap.put(o.toString(), o2);
                 });
             }
@@ -494,7 +494,7 @@ public class CollectionUdfSource extends AbstractUdfSource {
 
     /** Map 的 Key 替换 */
     public static Map<String, Object> mapKeyReplace(Map<String, Object> mapValue, Udf replaceKey, Hints hints) throws Throwable {
-        if (replaceKey == null || mapValue == null || mapValue.size() == 0) {
+        if (replaceKey == null || mapValue == null || mapValue.isEmpty()) {
             return mapValue;
         }
         //

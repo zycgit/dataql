@@ -392,7 +392,7 @@ public class StringUdfSource extends AbstractUdfSource {
 
     /** Checks if a String is empty ("") or null. */
     public static boolean isEmpty(String str) {
-        return str == null || str.length() == 0;
+        return str == null || str.isEmpty();
     }
 
     /** 忽略大小写比较相等 */

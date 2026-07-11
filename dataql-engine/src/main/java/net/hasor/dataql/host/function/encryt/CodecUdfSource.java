@@ -46,7 +46,7 @@ public class CodecUdfSource extends AbstractUdfSource {
         if (content == null) {
             return null;
         }
-        if (content.size() == 0) {
+        if (content.isEmpty()) {
             return "";
         }
         byte[] bytes = ArrayUtils.toPrimitive(content.toArray(new Byte[0]));
