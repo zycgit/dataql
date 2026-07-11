@@ -108,7 +108,7 @@ public class PrimitiveVariable extends BlockLocation implements Variable, Inst {
                 }
             } else if (number instanceof BigInteger bigInteger) {
                 int beginSub = bigInteger.compareTo(BigInteger.ZERO) < 0 ? 1 : 0;
-                String string = radix2String(this.radix) + ((BigInteger) number).toString(this.radix).substring(beginSub);
+                String string = radix2String(this.radix) + bigInteger.toString(this.radix).substring(beginSub);
                 if (beginSub > 0) {
                     writer.write("-" + string);
                 } else {

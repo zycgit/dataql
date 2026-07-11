@@ -13,21 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.fx.basic;
+package net.hasor.dataql.host.function.basic;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import net.hasor.core.Singleton;
-import net.hasor.dataql.UdfSourceAssembly;
+import net.hasor.dataql.host.function.AbstractUdfSource;
 
 /**
  * 时间函数。函数库引入 <code>import 'net.hasor.dataql.fx.basic.DateTimeUdfSource' as time;</code>
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2019-12-12
  */
-@Singleton
-public class DateTimeUdfSource implements UdfSourceAssembly {
+public class DateTimeUdfSource extends AbstractUdfSource {
     /** 返回当前时间戳 long 格式 */
     public static long now() {
         return System.currentTimeMillis();

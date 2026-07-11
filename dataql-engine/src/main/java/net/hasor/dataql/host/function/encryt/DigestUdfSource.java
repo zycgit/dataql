@@ -13,20 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.fx.encryt;
+package net.hasor.dataql.host.function.encryt;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
-import net.hasor.core.Singleton;
-import net.hasor.dataql.UdfSourceAssembly;
+import net.hasor.dataql.host.function.AbstractUdfSource;
 
 /**
  * 摘要算法库。函数库引入 <code>import 'net.hasor.dataql.fx.encryt.DigestUdfSource' as digest;</code>
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2020-03-31
  */
-@Singleton
 @Deprecated
-public class DigestUdfSource implements UdfSourceAssembly {
+public class DigestUdfSource extends AbstractUdfSource {
     /** 使用指定方式进行摘要计算 */
     public static byte[] digestBytes(DigestType digestType, List<Byte> content) throws NoSuchAlgorithmException {
         return CodecUdfSource.digestBytes(digestType.name(), content);

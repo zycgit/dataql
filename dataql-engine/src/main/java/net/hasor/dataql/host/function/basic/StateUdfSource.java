@@ -13,20 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.fx.basic;
+package net.hasor.dataql.host.function.basic;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
-import net.hasor.core.Singleton;
-import net.hasor.dataql.Udf;
-import net.hasor.dataql.UdfSourceAssembly;
+import net.hasor.dataql.domain.Udf;
+import net.hasor.dataql.host.function.AbstractUdfSource;
 
 /**
  * 状态函数 <code>import 'net.hasor.dataql.fx.basic.StateUdfSource' as state;</code>
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2019-12-12
  */
-@Singleton
-public class StateUdfSource implements UdfSourceAssembly {
+public class StateUdfSource extends AbstractUdfSource {
     /** 返回一个Udf，每次调用这个UDF，都会返回一个 Number。Number值较上一次会自增 1。 */
     public static Udf decNumber(long initValue) {
         AtomicLong atomicLong = new AtomicLong(initValue);

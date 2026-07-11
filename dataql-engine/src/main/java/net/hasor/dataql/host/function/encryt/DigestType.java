@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.fx.encryt;
+package net.hasor.dataql.host.function.encryt;
 /**
  * 摘要算法类型枚举
  * @author 赵永春 (zyc@hasor.net)
@@ -27,7 +27,7 @@ public enum DigestType {
     SHA512("SHA512");   //
     private final String digestDesc;
 
-    private DigestType(String digestDesc) {
+    DigestType(String digestDesc) {
         this.digestDesc = digestDesc;
     }
 

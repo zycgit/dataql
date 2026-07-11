@@ -13,18 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.fx.basic;
-import net.hasor.core.Singleton;
-import net.hasor.dataql.UdfSourceAssembly;
+package net.hasor.dataql.host.function.basic;
+import net.hasor.dataql.host.function.AbstractUdfSource;
 
 /**
  * 比较函数。函数库引入 <code>import 'net.hasor.dataql.fx.basic.CompareUdfSource' as compare;</code>
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2020-03-31
  */
-@Singleton
 @Deprecated
-public class CompareUdfSource implements UdfSourceAssembly {
+public class CompareUdfSource extends AbstractUdfSource {
     /**
      * Compares two strings lexicographically.
      * The comparison is based on the Unicode value of each character in

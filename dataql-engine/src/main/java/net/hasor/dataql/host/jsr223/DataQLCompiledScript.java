@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.extend.jsr223;
+package net.hasor.dataql.host.jsr223;
 import java.util.HashMap;
 import java.util.Map;
 import javax.script.*;
-import net.hasor.dataql.CustomizeScope;
-import net.hasor.dataql.Hints;
-import net.hasor.dataql.Query;
-import net.hasor.dataql.QueryResult;
 import net.hasor.dataql.compiler.qil.QIL;
-import net.hasor.dataql.runtime.HintsSet;
-import net.hasor.dataql.runtime.QueryHelper;
-import net.hasor.dataql.runtime.QueryRuntimeException;
+import net.hasor.dataql.domain.Hints;
+import net.hasor.dataql.domain.HintsSet;
+import net.hasor.dataql.host.Query;
+import net.hasor.dataql.host.QueryFactory;
+import net.hasor.dataql.kernel.CustomizeScope;
+import net.hasor.dataql.kernel.QueryResult;
+import net.hasor.dataql.kernel.QueryRuntimeException;
 
 /**
  * JSR223 编译机制的实现。
@@ -32,9 +32,9 @@ import net.hasor.dataql.runtime.QueryRuntimeException;
  * @version : 2017-10-19
  */
 class DataQLCompiledScript extends CompiledScript implements Hints {
-    private QIL                compilerQIL;
-    private HintsSet           optionSet;
-    private DataQLScriptEngine engine;
+    private final QIL                compilerQIL;
+    private final HintsSet           optionSet;
+    private final DataQLScriptEngine engine;
 
     public DataQLCompiledScript(QIL compilerQIL, DataQLScriptEngine engine) {
         this.compilerQIL = compilerQIL;
@@ -80,7 +80,7 @@ class DataQLCompiledScript extends CompiledScript implements Hints {
 
     @Override
     public QueryResult eval(ScriptContext context) throws ScriptException {
-        Query query = QueryHelper.createQuery(this.compilerQIL, this.engine.getFinder());
+        Query query = QueryFactory.createQuery(this.compilerQIL, this.engine.getFinder());
         Bindings globalBindings = context.getBindings(ScriptContext.GLOBAL_SCOPE);
         if (globalBindings != null) {
             globalBindings.forEach(query::addShareVar);

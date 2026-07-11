@@ -13,29 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.fx.basic;
+package net.hasor.dataql.host.function.basic;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import net.hasor.cobble.ExceptionUtils;
-import net.hasor.core.Singleton;
-import net.hasor.dataql.Finder;
-import net.hasor.dataql.Hints;
-import net.hasor.dataql.Udf;
-import net.hasor.dataql.UdfSourceAssembly;
-import net.hasor.dataql.domain.DataModel;
-import net.hasor.dataql.domain.DomainHelper;
-import net.hasor.dataql.domain.ListModel;
-import net.hasor.dataql.domain.ObjectModel;
+import net.hasor.dataql.domain.*;
+import net.hasor.dataql.host.DefaultFinder;
+import net.hasor.dataql.host.function.AbstractUdfSource;
+import net.hasor.dataql.host.function.UdfParams;
 
 /**
  * 集合函数。函数库引入 <code>import 'net.hasor.dataql.fx.basic.CollectionUdfSource' as collect;</code>
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2019-12-12
  */
-@Singleton
-public class CollectionUdfSource implements UdfSourceAssembly {
+public class CollectionUdfSource extends AbstractUdfSource {
     /** 集合 或 Map 是否为空 */
     public static boolean isEmpty(Object target) {
         if (target instanceof List) {
@@ -206,7 +200,7 @@ public class CollectionUdfSource implements UdfSourceAssembly {
         if (maybeCollection != null) {
             initData.addAll(foreach(maybeCollection));
         }
-        return new Inner_ListStateUdfSource(initData).getUdfResource(Finder.DEFAULT).get();
+        return new InnerListStateUdfSource(initData).getUdfResource(DefaultFinder.DEFAULT).get();
     }
 
     /** 对 List 进行排序 */
@@ -359,10 +353,10 @@ public class CollectionUdfSource implements UdfSourceAssembly {
     // -------------------------------------------------------------------------------------------------------------------------- Map
     private static String evalJoinKey(Object data, String[] joinField) {
         ObjectModel objectModel = (ObjectModel) DomainHelper.convertTo(data);
-        StringBuilder joinKey = new StringBuilder("");
+        StringBuilder joinKey = new StringBuilder();
         Arrays.stream(joinField).forEach(s -> {
             Object unwrap = objectModel.get(s).unwrap();
-            unwrap = (unwrap == null) ? "NULL" : ("s" + unwrap.toString());
+            unwrap = (unwrap == null) ? "NULL" : ("s" + unwrap);
             joinKey.append(unwrap).append(",");
         });
         return joinKey.toString();
@@ -374,7 +368,7 @@ public class CollectionUdfSource implements UdfSourceAssembly {
         if (collection != null) {
             initData.putAll(collection);
         }
-        return new Inner_MapStateUdfSource(initData).getUdfResource(Finder.DEFAULT).get();
+        return new InnerMapStateUdfSource(initData).getUdfResource(DefaultFinder.DEFAULT).get();
     }
 
     /** 将两个 Map List 进行链接，行为和 sql 中的 left join 相同 */

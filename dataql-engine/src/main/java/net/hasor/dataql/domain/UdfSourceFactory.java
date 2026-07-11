@@ -13,19 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.parser.ast;
-import java.io.IOException;
-import net.hasor.dataql.domain.Hints;
+package net.hasor.dataql.domain;
 
-/**
- * 格式化输出
- * @author 赵永春 (zyc@hasor.net)
- * @version : 2017-03-23
- */
-public interface InstFormat {
-    int  fixedLength = 4;
-    char quoteChar   = '"';
+/** SPI factory for a UDF source type. */
+public interface UdfSourceFactory {
 
-    /** 格式化 */
-    void doFormat(int depth, Hints formatOption, FormatWriter writer) throws IOException;
+    String getResourceName();
+
+    UdfSource create();
 }

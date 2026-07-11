@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.fx.encryt;
+package net.hasor.dataql.host.function.encryt;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -24,17 +24,15 @@ import java.util.Base64;
 import java.util.List;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import net.hasor.core.Singleton;
-import net.hasor.dataql.UdfSourceAssembly;
-import net.hasor.utils.ArrayUtils;
+import net.hasor.cobble.ArrayUtils;
+import net.hasor.dataql.host.function.AbstractUdfSource;
 
 /**
  * 签名/编码函数库。函数库引入 <code>import 'net.hasor.dataql.fx.encryt.CodecUdfSource' as codec;</code>
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2020-03-31
  */
-@Singleton
-public class CodecUdfSource implements UdfSourceAssembly {
+public class CodecUdfSource extends AbstractUdfSource {
     /** 对字符串组进行 Base64编码 */
     public static String encodeString(String content) {
         if (content == null) {

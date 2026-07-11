@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.fx.encryt;
+package net.hasor.dataql.host.function.encryt;
 /**
  * Hmac算法类型枚举
  * @author 赵永春 (zyc@hasor.net)
@@ -26,7 +26,7 @@ public enum HmacType {
     HmacSHA512("HmacSHA512");   //
     private final String hmacType;
 
-    private HmacType(String hmacType) {
+    HmacType(String hmacType) {
         this.hmacType = hmacType;
     }
 

@@ -13,35 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.fx.basic;
-import java.lang.reflect.Method;
+package net.hasor.dataql.host.function.basic;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
-import net.hasor.dataql.Udf;
-import net.hasor.dataql.UdfSourceAssembly;
+import net.hasor.cobble.function.ESupplier;
+import net.hasor.dataql.domain.Udf;
+import net.hasor.dataql.host.function.AbstractUdfSource;
+import net.hasor.dataql.kernel.Finder;
 
 /**
  * 带有状态的集合。函数库引入 <code>import 'net.hasor.dataql.fx.basic.CollectionUdfSource' as collect; var arr = collect.newList()</code>
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2019-12-12
  */
-class Inner_ListStateUdfSource implements UdfSourceAssembly {
-    private List<Object>     objectArrayList;
-    private Map<String, Udf> self;
+class InnerListStateUdfSource extends AbstractUdfSource {
+    private       List<Object>     objectArrayList;
+    private final Map<String, Udf> self;
 
-    public Inner_ListStateUdfSource(List<Object> initData) {
+    public InnerListStateUdfSource(List<Object> initData) {
         if (initData != null) {
             objectArrayList = initData;
         } else {
             objectArrayList = new ArrayList<>();
         }
         //
-        Class<?> targetType = getClass();
-        Predicate<Method> predicate = getPredicate(targetType);
-        Inner_ListStateUdfSource target = this;
-        this.self = new TypeUdfMap(targetType, () -> target, predicate);
+        this.self = this.buildUdfMap(this, this.getPredicate(this.getClass()));
+    }
+
+    @Override
+    public ESupplier<Map<String, Udf>, Exception> getUdfResource(Finder finder) {
+        return () -> this.self;
     }
 
     /** 把参数数据加到开头 */

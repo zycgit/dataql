@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.fx.basic;
+package net.hasor.dataql.host.function.basic;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.List;
@@ -22,16 +22,14 @@ import net.hasor.cobble.BooleanUtils;
 import net.hasor.cobble.NumberUtils;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.codec.HexUtils;
-import net.hasor.core.Singleton;
-import net.hasor.dataql.UdfSourceAssembly;
+import net.hasor.dataql.host.function.AbstractUdfSource;
 
 /**
  * 转换函数。函数库引入 <code>import 'net.hasor.dataql.fx.basic.ConvertUdfSource' as convert;</code>
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2019-12-12
  */
-@Singleton
-public class ConvertUdfSource implements UdfSourceAssembly {
+public class ConvertUdfSource extends AbstractUdfSource {
     /** 将对象转换为 Number */
     public static Number toInt(Object target) {
         if (target instanceof Number) {

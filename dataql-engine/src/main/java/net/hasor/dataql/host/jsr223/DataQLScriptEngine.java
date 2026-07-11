@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.extend.jsr223;
+package net.hasor.dataql.host.jsr223;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -21,13 +21,14 @@ import java.util.Objects;
 import javax.script.*;
 import net.hasor.cobble.loader.ResourceLoader;
 import net.hasor.cobble.loader.providers.ClassPathResourceLoader;
-import net.hasor.dataql.Finder;
-import net.hasor.dataql.Hints;
+import net.hasor.dataql.compiler.CompilerArguments;
+import net.hasor.dataql.compiler.CompilerHelper;
 import net.hasor.dataql.compiler.qil.QIL;
+import net.hasor.dataql.domain.Hints;
+import net.hasor.dataql.domain.HintsSet;
+import net.hasor.dataql.host.DefaultFinder;
+import net.hasor.dataql.kernel.Finder;
 import net.hasor.dataql.parser.QueryModel;
-import net.hasor.dataql.runtime.CompilerArguments;
-import net.hasor.dataql.runtime.HintsSet;
-import net.hasor.dataql.runtime.QueryHelper;
 
 /**
  * JSR223 引擎机制的实现。
@@ -35,9 +36,9 @@ import net.hasor.dataql.runtime.QueryHelper;
  * @version : 2017-10-19
  */
 public class DataQLScriptEngine extends AbstractScriptEngine implements ScriptEngine, Compilable, Hints {
-    private final HintsSet                  optionSet = new HintsSet();
+    private final HintsSet                  optionSet      = new HintsSet();
     private final DataQLScriptEngineFactory engineFactory;
-    private       Finder                    finder    = Finder.DEFAULT;
+    private       Finder                    finder         = DefaultFinder.DEFAULT;
     private       ResourceLoader            resourceLoader = ClassPathResourceLoader.INSTANCE;
 
     DataQLScriptEngine(DataQLScriptEngineFactory engineFactory) {
@@ -112,10 +113,10 @@ public class DataQLScriptEngine extends AbstractScriptEngine implements ScriptEn
                 this.setBindings(createBindings(), ScriptContext.GLOBAL_SCOPE);
             }
             //
-            QueryModel queryModel = QueryHelper.queryParser(queryString);
+            QueryModel queryModel = CompilerHelper.queryParser(queryString);
             CompilerArguments compilerArguments = CompilerArguments.DEFAULT.copyAsNew();
             compilerArguments.getCompilerVar().addAll(global.keySet());
-            QIL compilerQIL = QueryHelper.queryCompiler(queryModel, compilerArguments, this.resourceLoader);
+            QIL compilerQIL = CompilerHelper.queryCompiler(queryModel, compilerArguments, this.resourceLoader);
             return new DataQLCompiledScript(compilerQIL, this);
         } catch (IOException e) {
             throw new ScriptException(e);

@@ -13,21 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.fx.encryt;
+package net.hasor.dataql.host.function.encryt;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
-import net.hasor.core.Singleton;
-import net.hasor.dataql.UdfSourceAssembly;
-import net.hasor.dataql.fx.basic.ConvertUdfSource;
+import net.hasor.dataql.host.function.AbstractUdfSource;
+import net.hasor.dataql.host.function.basic.ConvertUdfSource;
 
 /**
  * 十六进制转换函数库。函数库引入 <code>import 'net.hasor.dataql.fx.encryt.HexUdfSource' as hex;</code>
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2019-12-12
  */
-@Singleton
 @Deprecated
-public class HexUdfSource implements UdfSourceAssembly {
+public class HexUdfSource extends AbstractUdfSource {
     /** 将二进制数据转换为 16进制字符串 */
     public static String byteToHex(List<Byte> content) {
         return ConvertUdfSource.byteToHex(content);

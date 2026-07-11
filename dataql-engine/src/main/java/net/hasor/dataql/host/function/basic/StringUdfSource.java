@@ -13,21 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.fx.basic;
+package net.hasor.dataql.host.function.basic;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.hasor.cobble.StringUtils;
-import net.hasor.core.Singleton;
-import net.hasor.dataql.UdfSourceAssembly;
+import net.hasor.dataql.host.function.AbstractUdfSource;
 
 /**
  * 字符串函数 <code>import 'net.hasor.dataql.fx.basic.StringUdfSource' as string;</code>
  * @version : 2019-12-12
  */
-@Singleton
-public class StringUdfSource implements UdfSourceAssembly {
+public class StringUdfSource extends AbstractUdfSource {
     // startsWith/endsWith
     //-----------------------------------------------------------------------
 
