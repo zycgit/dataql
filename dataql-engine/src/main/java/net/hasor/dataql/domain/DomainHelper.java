@@ -17,8 +17,6 @@ package net.hasor.dataql.domain;
 import java.util.*;
 import net.hasor.cobble.ArrayUtils;
 import net.hasor.cobble.ref.BeanMap;
-import net.hasor.dataql.Udf;
-import net.hasor.dataql.runtime.operator.OperatorUtils;
 
 public class DomainHelper {
     public static ValueModel nullDomain() {
@@ -40,7 +38,7 @@ public class DomainHelper {
         } else if (object == null) {
             // 基础类型：空
             return ValueModel.NULL;
-        } else if (OperatorUtils.isBoolean(object)) {
+        } else if (object instanceof Boolean) {
             // 基础类型：boolean
             if ((boolean) object) {
                 return ValueModel.TRUE;
@@ -50,7 +48,7 @@ public class DomainHelper {
         } else if (object instanceof CharSequence) {
             // 基础类型：字符串
             return new ValueModel(String.valueOf(object));
-        } else if (OperatorUtils.isNumber(object)) {
+        } else if (object instanceof Number) {
             // 基础类型：数字
             return new ValueModel(object);
         } else if (object instanceof Date) {
@@ -58,13 +56,12 @@ public class DomainHelper {
             return new ValueModel(((Date) object).getTime());
         } else if (object instanceof UUID) {
             // 外部类型：UUID -> String
-            return new ValueModel(((UUID) object).toString());
+            return new ValueModel(object.toString());
         } else if (object.getClass().isEnum()) {
             // 外部类型：枚举 -> ValueModel（字符串）
             return new ValueModel(((Enum<?>) object).name());
-        } else if (object instanceof Map) {
+        } else if (object instanceof Map mapData) {
             // 外部类型：Map -> ObjectModel
-            Map mapData = (Map) object;
             Set entrySet = mapData.entrySet();
             ObjectModel objectModel = new ObjectModel();
             for (Object entry : entrySet) {

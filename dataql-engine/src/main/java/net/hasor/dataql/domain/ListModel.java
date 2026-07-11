@@ -24,7 +24,7 @@ import java.util.List;
  * @version : 2017-03-23
  */
 public class ListModel implements DataModel {
-    private List<DataModel> dataModel = new ArrayList<>();
+    private final List<DataModel> dataModel = new ArrayList<>();
 
     public ListModel() {
     }

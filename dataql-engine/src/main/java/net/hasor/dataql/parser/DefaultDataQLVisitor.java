@@ -885,6 +885,7 @@ public class DefaultDataQLVisitor<T> extends AbstractParseTreeVisitor<T> impleme
     public T visitExtParams(ExtParamsContext ctx) {
         return null;
     }
+
     @Override
     public T visitExtParam(ExtParamContext ctx) {
         if (ctx.IDENTIFIER() != null) {
@@ -900,6 +901,7 @@ public class DefaultDataQLVisitor<T> extends AbstractParseTreeVisitor<T> impleme
         }
         return null;
     }
+
     private SpecialType specialType(TerminalNode rou, SpecialType defaultType) {
         if (rou == null) {
             return defaultType;

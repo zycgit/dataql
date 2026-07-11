@@ -1,5 +1,5 @@
 package net.hasor.test.dataql.udfs;
-import net.hasor.dataql.UdfSourceAssembly;
+import net.hasor.dataql.domain.UdfSourceAssembly;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

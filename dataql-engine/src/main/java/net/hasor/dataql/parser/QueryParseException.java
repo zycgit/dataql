@@ -29,10 +29,10 @@ public class QueryParseException extends DataQueryException {
     }
 
     public int getLine() {
-        return this.getLocation().getStartPosition().getLineNumber();
+        return this.getLocation().getStartPosition().lineNumber();
     }
 
     public int getColumn() {
-        return this.getLocation().getStartPosition().getColumnNumber();
+        return this.getLocation().getStartPosition().columnNumber();
     }
 }

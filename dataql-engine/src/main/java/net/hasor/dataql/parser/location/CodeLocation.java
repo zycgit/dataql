@@ -18,27 +18,12 @@ package net.hasor.dataql.parser.location;
  * 具体到行/列到位置
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2020-06-11
+ * @param lineNumber  代码行号
+ * @param columnNumber  代码行的第几个字符
  */
-public final class CodeLocation {
-    private final int lineNumber;   // 代码行号
-    private final int columnNumber; // 代码行的第几个字符
-
+public record CodeLocation(int lineNumber, int columnNumber) {
     public CodeLocation() {
-        this.lineNumber = -1;
-        this.columnNumber = -1;
-    }
-
-    public CodeLocation(int lineNumber, int columnNumber) {
-        this.lineNumber = lineNumber;
-        this.columnNumber = columnNumber;
-    }
-
-    public int getLineNumber() {
-        return this.lineNumber;
-    }
-
-    public int getColumnNumber() {
-        return this.columnNumber;
+        this(-1, -1);
     }
 
     @Override

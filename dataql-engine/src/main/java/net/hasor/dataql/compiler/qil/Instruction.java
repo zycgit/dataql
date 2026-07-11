@@ -21,22 +21,22 @@ package net.hasor.dataql.compiler.qil;
  */
 public interface Instruction {
     /** 获取指令码。 */
-    public byte getInstCode();
+    byte getInstCode();
 
     /** 获取 字符串数据 */
-    public String getString(int index);
+    String getString(int index);
 
     /** 获取 布尔数据 */
-    public Boolean getBoolean(int index);
+    Boolean getBoolean(int index);
 
     /** 获取 数字数据 */
-    public Number getNumber(int index);
+    Number getNumber(int index);
 
     /** 获取 数字数据 */
-    public int getInt(int index);
+    int getInt(int index);
 
     /** 获取 字符串数据 */
-    public Object[] getArrays();
+    Object[] getArrays();
 
-    public String toString();
+    String toString();
 }

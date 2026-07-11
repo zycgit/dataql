@@ -40,8 +40,7 @@ public class NameRouteVariableInstCompiler implements InstCompiler<NameRouteVari
                 parent = parent.getParent();
             }
         }
-        if (parent instanceof EnterRouteVariable) {
-            EnterRouteVariable enterParent = (EnterRouteVariable) parent;
+        if (parent instanceof EnterRouteVariable enterParent) {
             if (enterParent.getRouteType() == RouteType.Expr) {
                 ContainsIndex withTree = compilerContext.containsWithTree(nameRouteToken.getValue());
                 if (withTree.isValid()) {

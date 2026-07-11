@@ -25,7 +25,7 @@ import java.util.Map;
  * @version : 2017-03-23
  */
 public class ObjectModel implements DataModel {
-    private Map<String, DataModel> dataModel = new LinkedHashMap<>();
+    private final Map<String, DataModel> dataModel = new LinkedHashMap<>();
 
     public ObjectModel() {
     }

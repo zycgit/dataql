@@ -20,5 +20,5 @@ package net.hasor.dataql.parser.ast;
  * @version : 2019-11-07
  */
 public interface RouteVariable extends Variable {
-    public RouteVariable getParent();
+    RouteVariable getParent();
 }

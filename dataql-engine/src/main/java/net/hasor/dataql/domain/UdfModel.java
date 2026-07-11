@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 package net.hasor.dataql.domain;
-import net.hasor.dataql.Hints;
-import net.hasor.dataql.Udf;
-import net.hasor.dataql.runtime.HintsSet;
 
 /**
  * 函数调用

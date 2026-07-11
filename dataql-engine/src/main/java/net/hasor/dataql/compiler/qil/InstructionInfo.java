@@ -69,8 +69,7 @@ public class InstructionInfo implements Opcodes, Instruction {
      */
     public boolean replaceLabel() {
         for (int i = 0; i < this.instParam.length; i++) {
-            if (this.instParam[i] instanceof Label) {
-                Label label = (Label) this.instParam[i];
+            if (this.instParam[i] instanceof Label label) {
                 if (label.getIndex() == null) {
                     return false;
                 }

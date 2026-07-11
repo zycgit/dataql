@@ -15,7 +15,7 @@
  */
 package net.hasor.dataql.parser.ast.expr;
 import java.io.IOException;
-import net.hasor.dataql.Hints;
+import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.parser.ast.AstVisitor;
 import net.hasor.dataql.parser.ast.Expression;
 import net.hasor.dataql.parser.ast.FormatWriter;

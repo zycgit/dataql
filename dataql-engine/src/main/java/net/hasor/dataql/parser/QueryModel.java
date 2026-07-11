@@ -17,8 +17,8 @@ package net.hasor.dataql.parser;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import net.hasor.dataql.domain.HintsSet;
 import net.hasor.dataql.parser.ast.Visitor;
-import net.hasor.dataql.runtime.HintsSet;
 
 /**
  * 查询模型 -> Data QL 的 AST Tree
@@ -26,15 +26,15 @@ import net.hasor.dataql.runtime.HintsSet;
  * @version : 2017-03-23
  */
 public interface QueryModel extends Visitor {
-    public default String toQueryString() throws IOException {
+    default String toQueryString() throws IOException {
         StringWriter stringWriter = new StringWriter();
         this.toQueryString(stringWriter);
         return stringWriter.toString();
     }
 
-    public default void toQueryString(Writer writer) throws IOException {
+    default void toQueryString(Writer writer) throws IOException {
         this.toQueryString(new HintsSet(), writer);
     }
 
-    public void toQueryString(HintsSet formatOptions, Writer writer) throws IOException;
+    void toQueryString(HintsSet formatOptions, Writer writer) throws IOException;
 }

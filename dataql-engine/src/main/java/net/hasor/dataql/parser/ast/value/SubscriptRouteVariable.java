@@ -15,7 +15,7 @@
  */
 package net.hasor.dataql.parser.ast.value;
 import java.io.IOException;
-import net.hasor.dataql.Hints;
+import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.parser.ast.*;
 import net.hasor.dataql.parser.ast.expr.AtomExpression;
 import net.hasor.dataql.parser.ast.expr.PrivilegeExpression;
@@ -31,7 +31,7 @@ import net.hasor.dataql.parser.location.BlockLocation;
  * @version : 2017-03-23
  */
 public class SubscriptRouteVariable extends BlockLocation implements Variable, RouteVariable {
-    public static enum SubType {
+    public enum SubType {
         String,
         Integer,
         Expr

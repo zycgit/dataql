@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.test.dataql.udfs;
-import net.hasor.dataql.UdfSourceAssembly;
+import net.hasor.dataql.domain.UdfSourceAssembly;
 
 import java.util.ArrayList;
 import java.util.List;

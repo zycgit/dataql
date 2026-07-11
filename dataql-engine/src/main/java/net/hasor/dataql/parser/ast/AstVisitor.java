@@ -20,5 +20,5 @@ package net.hasor.dataql.parser.ast;
  * @version : 2019-11-07
  */
 public interface AstVisitor {
-    public void visitInst(InstVisitorContext inst);
+    void visitInst(InstVisitorContext inst);
 }

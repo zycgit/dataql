@@ -15,17 +15,28 @@
  */
 package net.hasor.dataql.compiler;
 import net.hasor.cobble.StringUtils;
+import net.hasor.dataql.compiler.CompilerHelper;
 import net.hasor.cobble.loader.providers.ClassPathResourceLoader;
+import net.hasor.dataql.compiler.CompilerHelper;
 import net.hasor.dataql.AbstractTestResource;
+import net.hasor.dataql.compiler.CompilerHelper;
 import net.hasor.dataql.compiler.qil.QIL;
+import net.hasor.dataql.compiler.CompilerHelper;
 import net.hasor.dataql.parser.QueryModel;
-import net.hasor.dataql.runtime.CompilerArguments;
-import net.hasor.dataql.runtime.CompilerArguments.CodeLocationEnum;
-import net.hasor.dataql.runtime.QueryHelper;
+import net.hasor.dataql.compiler.CompilerHelper;
+import net.hasor.dataql.compiler.CompilerArguments;
+import net.hasor.dataql.compiler.CompilerHelper;
+import net.hasor.dataql.compiler.CompilerArguments.CodeLocationEnum;
+import net.hasor.dataql.compiler.CompilerHelper;
+import net.hasor.dataql.host.QueryFactory;
+import net.hasor.dataql.compiler.CompilerHelper;
 import org.junit.Test;
+import net.hasor.dataql.compiler.CompilerHelper;
 
 import java.io.IOException;
+import net.hasor.dataql.compiler.CompilerHelper;
 import java.util.List;
+import net.hasor.dataql.compiler.CompilerHelper;
 
 /**
  * 测试用例
@@ -41,10 +52,10 @@ public class CompilerTest extends AbstractTestResource {
 
     private void qilTest(String testCase) throws IOException {
         String query1 = getScript("/net_hasor_dataql_ast/" + testCase + "/ast.ql");
-        QueryModel queryModel = QueryHelper.queryParser(query1);
-        QIL qilFast = QueryHelper.queryCompiler(queryModel, arguments(CodeLocationEnum.NONE), ClassPathResourceLoader.INSTANCE);
-        QIL qilDefault = QueryHelper.queryCompiler(queryModel, arguments(CodeLocationEnum.LINE), ClassPathResourceLoader.INSTANCE);
-        QIL qilDebug = QueryHelper.queryCompiler(queryModel, arguments(CodeLocationEnum.TERM), ClassPathResourceLoader.INSTANCE);
+        QueryModel queryModel = CompilerHelper.queryParser(query1);
+        QIL qilFast = CompilerHelper.queryCompiler(queryModel, arguments(CodeLocationEnum.NONE), ClassPathResourceLoader.INSTANCE);
+        QIL qilDefault = CompilerHelper.queryCompiler(queryModel, arguments(CodeLocationEnum.LINE), ClassPathResourceLoader.INSTANCE);
+        QIL qilDebug = CompilerHelper.queryCompiler(queryModel, arguments(CodeLocationEnum.TERM), ClassPathResourceLoader.INSTANCE);
         //
         String qilStringFast1 = qilFast.toString();
         String qilStringDefault1 = qilDefault.toString();
@@ -60,9 +71,9 @@ public class CompilerTest extends AbstractTestResource {
 
     private void astTest(String testCase) throws IOException {
         String query1 = getScript("/net_hasor_dataql_ast/" + testCase + "/ast.ql");
-        QueryModel queryModel1 = QueryHelper.queryParser(query1);
+        QueryModel queryModel1 = CompilerHelper.queryParser(query1);
         String q11 = queryModel1.toQueryString();
-        String q12 = QueryHelper.queryParser(q11).toQueryString();
+        String q12 = CompilerHelper.queryParser(q11).toQueryString();
         List<String> list1 = acceptVisitor(queryModel1);
         String visitor1 = StringUtils.join(list1.toArray(), "\n");
         //
@@ -291,7 +302,7 @@ public class CompilerTest extends AbstractTestResource {
     @Test
     public void error_ast_format_test() throws IOException {
         try {
-            QueryHelper.queryParser("return [1,2,3,4,5,6] => [ # ]"); // 不支持的语法
+            CompilerHelper.queryParser("return [1,2,3,4,5,6] => [ # ]"); // 不支持的语法
             assert false;
         } catch (Exception e) {
             assert true;

@@ -16,7 +16,7 @@
 package net.hasor.dataql.parser.ast.value;
 import java.io.IOException;
 import net.hasor.cobble.StringUtils;
-import net.hasor.dataql.Hints;
+import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.parser.ast.*;
 import net.hasor.dataql.parser.ast.token.StringToken;
 import net.hasor.dataql.parser.location.BlockLocation;

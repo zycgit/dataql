@@ -1,6 +1,7 @@
 package net.hasor.test.dataql.udfs;
-import net.hasor.dataql.FragmentProcess;
-import net.hasor.dataql.Hints;
+
+import net.hasor.dataql.kernel.FragmentProcess;
+import net.hasor.dataql.domain.Hints;
 
 import java.util.HashMap;
 import java.util.Map;

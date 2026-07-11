@@ -17,7 +17,6 @@ package net.hasor.dataql.domain;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import net.hasor.cobble.NumberUtils;
-import net.hasor.dataql.runtime.operator.OperatorUtils;
 
 /**
  * 值类型结果
@@ -56,27 +55,27 @@ public class ValueModel implements DataModel {
 
     /** 是否可以转为 Number 类型值 */
     public boolean isNumber() {
-        return OperatorUtils.isNumber(this.value);
+        return this.value instanceof Number;
     }
 
     /** 是否可以转为 byte 类型值 */
     public boolean isByte() {
-        return OperatorUtils.isByteNumber(this.value);
+        return this.value instanceof Byte;
     }
 
     /** 是否可以转为 short 类型值 */
     public boolean isShort() {
-        return OperatorUtils.isShortNumber(this.value) || isByte();
+        return this.value instanceof Short || isByte();
     }
 
     /** 是否可以转为 int 类型值 */
     public boolean isInt() {
-        return OperatorUtils.isIntegerNumber(this.value) || isShort();
+        return this.value instanceof Integer || isShort();
     }
 
     /** 是否可以转为 long 类型值 */
     public boolean isLong() {
-        return OperatorUtils.isLongNumber(this.value) || isInt();
+        return this.value instanceof Long || isInt();
     }
 
     /** 是否可以转为 BigInteger 类型值 */
@@ -86,12 +85,12 @@ public class ValueModel implements DataModel {
 
     /** 是否可以转为 float 类型值 */
     public boolean isFloat() {
-        return OperatorUtils.isFloatNumber(this.value);
+        return this.value instanceof Float;
     }
 
     /** 是否可以转为 double 类型值 */
     public boolean isDouble() {
-        return OperatorUtils.isDoubleNumber(this.value) || isFloat();
+        return this.value instanceof Double || isFloat();
     }
 
     /** 是否可以转为 BigDecimal 类型值 */
@@ -106,7 +105,7 @@ public class ValueModel implements DataModel {
 
     /** 是否可以转为 boolean 类型值 */
     public boolean isBoolean() {
-        return OperatorUtils.isBoolean(this.value);
+        return this.value instanceof Boolean;
     }
 
     /** 转换为 boolean 值，如果为空值，那么返回false。任何整数非0值都为true */
@@ -120,8 +119,7 @@ public class ValueModel implements DataModel {
         if (this.value instanceof Number) {
             return ((Number) this.value).intValue() != 0;
         }
-        if (this.value instanceof String) {
-            String strVal = (String) this.value;
+        if (this.value instanceof String strVal) {
             if (strVal.length() == 0 //
                     || "null".equals(strVal) //
                     || "NULL".equals(strVal)) {
@@ -155,8 +153,7 @@ public class ValueModel implements DataModel {
         if (this.value instanceof Number) {
             return ((Number) this.value).byteValue();
         }
-        if (this.value instanceof String) {
-            String strVal = (String) this.value;
+        if (this.value instanceof String strVal) {
             if (strVal.length() == 0 //
                     || "null".equals(strVal) //
                     || "NULL".equals(strVal)) {
@@ -180,8 +177,7 @@ public class ValueModel implements DataModel {
         if (this.value instanceof Number) {
             return ((Number) this.value).shortValue();
         }
-        if (this.value instanceof String) {
-            String strVal = (String) this.value;
+        if (this.value instanceof String strVal) {
             if (strVal.length() == 0 //
                     || "null".equals(strVal) //
                     || "NULL".equals(strVal)) {
@@ -208,8 +204,7 @@ public class ValueModel implements DataModel {
         if (this.value instanceof Number) {
             return ((Number) this.value).intValue();
         }
-        if (this.value instanceof String) {
-            String strVal = (String) this.value;
+        if (this.value instanceof String strVal) {
             if (strVal.length() == 0 //
                     || "null".equals(strVal) //
                     || "NULL".equals(strVal)) {
@@ -236,8 +231,7 @@ public class ValueModel implements DataModel {
         if (this.value instanceof Number) {
             return ((Number) this.value).longValue();
         }
-        if (this.value instanceof String) {
-            String strVal = (String) this.value;
+        if (this.value instanceof String strVal) {
             if (strVal.length() == 0 //
                     || "null".equals(strVal) //
                     || "NULL".equals(strVal)) {

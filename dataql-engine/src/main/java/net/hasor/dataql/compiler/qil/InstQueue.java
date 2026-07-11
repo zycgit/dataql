@@ -20,8 +20,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.hasor.cobble.StringUtils;
+import net.hasor.dataql.compiler.CompilerArguments;
 import net.hasor.dataql.compiler.QueryCompilerException;
-import net.hasor.dataql.runtime.CompilerArguments;
 import static net.hasor.dataql.compiler.qil.Opcodes.LINE;
 
 /**

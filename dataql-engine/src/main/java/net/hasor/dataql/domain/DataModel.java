@@ -21,28 +21,28 @@ package net.hasor.dataql.domain;
  */
 public interface DataModel {
     /** 得到本来面目 */
-    public Object asOri();
+    Object asOri();
 
     /** 解开 DataModel 包裹，采用 Map 和 List 封装。 */
-    public Object unwrap();
+    Object unwrap();
 
     /** 判断是否为 ValueModel 类型值 */
-    public default boolean isValue() {
+    default boolean isValue() {
         return false;
     }
 
     /** 判断是否为 ListModel 类型值 */
-    public default boolean isList() {
+    default boolean isList() {
         return false;
     }
 
     /** 判断是否为 ObjectModel 类型值 */
-    public default boolean isObject() {
+    default boolean isObject() {
         return false;
     }
 
     /** 判断是否为 UdfModel 类型值 */
-    public default boolean isUdf() {
+    default boolean isUdf() {
         return false;
     }
 }

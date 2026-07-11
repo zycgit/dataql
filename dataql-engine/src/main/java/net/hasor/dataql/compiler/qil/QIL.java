@@ -24,7 +24,7 @@ import net.hasor.cobble.StringUtils;
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-07-03
  */
-public class QIL {
+public final class QIL {
     private final Instruction[][]      queueSet;
     private final Map<String, Integer> compilerVar;
 

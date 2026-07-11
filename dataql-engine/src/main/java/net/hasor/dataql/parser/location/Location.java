@@ -20,11 +20,11 @@ package net.hasor.dataql.parser.location;
  * @version : 2020-06-11
  */
 public interface Location {
-    public CodeLocation getStartPosition();
+    CodeLocation getStartPosition();
 
-    public CodeLocation getEndPosition();
+    CodeLocation getEndPosition();
 
-    public void setStartPosition(CodeLocation codeLocation);
+    void setStartPosition(CodeLocation codeLocation);
 
-    public void setEndPosition(CodeLocation codeLocation);
+    void setEndPosition(CodeLocation codeLocation);
 }

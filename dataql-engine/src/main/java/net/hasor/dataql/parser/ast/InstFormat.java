@@ -15,7 +15,7 @@
  */
 package net.hasor.dataql.parser.ast;
 import java.io.IOException;
-import net.hasor.dataql.Hints;
+import net.hasor.dataql.domain.Hints;
 
 /**
  * 格式化输出
@@ -23,9 +23,9 @@ import net.hasor.dataql.Hints;
  * @version : 2017-03-23
  */
 public interface InstFormat {
-    public static int  fixedLength = 4;
-    public static char quoteChar   = '"';
+    int fixedLength = 4;
+    char quoteChar   = '"';
 
     /** 格式化 */
-    public void doFormat(int depth, Hints formatOption, FormatWriter writer) throws IOException;
+    void doFormat(int depth, Hints formatOption, FormatWriter writer) throws IOException;
 }

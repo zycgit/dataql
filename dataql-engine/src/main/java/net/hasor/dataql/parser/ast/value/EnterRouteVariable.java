@@ -15,7 +15,7 @@
  */
 package net.hasor.dataql.parser.ast.value;
 import java.io.IOException;
-import net.hasor.dataql.Hints;
+import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.parser.ast.AstVisitor;
 import net.hasor.dataql.parser.ast.FormatWriter;
 import net.hasor.dataql.parser.ast.InstVisitorContext;
@@ -28,15 +28,14 @@ import net.hasor.dataql.parser.location.BlockLocation;
  * @version : 2017-03-23
  */
 public class EnterRouteVariable extends BlockLocation implements RouteVariable {
-    public static enum RouteType {
+    public enum RouteType {
         /** 表达式 */
         Expr(),
         /** 程序传参 */
         Params(),
-        ;
     }
 
-    public static enum SpecialType {
+    public enum SpecialType {
         Special_A("#"),  // 特殊路由1，自定义
         Special_B("$"),  // 特殊路由2，自定义
         Special_C("@"),  // 特殊路由3，自定义

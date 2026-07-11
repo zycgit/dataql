@@ -17,7 +17,7 @@ package net.hasor.dataql.parser.ast.value;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import net.hasor.dataql.Hints;
+import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.parser.ast.*;
 import net.hasor.dataql.parser.location.BlockLocation;
 import static net.hasor.cobble.NumberUtils.*;
@@ -28,7 +28,7 @@ import static net.hasor.cobble.NumberUtils.*;
  * @version : 2017-03-23
  */
 public class PrimitiveVariable extends BlockLocation implements Variable, Inst {
-    public static enum ValueType {
+    public enum ValueType {
         Boolean,
         Number,
         String,
@@ -96,8 +96,7 @@ public class PrimitiveVariable extends BlockLocation implements Variable, Inst {
         } else if (this.valueType == ValueType.String) {
             String newValue = this.value.toString().replace(String.valueOf(quoteChar), "\\" + quoteChar);
             writer.write(quoteChar + newValue + quoteChar);
-        } else if (this.value instanceof Number) {
-            Number number = (Number) this.value;
+        } else if (this.value instanceof Number number) {
             if (isByteType(number.getClass()) || isShortType(number.getClass()) || isIntType(number.getClass()) || isLongType(number.getClass())) {
                 long longValue = number.longValue();
                 int beginSub = longValue < 0 ? 1 : 0;
@@ -107,8 +106,7 @@ public class PrimitiveVariable extends BlockLocation implements Variable, Inst {
                 } else {
                     writer.write(string);
                 }
-            } else if (number instanceof BigInteger) {
-                BigInteger bigInteger = (BigInteger) number;
+            } else if (number instanceof BigInteger bigInteger) {
                 int beginSub = bigInteger.compareTo(BigInteger.ZERO) < 0 ? 1 : 0;
                 String string = radix2String(this.radix) + ((BigInteger) number).toString(this.radix).substring(beginSub);
                 if (beginSub > 0) {

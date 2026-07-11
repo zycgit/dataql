@@ -17,6 +17,7 @@ package net.hasor.dataql.compiler.cc;
 import java.io.InputStream;
 import java.util.Objects;
 import net.hasor.cobble.ExceptionUtils;
+import net.hasor.dataql.compiler.CompilerHelper;
 import net.hasor.dataql.compiler.QueryCompilerException;
 import net.hasor.dataql.compiler.qil.CompilerContext;
 import net.hasor.dataql.compiler.qil.InstCompiler;
@@ -25,7 +26,6 @@ import net.hasor.dataql.parser.ast.inst.ImportInst;
 import net.hasor.dataql.parser.ast.inst.ImportInst.ImportType;
 import net.hasor.dataql.parser.ast.inst.RootBlockSet;
 import net.hasor.dataql.parser.ast.token.StringToken;
-import net.hasor.dataql.runtime.QueryHelper;
 
 /**
  * import 语法
@@ -74,7 +74,7 @@ public class ImportInstCompiler implements InstCompiler<ImportInst> {
         RootBlockSet queryModel = null;
         try {
             InputStream inputStream = Objects.requireNonNull(compilerContext.getResourceLoader().getResourceAsStream(importName), "import resource '" + importName + "' not found.");
-            queryModel = (RootBlockSet) QueryHelper.queryParser(inputStream);
+            queryModel = (RootBlockSet) CompilerHelper.queryParser(inputStream);
         } catch (Exception e) {
             throw ExceptionUtils.toRuntime(e, throwable -> new QueryCompilerException("import compiler failed -> parser failed.", throwable));
         }

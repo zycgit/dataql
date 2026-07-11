@@ -1,6 +1,5 @@
 package net.hasor.dataql.domain;
 import net.hasor.dataql.AbstractTestResource;
-import net.hasor.dataql.Udf;
 import net.hasor.test.dataql.udfs.DataBean;
 import org.junit.Test;
 

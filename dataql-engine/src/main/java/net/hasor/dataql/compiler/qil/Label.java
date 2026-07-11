@@ -20,8 +20,8 @@ package net.hasor.dataql.compiler.qil;
  * @version : 2017-03-23
  */
 public class Label {
-    private String  labelID;
-    private Integer index;
+    private final String  labelID;
+    private       Integer index;
 
     Label(int labelID) {
         this.labelID = "label_" + labelID;

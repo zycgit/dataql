@@ -15,7 +15,7 @@
  */
 package net.hasor.dataql.parser.ast.fmt;
 import java.io.IOException;
-import net.hasor.dataql.Hints;
+import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.parser.ast.*;
 import net.hasor.dataql.parser.ast.value.ListVariable;
 import net.hasor.dataql.parser.location.BlockLocation;

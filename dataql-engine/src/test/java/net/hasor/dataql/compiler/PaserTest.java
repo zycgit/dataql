@@ -15,10 +15,14 @@
  */
 package net.hasor.dataql.compiler;
 import net.hasor.dataql.AbstractTestResource;
-import net.hasor.dataql.runtime.QueryHelper;
+import net.hasor.dataql.compiler.CompilerHelper;
+import net.hasor.dataql.host.QueryFactory;
+import net.hasor.dataql.compiler.CompilerHelper;
 import org.junit.Test;
+import net.hasor.dataql.compiler.CompilerHelper;
 
 import java.io.IOException;
+import net.hasor.dataql.compiler.CompilerHelper;
 
 /**
  * 测试用例
@@ -29,7 +33,7 @@ public class PaserTest extends AbstractTestResource {
     @Test
     public void testPaser_1() {
         try {
-            QueryHelper.queryParser("return ${a} -1");
+            CompilerHelper.queryParser("return ${a} -1");
             assert false;
         } catch (Exception e) {
             assert e.getMessage().contains("no viable alternative at input");
@@ -38,13 +42,13 @@ public class PaserTest extends AbstractTestResource {
 
     @Test
     public void testPaser_2() throws IOException {
-        QueryHelper.queryParser("return a == b ? c : d");
+        CompilerHelper.queryParser("return a == b ? c : d");
         assert true;
     }
 
     @Test
     public void testPaser_3() throws IOException {
-        QueryHelper.queryParser("return 123,a == b ? c : d");
+        CompilerHelper.queryParser("return 123,a == b ? c : d");
         assert true;
     }
 }

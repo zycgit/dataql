@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.hasor.cobble.StringUtils;
-import net.hasor.dataql.Hints;
+import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.parser.ast.*;
 import net.hasor.dataql.parser.ast.expr.AtomExpression;
 import net.hasor.dataql.parser.ast.token.StringToken;
@@ -101,8 +101,7 @@ public class ObjectVariable extends BlockLocation implements Inst, Variable {
             if (variable instanceof AtomExpression) {
                 variable = ((AtomExpression) variable).getVariableExpression();
             }
-            if (variable instanceof NameRouteVariable) {
-                NameRouteVariable nameRouteVariable = (NameRouteVariable) variable;
+            if (variable instanceof NameRouteVariable nameRouteVariable) {
                 if (!key.equals(nameRouteVariable.getName().getValue())) {
                     writer.write(" : ");
                     variable.doFormat(depth + 1, formatOption, writer);

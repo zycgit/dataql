@@ -22,7 +22,7 @@ import net.hasor.dataql.parser.location.Location;
  * @version : 2017-03-23
  */
 public interface Expression extends Variable {
-    public default Location expressCodeLocation() {
+    default Location expressCodeLocation() {
         return this;
     }
 }
