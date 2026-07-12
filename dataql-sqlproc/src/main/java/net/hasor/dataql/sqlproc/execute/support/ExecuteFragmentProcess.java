@@ -10,7 +10,6 @@ import net.hasor.dataql.domain.HintsProxy;
 import net.hasor.dataql.sqlproc.ConfigFormatType;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
-import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
 
 /**
  * SQL FragmentProcess 实现。通过 {@link #inferQueryType(String)} 自动推断查询类型，
@@ -28,7 +27,7 @@ public class ExecuteFragmentProcess extends AbstractSqlFragment {
     }
 
     @Override
-    protected SqlConfig buildConfig(String fragmentString, Hints hints) {
+    protected FragmentConfig buildConfig(String fragmentString, Hints hints) {
         FragmentBody fragmentBody = parseFragmentBody(fragmentString);
         if (fragmentBody.queryType != null) {
             return super.buildConfig(fragmentBody.fragmentString, typeHints(hints, fragmentBody.queryType));
@@ -43,7 +42,7 @@ public class ExecuteFragmentProcess extends AbstractSqlFragment {
     }
 
     // ----------------------------------------------------------------
-    // Type inference / explicit type
+    // Type / explicit type
     // ----------------------------------------------------------------
 
     public static QueryType parseExplicitType(String fragmentString) {

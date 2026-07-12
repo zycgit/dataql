@@ -23,6 +23,7 @@ import net.hasor.cobble.convert.ConverterBean;
 import net.hasor.cobble.ref.BeanMap;
 import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.sqlproc.dynamic.config.SelectKeyConfig;
+import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionInterceptor;
 
 /**
  * 负责处理 SelectKey 的执行
@@ -36,25 +37,24 @@ class SelectKeyStatementExecute {
     SelectKeyStatementExecute(SelectKeyConfig config, AbstractStatementExecute execute) {
         this.config = config;
         this.execute = execute;
-
     }
 
-    public void processBefore(Connection conn, Hints hints, Map<String, Object> parameter) throws SQLException {
+    public void processBefore(Connection conn, Hints hints, Map<String, Object> parameter, List<SqlExecutionInterceptor> interceptors) throws SQLException {
         if (StringUtils.equalsIgnoreCase("BEFORE", this.config.getOrder())) {
-            this.processSelectKey(conn, hints, parameter);
+            this.processSelectKey(conn, hints, parameter, interceptors);
         }
     }
 
-    public void processAfter(Connection conn, Hints hints, Map<String, Object> parameter) throws SQLException {
+    public void processAfter(Connection conn, Hints hints, Map<String, Object> parameter, List<SqlExecutionInterceptor> interceptors) throws SQLException {
         if (StringUtils.equalsIgnoreCase("AFTER", this.config.getOrder())) {
-            this.processSelectKey(conn, hints, parameter);
+            this.processSelectKey(conn, hints, parameter, interceptors);
         }
     }
 
-    private void processSelectKey(Connection conn, Hints hints, Map<String, Object> parameter) throws SQLException {
+    private void processSelectKey(Connection conn, Hints hints, Map<String, Object> parameter, List<SqlExecutionInterceptor> interceptors) throws SQLException {
         String keyColumn = this.config.getKeyColumn();
         String keyProperty = this.config.getKeyProperty();
-        Object resultValue = this.execute.execute(conn, hints, this.config, parameter, null, false);
+        Object resultValue = this.execute.execute(conn, hints, this.config, parameter, null, false, interceptors);
 
         if (resultValue instanceof List) {
             resultValue = ((List<?>) resultValue).get(0);

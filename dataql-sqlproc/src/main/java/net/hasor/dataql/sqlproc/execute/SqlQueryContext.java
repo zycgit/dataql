@@ -16,6 +16,7 @@
 package net.hasor.dataql.sqlproc.execute;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Objects;
 import java.util.ServiceLoader;
 import net.hasor.cobble.ClassUtils;
@@ -25,15 +26,18 @@ import net.hasor.dataql.sqlproc.dynamic.MacroRegistry;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.rule.RuleRegistry;
 import net.hasor.dataql.sqlproc.dynamic.rule.SqlRule;
+import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionInterceptor;
+import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionInterceptorRegistry;
 import net.hasor.dataql.sqlproc.spi.LookupConnectionListener;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 
 public class SqlQueryContext implements QueryContext {
-    private final ConnectionFinder    connection;
-    private       TypeHandlerRegistry typeRegistry  = TypeHandlerRegistry.DEFAULT;
-    private MacroRegistry       macroRegistry = new MacroRegistry();
-    private RuleRegistry        ruleRegistry  = new RuleRegistry();
-    private ClassLoader         classLoader   = SqlQueryContext.class.getClassLoader();
+    private final ConnectionFinder                connection;
+    private       TypeHandlerRegistry             typeRegistry        = TypeHandlerRegistry.DEFAULT;
+    private       MacroRegistry                   macroRegistry       = new MacroRegistry();
+    private       RuleRegistry                    ruleRegistry        = new RuleRegistry();
+    private       ClassLoader                     classLoader         = SqlQueryContext.class.getClassLoader();
+    private final SqlExecutionInterceptorRegistry interceptorRegistry = new SqlExecutionInterceptorRegistry();
 
     public SqlQueryContext() {
         this(SqlQueryContext::lookupConnection);
@@ -41,6 +45,7 @@ public class SqlQueryContext implements QueryContext {
 
     public SqlQueryContext(ConnectionFinder connection) {
         this.connection = Objects.requireNonNull(connection, "connectionFinder is null.");
+        this.interceptorRegistry.loadFromSpi(this.classLoader);
     }
 
     @Override
@@ -70,6 +75,7 @@ public class SqlQueryContext implements QueryContext {
 
     public void setClassLoader(ClassLoader classLoader) {
         this.classLoader = Objects.requireNonNull(classLoader, "classLoader is null.");
+        this.interceptorRegistry.loadFromSpi(this.classLoader);
     }
 
     @Override
@@ -90,6 +96,16 @@ public class SqlQueryContext implements QueryContext {
     @Override
     public ClassLoader getClassLoader() {
         return this.classLoader;
+    }
+
+    @Override
+    public List<SqlExecutionInterceptor> getSqlExecutionInterceptors() {
+        return this.interceptorRegistry.getActiveInterceptors();
+    }
+
+    @Override
+    public SqlExecutionInterceptorRegistry getInterceptorRegistry() {
+        return this.interceptorRegistry;
     }
 
     @Override

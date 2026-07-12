@@ -16,7 +16,9 @@
 package net.hasor.dataql.sqlproc.execute;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.sqlproc.dialect.Page;
@@ -25,6 +27,7 @@ import net.hasor.dataql.sqlproc.dynamic.config.InsertConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.SelectKeyConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.StatementType;
+import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionInterceptor;
 
 /**
  * 执行器总入口
@@ -52,7 +55,8 @@ public class RootStatement {
         };
     }
 
-    public Object execute(Connection conn, Hints hints, SqlConfig config, Map<String, Object> data, Page pageInfo, boolean pageResult) throws SQLException {
+    public Object execute(Connection conn, Hints hints, SqlConfig config, Map<String, Object> data, Page pageInfo, boolean pageResult, List<SqlExecutionInterceptor> interceptors) throws SQLException {
+        interceptors = interceptors == null ? Collections.emptyList() : interceptors;
         SelectKeyStatementExecute selectKeyExecute = null;
 
         if (config instanceof InsertConfig) {
@@ -64,13 +68,14 @@ public class RootStatement {
         }
 
         if (selectKeyExecute != null) {
-            selectKeyExecute.processBefore(conn, hints, data);
+            selectKeyExecute.processBefore(conn, hints, data, interceptors);
         }
 
-        Object result = this.executeMap.get(config.getStatementType()).execute(conn, hints, config, data, pageInfo, pageResult);
+        AbstractStatementExecute statement = this.executeMap.get(config.getStatementType());
+        Object result = statement.execute(conn, hints, config, data, pageInfo, pageResult, interceptors);
 
         if (selectKeyExecute != null) {
-            selectKeyExecute.processAfter(conn, hints, data);
+            selectKeyExecute.processAfter(conn, hints, data, interceptors);
         }
 
         return result;

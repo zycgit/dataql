@@ -25,7 +25,6 @@ import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dialect.PageObject;
 import net.hasor.dataql.sqlproc.dialect.PageResult;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
-import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
 import net.hasor.dataql.sqlproc.execute.RootStatement;
 
 /**
@@ -41,19 +40,19 @@ import net.hasor.dataql.sqlproc.execute.RootStatement;
 public class PageQuery extends AbstractUdfSource {
     private final QueryContext        queryContext;
     private final Hints               hints;
-    private final SqlConfig           sqlConfig;
+    private final FragmentConfig      sqlConfig;
     private final Map<String, Object> params;
     private final RootStatement       rootStatement;
     private final PageObject          pageInfo;
     private       PageResult<Object>  pageResult;
 
-    public PageQuery(QueryContext queryContext, Hints hints, SqlConfig sqlConfig, Map<String, Object> params, RootStatement rootStatement, PageObject pageInfo) {
+    PageQuery(QueryContext queryContext, FragmentConfig sqlConfig, Hints hints, Map<String, Object> params, RootStatement rootStatement, PageObject pageInfo) {
         this.queryContext = queryContext;
         this.hints = hints;
-        this.sqlConfig = sqlConfig;
         this.params = params;
         this.rootStatement = rootStatement;
         this.pageInfo = pageInfo;
+        this.sqlConfig = sqlConfig;
     }
 
     @Override
@@ -134,7 +133,7 @@ public class PageQuery extends AbstractUdfSource {
     private void fetchData() throws SQLException {
         String sourceName = SqlHintNames.getValue(hints, SqlHintNames.FRAGMENT_SQL_DATA_SOURCE);
         try (Connection conn = this.queryContext.findConnection(sourceName, this.hints)) {
-            this.pageResult = (PageResult<Object>) this.rootStatement.execute(conn, this.hints, this.sqlConfig, this.params, this.pageInfo, true);
+            this.pageResult = (PageResult<Object>) this.rootStatement.execute(conn, this.hints, this.sqlConfig.config(), this.params, this.pageInfo, true, this.sqlConfig.interceptors());
         }
     }
 }

@@ -34,9 +34,9 @@ import net.hasor.dataql.sqlproc.dynamic.config.DmlConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.DqlConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.ExecuteConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
-import net.hasor.dataql.sqlproc.execute.interceptor.SqlInfo;
 import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionChain;
 import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionInterceptor;
+import net.hasor.dataql.sqlproc.execute.interceptor.SqlInfo;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 
 /**
@@ -45,15 +45,13 @@ import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
  * @version 2021-07-20
  */
 public abstract class AbstractStatementExecute {
-    protected static final Logger                        logger = LoggerFactory.getLogger(AbstractStatementExecute.class);
-    protected final        QueryContext                  context;
-    protected final        MapResultExtractor            extractor;
-    private final          List<SqlExecutionInterceptor> executionInterceptors;
+    protected static final Logger             logger = LoggerFactory.getLogger(AbstractStatementExecute.class);
+    protected final        QueryContext       context;
+    protected final        MapResultExtractor extractor;
 
     public AbstractStatementExecute(QueryContext context) {
         this.context = context;
         this.extractor = new MapResultExtractor(context.getTypeRegistry());
-        this.executionInterceptors = SqlExecutionChain.load(context.getClassLoader());
     }
 
     protected void doCheck(Connection conn, Hints hints, SqlConfig config, Map<String, Object> data, Page pageInfo) throws SQLException {
@@ -71,8 +69,10 @@ public abstract class AbstractStatementExecute {
         }
     }
 
-    public final Object execute(Connection conn, Hints hints, SqlConfig config, Map<String, Object> data, Page pageInfo, boolean pageResult) throws SQLException {
+    public final Object execute(Connection conn, Hints hints, SqlConfig config, Map<String, Object> data, Page pageInfo, boolean pageResult, List<SqlExecutionInterceptor> interceptors) throws SQLException {
         this.doCheck(conn, hints, config, data, pageInfo);
+
+        List<SqlExecutionInterceptor> useInterceptors = interceptors != null ? interceptors : Collections.emptyList();
 
         // prepare sql
         MergedMap<String, Object> dataCtx;
@@ -108,7 +108,7 @@ public abstract class AbstractStatementExecute {
         if (countSql != null && pageResult) {
             BoundSql finalCountSql = countSql;
             SqlInfo countInfo = new SqlInfo(false, sourceName, finalCountSql.getSqlString(), finalCountSql.getArgs(), hints);
-            Object countResult = SqlExecutionChain.execute(this.executionInterceptors, countInfo, () -> this.executeCountSql(conn, config, finalCountSql));
+            Object countResult = SqlExecutionChain.execute(useInterceptors, countInfo, () -> this.executeCountSql(conn, config, finalCountSql));
             if (!(countResult instanceof Number)) {
                 throw new SQLException("Count SQL interceptor result must be a Number.");
             }
@@ -118,7 +118,7 @@ public abstract class AbstractStatementExecute {
         BoundSql finalExecSql = execSql;
         long finalResultCount = resultCount;
         SqlInfo sqlInfo = new SqlInfo(false, sourceName, finalExecSql.getSqlString(), finalExecSql.getArgs(), hints);
-        return SqlExecutionChain.execute(this.executionInterceptors, sqlInfo, () -> this.executeSql(conn, hints, config, dataCtx, pageInfo, pageResult, oriSql, finalExecSql, finalResultCount));
+        return SqlExecutionChain.execute(useInterceptors, sqlInfo, () -> this.executeSql(conn, hints, config, dataCtx, pageInfo, pageResult, oriSql, finalExecSql, finalResultCount));
     }
 
     private Object executeCountSql(Connection conn, SqlConfig config, BoundSql countSql) throws SQLException {

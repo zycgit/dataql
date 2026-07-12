@@ -8,6 +8,7 @@ package net.hasor.dataql.sqlproc.execute.support;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,6 +25,7 @@ import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
 import net.hasor.dataql.sqlproc.dynamic.resolve.ConfigResolve;
 import net.hasor.dataql.sqlproc.dynamic.resolve.ConfigResolveRoot;
 import net.hasor.dataql.sqlproc.execute.RootStatement;
+import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionInterceptor;
 import static net.hasor.dataql.sqlproc.SqlHintNames.FRAGMENT_SQL_DATA_SOURCE;
 import static net.hasor.dataql.sqlproc.SqlHintNames.FRAGMENT_SQL_QUERY_BY_PAGE;
 import static net.hasor.dataql.sqlproc.SqlHintNames.FRAGMENT_SQL_QUERY_BY_PAGE_NUMBER_OFFSET;
@@ -34,10 +36,10 @@ import static net.hasor.dataql.sqlproc.SqlHintValue.FRAGMENT_SQL_QUERY_BY_PAGE_E
  * 注入 Hints，子类覆写 {@link #queryType(String, Hints)} 读取即可。
  */
 public abstract class AbstractSqlFragment implements FragmentProcess {
-    private final ConfigResolveRoot      configResolve = new ConfigResolveRoot();
-    private final Map<String, SqlConfig> configCache   = new ConcurrentHashMap<>();
-    private final RootStatement          rootStatement;
-    private final QueryContext           queryContext;
+    private final ConfigResolveRoot           configResolve = new ConfigResolveRoot();
+    private final Map<String, SqlConfig>      configCache   = new ConcurrentHashMap<>();
+    private final RootStatement               rootStatement;
+    private final QueryContext                queryContext;
 
     protected AbstractSqlFragment(QueryContext queryContext) {
         this.queryContext = Objects.requireNonNull(queryContext, "queryContext is null");
@@ -63,7 +65,7 @@ public abstract class AbstractSqlFragment implements FragmentProcess {
         }
     }
 
-    private String buildCacheKey(String fragmentString, QueryType type, ConfigFormatType formatType, Hints hints) {
+    String buildCacheKey(String fragmentString, QueryType type, ConfigFormatType formatType, Hints hints) {
         StringBuilder cacheKey = new StringBuilder();
         cacheKey.append(fragmentString).append('|').append(type.name()).append('|').append(formatType.name());
         for (SqlHintNames hintName : ConfigResolve.CONFIG_HINTS) {
@@ -79,13 +81,19 @@ public abstract class AbstractSqlFragment implements FragmentProcess {
         if (type == null) {
             type = this.queryType(fragmentString, hints);
         }
+        QueryType queryType = type;
 
         ConfigFormatType formatType = this.resolveFormatType(fragmentType);
-        String fragmentName = type.getTagString();
-        return this.configCache.computeIfAbsent(buildCacheKey(fragmentString, type, formatType, hints), k -> switch (formatType) {
-            case Text -> this.configResolve.parsePlainConfig(fragmentName, hints, fragmentString);
-            case Xml -> this.configResolve.parseXmlConfig(fragmentName, hints, fragmentString);
-            default -> throw new UnsupportedOperationException("fragment type '" + fragmentType + "' Unsupported.");
+        String cacheKey = buildCacheKey(fragmentString, queryType, formatType, hints);
+
+        String fragmentName = queryType.getTagString();
+        return this.configCache.computeIfAbsent(cacheKey, k -> {
+            SqlConfig config = switch (formatType) {
+                case Text -> this.configResolve.parsePlainConfig(fragmentName, hints, fragmentString);
+                case Xml -> this.configResolve.parseXmlConfig(fragmentName, hints, fragmentString);
+                default -> throw new UnsupportedOperationException("fragment type '" + fragmentType + "' Unsupported.");
+            };
+            return config;
         });
     }
 
@@ -101,28 +109,31 @@ public abstract class AbstractSqlFragment implements FragmentProcess {
     protected Object executeFragment(Hints hints, Map<String, Object> params, String fragmentString) throws Throwable {
         Hints fragmentHints = this.resolveHints(hints);
         SqlConfig config = buildConfig(fragmentString, fragmentHints);
+        List<SqlExecutionInterceptor> interceptors = this.queryContext.filterInterceptors(config.getType(), fragmentString, fragmentHints);
+        FragmentConfig fragmentConfig = new FragmentConfig(config, interceptors);
+
         String byPage = SqlHintNames.getValue(fragmentHints, FRAGMENT_SQL_QUERY_BY_PAGE);
         if (config.getType() == QueryType.Select && StringUtils.equalsIgnoreCase(FRAGMENT_SQL_QUERY_BY_PAGE_ENABLE, byPage)) {
-            return this.usePageFragment(fragmentHints, params, config);
+            return this.usePageFragment(fragmentHints, params, fragmentConfig);
         } else {
-            return this.noPageFragment(fragmentHints, params, config);
+            return this.noPageFragment(fragmentHints, params, config, interceptors);
         }
     }
 
-    protected Object noPageFragment(Hints hints, Map<String, Object> params, SqlConfig config) throws SQLException {
+    protected Object noPageFragment(Hints hints, Map<String, Object> params, SqlConfig config, List<SqlExecutionInterceptor> interceptors) throws SQLException {
         String sourceName = SqlHintNames.getValue(hints, FRAGMENT_SQL_DATA_SOURCE);
         try (Connection conn = this.queryContext.findConnection(sourceName, hints)) {
-            return this.rootStatement.execute(conn, hints, config, params, null, false);
+            return this.rootStatement.execute(conn, hints, config, params, null, false, interceptors);
         }
     }
 
-    protected Object usePageFragment(Hints hints, Map<String, Object> params, SqlConfig config) {
+    protected Object usePageFragment(Hints hints, Map<String, Object> params, FragmentConfig fragmentConfig) {
         PageObject page = new PageObject(1, -1);
         String offsetStr = SqlHintNames.getValue(hints, FRAGMENT_SQL_QUERY_BY_PAGE_NUMBER_OFFSET);
         if (StringUtils.isNotBlank(offsetStr)) {
             page.setPageNumberOffset(Integer.parseInt(offsetStr));
         }
 
-        return new PageQuery(this.queryContext, hints, config, params, this.rootStatement, page);
+        return new PageQuery(this.queryContext, fragmentConfig, hints, params, this.rootStatement, page);
     }
 }

@@ -17,8 +17,12 @@ package net.hasor.dataql.sqlproc.dynamic;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 import net.hasor.dataql.domain.Hints;
+import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
 import net.hasor.dataql.sqlproc.dynamic.rule.SqlRule;
+import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionInterceptor;
+import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionPredicate;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 
 public interface QueryContext {
@@ -34,6 +38,20 @@ public interface QueryContext {
     TypeHandlerRegistry getTypeRegistry();
 
     ClassLoader getClassLoader();
+
+    /** Register an interceptor. */
+    void addInterceptor(SqlExecutionInterceptor interceptor);
+
+    /** Register an interceptor with its matching condition. */
+    void addInterceptor(SqlExecutionInterceptor interceptor, SqlExecutionPredicate predicate);
+
+    /** Remove an interceptor by identity. */
+    boolean removeInterceptor(SqlExecutionInterceptor interceptor);
+
+    /**
+     * Return interceptors whose registration predicate matches the execution context.
+     */
+    List<SqlExecutionInterceptor> filterInterceptors(QueryType type, String fragmentString, Hints hints);
 
     //Options options();
 }
