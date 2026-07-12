@@ -11,20 +11,27 @@ package net.hasor.dataql.sqlproc.execute.transaction;
 import java.util.Objects;
 import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.domain.Udf;
+import net.hasor.dataql.domain.UdfSource;
+import net.hasor.dataql.host.HostContext;
 import net.hasor.dataql.host.function.AbstractUdfSource;
 import net.hasor.dataql.sqlproc.SqlHintNames;
-import net.hasor.dataql.sqlproc.SqlProcFragmentProcessFactory;
+import net.hasor.dataql.sqlproc.internal.SqlProcConfiguration;
 
 /** Transaction functions imported with {@code import 'net.hasor.dataql.sqlproc.execute.transaction.TransactionUdfSource' as tran}. */
 public class TransactionUdfSource extends AbstractUdfSource {
     private final TransactionConnectionManager txManager;
 
     public TransactionUdfSource() {
-        this(SqlProcFragmentProcessFactory.connectionManager());
+        this.txManager = null;
     }
 
-    public TransactionUdfSource(TransactionConnectionManager txManager) {
+    private TransactionUdfSource(TransactionConnectionManager txManager) {
         this.txManager = Objects.requireNonNull(txManager, "connectionManager is null.");
+    }
+
+    @Override
+    public UdfSource create(HostContext context) {
+        return new TransactionUdfSource(SqlProcConfiguration.get(context).getConnectionManager());
     }
 
     @Override
@@ -66,6 +73,7 @@ public class TransactionUdfSource extends AbstractUdfSource {
     }
 
     private Object execute(Udf udf, Hints hints, Propagation propagation) throws Throwable {
+        Objects.requireNonNull(this.txManager, "TransactionUdfSource must be created by HostContext.");
         String sourceName = SqlHintNames.getValue(hints, SqlHintNames.FRAGMENT_SQL_DATA_SOURCE);
         TransactionTemplate template = this.txManager.getTransactionTemplate(sourceName);
         return template.execute(status -> udf.call(hints), propagation);

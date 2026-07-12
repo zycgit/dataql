@@ -34,8 +34,9 @@ import net.hasor.dataql.sqlproc.dynamic.config.DmlConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.DqlConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.ExecuteConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
-import net.hasor.dataql.sqlproc.spi.FxSqlInfo;
-import net.hasor.dataql.sqlproc.spi.SqlExecutionInterceptor;
+import net.hasor.dataql.sqlproc.execute.interceptor.SqlInfo;
+import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionChain;
+import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionInterceptor;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 
 /**
@@ -106,7 +107,7 @@ public abstract class AbstractStatementExecute {
         // query count
         if (countSql != null && pageResult) {
             BoundSql finalCountSql = countSql;
-            FxSqlInfo countInfo = new FxSqlInfo(false, sourceName, finalCountSql.getSqlString(), finalCountSql.getArgs());
+            SqlInfo countInfo = new SqlInfo(false, sourceName, finalCountSql.getSqlString(), finalCountSql.getArgs(), hints);
             Object countResult = SqlExecutionChain.execute(this.executionInterceptors, countInfo, () -> this.executeCountSql(conn, config, finalCountSql));
             if (!(countResult instanceof Number)) {
                 throw new SQLException("Count SQL interceptor result must be a Number.");
@@ -116,7 +117,7 @@ public abstract class AbstractStatementExecute {
 
         BoundSql finalExecSql = execSql;
         long finalResultCount = resultCount;
-        FxSqlInfo sqlInfo = new FxSqlInfo(false, sourceName, finalExecSql.getSqlString(), finalExecSql.getArgs());
+        SqlInfo sqlInfo = new SqlInfo(false, sourceName, finalExecSql.getSqlString(), finalExecSql.getArgs(), hints);
         return SqlExecutionChain.execute(this.executionInterceptors, sqlInfo, () -> this.executeSql(conn, hints, config, dataCtx, pageInfo, pageResult, oriSql, finalExecSql, finalResultCount));
     }
 

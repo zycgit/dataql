@@ -7,12 +7,12 @@ import net.hasor.dataql.kernel.FragmentProcess;
 
 public class TestFragmentProcessFactory implements FragmentProcessFactory {
     @Override
-    public String getName() {
-        return "testFragment";
+    public String[] getNames() {
+        return new String[] { "testFragment", "testFragmentAlias" };
     }
 
     @Override
-    public FragmentProcess create(HostContext context) {
+    public FragmentProcess create(String name, HostContext context) {
         return new FragmentProcess() {
             @Override
             public Object runFragment(Hints hints, Map<String, Object> params, String fragmentString) {

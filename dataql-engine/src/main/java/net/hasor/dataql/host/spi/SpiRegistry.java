@@ -37,7 +37,11 @@ public class SpiRegistry {
             ServiceLoader<FragmentProcessFactory> fragLoader = classLoader != null//
                     ? ServiceLoader.load(FragmentProcessFactory.class, classLoader)//
                     : ServiceLoader.load(FragmentProcessFactory.class);
-            fragLoader.forEach(factory -> this.addFragment(factory.getName(), () -> factory.create(this.context)));
+            fragLoader.forEach(factory -> {
+                for (String name : factory.getNames()) {
+                    this.addFragment(name, () -> factory.create(name, this.context));
+                }
+            });
 
             ServiceLoader<UdfSourceFactory> udfLoader = classLoader != null//
                     ? ServiceLoader.load(UdfSourceFactory.class, classLoader)//
