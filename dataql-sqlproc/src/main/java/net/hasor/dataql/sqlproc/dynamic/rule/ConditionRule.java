@@ -17,11 +17,11 @@ package net.hasor.dataql.sqlproc.dynamic.rule;
 import java.sql.SQLException;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
-import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
+import net.hasor.dataql.sqlproc.types.SqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
 import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
 import net.hasor.dataql.sqlproc.dynamic.segment.PlanDynamicSql;
-import static net.hasor.dataql.sqlproc.internal.OgnlUtils.evalOgnl;
+import static net.hasor.dataql.sqlproc.dynamic.internal.OgnlUtils.evalOgnl;
 
 /**
  * 如果参数不为空，则生成 'and column = ?' 或者 'column = ?' 。

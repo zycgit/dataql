@@ -1,4 +1,4 @@
-package net.hasor.dataql.sqlproc.execute.support;
+package net.hasor.dataql.sqlproc.execute.fragment;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
@@ -8,16 +8,17 @@ import net.hasor.dataql.domain.HintNames;
 import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.domain.HintsProxy;
 import net.hasor.dataql.sqlproc.ConfigFormatType;
-import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
+import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
+import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 
 /**
  * SQL FragmentProcess 实现。通过 {@link #inferQueryType(String)} 自动推断查询类型，
  * 同时支持 @@type 前缀显式覆盖。
  */
 public class ExecuteFragmentProcess extends AbstractSqlFragment {
-    public ExecuteFragmentProcess(QueryContext queryContext) {
-        super(queryContext);
+    public ExecuteFragmentProcess(ExecuteContext context) {
+        super(context);
     }
 
     @Override
@@ -27,7 +28,7 @@ public class ExecuteFragmentProcess extends AbstractSqlFragment {
     }
 
     @Override
-    protected FragmentConfig buildConfig(String fragmentString, Hints hints) {
+    protected SqlConfig buildConfig(String fragmentString, Hints hints) {
         FragmentBody fragmentBody = parseFragmentBody(fragmentString);
         if (fragmentBody.queryType != null) {
             return super.buildConfig(fragmentBody.fragmentString, typeHints(hints, fragmentBody.queryType));

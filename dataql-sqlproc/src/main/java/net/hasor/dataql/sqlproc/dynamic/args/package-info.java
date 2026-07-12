@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /**
- * 提供了一些有用的 {@link net.hasor.dbvisitor.dynamic.SqlArgSource}接口实现。
+ * 提供了一些有用的 {@link net.hasor.dataql.sqlproc.types.SqlArgSource} 接口实现。
  * @author 赵永春 (zyc@hasor.net)
  */
 package net.hasor.dataql.sqlproc.dynamic.args;

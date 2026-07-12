@@ -23,12 +23,12 @@ import net.hasor.dataql.sqlproc.OpenPackageType;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
 import net.hasor.dataql.sqlproc.dialect.Page;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
-import net.hasor.dataql.sqlproc.dynamic.SqlArg;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
-import net.hasor.dataql.sqlproc.dynamic.SqlMode;
 import net.hasor.dataql.sqlproc.dynamic.config.DqlConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.ResultSetType;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
+import net.hasor.dataql.sqlproc.types.SqlArg;
+import net.hasor.dataql.sqlproc.types.SqlMode;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 
 /**

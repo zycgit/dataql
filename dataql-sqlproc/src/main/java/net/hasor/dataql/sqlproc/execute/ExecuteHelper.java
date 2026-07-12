@@ -5,7 +5,7 @@ import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.io.IOUtils;
 import net.hasor.dataql.sqlproc.dialect.BoundSql;
 import net.hasor.dataql.sqlproc.dialect.Page;
-import net.hasor.dataql.sqlproc.dynamic.SqlArg;
+import net.hasor.dataql.sqlproc.types.SqlArg;
 
 class ExecuteHelper {
     public static boolean usingPage(Page pageInfo) {

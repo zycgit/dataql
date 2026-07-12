@@ -81,11 +81,10 @@
             <groupId>net.hasor</groupId>
             <artifactId>cobble-all</artifactId>
         </dependency>
-
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
-            <scope>test</scope>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

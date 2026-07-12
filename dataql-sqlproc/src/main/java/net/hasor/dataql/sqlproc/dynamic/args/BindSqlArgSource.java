@@ -19,7 +19,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
-import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
+import net.hasor.dataql.sqlproc.types.SqlArgSource;
 
 /**
  * 一个 Map 到 SqlParameterSource 的桥，同时支持自动识别 Supplier 接口以获取具体参数。

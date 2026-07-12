@@ -18,6 +18,7 @@ package net.hasor.dataql.sqlproc.dynamic;
 import java.sql.SQLException;
 import java.util.Map;
 import net.hasor.dataql.sqlproc.dynamic.args.MapSqlArgSource;
+import net.hasor.dataql.sqlproc.types.SqlArgSource;
 
 /**
  * 本处理器，兼容 @{...}、#{...}、${...} 三种写法。

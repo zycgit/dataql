@@ -17,7 +17,7 @@ package net.hasor.dataql.sqlproc.dynamic.segment;
 import java.util.Map;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.sqlproc.dynamic.rule.ArgRule;
-import net.hasor.dataql.sqlproc.internal.RuntimeSQLException;
+import net.hasor.dataql.sqlproc.dynamic.internal.RuntimeSQLException;
 
 /**
  * Holds information about a parsed SQL statement.

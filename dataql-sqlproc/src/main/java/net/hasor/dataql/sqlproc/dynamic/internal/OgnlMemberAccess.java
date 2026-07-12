@@ -28,7 +28,7 @@
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 // DAMAGE.
 // --------------------------------------------------------------------------
-package net.hasor.dataql.sqlproc.internal;
+package net.hasor.dataql.sqlproc.dynamic.internal;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Member;
 import java.lang.reflect.Modifier;

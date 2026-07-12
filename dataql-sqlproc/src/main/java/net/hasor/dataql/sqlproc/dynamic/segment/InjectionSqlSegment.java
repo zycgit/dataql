@@ -16,9 +16,9 @@
 package net.hasor.dataql.sqlproc.dynamic.segment;
 import java.sql.SQLException;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
-import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
+import net.hasor.dataql.sqlproc.types.SqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
-import static net.hasor.dataql.sqlproc.internal.OgnlUtils.evalOgnl;
+import static net.hasor.dataql.sqlproc.dynamic.internal.OgnlUtils.evalOgnl;
 
 public class InjectionSqlSegment implements SqlSegment {
     private final String exprString;

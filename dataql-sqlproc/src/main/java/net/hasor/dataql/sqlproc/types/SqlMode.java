@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.dynamic;
+package net.hasor.dataql.sqlproc.types;
 /**
  * 参数模式
  * @author 赵永春 (zyc@hasor.net)

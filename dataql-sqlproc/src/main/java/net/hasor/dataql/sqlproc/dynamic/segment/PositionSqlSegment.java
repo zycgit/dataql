@@ -17,7 +17,7 @@ package net.hasor.dataql.sqlproc.dynamic.segment;
 import java.sql.SQLException;
 import java.util.Collections;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
-import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
+import net.hasor.dataql.sqlproc.types.SqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
 import net.hasor.dataql.sqlproc.dynamic.rule.ArgRule;
 

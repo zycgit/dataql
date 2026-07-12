@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * ...
  */
-package net.hasor.dataql.sqlproc.execute.support;
+package net.hasor.dataql.sqlproc.execute.fragment;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -19,11 +19,11 @@ import net.hasor.dataql.kernel.FragmentProcess;
 import net.hasor.dataql.sqlproc.ConfigFormatType;
 import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dialect.PageObject;
-import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
 import net.hasor.dataql.sqlproc.dynamic.resolve.ConfigResolve;
 import net.hasor.dataql.sqlproc.dynamic.resolve.ConfigResolveRoot;
+import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 import net.hasor.dataql.sqlproc.execute.RootStatement;
 import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionInterceptor;
 import static net.hasor.dataql.sqlproc.SqlHintNames.FRAGMENT_SQL_DATA_SOURCE;
@@ -36,14 +36,14 @@ import static net.hasor.dataql.sqlproc.SqlHintValue.FRAGMENT_SQL_QUERY_BY_PAGE_E
  * 注入 Hints，子类覆写 {@link #queryType(String, Hints)} 读取即可。
  */
 public abstract class AbstractSqlFragment implements FragmentProcess {
-    private final ConfigResolveRoot           configResolve = new ConfigResolveRoot();
-    private final Map<String, SqlConfig>      configCache   = new ConcurrentHashMap<>();
-    private final RootStatement               rootStatement;
-    private final QueryContext                queryContext;
+    private final ConfigResolveRoot      configResolve = new ConfigResolveRoot();
+    private final Map<String, SqlConfig> configCache   = new ConcurrentHashMap<>();
+    private final RootStatement          rootStatement;
+    private final ExecuteContext         context;
 
-    protected AbstractSqlFragment(QueryContext queryContext) {
-        this.queryContext = Objects.requireNonNull(queryContext, "queryContext is null");
-        this.rootStatement = new RootStatement(this.queryContext);
+    protected AbstractSqlFragment(ExecuteContext context) {
+        this.context = Objects.requireNonNull(context, "exeContext is null");
+        this.rootStatement = new RootStatement(this.context);
     }
 
     protected abstract QueryType queryType(String fragmentString, Hints hints);
@@ -109,7 +109,7 @@ public abstract class AbstractSqlFragment implements FragmentProcess {
     protected Object executeFragment(Hints hints, Map<String, Object> params, String fragmentString) throws Throwable {
         Hints fragmentHints = this.resolveHints(hints);
         SqlConfig config = buildConfig(fragmentString, fragmentHints);
-        List<SqlExecutionInterceptor> interceptors = this.queryContext.filterInterceptors(config.getType(), fragmentString, fragmentHints);
+        List<SqlExecutionInterceptor> interceptors = this.context.filterInterceptors(config.getType(), fragmentString, fragmentHints);
         FragmentConfig fragmentConfig = new FragmentConfig(config, interceptors);
 
         String byPage = SqlHintNames.getValue(fragmentHints, FRAGMENT_SQL_QUERY_BY_PAGE);
@@ -122,7 +122,7 @@ public abstract class AbstractSqlFragment implements FragmentProcess {
 
     protected Object noPageFragment(Hints hints, Map<String, Object> params, SqlConfig config, List<SqlExecutionInterceptor> interceptors) throws SQLException {
         String sourceName = SqlHintNames.getValue(hints, FRAGMENT_SQL_DATA_SOURCE);
-        try (Connection conn = this.queryContext.findConnection(sourceName, hints)) {
+        try (Connection conn = this.context.findConnection(sourceName, hints)) {
             return this.rootStatement.execute(conn, hints, config, params, null, false, interceptors);
         }
     }
@@ -134,6 +134,6 @@ public abstract class AbstractSqlFragment implements FragmentProcess {
             page.setPageNumberOffset(Integer.parseInt(offsetStr));
         }
 
-        return new PageQuery(this.queryContext, fragmentConfig, hints, params, this.rootStatement, page);
+        return new PageQuery(this.context, fragmentConfig, hints, params, this.rootStatement, page);
     }
 }

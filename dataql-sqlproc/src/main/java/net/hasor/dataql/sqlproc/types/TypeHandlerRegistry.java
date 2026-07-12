@@ -33,8 +33,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import net.hasor.cobble.ClassUtils;
 import net.hasor.dataql.sqlproc.dialect.JdbcHelper;
-import net.hasor.dataql.sqlproc.dynamic.SqlArg;
-import net.hasor.dataql.sqlproc.dynamic.SqlMode;
 import net.hasor.dataql.sqlproc.types.array.ArrayTypeHandler;
 import net.hasor.dataql.sqlproc.types.bool.BooleanTypeHandler;
 import net.hasor.dataql.sqlproc.types.bytes.BlobAsBytesTypeHandler;

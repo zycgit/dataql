@@ -20,7 +20,7 @@ import java.util.*;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.sqlproc.dynamic.DynamicSql;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
-import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
+import net.hasor.dataql.sqlproc.types.SqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
 
 /**

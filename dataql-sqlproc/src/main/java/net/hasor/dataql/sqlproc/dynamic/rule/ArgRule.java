@@ -21,8 +21,11 @@ import net.hasor.cobble.NumberUtils;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.ref.LinkedCaseInsensitiveMap;
 import net.hasor.dataql.sqlproc.dynamic.*;
-import net.hasor.dataql.sqlproc.internal.OgnlUtils;
+import net.hasor.dataql.sqlproc.dynamic.internal.OgnlUtils;
 import net.hasor.dataql.sqlproc.types.TypeHandler;
+import net.hasor.dataql.sqlproc.types.SqlArg;
+import net.hasor.dataql.sqlproc.types.SqlArgSource;
+import net.hasor.dataql.sqlproc.types.SqlMode;
 
 /**
  * 动态参数规则，负责动态 SQL 中 #{} 的解析。

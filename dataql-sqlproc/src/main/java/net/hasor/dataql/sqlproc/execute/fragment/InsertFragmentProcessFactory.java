@@ -1,4 +1,4 @@
-package net.hasor.dataql.sqlproc.execute.support;
+package net.hasor.dataql.sqlproc.execute.fragment;
 
 public final class InsertFragmentProcessFactory extends AbstractSqlFragmentProcessFactory {
     public InsertFragmentProcessFactory() {

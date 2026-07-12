@@ -1,0 +1,125 @@
+/*
+ * Copyright 2015-2022 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package net.hasor.dataql.sqlproc.execute.support;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
+import net.hasor.cobble.ClassUtils;
+import net.hasor.dataql.domain.Hints;
+import net.hasor.dataql.sqlproc.dynamic.DynamicSql;
+import net.hasor.dataql.sqlproc.dynamic.MacroRegistry;
+import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
+import net.hasor.dataql.sqlproc.dynamic.rule.RuleRegistry;
+import net.hasor.dataql.sqlproc.dynamic.rule.SqlRule;
+import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionInterceptor;
+import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionPredicate;
+import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
+
+public final class ExecuteContextImpl implements ExecuteContext {
+    private       TypeHandlerRegistry           typeRegistry  = TypeHandlerRegistry.DEFAULT;
+    private final MacroRegistry                 macroRegistry = new MacroRegistry();
+    private final RuleRegistry                  ruleRegistry  = new RuleRegistry();
+    private final ClassLoader                   classLoader;
+    private       ConnectionProvider            connection;
+    private final List<InterceptorRegistration> interceptors  = new CopyOnWriteArrayList<>();
+
+    private record InterceptorRegistration(SqlExecutionInterceptor interceptor, SqlExecutionPredicate predicate) {
+    }
+
+    ExecuteContextImpl(ClassLoader classLoader, ConnectionProvider connection) {
+        this.classLoader = Objects.requireNonNull(classLoader, "classLoader is null.");
+        this.connection = connection;
+    }
+
+    @Override
+    public SqlRule findRule(String ruleName) {
+        return this.ruleRegistry.findRule(ruleName);
+    }
+
+    @Override
+    public DynamicSql findMacro(String dynamicId) {
+        return this.macroRegistry.findMacro(dynamicId);
+    }
+
+    public void addMacro(String name, String segment) {
+        this.macroRegistry.register(name, segment);
+    }
+
+    @Override
+    public TypeHandlerRegistry getTypeRegistry() {
+        return this.typeRegistry;
+    }
+
+    @Override
+    public ClassLoader getClassLoader() {
+        return this.classLoader;
+    }
+
+    @Override
+    public void addInterceptor(SqlExecutionInterceptor interceptor) {
+        this.addInterceptor(interceptor, (type, fragmentString, hints) -> true);
+    }
+
+    @Override
+    public void addInterceptor(SqlExecutionInterceptor interceptor, SqlExecutionPredicate predicate) {
+        this.interceptors.add(new InterceptorRegistration(Objects.requireNonNull(interceptor, "interceptor is null."), Objects.requireNonNull(predicate, "predicate is null.")));
+    }
+
+    @Override
+    public boolean removeInterceptor(SqlExecutionInterceptor interceptor) {
+        return this.interceptors.removeIf(registration -> registration.interceptor() == interceptor);
+    }
+
+    @Override
+    public List<SqlExecutionInterceptor> filterInterceptors(QueryType type, String fragmentString, Hints hints) {
+        List<SqlExecutionInterceptor> result = new ArrayList<>(this.interceptors.size());
+        for (InterceptorRegistration registration : this.interceptors) {
+            if (registration.predicate().accept(type, fragmentString, hints)) {
+                result.add(registration.interceptor());
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public Class<?> loadClass(String className) throws ClassNotFoundException {
+        return ClassUtils.getClass(this.classLoader, className);
+    }
+
+    @Override
+    public Connection findConnection(String sourceName, Hints hints) throws SQLException {
+        return this.lookupConnection(sourceName, hints);
+    }
+
+    @Override
+    public void setConnectionProvider(ConnectionProvider provider) {
+        this.connection = provider;
+    }
+
+    private Connection lookupConnection(String sourceName, Hints hints) throws SQLException {
+        Connection c = null;
+        if (this.connection != null) {
+            c = this.connection.findConnection(sourceName, hints);
+        }
+        if (c == null) {
+            throw new SQLException("connection '" + sourceName + "' not configured");
+        }
+        return c;
+    }
+}

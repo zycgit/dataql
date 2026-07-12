@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.execute.support;
+package net.hasor.dataql.sqlproc.execute.fragment;
 
 import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.domain.HintsProxy;
 import net.hasor.dataql.sqlproc.SqlHintNames;
-import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
 import net.hasor.dataql.sqlproc.dynamic.config.StatementType;
+import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 
 public class CallFragmentProcess extends AbstractSqlFragment {
-    public CallFragmentProcess(QueryContext queryContext) {
-        super(queryContext);
+    public CallFragmentProcess(ExecuteContext context) {
+        super(context);
     }
 
     @Override

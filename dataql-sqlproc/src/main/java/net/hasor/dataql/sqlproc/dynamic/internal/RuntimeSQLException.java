@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.internal;
+package net.hasor.dataql.sqlproc.dynamic.internal;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;

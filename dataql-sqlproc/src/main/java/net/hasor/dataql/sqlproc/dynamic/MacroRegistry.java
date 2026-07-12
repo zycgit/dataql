@@ -25,8 +25,7 @@ import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
  * @version 2021-06-05
  */
 public class MacroRegistry {
-    public static final MacroRegistry           DEFAULT  = new MacroRegistry();
-    private final       Map<String, DynamicSql> macroMap = new HashMap<>();
+    private final Map<String, DynamicSql> macroMap = new HashMap<>();
 
     public DynamicSql findMacro(String dynamicId) {
         return this.macroMap.get(dynamicId);

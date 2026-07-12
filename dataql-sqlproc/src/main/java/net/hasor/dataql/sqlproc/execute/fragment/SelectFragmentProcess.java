@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.execute.support;
+package net.hasor.dataql.sqlproc.execute.fragment;
 
 import net.hasor.dataql.domain.Hints;
-import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
+import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 
-public class UpdateFragmentProcess extends AbstractSqlFragment {
-    public UpdateFragmentProcess(QueryContext queryContext) {
-        super(queryContext);
+public class SelectFragmentProcess extends AbstractSqlFragment {
+    public SelectFragmentProcess(ExecuteContext context) {
+        super(context);
     }
 
     @Override
     protected QueryType queryType(String fragmentString, Hints hints) {
-        return QueryType.Update;
+        return QueryType.Select;
     }
 }

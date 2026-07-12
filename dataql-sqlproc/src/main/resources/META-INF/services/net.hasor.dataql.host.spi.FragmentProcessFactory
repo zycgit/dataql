@@ -1,6 +1,6 @@
-net.hasor.dataql.sqlproc.execute.support.ExecuteFragmentProcessFactory
-net.hasor.dataql.sqlproc.execute.support.SelectFragmentProcessFactory
-net.hasor.dataql.sqlproc.execute.support.InsertFragmentProcessFactory
-net.hasor.dataql.sqlproc.execute.support.UpdateFragmentProcessFactory
-net.hasor.dataql.sqlproc.execute.support.DeleteFragmentProcessFactory
-net.hasor.dataql.sqlproc.execute.support.CallFragmentProcessFactory
+net.hasor.dataql.sqlproc.execute.fragment.ExecuteFragmentProcessFactory
+net.hasor.dataql.sqlproc.execute.fragment.SelectFragmentProcessFactory
+net.hasor.dataql.sqlproc.execute.fragment.InsertFragmentProcessFactory
+net.hasor.dataql.sqlproc.execute.fragment.UpdateFragmentProcessFactory
+net.hasor.dataql.sqlproc.execute.fragment.DeleteFragmentProcessFactory
+net.hasor.dataql.sqlproc.execute.fragment.CallFragmentProcessFactory

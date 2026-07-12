@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2009 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * DataQL 扩展函数包。
- */
-@IgnoreProxy
-package net.hasor.dataql.fx;
-import net.hasor.core.IgnoreProxy;
+package net.hasor.dataql.sqlproc.execute.fragment;
+
+import net.hasor.dataql.domain.Hints;
+import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
+import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
+
+public class InsertFragmentProcess extends AbstractSqlFragment {
+    public InsertFragmentProcess(ExecuteContext context) {
+        super(context);
+    }
+
+    @Override
+    protected QueryType queryType(String fragmentString, Hints hints) {
+        return QueryType.Insert;
+    }
+}

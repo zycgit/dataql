@@ -22,7 +22,10 @@ import net.hasor.dataql.sqlproc.dynamic.*;
 import net.hasor.dataql.sqlproc.dynamic.args.ArraySqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
 import net.hasor.dataql.sqlproc.types.TypeHandler;
-import static net.hasor.dataql.sqlproc.internal.OgnlUtils.evalOgnl;
+import net.hasor.dataql.sqlproc.types.SqlArg;
+import net.hasor.dataql.sqlproc.types.SqlArgSource;
+import net.hasor.dataql.sqlproc.types.SqlMode;
+import static net.hasor.dataql.sqlproc.dynamic.internal.OgnlUtils.evalOgnl;
 
 /**
  * in 规则，用于自动生成 in 语句后的多重参数，例如： where col in (?,?,?,?)。

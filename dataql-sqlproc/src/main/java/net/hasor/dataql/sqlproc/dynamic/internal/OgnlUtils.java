@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.internal;
+package net.hasor.dataql.sqlproc.dynamic.internal;
 import net.hasor.cobble.ExceptionUtils;
-import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
+import net.hasor.dataql.sqlproc.types.SqlArgSource;
 import ognl.Ognl;
 import ognl.OgnlContext;
 import ognl.OgnlRuntime;

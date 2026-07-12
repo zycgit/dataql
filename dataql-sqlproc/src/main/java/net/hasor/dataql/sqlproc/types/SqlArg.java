@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.dynamic;
+package net.hasor.dataql.sqlproc.types;
 import java.util.Objects;
-import net.hasor.dataql.sqlproc.types.TypeHandler;
 
 /**
  * 代表一个动态 SQL Build 之后的具体 SQL 和其参数

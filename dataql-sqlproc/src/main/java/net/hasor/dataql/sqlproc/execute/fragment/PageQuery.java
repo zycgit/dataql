@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.execute.support;
+package net.hasor.dataql.sqlproc.execute.fragment;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -24,7 +24,7 @@ import net.hasor.dataql.host.function.AbstractUdfSource;
 import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dialect.PageObject;
 import net.hasor.dataql.sqlproc.dialect.PageResult;
-import net.hasor.dataql.sqlproc.dynamic.QueryContext;
+import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 import net.hasor.dataql.sqlproc.execute.RootStatement;
 
 /**
@@ -38,7 +38,7 @@ import net.hasor.dataql.sqlproc.execute.RootStatement;
  * }</pre>
  */
 public class PageQuery extends AbstractUdfSource {
-    private final QueryContext        queryContext;
+    private final ExecuteContext      context;
     private final Hints               hints;
     private final FragmentConfig      sqlConfig;
     private final Map<String, Object> params;
@@ -46,8 +46,8 @@ public class PageQuery extends AbstractUdfSource {
     private final PageObject          pageInfo;
     private       PageResult<Object>  pageResult;
 
-    PageQuery(QueryContext queryContext, FragmentConfig sqlConfig, Hints hints, Map<String, Object> params, RootStatement rootStatement, PageObject pageInfo) {
-        this.queryContext = queryContext;
+    PageQuery(ExecuteContext context, FragmentConfig sqlConfig, Hints hints, Map<String, Object> params, RootStatement rootStatement, PageObject pageInfo) {
+        this.context = context;
         this.hints = hints;
         this.params = params;
         this.rootStatement = rootStatement;
@@ -132,7 +132,7 @@ public class PageQuery extends AbstractUdfSource {
 
     private void fetchData() throws SQLException {
         String sourceName = SqlHintNames.getValue(hints, SqlHintNames.FRAGMENT_SQL_DATA_SOURCE);
-        try (Connection conn = this.queryContext.findConnection(sourceName, this.hints)) {
+        try (Connection conn = this.context.findConnection(sourceName, this.hints)) {
             this.pageResult = (PageResult<Object>) this.rootStatement.execute(conn, this.hints, this.sqlConfig.config(), this.params, this.pageInfo, true, this.sqlConfig.interceptors());
         }
     }

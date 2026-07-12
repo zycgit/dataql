@@ -17,9 +17,9 @@ package net.hasor.dataql.sqlproc.dynamic.logic;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.sqlproc.dynamic.DynamicSql;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
-import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
+import net.hasor.dataql.sqlproc.types.SqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
-import net.hasor.dataql.sqlproc.internal.OgnlUtils;
+import net.hasor.dataql.sqlproc.dynamic.internal.OgnlUtils;
 
 /**
  * <bind> 标签

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.dynamic;
+package net.hasor.dataql.sqlproc.types;
 import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Set;

@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.execute.support;
+package net.hasor.dataql.sqlproc.execute.fragment;
 
 import net.hasor.dataql.domain.Hints;
-import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
+import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 
 public class DeleteFragmentProcess extends AbstractSqlFragment {
-    public DeleteFragmentProcess(QueryContext queryContext) {
-        super(queryContext);
+    public DeleteFragmentProcess(ExecuteContext context) {
+        super(context);
     }
 
     @Override

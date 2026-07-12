@@ -16,7 +16,7 @@
 package net.hasor.dataql.sqlproc.dynamic.segment;
 import java.sql.SQLException;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
-import net.hasor.dataql.sqlproc.dynamic.SqlArgSource;
+import net.hasor.dataql.sqlproc.types.SqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
 
 public class TextSqlSegment implements SqlSegment {
