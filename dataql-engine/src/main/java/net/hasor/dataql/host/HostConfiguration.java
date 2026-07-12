@@ -38,6 +38,16 @@ public class HostConfiguration implements HostContext {
     }
 
     @Override
+    public <T> T getAttachment(Class<T> attachmentType) {
+        return this.spiRegistry.getAttachment(attachmentType);
+    }
+
+    @Override
+    public <T> void addAttachment(Class<T> attachmentType, T attachment) {
+        this.spiRegistry.addAttachment(attachmentType, attachment);
+    }
+
+    @Override
     public ResourceLoader getResourceLoader() {
         return this.resourceLoader;
     }

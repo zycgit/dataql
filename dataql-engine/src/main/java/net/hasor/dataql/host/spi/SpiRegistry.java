@@ -13,11 +13,13 @@ import net.hasor.dataql.kernel.FragmentProcess;
  * 片段和导入注册器，支持 SPI 自动发现和手动注册。
  */
 public class SpiRegistry {
-    private final    HostContext              context;
-    private final    Map<String, Supplier<?>> fragmentMap = new LinkedCaseInsensitiveMap<>();
-    private final    Map<String, Supplier<?>> importMap   = new ConcurrentHashMap<>();
-    private volatile boolean                  providersLoaded;
-    private volatile boolean                  providerLoading;
+    private final    HostContext                             context;
+    private final    Map<String, Supplier<?>>                fragmentMap         = new LinkedCaseInsensitiveMap<>();
+    private final    Map<String, Supplier<?>>                importMap           = new ConcurrentHashMap<>();
+    private final    Map<Class<?>, HostAttachmentFactory<?>> attachmentFactories = new ConcurrentHashMap<>();
+    private final    Map<Class<?>, Object>                   attachments         = new ConcurrentHashMap<>();
+    private volatile boolean                                 providersLoaded;
+    private volatile boolean                                 providerLoading;
 
     public SpiRegistry(HostContext context) {
         this.context = Objects.requireNonNull(context, "context is null.");
@@ -34,6 +36,11 @@ public class SpiRegistry {
         this.providerLoading = true;
         try {
             ClassLoader classLoader = this.context.getClassLoader();
+            ServiceLoader<HostAttachmentFactory> attachmentLoader = classLoader != null//
+                    ? ServiceLoader.load(HostAttachmentFactory.class, classLoader)//
+                    : ServiceLoader.load(HostAttachmentFactory.class);
+            attachmentLoader.forEach(factory -> this.attachmentFactories.putIfAbsent(factory.getAttachmentType(), factory));
+
             ServiceLoader<FragmentProcessFactory> fragLoader = classLoader != null//
                     ? ServiceLoader.load(FragmentProcessFactory.class, classLoader)//
                     : ServiceLoader.load(FragmentProcessFactory.class);
@@ -87,6 +94,24 @@ public class SpiRegistry {
         this.loadProviders();
         Supplier<?> supplier = this.importMap.get(name);
         return supplier != null ? supplier.get() : null;
+    }
+
+    public <T> T getAttachment(Class<T> attachmentType) {
+        Objects.requireNonNull(attachmentType, "attachmentType is null.");
+        this.loadProviders();
+        Object attachment = this.attachments.computeIfAbsent(attachmentType, type -> {
+            HostAttachmentFactory<?> factory = this.attachmentFactories.get(type);
+            if (factory == null) {
+                throw new IllegalStateException("Host attachment '" + type.getName() + "' is not configured.");
+            }
+            return Objects.requireNonNull(factory.create(this.context), "Host attachment factory returned null for '" + type.getName() + "'.");
+        });
+        return attachmentType.cast(attachment);
+    }
+
+    public <T> void addAttachment(Class<T> attachmentType, T attachment) {
+        Objects.requireNonNull(attachmentType, "attachmentType is null.");
+        this.attachments.putIfAbsent(attachmentType, attachmentType.cast(Objects.requireNonNull(attachment, "attachment is null.")));
     }
 
     // ========== 内部用到的方法 ==========

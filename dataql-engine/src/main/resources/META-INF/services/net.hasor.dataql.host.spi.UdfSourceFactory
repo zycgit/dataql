@@ -20,3 +20,4 @@ net.hasor.dataql.host.function.basic.NumberUdfSource
 net.hasor.dataql.host.function.basic.StateUdfSource
 net.hasor.dataql.host.function.basic.StringUdfSource
 net.hasor.dataql.host.function.encryt.CodecUdfSource
+net.hasor.dataql.host.function.encryt.JsonUdfSource

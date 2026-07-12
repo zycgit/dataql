@@ -13,18 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.fx.basic;
+package net.hasor.dataql.host.function.encryt;
 import com.alibaba.fastjson.JSON;
-import net.hasor.core.Singleton;
-import net.hasor.dataql.UdfSourceAssembly;
+import net.hasor.dataql.host.function.AbstractUdfSource;
 
 /**
- * Json函数。函数库引入 <code>import 'net.hasor.dataql.fx.basic.JsonUdfSource' as json;</code>
+ * Json函数。函数库引入 <code>import 'net.hasor.dataql.host.function.encryt.JsonUdfSource' as json;</code>
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2019-12-12
  */
-@Singleton
-public class JsonUdfSource implements UdfSourceAssembly {
+public class JsonUdfSource extends AbstractUdfSource {
     /** 把对象 JSON 序列化 */
     public String toJson(Object data) {
         return JSON.toJSONString(data);

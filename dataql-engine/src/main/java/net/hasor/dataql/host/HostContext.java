@@ -22,4 +22,10 @@ import net.hasor.dataql.kernel.Finder;
  * 继承 {@link Finder}，SPI 工厂可直接通过上下文进行资源查找。
  */
 public interface HostContext extends Finder {
+
+    /** Return the host-scoped attachment, creating it through SPI when first requested. */
+    <T> T getAttachment(Class<T> attachmentType);
+
+    /** Add a host-scoped attachment created while initializing another attachment. */
+    <T> void addAttachment(Class<T> attachmentType, T attachment);
 }
