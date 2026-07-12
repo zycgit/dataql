@@ -1,4 +1,4 @@
-package net.hasor.dataql.sqlproc.execute.utils;
+package net.hasor.dataql.sqlproc.execute;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import net.hasor.dataql.sqlproc.ColumnCaseType;
-import net.hasor.dataql.sqlproc.execute.MapResultExtractor;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
 import org.junit.Test;

@@ -43,7 +43,7 @@ public class ExecuteFragmentProcess extends AbstractSqlFragment {
     }
 
     // ----------------------------------------------------------------
-    // Type / explicit type
+    // Type  / explicit type
     // ----------------------------------------------------------------
 
     public static QueryType parseExplicitType(String fragmentString) {

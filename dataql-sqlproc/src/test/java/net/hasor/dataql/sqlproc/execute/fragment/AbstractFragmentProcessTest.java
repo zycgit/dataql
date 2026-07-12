@@ -1,12 +1,12 @@
-package net.hasor.dataql.sqlproc.execute.support;
+package net.hasor.dataql.sqlproc.execute.fragment;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import net.hasor.cobble.function.EFunction;
-import net.hasor.dataql.HintNames;
-import net.hasor.dataql.runtime.HintsSet;
+import net.hasor.dataql.domain.HintNames;
+import net.hasor.dataql.domain.HintsSet;
 import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import net.hasor.dataql.sqlproc.SqlHintNames;
 

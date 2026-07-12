@@ -1,8 +1,8 @@
 package net.hasor.dataql.sqlproc.dynamic.rule;
 import net.hasor.cobble.CollectionUtils;
-import net.hasor.dataql.sqlproc.dynamic.SqlArg;
+import net.hasor.dataql.sqlproc.types.SqlArg;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
-import net.hasor.dataql.sqlproc.dynamic.SqlMode;
+import net.hasor.dataql.sqlproc.types.SqlMode;
 import net.hasor.dataql.sqlproc.dynamic.rule.dto.MyTypeHandler;
 import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
 import net.hasor.dataql.sqlproc.dynamic.segment.PlanDynamicSql;
@@ -144,7 +144,7 @@ public class DynamicTest {
         Map<String, Object> ctx = CollectionUtils.asMap("id", CollectionUtils.asMap("ccc", CollectionUtils.asMap("aaa", Arrays.asList("abc"))));
         SqlBuilder sqlBuilder = segment.buildQuery(ctx, new TestQueryContext());
 
-        assert segment.getNamedList().get(0).getExpr().equals("id.ccc['aaa'][0]");
+        assert segment.getNamedList().get(0).expr().equals("id.ccc['aaa'][0]");
         assert segment.getOriSqlString().equals(sql);
         assert sqlBuilder.getSqlString().equals("a = ?");
         assert ((SqlArg) sqlBuilder.getArgs()[0]).getName().equals("id.ccc['aaa'][0]");

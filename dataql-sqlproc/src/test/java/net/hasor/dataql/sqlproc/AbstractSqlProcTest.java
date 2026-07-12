@@ -19,14 +19,16 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.UUID;
-import net.hasor.dataql.runtime.HintsSet;
-import net.hasor.dataql.sqlproc.dynamic.QueryContext;
-import net.hasor.dataql.sqlproc.dynamic.config.InsertConfig;
+import net.hasor.cobble.function.EFunction;
+import net.hasor.dataql.domain.HintsSet;
+import net.hasor.dataql.host.HostConfiguration;
 import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.StatementType;
 import net.hasor.dataql.sqlproc.dynamic.resolve.ConfigResolveRoot;
-import net.hasor.dataql.sqlproc.execute.SqlQueryContext;
+import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
+import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
+import net.hasor.dataql.sqlproc.execute.support.SqlQueryContextFactory;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
 import org.junit.After;
@@ -35,7 +37,7 @@ import org.junit.Before;
 /**
  * 统一的 SQL 相关测试基类，提供：
  *   - H2 连接生命周期管理 ({@link #conn})
- *   - {@link QueryContext} 工厂方法
+ *   - {@link ExecuteContext} 工厂方法
  *   - 便捷的 H2 连接创建方法
  */
 public abstract class AbstractSqlProcTest {
@@ -81,8 +83,18 @@ public abstract class AbstractSqlProcTest {
     }
 
     /** 创建 SQL 执行测试使用的 QueryContext。 */
-    protected QueryContext newQueryContext() {
-        return new SqlQueryContext();
+    protected ExecuteContext newQueryContext() {
+        return newQueryContext((ConnectionProvider) null);
+    }
+
+    protected ExecuteContext newQueryContext(EFunction<String, Connection, SQLException> function) {
+        return newQueryContext((sourceName, hints) -> function.eApply(sourceName));
+    }
+
+    protected ExecuteContext newQueryContext(ConnectionProvider provider) {
+        ExecuteContext context = new SqlQueryContextFactory().create(new HostConfiguration());
+        context.setConnectionProvider(provider);
+        return context;
     }
 
     // ----------------------------------------------------------------
@@ -135,40 +147,4 @@ public abstract class AbstractSqlProcTest {
         return new ConfigResolveRoot().parseXmlConfig(type.getTagString(), hints, xml);
     }
 
-    protected SqlConfig usersSelectConfig() {
-        return usersSelectConfig(null);
-    }
-
-    protected SqlConfig usersSelectConfig(StatementType statementType) {
-        return sqlConfig(QueryType.Select, statementHints(statementType), "SELECT id, name, age FROM users");
-    }
-
-    protected SqlConfig aliceSelectConfig() {
-        return sqlConfig(QueryType.Select, "SELECT id, name, age FROM users WHERE name = 'Alice'");
-    }
-
-    protected SqlConfig insertUserConfig() {
-        return sqlConfig(QueryType.Insert, "INSERT INTO users (name, age) VALUES ('Test', 99)");
-    }
-
-    protected SqlConfig updateAliceConfig() {
-        return sqlConfig(QueryType.Update, "UPDATE users SET age = 100 WHERE name = 'Alice'");
-    }
-
-    protected SqlConfig deleteNoUserConfig() {
-        return sqlConfig(QueryType.Delete, "DELETE FROM users WHERE id > 100");
-    }
-
-    protected InsertConfig insertWithSelectKeyConfig(String selectKeySql, String keyProperty, String keyColumn, String order) {
-        StringBuilder xml = new StringBuilder();
-        xml.append("INSERT INTO users (name, age) VALUES ('Test', 99)");
-        xml.append("<selectKey keyProperty=\"").append(keyProperty).append("\"");
-        if (keyColumn != null) {
-            xml.append(" keyColumn=\"").append(keyColumn).append("\"");
-        }
-        xml.append(" order=\"").append(order).append("\">");
-        xml.append(selectKeySql);
-        xml.append("</selectKey>");
-        return (InsertConfig) xmlConfig(QueryType.Insert, xml.toString());
-    }
 }

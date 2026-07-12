@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.hasor.dataql.sqlproc.execute.utils;
+package net.hasor.dataql.sqlproc.execute;
 
 import java.util.*;
-import net.hasor.dataql.sqlproc.execute.MergedMap;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

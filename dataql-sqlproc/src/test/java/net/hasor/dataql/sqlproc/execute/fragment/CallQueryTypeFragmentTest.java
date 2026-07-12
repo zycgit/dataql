@@ -1,22 +1,22 @@
-package net.hasor.dataql.sqlproc.execute.support;
+package net.hasor.dataql.sqlproc.execute.fragment;
 
+import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.lang.reflect.Proxy;
 import java.util.Collections;
 import net.hasor.cobble.function.EFunction;
-import net.hasor.dataql.runtime.HintsSet;
+import net.hasor.dataql.domain.HintsSet;
 import net.hasor.dataql.sqlproc.SqlHintNames;
-import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.StatementType;
+import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-public class CallFragmentProcessTest extends AbstractFragmentProcessTest {
+public class CallQueryTypeFragmentTest extends AbstractFragmentProcessTest {
     @Test
     public void queryTypeIsCall() {
         assertEquals(QueryType.Call, exposed().type("SELECT * FROM users"));
@@ -70,14 +70,14 @@ public class CallFragmentProcessTest extends AbstractFragmentProcessTest {
     }
 
     private CallFragmentProcess fragment() {
-        return new CallFragmentProcess(procedureDb(), newQueryContext());
+        return new CallFragmentProcess(newQueryContext(procedureDb()));
     }
 
     private EFunction<String, Connection, SQLException> procedureDb() {
         return name -> {
             Connection conn = newH2WithUsers();
             try (Statement stmt = conn.createStatement()) {
-                stmt.execute("CREATE ALIAS IF NOT EXISTS SQLPROC_USER_COUNT FOR \"" + CallFragmentProcessTest.class.getName() + ".userCount\"");
+                stmt.execute("CREATE ALIAS IF NOT EXISTS SQLPROC_USER_COUNT FOR \"" + CallQueryTypeFragmentTest.class.getName() + ".userCount\"");
             }
             return storedProcedureCapable(conn);
         };
@@ -103,8 +103,8 @@ public class CallFragmentProcessTest extends AbstractFragmentProcessTest {
     }
 
     private class ExposedCallFragmentProcess extends CallFragmentProcess {
-        private ExposedCallFragmentProcess(QueryContext queryContext) {
-            super(name -> null, queryContext);
+        public ExposedCallFragmentProcess(ExecuteContext context) {
+            super(context);
         }
 
         private QueryType type(String fragmentString) {

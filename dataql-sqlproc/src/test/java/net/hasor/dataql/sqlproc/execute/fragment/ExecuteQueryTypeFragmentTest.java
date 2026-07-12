@@ -1,22 +1,22 @@
-package net.hasor.dataql.sqlproc.execute.support;
+package net.hasor.dataql.sqlproc.execute.fragment;
 
 import java.util.*;
-import net.hasor.dataql.runtime.HintsSet;
+import net.hasor.dataql.domain.HintsSet;
 import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
-import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
+import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-public class ExecuteFragmentTest extends AbstractSqlProcTest {
+public class ExecuteQueryTypeFragmentTest extends AbstractSqlProcTest {
 
     /** Supplier that creates fresh H2 connections per call */
     private ExecuteFragmentProcess newFragment() {
-        return new ExecuteFragmentProcess(name -> newH2WithUsers(), newQueryContext());
+        return new ExecuteFragmentProcess(newQueryContext(name -> newH2WithUsers()));
     }
 
     // ----------------------------------------------------------------
@@ -345,13 +345,8 @@ public class ExecuteFragmentTest extends AbstractSqlProcTest {
     // ----------------------------------------------------------------
 
     @Test(expected = NullPointerException.class)
-    public void nullConnectionSupplier() {
-        new ExecuteFragmentProcess(null, newQueryContext());
-    }
-
-    @Test(expected = NullPointerException.class)
     public void nullQueryContext() {
-        new ExecuteFragmentProcess(name -> newH2WithUsers(), null);
+        new ExecuteFragmentProcess(null);
     }
 
     @Test
@@ -368,16 +363,14 @@ public class ExecuteFragmentTest extends AbstractSqlProcTest {
     @Test
     public void runExplicitInsert() throws Throwable {
         ExecuteFragmentProcess f = newFragment();
-        Object result = f.runFragment(new HintsSet(), Collections.emptyMap(),
-                "@@insert INSERT INTO users (name, age) VALUES ('E1', 10)");
+        Object result = f.runFragment(new HintsSet(), Collections.emptyMap(), "@@insert INSERT INTO users (name, age) VALUES ('E1', 10)");
         assertEquals(1, ((Integer) result).intValue());
     }
 
     @Test
     public void runExplicitSelect() throws Throwable {
         ExecuteFragmentProcess f = newFragment();
-        Object result = f.runFragment(new HintsSet(), Collections.emptyMap(),
-                "@@select SELECT * FROM users");
+        Object result = f.runFragment(new HintsSet(), Collections.emptyMap(), "@@select SELECT * FROM users");
         assertTrue(result instanceof List);
     }
 
@@ -386,8 +379,7 @@ public class ExecuteFragmentTest extends AbstractSqlProcTest {
         ExecuteFragmentProcess f = newFragment();
         HintsSet hints = new HintsSet();
         hints.setHint("FRAGMENT_SQL_QUERY_BY_PAGE", "true");
-        Object result = f.runFragment(hints, Collections.emptyMap(),
-                "@@select SELECT * FROM users");
+        Object result = f.runFragment(hints, Collections.emptyMap(), "@@select SELECT * FROM users");
         assertTrue(result instanceof PageQuery);
     }
 
@@ -401,8 +393,8 @@ public class ExecuteFragmentTest extends AbstractSqlProcTest {
     // --- helpers ---
 
     private static class ExposedExecuteFragmentProcess extends ExecuteFragmentProcess {
-        private ExposedExecuteFragmentProcess(QueryContext queryContext) {
-            super(n -> null, queryContext);
+        private ExposedExecuteFragmentProcess(ExecuteContext context) {
+            super(context);
         }
 
         private SqlConfig config(HintsSet hints, String fragmentString) {

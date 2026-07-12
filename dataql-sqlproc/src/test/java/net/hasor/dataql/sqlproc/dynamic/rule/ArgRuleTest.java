@@ -1,8 +1,8 @@
 package net.hasor.dataql.sqlproc.dynamic.rule;
 import net.hasor.cobble.CollectionUtils;
-import net.hasor.dataql.sqlproc.dynamic.SqlArg;
+import net.hasor.dataql.sqlproc.types.SqlArg;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
-import net.hasor.dataql.sqlproc.dynamic.SqlMode;
+import net.hasor.dataql.sqlproc.types.SqlMode;
 import net.hasor.dataql.sqlproc.dynamic.rule.dto.UserFutures;
 import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
 import net.hasor.dataql.sqlproc.dynamic.segment.PlanDynamicSql;

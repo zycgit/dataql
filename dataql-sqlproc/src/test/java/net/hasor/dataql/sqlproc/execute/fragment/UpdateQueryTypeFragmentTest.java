@@ -1,16 +1,16 @@
-package net.hasor.dataql.sqlproc.execute.support;
+package net.hasor.dataql.sqlproc.execute.fragment;
 
 import java.util.Collections;
-import net.hasor.dataql.runtime.HintsSet;
+import net.hasor.dataql.domain.HintsSet;
 import net.hasor.dataql.sqlproc.SqlHintNames;
-import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.StatementType;
+import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-public class UpdateFragmentProcessTest extends AbstractFragmentProcessTest {
+public class UpdateQueryTypeFragmentTest extends AbstractFragmentProcessTest {
     @Test
     public void queryTypeIsUpdate() {
         assertEquals(QueryType.Update, exposed().type("SELECT * FROM users"));
@@ -69,7 +69,7 @@ public class UpdateFragmentProcessTest extends AbstractFragmentProcessTest {
     }
 
     private UpdateFragmentProcess fragment() {
-        return new UpdateFragmentProcess(users(), newQueryContext());
+        return new UpdateFragmentProcess(newQueryContext(users()));
     }
 
     private ExposedUpdateFragmentProcess exposed() {
@@ -77,8 +77,8 @@ public class UpdateFragmentProcessTest extends AbstractFragmentProcessTest {
     }
 
     private class ExposedUpdateFragmentProcess extends UpdateFragmentProcess {
-        private ExposedUpdateFragmentProcess(QueryContext queryContext) {
-            super(name -> null, queryContext);
+        private ExposedUpdateFragmentProcess(ExecuteContext context) {
+            super(context);
         }
 
         private QueryType type(String fragmentString) {

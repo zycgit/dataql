@@ -29,7 +29,7 @@ import net.hasor.dataql.sqlproc.types.string.StringTypeHandler;
 import net.hasor.dataql.sqlproc.types.time.*;
 import org.junit.Test;
 
-public class RegistryTest {
+public class SpiRegistryTest {
 
     @Test
     public void ruleTest_1() {

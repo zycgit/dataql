@@ -7,7 +7,7 @@ import net.hasor.dataql.sqlproc.types.number.IntegerTypeHandler;
 import net.hasor.dataql.sqlproc.types.string.StringTypeHandler;
 import org.junit.Test;
 
-public class TypeHandlerRegistryCoverageTest {
+public class TypeHandlerSpiRegistryCoverageTest {
 
     @Test
     public void testDefaults() {

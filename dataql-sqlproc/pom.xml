@@ -71,7 +71,6 @@
         <dependency>
             <groupId>net.hasor</groupId>
             <artifactId>dbvisitor</artifactId>
-            <version>6.0.5</version>
             <scope>test</scope>
         </dependency>
         <dependency>

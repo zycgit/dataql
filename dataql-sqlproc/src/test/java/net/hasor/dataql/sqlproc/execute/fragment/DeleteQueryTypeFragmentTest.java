@@ -1,16 +1,16 @@
-package net.hasor.dataql.sqlproc.execute.support;
+package net.hasor.dataql.sqlproc.execute.fragment;
 
 import java.util.Collections;
-import net.hasor.dataql.runtime.HintsSet;
+import net.hasor.dataql.domain.HintsSet;
 import net.hasor.dataql.sqlproc.SqlHintNames;
-import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.StatementType;
+import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-public class DeleteFragmentProcessTest extends AbstractFragmentProcessTest {
+public class DeleteQueryTypeFragmentTest extends AbstractFragmentProcessTest {
     @Test
     public void queryTypeIsDelete() {
         assertEquals(QueryType.Delete, exposed().type("SELECT * FROM users"));
@@ -68,7 +68,7 @@ public class DeleteFragmentProcessTest extends AbstractFragmentProcessTest {
     }
 
     private DeleteFragmentProcess fragment() {
-        return new DeleteFragmentProcess(users(), newQueryContext());
+        return new DeleteFragmentProcess(newQueryContext(users()));
     }
 
     private ExposedDeleteFragmentProcess exposed() {
@@ -76,8 +76,8 @@ public class DeleteFragmentProcessTest extends AbstractFragmentProcessTest {
     }
 
     private class ExposedDeleteFragmentProcess extends DeleteFragmentProcess {
-        private ExposedDeleteFragmentProcess(QueryContext queryContext) {
-            super(name -> null, queryContext);
+        private ExposedDeleteFragmentProcess(ExecuteContext context) {
+            super(context);
         }
 
         private QueryType type(String fragmentString) {

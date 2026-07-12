@@ -1,19 +1,17 @@
-package net.hasor.dataql.sqlproc.execute.support;
+package net.hasor.dataql.sqlproc.execute.fragment;
 
 import java.util.Collections;
 import java.util.Map;
-import net.hasor.dataql.runtime.HintsSet;
+import net.hasor.dataql.domain.HintsSet;
 import net.hasor.dataql.sqlproc.SqlHintNames;
-import net.hasor.dataql.sqlproc.dynamic.QueryContext;
-import net.hasor.dataql.sqlproc.dynamic.config.InsertConfig;
-import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
-import net.hasor.dataql.sqlproc.dynamic.config.SelectKeyConfig;
-import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
-import net.hasor.dataql.sqlproc.dynamic.config.StatementType;
+import net.hasor.dataql.sqlproc.dynamic.config.*;
+import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-public class InsertFragmentProcessTest extends AbstractFragmentProcessTest {
+public class InsertQueryTypeFragmentTest extends AbstractFragmentProcessTest {
     @Test
     public void queryTypeIsInsert() {
         assertEquals(QueryType.Insert, exposed().type("SELECT * FROM users"));
@@ -122,7 +120,7 @@ public class InsertFragmentProcessTest extends AbstractFragmentProcessTest {
     }
 
     private InsertFragmentProcess fragment() {
-        return new InsertFragmentProcess(users(), newQueryContext());
+        return new InsertFragmentProcess(newQueryContext(users()));
     }
 
     private ExposedInsertFragmentProcess exposed() {
@@ -130,8 +128,8 @@ public class InsertFragmentProcessTest extends AbstractFragmentProcessTest {
     }
 
     private class ExposedInsertFragmentProcess extends InsertFragmentProcess {
-        private ExposedInsertFragmentProcess(QueryContext queryContext) {
-            super(name -> null, queryContext);
+        private ExposedInsertFragmentProcess(ExecuteContext context) {
+            super(context);
         }
 
         private QueryType type(String fragmentString) {

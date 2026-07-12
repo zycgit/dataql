@@ -1,4 +1,4 @@
-package net.hasor.dataql.sqlproc.execute.support;
+package net.hasor.dataql.sqlproc.execute.fragment;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -7,18 +7,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import net.hasor.cobble.function.EFunction;
-import net.hasor.dataql.runtime.HintsSet;
+import net.hasor.dataql.domain.HintsSet;
 import net.hasor.dataql.sqlproc.SqlHintNames;
-import net.hasor.dataql.sqlproc.dynamic.QueryContext;
-import net.hasor.dataql.sqlproc.dynamic.config.DqlConfig;
-import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
-import net.hasor.dataql.sqlproc.dynamic.config.ResultSetType;
-import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
-import net.hasor.dataql.sqlproc.dynamic.config.StatementType;
+import net.hasor.dataql.sqlproc.dynamic.config.*;
+import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-public class SelectFragmentProcessTest extends AbstractFragmentProcessTest {
+public class SelectQueryTypeFragmentTest extends AbstractFragmentProcessTest {
     @Test
     public void queryTypeIsSelect() {
         assertEquals(QueryType.Select, exposed().type("UPDATE users SET age = 1"));
@@ -159,7 +156,7 @@ public class SelectFragmentProcessTest extends AbstractFragmentProcessTest {
         };
         HintsSet hints = sqlHint(SqlHintNames.FRAGMENT_SQL_DATA_SOURCE, "reporting");
 
-        Object result = new SelectFragmentProcess(connection, newQueryContext()).runFragment(hints, Collections.emptyMap(), "SELECT * FROM users");
+        Object result = new SelectFragmentProcess(newQueryContext(connection)).runFragment(hints, Collections.emptyMap(), "SELECT * FROM users");
 
         assertTrue(result instanceof List);
         assertEquals("reporting", sourceName.get());
@@ -171,7 +168,7 @@ public class SelectFragmentProcessTest extends AbstractFragmentProcessTest {
     }
 
     private SelectFragmentProcess fragment() {
-        return new SelectFragmentProcess(users(), newQueryContext());
+        return new SelectFragmentProcess(newQueryContext(users()));
     }
 
     private ExposedSelectFragmentProcess exposed() {
@@ -179,8 +176,8 @@ public class SelectFragmentProcessTest extends AbstractFragmentProcessTest {
     }
 
     private class ExposedSelectFragmentProcess extends SelectFragmentProcess {
-        private ExposedSelectFragmentProcess(QueryContext queryContext) {
-            super(name -> null, queryContext);
+        private ExposedSelectFragmentProcess(ExecuteContext context) {
+            super(context);
         }
 
         private QueryType type(String fragmentString) {

@@ -14,10 +14,20 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic.rule;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import net.hasor.cobble.ClassUtils;
+import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.sqlproc.dynamic.DynamicSql;
 import net.hasor.dataql.sqlproc.dynamic.MacroRegistry;
-import net.hasor.dataql.sqlproc.dynamic.QueryContext;
+import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
+import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
+import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
+import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionInterceptor;
+import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionPredicate;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 
 /**
@@ -25,13 +35,31 @@ import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
  * @author 赵永春 (zyc@hasor.net)
  * @version 2021-05-24
  */
-public class TestQueryContext implements QueryContext {
-    private final TypeHandlerRegistry typeHandlerRegistry = new TypeHandlerRegistry();
-    private final RuleRegistry        ruleRegistry        = new RuleRegistry();
-    private final MacroRegistry       macroRegistry       = new MacroRegistry();
+public class TestQueryContext implements ExecuteContext {
+    private final TypeHandlerRegistry           typeHandlerRegistry = new TypeHandlerRegistry();
+    private final RuleRegistry                  ruleRegistry        = new RuleRegistry();
+    private final MacroRegistry                 macroRegistry       = new MacroRegistry();
+    private final List<InterceptorRegistration> interceptors        = new CopyOnWriteArrayList<>();
+    private       ConnectionProvider            connectionProvider;
 
     public void addMacro(String macroName, String sqlSegment) {
         this.macroRegistry.register(macroName, sqlSegment);
+    }
+
+    @Override
+    public Connection findConnection(String sourceName, Hints hints) throws SQLException {
+        if (this.connectionProvider != null) {
+            Connection connection = this.connectionProvider.findConnection(sourceName, hints);
+            if (connection != null) {
+                return connection;
+            }
+        }
+        throw new SQLException("connection '" + sourceName + "' not configured");
+    }
+
+    @Override
+    public void setConnectionProvider(ConnectionProvider provider) {
+        this.connectionProvider = provider;
     }
 
     @Override
@@ -49,11 +77,42 @@ public class TestQueryContext implements QueryContext {
         return this.typeHandlerRegistry;
     }
 
+    @Override
     public ClassLoader getClassLoader() {
         return Thread.currentThread().getContextClassLoader();
     }
 
+    @Override
+    public void addInterceptor(SqlExecutionInterceptor interceptor) {
+        this.addInterceptor(interceptor, (type, fragmentString, hints) -> true);
+    }
+
+    @Override
+    public void addInterceptor(SqlExecutionInterceptor interceptor, SqlExecutionPredicate predicate) {
+        this.interceptors.add(new InterceptorRegistration(interceptor, predicate));
+    }
+
+    @Override
+    public boolean removeInterceptor(SqlExecutionInterceptor interceptor) {
+        return this.interceptors.removeIf(registration -> registration.interceptor() == interceptor);
+    }
+
+    @Override
+    public List<SqlExecutionInterceptor> filterInterceptors(QueryType type, String fragmentString, Hints hints) {
+        List<SqlExecutionInterceptor> result = new ArrayList<>(this.interceptors.size());
+        for (InterceptorRegistration registration : this.interceptors) {
+            if (registration.predicate().accept(type, fragmentString, hints)) {
+                result.add(registration.interceptor());
+            }
+        }
+        return result;
+    }
+
+    @Override
     public Class<?> loadClass(String className) throws ClassNotFoundException {
         return ClassUtils.getClass(this.getClassLoader(), className);
+    }
+
+    private record InterceptorRegistration(SqlExecutionInterceptor interceptor, SqlExecutionPredicate predicate) {
     }
 }
