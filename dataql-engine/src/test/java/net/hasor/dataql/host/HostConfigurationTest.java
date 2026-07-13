@@ -24,8 +24,7 @@ public class HostConfigurationTest {
                 return super.getResourceAsStream(resource);
             }
         };
-        HostConfiguration parent = new HostConfiguration();
-        parent.setResourceLoader(resourceLoader);
+        HostConfiguration parent = new HostConfiguration(resourceLoader, null);
         HostConfiguration configuration = new HostConfiguration(parent);
         QueryManager queryManager = new QueryManager(configuration.getHostContext());
 

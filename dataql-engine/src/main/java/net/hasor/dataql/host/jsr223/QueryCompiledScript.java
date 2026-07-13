@@ -16,11 +16,13 @@
 package net.hasor.dataql.host.jsr223;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import javax.script.*;
 import net.hasor.dataql.compiler.qil.QIL;
 import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.domain.HintsSet;
 import net.hasor.dataql.host.Query;
+import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataql.kernel.CustomizeScope;
 import net.hasor.dataql.kernel.QueryResult;
 import net.hasor.dataql.kernel.QueryRuntimeException;
@@ -31,45 +33,46 @@ import net.hasor.dataql.kernel.QueryRuntimeException;
  * @version : 2017-10-19
  */
 class QueryCompiledScript extends CompiledScript implements Hints {
-    private final QIL                compilerQIL;
-    private final HintsSet           optionSet;
-    private final QueryScriptEngine engine;
+    private final QIL          compilerQIL;
+    private final ScriptEngine engine;
+    private final QueryManager queryManager;
+    private final Hints        engineHints;
 
-    public QueryCompiledScript(QIL compilerQIL, QueryScriptEngine engine) {
+    public QueryCompiledScript(QIL compilerQIL, ScriptEngine engine, QueryManager queryManager, Hints engineHints) {
         this.compilerQIL = compilerQIL;
-        this.optionSet = new HintsSet();
-        this.optionSet.setHints(engine);
         this.engine = engine;
+        this.queryManager = queryManager;
+        this.engineHints = engineHints;
     }
 
     @Override
     public String[] getHints() {
-        return this.optionSet.getHints();
+        return this.engineHints.getHints();
     }
 
     @Override
     public Object getHint(String optionKey) {
-        return this.optionSet.getHint(optionKey);
+        return this.engineHints.getHint(optionKey);
     }
 
     @Override
     public void removeHint(String optionKey) {
-        this.optionSet.removeHint(optionKey);
+        this.engineHints.removeHint(optionKey);
     }
 
     @Override
     public void setHint(String hintName, String value) {
-        this.optionSet.setHint(hintName, value);
+        this.engineHints.setHint(hintName, value);
     }
 
     @Override
     public void setHint(String hintName, Number value) {
-        this.optionSet.setHint(hintName, value);
+        this.engineHints.setHint(hintName, value);
     }
 
     @Override
     public void setHint(String hintName, boolean value) {
-        this.optionSet.setHint(hintName, value);
+        this.engineHints.setHint(hintName, value);
     }
 
     @Override
@@ -77,9 +80,21 @@ class QueryCompiledScript extends CompiledScript implements Hints {
         return this.engine;
     }
 
+    private void checkContext(ScriptContext context) {
+        Objects.requireNonNull(context, "context is null.");
+        if (!(context instanceof QueryScriptContext)) {
+            throw new IllegalArgumentException("context must be QueryScriptContext.");
+        }
+        if (((QueryScriptContext) context).getHostContext() != this.queryManager.getHostContext()) {
+            throw new IllegalArgumentException("context hostContext must match engine hostContext.");
+        }
+    }
+
     @Override
     public QueryResult eval(ScriptContext context) throws ScriptException {
-        Query query = this.engine.getQueryManager().createQuery(this.compilerQIL);
+        this.checkContext(context);
+
+        Query query = this.queryManager.newBuilder().createQuery(this.compilerQIL);
         Bindings globalBindings = context.getBindings(ScriptContext.GLOBAL_SCOPE);
         if (globalBindings != null) {
             globalBindings.forEach(query::addShareVar);
@@ -97,7 +112,16 @@ class QueryCompiledScript extends CompiledScript implements Hints {
             return dataMap;
         };
         try {
-            query.setHints(this);
+            HintsSet hints = new HintsSet();
+            hints.setHints(this.engineHints);
+            if (context instanceof Hints) {
+                hints.setHints((Hints) context);
+            }
+            Object contextHints = context.getAttribute(Hints.class.getName());
+            if (contextHints instanceof Hints) {
+                hints.setHints((Hints) contextHints);
+            }
+            query.setHints(hints);
             return query.execute(customizeScope);
         } catch (QueryRuntimeException e) {
             throw new ScriptException(e);

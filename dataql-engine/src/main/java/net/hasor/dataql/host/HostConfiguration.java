@@ -13,9 +13,9 @@ import net.hasor.dataql.kernel.FragmentProcess;
  * 宿主配置中心，负责准备资源加载、类加载以及 SPI 扩展。
  */
 public class HostConfiguration implements HostContext {
-    private       ResourceLoader resourceLoader;
+    private final ResourceLoader resourceLoader;
+    private final ClassLoader    classLoader;
     private final Finder         parent;
-    private       ClassLoader    classLoader;
     private final SpiRegistry    spiRegistry;
 
     public HostConfiguration() {
@@ -23,11 +23,37 @@ public class HostConfiguration implements HostContext {
     }
 
     public HostConfiguration(Finder parent) {
+        this(parent, resolveResourceLoader(parent, null), resolveClassLoader(parent, null));
+    }
+
+    public HostConfiguration(ResourceLoader resourceLoader, ClassLoader classLoader) {
+        this(null, resolveResourceLoader(null, resourceLoader), resolveClassLoader(null, classLoader));
+    }
+
+    private HostConfiguration(Finder parent, ResourceLoader resourceLoader, ClassLoader classLoader) {
         this.parent = parent;
-        this.resourceLoader = parent != null ? parent.getResourceLoader() : ClassPathResourceLoader.INSTANCE;
-        this.classLoader = parent != null ? parent.getClassLoader() : null;
+        this.resourceLoader = Objects.requireNonNull(resourceLoader, "resourceLoader is null.");
+        this.classLoader = Objects.requireNonNull(classLoader, "classLoader is null.");
         this.spiRegistry = new SpiRegistry(this);
     }
+
+    private static ResourceLoader resolveResourceLoader(Finder parent, ResourceLoader resourceLoader) {
+        if (parent != null) {
+            return parent.getResourceLoader();
+        } else {
+            return resourceLoader != null ? resourceLoader : ClassPathResourceLoader.INSTANCE;
+        }
+    }
+
+    private static ClassLoader resolveClassLoader(Finder parent, ClassLoader classLoader) {
+        if (parent != null) {
+            return parent.getClassLoader();
+        } else {
+            return classLoader != null ? classLoader : HostConfiguration.class.getClassLoader();
+        }
+    }
+
+    //
 
     public HostContext getHostContext() {
         return this;
@@ -52,17 +78,9 @@ public class HostConfiguration implements HostContext {
         return this.resourceLoader;
     }
 
-    public void setResourceLoader(ResourceLoader resourceLoader) {
-        this.resourceLoader = Objects.requireNonNull(resourceLoader, "resourceLoader is null.");
-    }
-
     @Override
     public ClassLoader getClassLoader() {
         return this.classLoader != null ? this.classLoader : Thread.currentThread().getContextClassLoader();
-    }
-
-    public void setClassLoader(ClassLoader classLoader) {
-        this.classLoader = classLoader;
     }
 
     public void addFragment(String name, Supplier<? extends FragmentProcess> provider) {

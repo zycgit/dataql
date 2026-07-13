@@ -47,12 +47,18 @@ public class HintInst extends BlockLocation implements Inst {
         return value;
     }
 
+    public boolean hasValue() {
+        return this.value != null;
+    }
+
     @Override
     public void accept(AstVisitor astVisitor) {
         astVisitor.visitInst(new InstVisitorContext(this) {
             @Override
             public void visitChildren(AstVisitor astVisitor) {
-                value.accept(astVisitor);
+                if (value != null) {
+                    value.accept(astVisitor);
+                }
             }
         });
     }
@@ -60,9 +66,11 @@ public class HintInst extends BlockLocation implements Inst {
     @Override
     public void doFormat(int depth, Hints formatOption, FormatWriter writer) throws IOException {
         String fixedString = StringUtils.repeat(' ', depth * fixedLength);
-        String opt = fixedString + "hint " + this.hint.getValue() + " = ";
-        writer.write(opt);
-        this.value.doFormat(depth + 1, formatOption, writer);
+        writer.write(fixedString + "hint " + this.hint.getValue());
+        if (this.value != null) {
+            writer.write(" = ");
+            this.value.doFormat(depth + 1, formatOption, writer);
+        }
         writer.write(";\n");
     }
 }

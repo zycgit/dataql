@@ -116,4 +116,33 @@ public class OptRuntimeTest extends AbstractTestResource implements HintValue {
         assert dataModel.isValue();
         assert ((ValueModel) dataModel).isNull();
     }
+
+    @Test
+    public void opt_declare_keeps_external_hint_Test() throws Exception {
+        Object[] obj = new Object[] { (Udf) (readOnly, params) -> {
+            return readOnly.getHint("abc");
+        } };
+        //
+        Query compilerQL = compilerQL("hint abc; return ${_0}()");
+        compilerQL.setHint("abc", "external");
+        DataModel dataModel = compilerQL.execute(obj).getData();
+        //
+        assert dataModel.isValue();
+        assert ((ValueModel) dataModel).isString();
+        assert ((ValueModel) dataModel).asString().equals("external");
+    }
+
+    @Test
+    public void opt_null_removes_external_hint_Test() throws Exception {
+        Object[] obj = new Object[] { (Udf) (readOnly, params) -> {
+            return readOnly.getHint("abc");
+        } };
+        //
+        Query compilerQL = compilerQL("hint abc = null; return ${_0}()");
+        compilerQL.setHint("abc", "external");
+        DataModel dataModel = compilerQL.execute(obj).getData();
+        //
+        assert dataModel.isValue();
+        assert ((ValueModel) dataModel).isNull();
+    }
 }

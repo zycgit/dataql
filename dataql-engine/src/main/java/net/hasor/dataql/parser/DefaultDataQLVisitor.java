@@ -139,7 +139,7 @@ public class DefaultDataQLVisitor<T> extends AbstractParseTreeVisitor<T> impleme
         this.instStack.push(stringToken);
         visitChildren(ctx);
         //
-        PrimitiveVariable optValue = (PrimitiveVariable) this.instStack.pop();
+        PrimitiveVariable optValue = ctx.primitiveValue() != null ? (PrimitiveVariable) this.instStack.pop() : null;
         StringToken optKey = (StringToken) this.instStack.pop();
         HintInst hintInst = code(new HintInst(optKey, optValue), ctx);
         //

@@ -29,6 +29,9 @@ import net.hasor.dataql.parser.ast.value.PrimitiveVariable;
 public class HintInstCompiler implements InstCompiler<HintInst> {
     @Override
     public void doCompiler(HintInst astInst, InstQueue queue, CompilerContext compilerContext) {
+        if (!astInst.hasValue()) {
+            return;
+        }
         StringToken instHint = astInst.getHint();
         instLocation(queue, instHint);
         queue.inst(LDC_S, instHint.getValue());

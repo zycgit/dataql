@@ -17,8 +17,10 @@ package net.hasor.dataql.host.jsr223;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.StringJoiner;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
+import net.hasor.dataql.host.HostConfiguration;
 
 /**
  * JSR223
@@ -83,15 +85,28 @@ public class QueryScriptEngineFactory implements ScriptEngineFactory {
     }
 
     public String getMethodCallSyntax(String obj, String method, String... args) {
-        throw new UnsupportedOperationException();
+        StringJoiner joiner = new StringJoiner(", ");
+        if (args != null) {
+            for (String arg : args) {
+                joiner.add(arg);
+            }
+        }
+        String owner = (obj == null || obj.isEmpty()) ? "" : obj + ".";
+        return owner + method + "(" + joiner + ")";
     }
 
     public String getOutputStatement(String toDisplay) {
-        throw new UnsupportedOperationException();
+        return "return \"" + escapeString(toDisplay) + "\"";
     }
 
     public String getProgram(String... statements) {
-        throw new UnsupportedOperationException();
+        StringJoiner joiner = new StringJoiner(System.lineSeparator());
+        if (statements != null) {
+            for (String statement : statements) {
+                joiner.add(statement);
+            }
+        }
+        return joiner.toString();
     }
 
     public Object getParameter(String key) {
@@ -106,12 +121,19 @@ public class QueryScriptEngineFactory implements ScriptEngineFactory {
         } else if (ScriptEngine.LANGUAGE_VERSION.equals(key)) {
             return getEngineVersion();
         } else {
-            throw new IllegalArgumentException("Invalid key");
+            return null;
         }
+    }
+
+    private static String escapeString(String text) {
+        if (text == null) {
+            return "";
+        }
+        return text.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
     @Override
     public ScriptEngine getScriptEngine() {
-        return new QueryScriptEngine(this);
+        return new QueryScriptEngine(this, new HostConfiguration());
     }
 }

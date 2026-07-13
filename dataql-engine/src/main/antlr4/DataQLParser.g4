@@ -7,7 +7,7 @@ options { tokenVocab = DataQLLexer; }
 rootInstSet     : hintInst* importInst* blockSet+ EOF;
 
 /* 选项指令 */
-hintInst        : HINT IDENTIFIER ASS primitiveValue SEM?;
+hintInst        : HINT IDENTIFIER (ASS primitiveValue)? SEM?;
 
 /* import指令 */
 importInst      : IMPORT ROU? STRING AS IDENTIFIER SEM?;

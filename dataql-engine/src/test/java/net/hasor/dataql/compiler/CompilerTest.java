@@ -27,6 +27,9 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
 /**
  * 测试用例
  * @author 赵永春 (zyc@hasor.net)
@@ -91,6 +94,16 @@ public class CompilerTest extends AbstractTestResource {
     @Test
     public void hint3_ast_format_test() throws IOException {
         astTest("hint_3");
+    }
+
+    @Test
+    public void hintDeclaration_ast_format_test() throws IOException {
+        QueryModel queryModel = CompilerHelper.queryParser("hint tenant;\nreturn 1;");
+        String queryString = queryModel.toQueryString();
+        QIL qil = CompilerHelper.queryCompiler(queryModel, arguments(CodeLocationEnum.NONE), ClassPathResourceLoader.INSTANCE);
+
+        assertEquals("hint tenant;\n\nreturn 1;\n", queryString);
+        assertFalse(qil.toString().contains("HINT"));
     }
 
     @Test
