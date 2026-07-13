@@ -11,6 +11,6 @@ public class SqlQueryContextFactory implements HostAttachmentFactory<ExecuteCont
 
     @Override
     public ExecuteContext create(HostContext context) {
-        return new ExecuteContextImpl(context.getClassLoader(), null);
+        return new ExecuteContextImpl(context, context.getClassLoader());
     }
 }

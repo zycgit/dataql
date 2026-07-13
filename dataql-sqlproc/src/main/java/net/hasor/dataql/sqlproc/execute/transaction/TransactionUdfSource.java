@@ -8,30 +8,29 @@
  *      http://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute.transaction;
-import java.util.Objects;
 import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.domain.Udf;
 import net.hasor.dataql.domain.UdfSource;
 import net.hasor.dataql.host.HostContext;
 import net.hasor.dataql.host.function.AbstractUdfSource;
 import net.hasor.dataql.sqlproc.SqlHintNames;
-import net.hasor.dataql.sqlproc.internal.SqlProcConfiguration;
+import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
 
 /** Transaction functions imported with {@code import 'net.hasor.dataql.sqlproc.execute.transaction.TransactionUdfSource' as tran}. */
 public class TransactionUdfSource extends AbstractUdfSource {
-    private final TransactionConnectionManager txManager;
+    private final HostContext context;
 
     public TransactionUdfSource() {
-        this.txManager = null;
+        this.context = null;
     }
 
-    private TransactionUdfSource(TransactionConnectionManager txManager) {
-        this.txManager = Objects.requireNonNull(txManager, "connectionManager is null.");
+    public TransactionUdfSource(HostContext context) {
+        this.context = context;
     }
 
     @Override
     public UdfSource create(HostContext context) {
-        return new TransactionUdfSource(SqlProcConfiguration.get(context).getConnectionManager());
+        return new TransactionUdfSource(context);
     }
 
     @Override
@@ -73,9 +72,60 @@ public class TransactionUdfSource extends AbstractUdfSource {
     }
 
     private Object execute(Udf udf, Hints hints, Propagation propagation) throws Throwable {
-        Objects.requireNonNull(this.txManager, "TransactionUdfSource must be created by HostContext.");
         String sourceName = SqlHintNames.getValue(hints, SqlHintNames.FRAGMENT_SQL_DATA_SOURCE);
-        TransactionTemplate template = this.txManager.getTransactionTemplate(sourceName);
-        return template.execute(status -> udf.call(hints), propagation);
+        Isolation isolation = this.resolveIsolation(hints);
+
+        if (this.context == null) {
+            throw new IllegalStateException("TransactionUdfSource must be created by HostContext.");
+        }
+        TransactionConnectionProvider txProvider = this.findTransactionConnectionProvider();
+        TransactionManager txManager = txProvider.findTransactionManager(sourceName);
+        TransactionStatus status = null;
+        try {
+            status = txManager.begin(hints, propagation, isolation);
+            return udf.call(hints);
+        } catch (Throwable e) {
+            if (status != null) {
+                status.setRollback();
+            }
+            throw e;
+        } finally {
+            if (status != null && !status.isCompleted()) {
+                txManager.commit(status);
+            }
+        }
+    }
+
+    private Isolation resolveIsolation(Hints hints) {
+        String isolation = SqlHintNames.getValue(hints, SqlHintNames.FRAGMENT_SQL_TRANSACTION_ISOLATION);
+        if (isolation == null || isolation.isBlank()) {
+            return Isolation.DEFAULT;
+        }
+        return Isolation.valueOf(isolation.trim().toUpperCase().replace('-', '_'));
+    }
+
+    private TransactionConnectionProvider findTransactionConnectionProvider() {
+        TransactionConnectionProvider txProvider = this.getAttachment(TransactionConnectionProvider.class);
+        if (txProvider != null) {
+            return txProvider;
+        }
+
+        ConnectionProvider provider = this.getAttachment(ConnectionProvider.class);
+        if (provider instanceof TransactionConnectionProvider transactionProvider) {
+            return transactionProvider;
+        }
+        if (provider != null) {
+            throw new IllegalStateException("ConnectionProvider must be TransactionConnectionProvider when using transaction functions.");
+        } else {
+            throw new IllegalStateException("TransactionConnectionProvider must be registered as HostContext attachment.");
+        }
+    }
+
+    private <T> T getAttachment(Class<T> attachmentType) {
+        try {
+            return this.context.getAttachment(attachmentType);
+        } catch (IllegalStateException e) {
+            return null;
+        }
     }
 }

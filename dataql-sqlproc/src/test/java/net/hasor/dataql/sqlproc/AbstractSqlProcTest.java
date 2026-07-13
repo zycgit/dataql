@@ -92,9 +92,11 @@ public abstract class AbstractSqlProcTest {
     }
 
     protected ExecuteContext newQueryContext(ConnectionProvider provider) {
-        ExecuteContext context = new SqlQueryContextFactory().create(new HostConfiguration());
-        context.setConnectionProvider(provider);
-        return context;
+        HostConfiguration configuration = new HostConfiguration();
+        if (provider != null) {
+            configuration.addAttachment(ConnectionProvider.class, provider);
+        }
+        return new SqlQueryContextFactory().create(configuration);
     }
 
     // ----------------------------------------------------------------

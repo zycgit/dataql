@@ -22,6 +22,7 @@ import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import net.hasor.cobble.ClassUtils;
 import net.hasor.dataql.domain.Hints;
+import net.hasor.dataql.host.HostContext;
 import net.hasor.dataql.sqlproc.dynamic.DynamicSql;
 import net.hasor.dataql.sqlproc.dynamic.MacroRegistry;
 import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
@@ -36,15 +37,15 @@ public final class ExecuteContextImpl implements ExecuteContext {
     private final MacroRegistry                 macroRegistry = new MacroRegistry();
     private final RuleRegistry                  ruleRegistry  = new RuleRegistry();
     private final ClassLoader                   classLoader;
-    private       ConnectionProvider            connection;
+    private final HostContext                   hostContext;
     private final List<InterceptorRegistration> interceptors  = new CopyOnWriteArrayList<>();
 
     private record InterceptorRegistration(SqlExecutionInterceptor interceptor, SqlExecutionPredicate predicate) {
     }
 
-    ExecuteContextImpl(ClassLoader classLoader, ConnectionProvider connection) {
+    ExecuteContextImpl(HostContext hostContext, ClassLoader classLoader) {
+        this.hostContext = Objects.requireNonNull(hostContext, "hostContext is null.");
         this.classLoader = Objects.requireNonNull(classLoader, "classLoader is null.");
-        this.connection = connection;
     }
 
     @Override
@@ -107,19 +108,23 @@ public final class ExecuteContextImpl implements ExecuteContext {
         return this.lookupConnection(sourceName, hints);
     }
 
-    @Override
-    public void setConnectionProvider(ConnectionProvider provider) {
-        this.connection = provider;
-    }
-
     private Connection lookupConnection(String sourceName, Hints hints) throws SQLException {
         Connection c = null;
-        if (this.connection != null) {
-            c = this.connection.findConnection(sourceName, hints);
+        ConnectionProvider provider = this.findConnectionProvider();
+        if (provider != null) {
+            c = provider.findConnection(sourceName, hints);
         }
         if (c == null) {
             throw new SQLException("connection '" + sourceName + "' not configured");
         }
         return c;
+    }
+
+    private ConnectionProvider findConnectionProvider() {
+        try {
+            return this.hostContext.getAttachment(ConnectionProvider.class);
+        } catch (IllegalStateException e) {
+            return null;
+        }
     }
 }

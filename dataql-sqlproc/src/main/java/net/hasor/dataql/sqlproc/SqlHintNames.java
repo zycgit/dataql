@@ -68,6 +68,8 @@ public enum SqlHintNames {
 
     /** SqlFragment 数据源名字 */
     FRAGMENT_SQL_DATA_SOURCE(""),
+    /** 事务隔离级别：DEFAULT、READ_UNCOMMITTED、READ_COMMITTED、REPEATABLE_READ、SERIALIZABLE */
+    FRAGMENT_SQL_TRANSACTION_ISOLATION(FRAGMENT_SQL_TRANSACTION_ISOLATION_DEFAULT, "isolation"),
     ;
 
     private final String shortName;

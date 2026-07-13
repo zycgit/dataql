@@ -1,4 +1,4 @@
-package net.hasor.dataql.sqlproc.real;
+package net.hasor.dataql.sqlproc.real.jsr223;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -8,16 +8,19 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import javax.script.Bindings;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import net.hasor.dataql.domain.DataModel;
-import net.hasor.dataql.host.HostConfiguration;
-import net.hasor.dataql.host.Query;
-import net.hasor.dataql.host.QueryManager;
+import net.hasor.dataql.host.jsr223.QueryScriptContext;
 import net.hasor.dataql.kernel.QueryResult;
 import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
 import net.hasor.dataql.sqlproc.execute.TestSqlExecutionInterceptor;
 import net.hasor.dataql.sqlproc.execute.interceptor.SqlInfo;
+import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
 import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 import org.junit.After;
 import org.junit.Before;
@@ -50,15 +53,13 @@ public class SelectQueryTypeInterceptorTest extends AbstractSqlProcTest {
             observed.set(invocation.getSqlInfo());
             return invocation.proceed();
         });
-        Query query = dataQL(context -> context.addInterceptor(new TestSqlExecutionInterceptor())).createQuery("""
+        Object result = unwrap(eval("""
                 hint FRAGMENT_SQL_DATA_SOURCE = "auditDs"
                 var loadUser = @@selectSql(age)<%
                     SELECT name FROM users WHERE age = :age
                 %>;
                 return loadUser(${age});
-                """);
-
-        Object result = unwrap(query.execute(Map.of("age", 25)));
+                """, Map.of("age", 25), context -> context.addInterceptor(new TestSqlExecutionInterceptor())));
 
         assertEquals("Alice", result);
         assertEquals("auditDs", observed.get().sourceName());
@@ -69,15 +70,13 @@ public class SelectQueryTypeInterceptorTest extends AbstractSqlProcTest {
     @Test
     public void dataqlFragmentCanReturnCustomResultWithoutJdbcExecution() throws Exception {
         TestSqlExecutionInterceptor.use(invocation -> Map.of("NAME", "intercepted"));
-        Query query = dataQL(context -> context.addInterceptor(new TestSqlExecutionInterceptor())).createQuery("""
+        Object result = unwrap(eval("""
                 var loadUser = @@selectSql()<%
                     SELECT * FROM table_that_does_not_exist
                 %>;
                 var user = loadUser();
                 return user.NAME;
-                """);
-
-        Object result = unwrap(query.execute());
+                """, context -> context.addInterceptor(new TestSqlExecutionInterceptor())));
 
         assertEquals("intercepted", result);
     }
@@ -89,30 +88,36 @@ public class SelectQueryTypeInterceptorTest extends AbstractSqlProcTest {
             observed.set(invocation.getSqlInfo());
             return invocation.proceed();
         });
-        Query query = dataQL(context -> {
-            context.addInterceptor(new TestSqlExecutionInterceptor(), (type, fragmentString, hints) -> {
-                return type == QueryType.Select && fragmentString.contains("FROM users") && Boolean.TRUE.equals(hints.getHint("enabled"));
-            });
-        }).createQuery("""
+        Object result = unwrap(eval("""
                 hint enabled = true
                 var loadUser = @@selectSql(name)<%
                     SELECT name FROM users WHERE name = :name
                 %>;
                 return loadUser(${name});
-                """);
-
-        Object result = unwrap(query.execute(Map.of("name", "Bob")));
+                """, Map.of("name", "Bob"), context -> {
+            context.addInterceptor(new TestSqlExecutionInterceptor(), (type, fragmentString, hints) -> {
+                return type == QueryType.Select && fragmentString.contains("FROM users") && Boolean.TRUE.equals(hints.getHint("enabled"));
+            });
+        }));
 
         assertEquals("Bob", result);
         assertTrue(observed.get().queryString().contains("FROM users"));
     }
 
-    private QueryManager dataQL(Consumer<ExecuteContext> customizer) {
-        HostConfiguration configuration = new HostConfiguration();
-        ExecuteContext queryContext = configuration.getAttachment(ExecuteContext.class);
-        queryContext.setConnectionProvider((sourceName, hints) -> rawConnection());
+    private QueryResult eval(String dataql, Consumer<ExecuteContext> customizer) throws Exception {
+        return eval(dataql, Map.of(), customizer);
+    }
+
+    private QueryResult eval(String dataql, Map<String, Object> params, Consumer<ExecuteContext> customizer) throws Exception {
+        ScriptEngine engine = new ScriptEngineManager().getEngineByName("dataql");
+        QueryScriptContext context = (QueryScriptContext) engine.getContext();
+        context.addAttachment(ConnectionProvider.class, (sourceName, hints) -> rawConnection());
+        ExecuteContext queryContext = context.getAttachment(ExecuteContext.class);
         customizer.accept(queryContext);
-        return new QueryManager(configuration);
+        Bindings bindings = engine.createBindings();
+        bindings.putAll(params);
+        context.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+        return (QueryResult) engine.eval(dataql, context);
     }
 
     private Connection rawConnection() throws SQLException {

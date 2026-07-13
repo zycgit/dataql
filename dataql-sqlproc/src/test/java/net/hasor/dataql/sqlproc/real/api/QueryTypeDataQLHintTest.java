@@ -1,4 +1,4 @@
-package net.hasor.dataql.sqlproc.real;
+package net.hasor.dataql.sqlproc.real.api;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -10,10 +10,11 @@ import java.util.UUID;
 import net.hasor.dataql.domain.DataModel;
 import net.hasor.dataql.host.HostConfiguration;
 import net.hasor.dataql.host.Query;
+import net.hasor.dataql.host.QueryBuilder;
 import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataql.kernel.QueryResult;
 import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
-import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
+import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -107,10 +108,10 @@ public class QueryTypeDataQLHintTest extends AbstractSqlProcTest {
         assertNumber(18, result.get("age"));
     }
 
-    private QueryManager dataQL() {
+    private QueryBuilder dataQL() {
         HostConfiguration configuration = new HostConfiguration();
-        configuration.getAttachment(ExecuteContext.class).setConnectionProvider((name, hints) -> rawConnection());
-        return new QueryManager(configuration);
+        configuration.addAttachment(ConnectionProvider.class, (name, hints) -> rawConnection());
+        return new QueryManager().newBuilder(configuration.getHostContext());
     }
 
     private Connection rawConnection() throws SQLException {

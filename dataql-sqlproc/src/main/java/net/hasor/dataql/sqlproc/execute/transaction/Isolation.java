@@ -9,19 +9,26 @@
  */
 package net.hasor.dataql.sqlproc.execute.transaction;
 import java.sql.Connection;
+import static net.hasor.dataql.sqlproc.SqlHintValue.*;
 
 /** JDBC transaction isolation level. */
 public enum Isolation {
-    DEFAULT(Connection.TRANSACTION_NONE),
-    READ_UNCOMMITTED(Connection.TRANSACTION_READ_UNCOMMITTED),
-    READ_COMMITTED(Connection.TRANSACTION_READ_COMMITTED),
-    REPEATABLE_READ(Connection.TRANSACTION_REPEATABLE_READ),
-    SERIALIZABLE(Connection.TRANSACTION_SERIALIZABLE);
+    DEFAULT(FRAGMENT_SQL_TRANSACTION_ISOLATION_DEFAULT, Connection.TRANSACTION_NONE),
+    READ_UNCOMMITTED(FRAGMENT_SQL_TRANSACTION_ISOLATION_READ_UNCOMMITTED, Connection.TRANSACTION_READ_UNCOMMITTED),
+    READ_COMMITTED(FRAGMENT_SQL_TRANSACTION_ISOLATION_READ_COMMITTED, Connection.TRANSACTION_READ_COMMITTED),
+    REPEATABLE_READ(FRAGMENT_SQL_TRANSACTION_ISOLATION_REPEATABLE_READ, Connection.TRANSACTION_REPEATABLE_READ),
+    SERIALIZABLE(FRAGMENT_SQL_TRANSACTION_ISOLATION_SERIALIZABLE, Connection.TRANSACTION_SERIALIZABLE);
 
-    private final int value;
+    private final String code;
+    private final int    value;
 
-    Isolation(int value) {
+    Isolation(String code, int value) {
+        this.code = code;
         this.value = value;
+    }
+
+    public String getCode() {
+        return this.code;
     }
 
     public int getValue() {

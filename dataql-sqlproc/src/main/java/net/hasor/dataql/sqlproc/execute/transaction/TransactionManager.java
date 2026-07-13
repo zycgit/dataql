@@ -10,28 +10,15 @@
 package net.hasor.dataql.sqlproc.execute.transaction;
 import java.io.Closeable;
 import java.sql.SQLException;
+import net.hasor.dataql.domain.Hints;
 
 /** Programmatic transaction manager. */
 public interface TransactionManager extends Closeable {
-    default TransactionStatus begin() throws SQLException {
-        return this.begin(Propagation.REQUIRED, Isolation.DEFAULT);
-    }
-
-    default TransactionStatus begin(Propagation propagation) throws SQLException {
-        return this.begin(propagation, Isolation.DEFAULT);
-    }
-
-    TransactionStatus begin(Propagation propagation, Isolation isolation) throws SQLException;
+    TransactionStatus begin(Hints hints, Propagation propagation, Isolation isolation) throws SQLException;
 
     void commit(TransactionStatus status) throws SQLException;
 
-    void commit() throws SQLException;
-
     void rollBack(TransactionStatus status) throws SQLException;
-
-    void rollBack() throws SQLException;
-
-    boolean hasTransaction();
 
     boolean isTopTransaction(TransactionStatus status);
 }

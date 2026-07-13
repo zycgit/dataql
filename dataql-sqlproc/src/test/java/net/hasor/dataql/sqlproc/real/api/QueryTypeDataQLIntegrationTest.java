@@ -1,21 +1,18 @@
-package net.hasor.dataql.sqlproc.real;
+package net.hasor.dataql.sqlproc.real.api;
 
 import java.lang.reflect.Proxy;
 import java.sql.*;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngineManager;
-import javax.script.SimpleScriptContext;
 import net.hasor.dataql.domain.DataModel;
 import net.hasor.dataql.host.HostConfiguration;
 import net.hasor.dataql.host.Query;
+import net.hasor.dataql.host.QueryBuilder;
 import net.hasor.dataql.host.QueryManager;
-import net.hasor.dataql.host.jsr223.QueryScriptEngine;
 import net.hasor.dataql.kernel.QueryResult;
 import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
-import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
+import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -244,38 +241,17 @@ public class QueryTypeDataQLIntegrationTest extends AbstractSqlProcTest {
         assertNumber(2, result.get("pageSize"));
     }
 
-    @Test
-    public void selectQueryTypeRunsThroughJsr223() throws Exception {
-        QueryScriptEngine engine = (QueryScriptEngine) new ScriptEngineManager().getEngineByName("dataql");
-        engine.setFinder(hostConfiguration());
-        HostConfiguration engineHost = (HostConfiguration) engine.getFinder();
-        engineHost.getAttachment(ExecuteContext.class).setConnectionProvider((name, hints) -> storedProcedureCapable(rawConnection()));
-        SimpleScriptContext context = new SimpleScriptContext();
-        context.setBindings(engine.createBindings(), ScriptContext.ENGINE_SCOPE);
-        context.setAttribute("name", "Alice", ScriptContext.ENGINE_SCOPE);
-
-        QueryResult queryResult = (QueryResult) engine.eval("""
-                var loadUser = @@selectSql(name)<%
-                    SELECT name, age FROM users WHERE name = :name
-                %>;
-                var user = loadUser(${name});
-                return user.NAME + ":" + user.AGE;
-                """, context);
-
-        assertEquals("Alice:25", queryResult.getData().unwrap());
-    }
-
     public static int userCount() {
         return 3;
     }
 
-    private QueryManager dataQL() {
-        return new QueryManager(hostConfiguration());
+    private QueryBuilder dataQL() {
+        return new QueryManager().newBuilder(hostConfiguration().getHostContext());
     }
 
     private HostConfiguration hostConfiguration() {
         HostConfiguration configuration = new HostConfiguration();
-        configuration.getAttachment(ExecuteContext.class).setConnectionProvider((name, hints) -> storedProcedureCapable(rawConnection()));
+        configuration.addAttachment(ConnectionProvider.class, (name, hints) -> storedProcedureCapable(rawConnection()));
         return configuration;
     }
 

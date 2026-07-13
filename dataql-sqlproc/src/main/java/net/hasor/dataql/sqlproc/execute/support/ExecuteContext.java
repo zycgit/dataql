@@ -28,8 +28,6 @@ public interface ExecuteContext extends QueryContext {
 
     Connection findConnection(String sourceName, Hints hints) throws SQLException;
 
-    void setConnectionProvider(ConnectionProvider provider);
-
     /** Register an interceptor. */
     void addInterceptor(SqlExecutionInterceptor interceptor);
 

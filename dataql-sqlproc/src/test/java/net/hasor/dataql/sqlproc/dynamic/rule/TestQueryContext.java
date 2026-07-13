@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic.rule;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +23,6 @@ import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.sqlproc.dynamic.DynamicSql;
 import net.hasor.dataql.sqlproc.dynamic.MacroRegistry;
 import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
-import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
 import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionInterceptor;
 import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionPredicate;
@@ -40,26 +38,14 @@ public class TestQueryContext implements ExecuteContext {
     private final RuleRegistry                  ruleRegistry        = new RuleRegistry();
     private final MacroRegistry                 macroRegistry       = new MacroRegistry();
     private final List<InterceptorRegistration> interceptors        = new CopyOnWriteArrayList<>();
-    private       ConnectionProvider            connectionProvider;
 
     public void addMacro(String macroName, String sqlSegment) {
         this.macroRegistry.register(macroName, sqlSegment);
     }
 
     @Override
-    public Connection findConnection(String sourceName, Hints hints) throws SQLException {
-        if (this.connectionProvider != null) {
-            Connection connection = this.connectionProvider.findConnection(sourceName, hints);
-            if (connection != null) {
-                return connection;
-            }
-        }
+    public java.sql.Connection findConnection(String sourceName, Hints hints) throws SQLException {
         throw new SQLException("connection '" + sourceName + "' not configured");
-    }
-
-    @Override
-    public void setConnectionProvider(ConnectionProvider provider) {
-        this.connectionProvider = provider;
     }
 
     @Override
