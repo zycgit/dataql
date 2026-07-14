@@ -19,7 +19,7 @@ import net.hasor.core.Inject;
 import net.hasor.core.Singleton;
 import net.hasor.core.spi.SpiTrigger;
 import net.hasor.dataql.Hints;
-import net.hasor.dataql.runtime.HintsSet;
+import net.hasor.dataql.kernel.HintsSet;
 import net.hasor.dataway.DatawayApi;
 import net.hasor.dataway.DatawayService;
 import net.hasor.dataway.config.DatawayUtils;

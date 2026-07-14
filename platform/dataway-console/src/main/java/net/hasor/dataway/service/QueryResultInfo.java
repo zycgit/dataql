@@ -16,7 +16,7 @@
 package net.hasor.dataway.service;
 import net.hasor.dataql.QueryResult;
 import net.hasor.dataql.domain.DataModel;
-import net.hasor.dataql.runtime.mem.ExitType;
+import net.hasor.dataql.kernel.mem.ExitType;
 
 /**
  * QueryResult 接口的一个简单实现。

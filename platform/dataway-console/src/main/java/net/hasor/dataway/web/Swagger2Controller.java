@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataway.web;
-import net.hasor.dataql.fx.basic.StringUdfSource;
+import net.hasor.dataql.host.function.basic.StringUdfSource;
 import net.hasor.dataway.config.DatawayUtils;
 import net.hasor.dataway.config.MappingToUrl;
 import net.hasor.dataway.dal.EntityDef;

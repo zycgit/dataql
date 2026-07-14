@@ -16,7 +16,7 @@
 package net.hasor.dataway.spi;
 import net.hasor.dataql.domain.DomainHelper;
 import net.hasor.dataql.parser.location.LocationUtils;
-import net.hasor.dataql.runtime.ThrowRuntimeException;
+import net.hasor.dataql.kernel.ThrowRuntimeException;
 
 /**
  * 带有错误Code的异常

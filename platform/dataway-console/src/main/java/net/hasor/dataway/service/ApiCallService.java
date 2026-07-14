@@ -17,14 +17,14 @@ package net.hasor.dataway.service;
 import net.hasor.core.Inject;
 import net.hasor.core.Singleton;
 import net.hasor.core.spi.SpiTrigger;
-import net.hasor.dataql.DataQL;
+import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataql.Query;
 import net.hasor.dataql.QueryResult;
 import net.hasor.dataql.compiler.qil.QIL;
 import net.hasor.dataql.domain.DataModel;
 import net.hasor.dataql.domain.DomainHelper;
-import net.hasor.dataql.runtime.ThrowRuntimeException;
-import net.hasor.dataql.runtime.mem.ExitType;
+import net.hasor.dataql.kernel.ThrowRuntimeException;
+import net.hasor.dataql.kernel.mem.ExitType;
 import net.hasor.dataway.authorization.PermissionType;
 import net.hasor.dataway.config.DatawayUtils;
 import net.hasor.dataway.config.LoggerUtils;
@@ -49,7 +49,7 @@ public class ApiCallService {
     @Inject
     private          SpiTrigger spiTrigger;
     @Inject
-    private          DataQL     executeDataQL;
+    private          QueryManager executeDataQL;
 
     public Object doCallWithoutError(ApiInfo apiInfo, QueryScriptBuild scriptBuild) throws Throwable {
         return this._doCall(apiInfo, scriptBuild, false);
@@ -128,7 +128,7 @@ public class ApiCallService {
                 //
                 loggerUtils.addLog("compilerTime", DatawayUtils.currentLostTime());
                 loggerUtils.addLog("prepareHint", apiInfo.getPrepareHint());
-                Query query = this.executeDataQL.createQuery(compiler);
+                Query query = this.executeDataQL.newBuilder().createQuery(compiler);
                 if (apiInfo.getPrepareHint() != null) {
                     apiInfo.getPrepareHint().forEach((hint, value) -> {
                         if (value == null) {

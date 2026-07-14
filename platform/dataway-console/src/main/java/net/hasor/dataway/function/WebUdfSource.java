@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.fx.web;
+import net.hasor.dataql.host.function.AbstractUdfSource;
 import java.util.*;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
@@ -21,7 +22,6 @@ import javax.servlet.http.HttpSession;
 import com.alibaba.fastjson.JSON;
 import net.hasor.cobble.StringUtils;
 import net.hasor.core.Singleton;
-import net.hasor.dataql.UdfSourceAssembly;
 import net.hasor.web.Invoker;
 import net.hasor.web.invoker.HttpParameters;
 
@@ -31,7 +31,7 @@ import net.hasor.web.invoker.HttpParameters;
  * @version : 2020-03-29
  */
 @Singleton
-public class WebUdfSource implements UdfSourceAssembly {
+public class WebUdfSource extends AbstractUdfSource {
     /** jsonBody */
     public static Object jsonBody() {
         Invoker invoker = HttpParameters.localInvoker();

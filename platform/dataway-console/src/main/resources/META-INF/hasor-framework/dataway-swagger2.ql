@@ -1,7 +1,7 @@
 //
 // see  -> https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md
 
-import 'net.hasor.dataql.fx.basic.JsonUdfSource' as json;
+import 'net.hasor.dataql.host.function.encryt.JsonUdfSource' as json;
 import "net.hasor.dataql.fx.basic.StringUdfSource" as string;
 import "net.hasor.dataql.fx.basic.CollectionUdfSource" as collect;
 

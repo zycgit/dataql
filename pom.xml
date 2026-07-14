@@ -52,7 +52,7 @@
         <module>kernel/dataql-engine</module>
         <module>kernel/dataql-sqlproc</module>
         <!--        <module>dataql-functions</module>-->
-        <!--        <module>dataql-dataway</module>-->
+        <!--        <module>platform/dataway-console</module>-->
     </modules>
 
     <!-- 构建描述 -->

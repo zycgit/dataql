@@ -21,7 +21,7 @@ import net.hasor.core.spi.SpiTrigger;
 import net.hasor.dataql.DataQueryException;
 import net.hasor.dataql.QueryResult;
 import net.hasor.dataql.domain.DataModel;
-import net.hasor.dataql.runtime.ThrowRuntimeException;
+import net.hasor.dataql.kernel.ThrowRuntimeException;
 import net.hasor.dataway.dal.ApiStatusEnum;
 import net.hasor.dataway.dal.FieldDef;
 import net.hasor.dataway.dal.QueryCondition;

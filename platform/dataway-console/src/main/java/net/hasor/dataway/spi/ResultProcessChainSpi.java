@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataway.spi;
-import net.hasor.dataql.runtime.ThrowRuntimeException;
+import net.hasor.dataql.kernel.ThrowRuntimeException;
 
 import java.util.EventListener;
 

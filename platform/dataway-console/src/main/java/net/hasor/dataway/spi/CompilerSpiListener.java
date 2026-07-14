@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataway.spi;
-import net.hasor.dataql.DataQL;
+import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataql.compiler.qil.QIL;
 
 import java.io.IOException;
@@ -29,7 +29,7 @@ public interface CompilerSpiListener extends EventListener {
     CompilerSpiListener DEFAULT = new CompilerSpiListener() {
     };
 
-    default QIL compiler(ApiInfo apiInfo, String query, DataQL dataQL) throws IOException {
-        return dataQL.compilerQuery(query);
+    default QIL compiler(ApiInfo apiInfo, String query, QueryManager dataQL) throws IOException {
+        return dataQL.newBuilder().compilerQuery(query);
     }
 }

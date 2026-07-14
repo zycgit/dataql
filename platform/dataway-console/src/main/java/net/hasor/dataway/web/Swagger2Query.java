@@ -1,15 +1,14 @@
 package net.hasor.dataway.web;
-import net.hasor.dataql.CustomizeScope;
-import net.hasor.dataql.Finder;
-import net.hasor.dataql.Query;
-import net.hasor.dataql.QueryResult;
-import net.hasor.dataql.compiler.qil.QIL;
-import net.hasor.dataql.parser.QueryModel;
+import net.hasor.dataql.domain.HintsSet;
+import net.hasor.dataql.host.Query;
+import net.hasor.dataql.host.HostConfiguration;
+import net.hasor.dataql.host.QueryBuilder;
+import net.hasor.dataql.host.QueryManager;
+import net.hasor.dataql.kernel.CustomizeScope;
+import net.hasor.dataql.kernel.Finder;
+import net.hasor.dataql.kernel.QueryResult;
+import net.hasor.dataql.kernel.QueryRuntimeException;
 import net.hasor.dataql.parser.QueryParseException;
-import net.hasor.dataql.runtime.CompilerArguments;
-import net.hasor.dataql.runtime.HintsSet;
-import net.hasor.dataql.runtime.QueryHelper;
-import net.hasor.dataql.runtime.QueryRuntimeException;
 import net.hasor.utils.ResourcesUtils;
 
 import java.io.IOException;
@@ -18,7 +17,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Supplier;
 // Generated from '/META-INF/hasor-framework/dataway-swagger2.ql'
 
@@ -31,16 +29,15 @@ public class Swagger2Query extends HintsSet implements Query {
     }
 
     public Swagger2Query() throws IOException, QueryParseException {
-        this(Finder.DEFAULT, Collections.emptyMap());
+        this(new HostConfiguration(), Collections.emptyMap());
     }
 
     public Swagger2Query(Finder finder, Map<String, Supplier<?>> shareVarMap) throws IOException, QueryParseException {
-        Set<String> keySet = shareVarMap.keySet();
         InputStream inputStream = Objects.requireNonNull(ResourcesUtils.getResourceAsStream(sourceCode), sourceCode);
-        QueryModel queryModel = QueryHelper.queryParser(inputStream, StandardCharsets.UTF_8);
-        QIL queryQil = QueryHelper.queryCompiler(queryModel, new CompilerArguments(keySet), finder);
-        this.dataQuery = QueryHelper.createQuery(queryQil, finder);
-        this.dataQuery.putShareVar(shareVarMap);
+        HostConfiguration configuration = new HostConfiguration(finder);
+        QueryBuilder queryBuilder = new QueryManager(configuration.getHostContext()).newBuilder();
+        shareVarMap.forEach(queryBuilder::addShareVar);
+        this.dataQuery = queryBuilder.createQuery(inputStream, StandardCharsets.UTF_8);
     }
 
     @Override
