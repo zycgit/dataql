@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdbvisitor_doc=self.webpackChunkdbvisitor_doc||[]).push([[1095],{3634:s=>{s.exports=JSON.parse('{"label":"SpringBoot","permalink":"/blog/tags/spring-boot","allTagsPath":"/blog/tags","count":1}')}}]);

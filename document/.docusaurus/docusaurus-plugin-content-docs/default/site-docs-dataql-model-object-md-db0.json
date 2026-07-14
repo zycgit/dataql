@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/model/object",
+  "id": "dataql/model/object",
+  "title": "d.ObjectModel",
+  "description": "DataQL 数据模型、ObjectModel模型",
+  "source": "@site/docs/dataql/model/object.md",
+  "sourceDirName": "dataql/model",
+  "slug": "/dataql/model/object",
+  "permalink": "/docs/dataql/model/object",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/model/object.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "id": "object",
+    "sidebar_position": 4,
+    "title": "d.ObjectModel",
+    "description": "DataQL 数据模型、ObjectModel模型"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "c.ListModel",
+    "permalink": "/docs/dataql/model/list"
+  },
+  "next": {
+    "title": "e.UDF",
+    "permalink": "/docs/dataql/model/udf"
+  }
+}

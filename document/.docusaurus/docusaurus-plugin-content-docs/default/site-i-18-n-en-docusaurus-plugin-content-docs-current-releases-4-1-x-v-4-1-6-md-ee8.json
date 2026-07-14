@@ -1,0 +1,27 @@
+{
+  "unversionedId": "releases/4.1.x/v4.1.6",
+  "id": "releases/4.1.x/v4.1.6",
+  "title": "v4.1.6 (2020-05-10)",
+  "description": "修复",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/releases/4.1.x/v4.1.6.md",
+  "sourceDirName": "releases/4.1.x",
+  "slug": "/releases/4.1.x/v4.1.6",
+  "permalink": "/en/docs/releases/4.1.x/v4.1.6",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/releases/4.1.x/v4.1.6.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {
+    "id": "v4.1.6",
+    "title": "v4.1.6 (2020-05-10)"
+  },
+  "sidebar": "releases",
+  "previous": {
+    "title": "v4.1.5 (2020-05-09)",
+    "permalink": "/en/docs/releases/4.1.x/v4.1.5"
+  },
+  "next": {
+    "title": "v4.1.7 (2020-05-18)",
+    "permalink": "/en/docs/releases/4.1.x/v4.1.7"
+  }
+}

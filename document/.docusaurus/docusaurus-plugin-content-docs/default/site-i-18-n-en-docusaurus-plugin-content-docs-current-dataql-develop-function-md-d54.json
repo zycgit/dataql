@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/develop/function",
+  "id": "dataql/develop/function",
+  "title": "c.函数/函数包",
+  "description": "DataQL 开发手册，函数/函数包。必须是实现UDF接口、注册 UDF、UDF作为参数、函数包",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataql/develop/function.md",
+  "sourceDirName": "dataql/develop",
+  "slug": "/dataql/develop/function",
+  "permalink": "/en/docs/dataql/develop/function",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/develop/function.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "id": "function",
+    "sidebar_position": 3,
+    "title": "c.函数/函数包",
+    "description": "DataQL 开发手册，函数/函数包。必须是实现UDF接口、注册 UDF、UDF作为参数、函数包"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "b.全局变量",
+    "permalink": "/en/docs/dataql/develop/globalvar"
+  },
+  "next": {
+    "title": "d.外部代码片段",
+    "permalink": "/en/docs/dataql/develop/fragment"
+  }
+}

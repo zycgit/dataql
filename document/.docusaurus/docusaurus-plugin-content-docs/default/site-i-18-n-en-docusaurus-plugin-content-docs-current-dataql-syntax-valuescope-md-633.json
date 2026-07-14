@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/syntax/valuescope",
+  "id": "dataql/syntax/valuescope",
+  "title": "f.值域",
+  "description": "DataQL 的值域是一种参数隔离机制，例如同样名称的参数可以出现在不同的 域 里。值域参数隔离、表达式访问符、DataQL值域符",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataql/syntax/valuescope.md",
+  "sourceDirName": "dataql/syntax",
+  "slug": "/dataql/syntax/valuescope",
+  "permalink": "/en/docs/dataql/syntax/valuescope",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/syntax/valuescope.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 6,
+  "frontMatter": {
+    "id": "valuescope",
+    "sidebar_position": 6,
+    "title": "f.值域",
+    "description": "DataQL 的值域是一种参数隔离机制，例如同样名称的参数可以出现在不同的 域 里。值域参数隔离、表达式访问符、DataQL值域符"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "e.表达式",
+    "permalink": "/en/docs/dataql/syntax/expression"
+  },
+  "next": {
+    "title": "g.取值",
+    "permalink": "/en/docs/dataql/syntax/getter"
+  }
+}

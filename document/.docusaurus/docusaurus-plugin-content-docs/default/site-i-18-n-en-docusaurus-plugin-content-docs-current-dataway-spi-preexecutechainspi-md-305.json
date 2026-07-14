@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataway/spi/preexecutechainspi",
+  "id": "dataway/spi/preexecutechainspi",
+  "title": "f.PreExecuteChainSpi",
+  "description": "DataQL Dataway SPI,PreExecuteChainSpi",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataway/spi/preexecutechainspi.md",
+  "sourceDirName": "dataway/spi",
+  "slug": "/dataway/spi/preexecutechainspi",
+  "permalink": "/en/docs/dataway/spi/preexecutechainspi",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataway/spi/preexecutechainspi.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 6,
+  "frontMatter": {
+    "id": "preexecutechainspi",
+    "sidebar_position": 6,
+    "title": "f.PreExecuteChainSpi",
+    "description": "DataQL Dataway SPI,PreExecuteChainSpi"
+  },
+  "sidebar": "dataway",
+  "previous": {
+    "title": "e.LookupListener",
+    "permalink": "/en/docs/dataway/spi/lookuplistener"
+  },
+  "next": {
+    "title": "g.ResultProcessChainSpi",
+    "permalink": "/en/docs/dataway/spi/resultprocesschainspi"
+  }
+}

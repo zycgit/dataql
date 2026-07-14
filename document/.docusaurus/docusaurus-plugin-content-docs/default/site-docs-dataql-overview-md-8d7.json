@@ -1,0 +1,26 @@
+{
+  "unversionedId": "dataql/overview",
+  "id": "dataql/overview",
+  "title": "什么是DataQL？",
+  "description": "DataQL 全称为 Data Query Language，它是一种查询语言，旨在通过提供直观、灵活的语法来描述获取数据的需求。",
+  "source": "@site/docs/dataql/overview.md",
+  "sourceDirName": "dataql",
+  "slug": "/dataql/overview",
+  "permalink": "/docs/dataql/overview",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/overview.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "id": "overview",
+    "sidebar_position": 1,
+    "title": "什么是DataQL？",
+    "description": "DataQL 全称为 Data Query Language，它是一种查询语言，旨在通过提供直观、灵活的语法来描述获取数据的需求。"
+  },
+  "sidebar": "engine",
+  "next": {
+    "title": "a.词法记号",
+    "permalink": "/docs/dataql/syntax/lexical"
+  }
+}

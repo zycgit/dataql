@@ -1,0 +1,26 @@
+{
+  "unversionedId": "integration/with-springboot",
+  "id": "integration/with-springboot",
+  "title": "Spring Boot 整合",
+  "description": "dbVisitor ORM 工具和 Spring Boot 整合使用。",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/integration/with-springboot.md",
+  "sourceDirName": "integration",
+  "slug": "/integration/with-springboot",
+  "permalink": "/en/docs/integration/with-springboot",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/integration/with-springboot.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "id": "with-springboot",
+    "sidebar_position": 2,
+    "title": "Spring Boot 整合",
+    "description": "dbVisitor ORM 工具和 Spring Boot 整合使用。"
+  },
+  "sidebar": "integration",
+  "previous": {
+    "title": "概要",
+    "permalink": "/en/docs/integration/overview"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/syntax/lexical",
+  "id": "dataql/syntax/lexical",
+  "title": "a.词法记号",
+  "description": "以下正式的 DataQL 语法规范可以用来帮助更深入的了解如何使用 DataQL 的所有特性、DataQL 语法、DataQL词法、DataQL运算符、DataQL关键字、DataQL标识符、DataQL分隔符。",
+  "source": "@site/docs/dataql/syntax/lexical.md",
+  "sourceDirName": "dataql/syntax",
+  "slug": "/dataql/syntax/lexical",
+  "permalink": "/docs/dataql/syntax/lexical",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/syntax/lexical.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "id": "lexical",
+    "sidebar_position": 1,
+    "title": "a.词法记号",
+    "description": "以下正式的 DataQL 语法规范可以用来帮助更深入的了解如何使用 DataQL 的所有特性、DataQL 语法、DataQL词法、DataQL运算符、DataQL关键字、DataQL标识符、DataQL分隔符。"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "什么是DataQL？",
+    "permalink": "/docs/dataql/overview"
+  },
+  "next": {
+    "title": "b.类型系统",
+    "permalink": "/docs/dataql/syntax/types"
+  }
+}

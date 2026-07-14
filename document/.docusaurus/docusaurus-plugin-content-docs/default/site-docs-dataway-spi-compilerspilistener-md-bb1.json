@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataway/spi/compilerspilistener",
+  "id": "dataway/spi/compilerspilistener",
+  "title": "b.CompilerSpiListener",
+  "description": "DataQL Dataway SPI,CompilerSpiListener",
+  "source": "@site/docs/dataway/spi/compilerspilistener.md",
+  "sourceDirName": "dataway/spi",
+  "slug": "/dataway/spi/compilerspilistener",
+  "permalink": "/docs/dataway/spi/compilerspilistener",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataway/spi/compilerspilistener.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "id": "compilerspilistener",
+    "sidebar_position": 2,
+    "title": "b.CompilerSpiListener",
+    "description": "DataQL Dataway SPI,CompilerSpiListener"
+  },
+  "sidebar": "dataway",
+  "previous": {
+    "title": "a.AuthorizationChainSpi",
+    "permalink": "/docs/dataway/spi/authorizationchainspi"
+  },
+  "next": {
+    "title": "h.SerializationChainSpi",
+    "permalink": "/docs/dataway/spi/serializationchainspi"
+  }
+}

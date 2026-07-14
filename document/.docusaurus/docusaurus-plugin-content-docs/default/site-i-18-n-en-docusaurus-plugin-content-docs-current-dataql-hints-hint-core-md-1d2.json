@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/hints/hint_core",
+  "id": "dataql/hints/hint_core",
+  "title": "引擎 HINT",
+  "description": "DataQL 引擎相关的 Hint。",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataql/hints/hint_core.md",
+  "sourceDirName": "dataql/hints",
+  "slug": "/dataql/hints/hint_core",
+  "permalink": "/en/docs/dataql/hints/hint_core",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/hints/hint_core.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "id": "hint_core",
+    "sidebar_position": 1,
+    "title": "引擎 HINT",
+    "description": "DataQL 引擎相关的 Hint。"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "g.Web函数库",
+    "permalink": "/en/docs/dataql/funx/web"
+  },
+  "next": {
+    "title": "SQL HINT",
+    "permalink": "/en/docs/dataql/hints/hint_sql"
+  }
+}

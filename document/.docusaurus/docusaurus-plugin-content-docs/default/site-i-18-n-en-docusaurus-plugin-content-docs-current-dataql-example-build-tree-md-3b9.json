@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/example/build_tree",
+  "id": "dataql/example/build_tree",
+  "title": "生成 Tree 结构",
+  "description": "DataQL 样例集锦，通过 DataQL 查询将含有 parent 属性的数据集生成为 Tree 结构",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataql/example/build_tree.md",
+  "sourceDirName": "dataql/example",
+  "slug": "/dataql/example/build_tree",
+  "permalink": "/en/docs/dataql/example/build_tree",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/example/build_tree.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "id": "build_tree",
+    "sidebar_position": 4,
+    "title": "生成 Tree 结构",
+    "description": "DataQL 样例集锦，通过 DataQL 查询将含有 parent 属性的数据集生成为 Tree 结构"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "仿for循环遍历",
+    "permalink": "/en/docs/dataql/example/like_for"
+  },
+  "next": {
+    "title": "行列转换（行数量任意）",
+    "permalink": "/en/docs/dataql/example/row_to_col"
+  }
+}

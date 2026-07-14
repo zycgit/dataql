@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/funx/state",
+  "id": "dataql/funx/state",
+  "title": "f.状态函数库",
+  "description": "DataQL FunctionX库函数，状态函数库",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataql/funx/state.md",
+  "sourceDirName": "dataql/funx",
+  "slug": "/dataql/funx/state",
+  "permalink": "/en/docs/dataql/funx/state",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/funx/state.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 6,
+  "frontMatter": {
+    "id": "state",
+    "sidebar_position": 6,
+    "title": "f.状态函数库",
+    "description": "DataQL FunctionX库函数，状态函数库"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "e.字符串函数库",
+    "permalink": "/en/docs/dataql/funx/string"
+  },
+  "next": {
+    "title": "g.Web函数库",
+    "permalink": "/en/docs/dataql/funx/web"
+  }
+}

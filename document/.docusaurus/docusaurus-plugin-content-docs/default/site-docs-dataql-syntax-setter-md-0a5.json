@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/syntax/setter",
+  "id": "dataql/syntax/setter",
+  "title": "h.赋值",
+  "description": "在 DataQL 中数据是不可被修改的，如要修改数据集中的数据。则需要重新生成这个数据集，或者利用结果转换在转换的过程中对局部数据进行修改。。",
+  "source": "@site/docs/dataql/syntax/setter.md",
+  "sourceDirName": "dataql/syntax",
+  "slug": "/dataql/syntax/setter",
+  "permalink": "/docs/dataql/syntax/setter",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/syntax/setter.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 8,
+  "frontMatter": {
+    "id": "setter",
+    "sidebar_position": 8,
+    "title": "h.赋值",
+    "description": "在 DataQL 中数据是不可被修改的，如要修改数据集中的数据。则需要重新生成这个数据集，或者利用结果转换在转换的过程中对局部数据进行修改。。"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "g.取值",
+    "permalink": "/docs/dataql/syntax/getter"
+  },
+  "next": {
+    "title": "i.结果转换",
+    "permalink": "/docs/dataql/syntax/transform"
+  }
+}

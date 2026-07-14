@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdbvisitor_doc=self.webpackChunkdbvisitor_doc||[]).push([[1945],{289:e=>{e.exports=JSON.parse('{"permalink":"/en/blog/tags/data-ql","page":1,"postsPerPage":10,"totalPages":1,"totalCount":1,"blogDescription":"Blog","blogTitle":"Blog"}')}}]);

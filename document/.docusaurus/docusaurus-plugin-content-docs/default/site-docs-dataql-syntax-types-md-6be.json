@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/syntax/types",
+  "id": "dataql/syntax/types",
+  "title": "b.类型系统",
+  "description": "DataQL 是弱类型定义的查询语言，在DataQL 中所有数据都会被归结到有限的几种类型上。无需定义数据类型结构，在弱类型系统中编写查询会非常方便，它去掉了繁杂的类型定义。。",
+  "source": "@site/docs/dataql/syntax/types.md",
+  "sourceDirName": "dataql/syntax",
+  "slug": "/dataql/syntax/types",
+  "permalink": "/docs/dataql/syntax/types",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/syntax/types.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "id": "types",
+    "sidebar_position": 2,
+    "title": "b.类型系统",
+    "description": "DataQL 是弱类型定义的查询语言，在DataQL 中所有数据都会被归结到有限的几种类型上。无需定义数据类型结构，在弱类型系统中编写查询会非常方便，它去掉了繁杂的类型定义。。"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "a.词法记号",
+    "permalink": "/docs/dataql/syntax/lexical"
+  },
+  "next": {
+    "title": "c.数值",
+    "permalink": "/docs/dataql/syntax/numbers"
+  }
+}

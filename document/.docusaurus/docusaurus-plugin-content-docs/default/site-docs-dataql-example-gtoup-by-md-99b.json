@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/example/group_by",
+  "id": "dataql/example/group_by",
+  "title": "集合分组",
+  "description": "DataQL 样例集锦，通过 DataQL 查询实现将一个集合数据按照某个条件拆分为多个数据集、集合分组",
+  "source": "@site/docs/dataql/example/gtoup_by.md",
+  "sourceDirName": "dataql/example",
+  "slug": "/dataql/example/group_by",
+  "permalink": "/docs/dataql/example/group_by",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/example/gtoup_by.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 7,
+  "frontMatter": {
+    "id": "group_by",
+    "sidebar_position": 7,
+    "title": "集合分组",
+    "description": "DataQL 样例集锦，通过 DataQL 查询实现将一个集合数据按照某个条件拆分为多个数据集、集合分组"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "连接两个数据集(left join)",
+    "permalink": "/docs/dataql/example/left_join"
+  },
+  "next": {
+    "title": "高维数组降维",
+    "permalink": "/docs/dataql/example/dim_reduction"
+  }
+}

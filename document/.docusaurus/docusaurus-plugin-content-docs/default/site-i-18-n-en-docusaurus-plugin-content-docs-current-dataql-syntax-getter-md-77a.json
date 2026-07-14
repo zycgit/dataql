@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/syntax/getter",
+  "id": "dataql/syntax/getter",
+  "title": "g.取值",
+  "description": "DataQL 取值的几种方式、DataQL对象取值、函数结果取值、数组中取值、下标取值、连续下标取值、数组下标取值、DataQL下表越界。",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataql/syntax/getter.md",
+  "sourceDirName": "dataql/syntax",
+  "slug": "/dataql/syntax/getter",
+  "permalink": "/en/docs/dataql/syntax/getter",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/syntax/getter.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 7,
+  "frontMatter": {
+    "id": "getter",
+    "sidebar_position": 7,
+    "title": "g.取值",
+    "description": "DataQL 取值的几种方式、DataQL对象取值、函数结果取值、数组中取值、下标取值、连续下标取值、数组下标取值、DataQL下表越界。"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "f.值域",
+    "permalink": "/en/docs/dataql/syntax/valuescope"
+  },
+  "next": {
+    "title": "h.赋值",
+    "permalink": "/en/docs/dataql/syntax/setter"
+  }
+}

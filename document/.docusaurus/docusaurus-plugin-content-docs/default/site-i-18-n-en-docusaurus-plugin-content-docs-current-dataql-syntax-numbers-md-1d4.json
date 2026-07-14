@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/syntax/numbers",
+  "id": "dataql/syntax/numbers",
+  "title": "c.数值",
+  "description": "DataQL 中的数值类型、DataQL默认数值宽度、DataQL精度舍入问题",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataql/syntax/numbers.md",
+  "sourceDirName": "dataql/syntax",
+  "slug": "/dataql/syntax/numbers",
+  "permalink": "/en/docs/dataql/syntax/numbers",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/syntax/numbers.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "id": "numbers",
+    "sidebar_position": 3,
+    "title": "c.数值",
+    "description": "DataQL 中的数值类型、DataQL默认数值宽度、DataQL精度舍入问题"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "b.类型系统",
+    "permalink": "/en/docs/dataql/syntax/types"
+  },
+  "next": {
+    "title": "d.语句",
+    "permalink": "/en/docs/dataql/syntax/statements"
+  }
+}

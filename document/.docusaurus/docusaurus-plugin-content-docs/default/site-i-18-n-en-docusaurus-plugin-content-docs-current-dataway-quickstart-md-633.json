@@ -1,0 +1,28 @@
+{
+  "unversionedId": "dataway/quickstart",
+  "id": "dataway/quickstart",
+  "title": "快速上手",
+  "description": "《Dataway 让 Spring Boot 不再需要 Controller、Service、DAO、Mapper》",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataway/quickstart.md",
+  "sourceDirName": "dataway",
+  "slug": "/dataway/quickstart",
+  "permalink": "/en/docs/dataway/quickstart",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataway/quickstart.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "id": "quickstart",
+    "sidebar_position": 2
+  },
+  "sidebar": "dataway",
+  "previous": {
+    "title": "什么是Dataway?",
+    "permalink": "/en/docs/dataway/overview"
+  },
+  "next": {
+    "title": "a.功能说明",
+    "permalink": "/en/docs/dataway/func/function"
+  }
+}

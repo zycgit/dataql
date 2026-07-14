@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/sql/about",
+  "id": "dataql/sql/about",
+  "title": "a.SQL执行器",
+  "description": "SQL 执行器是 DataQL 的一个 FragmentProcess 扩展，其作用是让 DataQL 可以执行 SQL。",
+  "source": "@site/docs/dataql/sql/about.md",
+  "sourceDirName": "dataql/sql",
+  "slug": "/dataql/sql/about",
+  "permalink": "/docs/dataql/sql/about",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/sql/about.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "id": "about",
+    "sidebar_position": 1,
+    "title": "a.SQL执行器",
+    "description": "SQL 执行器是 DataQL 的一个 FragmentProcess 扩展，其作用是让 DataQL 可以执行 SQL。"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "e.指令系统",
+    "permalink": "/docs/dataql/develop/instruction"
+  },
+  "next": {
+    "title": "b.执行 SQL",
+    "permalink": "/docs/dataql/sql/execute"
+  }
+}

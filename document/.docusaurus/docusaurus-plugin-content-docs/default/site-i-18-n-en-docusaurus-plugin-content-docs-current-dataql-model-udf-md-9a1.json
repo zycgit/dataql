@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/model/udf",
+  "id": "dataql/model/udf",
+  "title": "e.UDF",
+  "description": "DataQL 数据模型、UdfModel模型",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataql/model/udf.md",
+  "sourceDirName": "dataql/model",
+  "slug": "/dataql/model/udf",
+  "permalink": "/en/docs/dataql/model/udf",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/model/udf.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 5,
+  "frontMatter": {
+    "id": "udf",
+    "sidebar_position": 5,
+    "title": "e.UDF",
+    "description": "DataQL 数据模型、UdfModel模型"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "d.ObjectModel",
+    "permalink": "/en/docs/dataql/model/object"
+  },
+  "next": {
+    "title": "a.执行查询",
+    "permalink": "/en/docs/dataql/develop/execute"
+  }
+}

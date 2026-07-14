@@ -1,0 +1,501 @@
+{
+  "@cmfcmf/docusaurus-search-local": {
+    "default": {
+      "titleBoost": 5,
+      "contentBoost": 1,
+      "tagsBoost": 3,
+      "parentCategoriesBoost": 2,
+      "indexDocSidebarParentCategories": 0,
+      "maxSearchResults": 8
+    }
+  },
+  "docusaurus-plugin-content-docs": {
+    "default": {
+      "path": "/en/docs",
+      "versions": [
+        {
+          "name": "current",
+          "label": "Next",
+          "isLast": true,
+          "path": "/en/docs",
+          "mainDocId": "dataql/overview",
+          "docs": [
+            {
+              "id": "dataql/develop/execute",
+              "path": "/en/docs/dataql/develop/execute",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/develop/fragment",
+              "path": "/en/docs/dataql/develop/fragment",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/develop/function",
+              "path": "/en/docs/dataql/develop/function",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/develop/globalvar",
+              "path": "/en/docs/dataql/develop/globalvar",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/develop/instruction",
+              "path": "/en/docs/dataql/develop/instruction",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/example/build_tree",
+              "path": "/en/docs/dataql/example/build_tree",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/example/dataset_ranking",
+              "path": "/en/docs/dataql/example/dataset_ranking",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/example/dim_reduction",
+              "path": "/en/docs/dataql/example/dim_reduction",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/example/group_by",
+              "path": "/en/docs/dataql/example/group_by",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/example/left_join",
+              "path": "/en/docs/dataql/example/left_join",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/example/like_for",
+              "path": "/en/docs/dataql/example/like_for",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/example/row_to_col",
+              "path": "/en/docs/dataql/example/row_to_col",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/example/tree_to_tree",
+              "path": "/en/docs/dataql/example/tree_to_tree",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/funx/collect",
+              "path": "/en/docs/dataql/funx/collect",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/funx/convert",
+              "path": "/en/docs/dataql/funx/convert",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/funx/datetime",
+              "path": "/en/docs/dataql/funx/datetime",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/funx/json",
+              "path": "/en/docs/dataql/funx/json",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/funx/state",
+              "path": "/en/docs/dataql/funx/state",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/funx/string",
+              "path": "/en/docs/dataql/funx/string",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/funx/web",
+              "path": "/en/docs/dataql/funx/web",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/hints/hint_core",
+              "path": "/en/docs/dataql/hints/hint_core",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/hints/hint_sql",
+              "path": "/en/docs/dataql/hints/hint_sql",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/model/about",
+              "path": "/en/docs/dataql/model/about",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/model/list",
+              "path": "/en/docs/dataql/model/list",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/model/object",
+              "path": "/en/docs/dataql/model/object",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/model/udf",
+              "path": "/en/docs/dataql/model/udf",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/model/value",
+              "path": "/en/docs/dataql/model/value",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/overview",
+              "path": "/en/docs/dataql/overview",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/sql/about",
+              "path": "/en/docs/dataql/sql/about",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/sql/dialect",
+              "path": "/en/docs/dataql/sql/dialect",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/sql/execute",
+              "path": "/en/docs/dataql/sql/execute",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/sql/MyBatis",
+              "path": "/en/docs/dataql/sql/MyBatis",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/syntax/expression",
+              "path": "/en/docs/dataql/syntax/expression",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/syntax/fragment",
+              "path": "/en/docs/dataql/syntax/fragment",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/syntax/function",
+              "path": "/en/docs/dataql/syntax/function",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/syntax/getter",
+              "path": "/en/docs/dataql/syntax/getter",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/syntax/lexical",
+              "path": "/en/docs/dataql/syntax/lexical",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/syntax/numbers",
+              "path": "/en/docs/dataql/syntax/numbers",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/syntax/setter",
+              "path": "/en/docs/dataql/syntax/setter",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/syntax/statements",
+              "path": "/en/docs/dataql/syntax/statements",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/syntax/transform",
+              "path": "/en/docs/dataql/syntax/transform",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/syntax/types",
+              "path": "/en/docs/dataql/syntax/types",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataql/syntax/valuescope",
+              "path": "/en/docs/dataql/syntax/valuescope",
+              "sidebar": "engine"
+            },
+            {
+              "id": "dataway/func/function",
+              "path": "/en/docs/dataway/func/function",
+              "sidebar": "dataway"
+            },
+            {
+              "id": "dataway/func/use-in-program",
+              "path": "/en/docs/dataway/func/use-in-program",
+              "sidebar": "dataway"
+            },
+            {
+              "id": "dataway/overview",
+              "path": "/en/docs/dataway/overview",
+              "sidebar": "dataway"
+            },
+            {
+              "id": "dataway/quickstart",
+              "path": "/en/docs/dataway/quickstart",
+              "sidebar": "dataway"
+            },
+            {
+              "id": "dataway/spi/authorizationchainspi",
+              "path": "/en/docs/dataway/spi/authorizationchainspi",
+              "sidebar": "dataway"
+            },
+            {
+              "id": "dataway/spi/compilerspilistener",
+              "path": "/en/docs/dataway/spi/compilerspilistener",
+              "sidebar": "dataway"
+            },
+            {
+              "id": "dataway/spi/fxsqlcheckchainspi",
+              "path": "/en/docs/dataway/spi/fxsqlcheckchainspi",
+              "sidebar": "dataway"
+            },
+            {
+              "id": "dataway/spi/loginchainspi",
+              "path": "/en/docs/dataway/spi/loginchainspi",
+              "sidebar": "dataway"
+            },
+            {
+              "id": "dataway/spi/lookuplistener",
+              "path": "/en/docs/dataway/spi/lookuplistener",
+              "sidebar": "dataway"
+            },
+            {
+              "id": "dataway/spi/preexecutechainspi",
+              "path": "/en/docs/dataway/spi/preexecutechainspi",
+              "sidebar": "dataway"
+            },
+            {
+              "id": "dataway/spi/resultprocesschainspi",
+              "path": "/en/docs/dataway/spi/resultprocesschainspi",
+              "sidebar": "dataway"
+            },
+            {
+              "id": "dataway/spi/serializationchainspi",
+              "path": "/en/docs/dataway/spi/serializationchainspi",
+              "sidebar": "dataway"
+            },
+            {
+              "id": "dataway/ui/apimanager",
+              "path": "/en/docs/dataway/ui/apimanager",
+              "sidebar": "dataway"
+            },
+            {
+              "id": "dataway/ui/ui-editor",
+              "path": "/en/docs/dataway/ui/ui-editor",
+              "sidebar": "dataway"
+            },
+            {
+              "id": "dataway/ui/ui-list",
+              "path": "/en/docs/dataway/ui/ui-list",
+              "sidebar": "dataway"
+            },
+            {
+              "id": "integration/overview",
+              "path": "/en/docs/integration/overview",
+              "sidebar": "integration"
+            },
+            {
+              "id": "integration/with-springboot",
+              "path": "/en/docs/integration/with-springboot",
+              "sidebar": "integration"
+            },
+            {
+              "id": "releases/3.2.x/v3.2.0",
+              "path": "/en/docs/releases/3.2.x/v3.2.0",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/3.2.x/v3.2.1",
+              "path": "/en/docs/releases/3.2.x/v3.2.1",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/3.2.x/v3.2.2",
+              "path": "/en/docs/releases/3.2.x/v3.2.2",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/4.0.x/v4.0.x",
+              "path": "/en/docs/releases/4.0.x/v4.0.x",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/4.1.x/v4.1.0",
+              "path": "/en/docs/releases/4.1.x/v4.1.0",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/4.1.x/v4.1.1",
+              "path": "/en/docs/releases/4.1.x/v4.1.1",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/4.1.x/v4.1.10",
+              "path": "/en/docs/releases/4.1.x/v4.1.10",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/4.1.x/v4.1.11",
+              "path": "/en/docs/releases/4.1.x/v4.1.11",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/4.1.x/v4.1.12",
+              "path": "/en/docs/releases/4.1.x/v4.1.12",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/4.1.x/v4.1.13",
+              "path": "/en/docs/releases/4.1.x/v4.1.13",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/4.1.x/v4.1.2",
+              "path": "/en/docs/releases/4.1.x/v4.1.2",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/4.1.x/v4.1.3",
+              "path": "/en/docs/releases/4.1.x/v4.1.3",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/4.1.x/v4.1.4",
+              "path": "/en/docs/releases/4.1.x/v4.1.4",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/4.1.x/v4.1.5",
+              "path": "/en/docs/releases/4.1.x/v4.1.5",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/4.1.x/v4.1.6",
+              "path": "/en/docs/releases/4.1.x/v4.1.6",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/4.1.x/v4.1.7",
+              "path": "/en/docs/releases/4.1.x/v4.1.7",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/4.1.x/v4.1.8",
+              "path": "/en/docs/releases/4.1.x/v4.1.8",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/4.1.x/v4.1.9",
+              "path": "/en/docs/releases/4.1.x/v4.1.9",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/4.2.x/v4.2.0",
+              "path": "/en/docs/releases/4.2.x/v4.2.0",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/4.2.x/v4.2.1",
+              "path": "/en/docs/releases/4.2.x/v4.2.1",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/4.2.x/v4.2.2",
+              "path": "/en/docs/releases/4.2.x/v4.2.2",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/4.2.x/v4.2.3",
+              "path": "/en/docs/releases/4.2.x/v4.2.3",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/4.2.x/v4.2.4",
+              "path": "/en/docs/releases/4.2.x/v4.2.4",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/4.2.x/v4.2.5",
+              "path": "/en/docs/releases/4.2.x/v4.2.5",
+              "sidebar": "releases"
+            },
+            {
+              "id": "releases/latest",
+              "path": "/en/docs/releases/latest",
+              "sidebar": "releases"
+            },
+            {
+              "id": "/category/v42x",
+              "path": "/en/docs/category/v42x",
+              "sidebar": "releases"
+            },
+            {
+              "id": "/category/v41x",
+              "path": "/en/docs/category/v41x",
+              "sidebar": "releases"
+            },
+            {
+              "id": "/category/v40x",
+              "path": "/en/docs/category/v40x",
+              "sidebar": "releases"
+            },
+            {
+              "id": "/category/v32x",
+              "path": "/en/docs/category/v32x",
+              "sidebar": "releases"
+            }
+          ],
+          "draftIds": [],
+          "sidebars": {
+            "engine": {
+              "link": {
+                "path": "/en/docs/dataql/overview",
+                "label": "dataql/overview"
+              }
+            },
+            "dataway": {
+              "link": {
+                "path": "/en/docs/dataway/overview",
+                "label": "dataway/overview"
+              }
+            },
+            "integration": {
+              "link": {
+                "path": "/en/docs/integration/overview",
+                "label": "integration/overview"
+              }
+            },
+            "releases": {
+              "link": {
+                "path": "/en/docs/releases/latest",
+                "label": "releases/latest"
+              }
+            }
+          }
+        }
+      ],
+      "breadcrumbs": true
+    }
+  }
+}

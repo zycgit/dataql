@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/sql/execute",
+  "id": "dataql/sql/execute",
+  "title": "b.执行 SQL",
+  "description": "在 DataQL 中执行一条SQL，然后将 SQL 的结果集进行处理非常简单、参数化SQL、SQL注入。",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataql/sql/execute.md",
+  "sourceDirName": "dataql/sql",
+  "slug": "/dataql/sql/execute",
+  "permalink": "/en/docs/dataql/sql/execute",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/sql/execute.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "id": "execute",
+    "sidebar_position": 2,
+    "title": "b.执行 SQL",
+    "description": "在 DataQL 中执行一条SQL，然后将 SQL 的结果集进行处理非常简单、参数化SQL、SQL注入。"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "a.SQL执行器",
+    "permalink": "/en/docs/dataql/sql/about"
+  },
+  "next": {
+    "title": "c.配置和方言",
+    "permalink": "/en/docs/dataql/sql/dialect"
+  }
+}

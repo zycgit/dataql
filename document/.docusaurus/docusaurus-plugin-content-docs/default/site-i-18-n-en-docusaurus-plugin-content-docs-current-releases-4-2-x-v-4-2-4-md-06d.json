@@ -1,0 +1,27 @@
+{
+  "unversionedId": "releases/4.2.x/v4.2.4",
+  "id": "releases/4.2.x/v4.2.4",
+  "title": "v4.2.4 (2021-03-17)",
+  "description": "优化",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/releases/4.2.x/v4.2.4.md",
+  "sourceDirName": "releases/4.2.x",
+  "slug": "/releases/4.2.x/v4.2.4",
+  "permalink": "/en/docs/releases/4.2.x/v4.2.4",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/releases/4.2.x/v4.2.4.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {
+    "id": "v4.2.4",
+    "title": "v4.2.4 (2021-03-17)"
+  },
+  "sidebar": "releases",
+  "previous": {
+    "title": "v4.2.3 (2021-02-26)",
+    "permalink": "/en/docs/releases/4.2.x/v4.2.3"
+  },
+  "next": {
+    "title": "v4.2.5 (2021-03-31)",
+    "permalink": "/en/docs/releases/4.2.x/v4.2.5"
+  }
+}

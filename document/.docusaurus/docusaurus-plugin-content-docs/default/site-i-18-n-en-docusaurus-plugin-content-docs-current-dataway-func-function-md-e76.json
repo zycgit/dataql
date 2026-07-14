@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataway/func/function",
+  "id": "dataway/func/function",
+  "title": "a.功能说明",
+  "description": "DataQL Dataway 功能说明",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataway/func/function.md",
+  "sourceDirName": "dataway/func",
+  "slug": "/dataway/func/function",
+  "permalink": "/en/docs/dataway/func/function",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataway/func/function.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "id": "function",
+    "sidebar_position": 1,
+    "title": "a.功能说明",
+    "description": "DataQL Dataway 功能说明"
+  },
+  "sidebar": "dataway",
+  "previous": {
+    "title": "快速上手",
+    "permalink": "/en/docs/dataway/quickstart"
+  },
+  "next": {
+    "title": "a.在程序中调用",
+    "permalink": "/en/docs/dataway/func/use-in-program"
+  }
+}

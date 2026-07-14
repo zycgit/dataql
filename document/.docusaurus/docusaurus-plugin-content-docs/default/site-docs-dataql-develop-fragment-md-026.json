@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/develop/fragment",
+  "id": "dataql/develop/fragment",
+  "title": "d.外部代码片段",
+  "description": "DataQL 开发手册，外部代码片段是 DataQL 特有能力，它允许在 DataQL 查询中混合其它语言的脚本。并将引入的外部语言脚本转换为 UDF 形式进行调用",
+  "source": "@site/docs/dataql/develop/fragment.md",
+  "sourceDirName": "dataql/develop",
+  "slug": "/dataql/develop/fragment",
+  "permalink": "/docs/dataql/develop/fragment",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/develop/fragment.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "id": "fragment",
+    "sidebar_position": 4,
+    "title": "d.外部代码片段",
+    "description": "DataQL 开发手册，外部代码片段是 DataQL 特有能力，它允许在 DataQL 查询中混合其它语言的脚本。并将引入的外部语言脚本转换为 UDF 形式进行调用"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "c.函数/函数包",
+    "permalink": "/docs/dataql/develop/function"
+  },
+  "next": {
+    "title": "e.指令系统",
+    "permalink": "/docs/dataql/develop/instruction"
+  }
+}

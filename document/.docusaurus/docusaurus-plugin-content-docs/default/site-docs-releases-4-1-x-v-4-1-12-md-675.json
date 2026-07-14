@@ -1,0 +1,27 @@
+{
+  "unversionedId": "releases/4.1.x/v4.1.12",
+  "id": "releases/4.1.x/v4.1.12",
+  "title": "v4.1.12 (2020-07-22)",
+  "description": "优化",
+  "source": "@site/docs/releases/4.1.x/v4.1.12.md",
+  "sourceDirName": "releases/4.1.x",
+  "slug": "/releases/4.1.x/v4.1.12",
+  "permalink": "/docs/releases/4.1.x/v4.1.12",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/releases/4.1.x/v4.1.12.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {
+    "id": "v4.1.12",
+    "title": "v4.1.12 (2020-07-22)"
+  },
+  "sidebar": "releases",
+  "previous": {
+    "title": "v4.1.11 (2020-07-07)",
+    "permalink": "/docs/releases/4.1.x/v4.1.11"
+  },
+  "next": {
+    "title": "v4.1.13 (2020-07-23)",
+    "permalink": "/docs/releases/4.1.x/v4.1.13"
+  }
+}

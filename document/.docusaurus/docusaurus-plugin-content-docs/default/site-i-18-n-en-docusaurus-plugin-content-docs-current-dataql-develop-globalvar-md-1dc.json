@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/develop/globalvar",
+  "id": "dataql/develop/globalvar",
+  "title": "b.全局变量",
+  "description": "DataQL 开发手册，全局变量。添加全局变量有两种方式，两种方式没有分别。",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataql/develop/globalvar.md",
+  "sourceDirName": "dataql/develop",
+  "slug": "/dataql/develop/globalvar",
+  "permalink": "/en/docs/dataql/develop/globalvar",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/develop/globalvar.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "id": "globalvar",
+    "sidebar_position": 2,
+    "title": "b.全局变量",
+    "description": "DataQL 开发手册，全局变量。添加全局变量有两种方式，两种方式没有分别。"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "a.执行查询",
+    "permalink": "/en/docs/dataql/develop/execute"
+  },
+  "next": {
+    "title": "c.函数/函数包",
+    "permalink": "/en/docs/dataql/develop/function"
+  }
+}

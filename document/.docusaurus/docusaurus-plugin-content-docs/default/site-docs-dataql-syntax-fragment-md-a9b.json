@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/syntax/fragment",
+  "id": "dataql/syntax/fragment",
+  "title": "k.代码片段",
+  "description": "DataQL 查询中使用其它语言，这个能力在 DataQL 被称作 代码片段。",
+  "source": "@site/docs/dataql/syntax/fragment.md",
+  "sourceDirName": "dataql/syntax",
+  "slug": "/dataql/syntax/fragment",
+  "permalink": "/docs/dataql/syntax/fragment",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/syntax/fragment.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 11,
+  "frontMatter": {
+    "id": "fragment",
+    "sidebar_position": 11,
+    "title": "k.代码片段",
+    "description": "DataQL 查询中使用其它语言，这个能力在 DataQL 被称作 代码片段。"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "j.函数",
+    "permalink": "/docs/dataql/syntax/function"
+  },
+  "next": {
+    "title": "a.介绍",
+    "permalink": "/docs/dataql/model/about"
+  }
+}

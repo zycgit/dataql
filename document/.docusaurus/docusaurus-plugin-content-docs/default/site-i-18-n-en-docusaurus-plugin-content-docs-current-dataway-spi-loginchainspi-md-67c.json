@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataway/spi/loginchainspi",
+  "id": "dataway/spi/loginchainspi",
+  "title": "d.LoginChainSpi",
+  "description": "DataQL Dataway SPI,LoginPerformChainSpi,LoginTokenChainSpi",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataway/spi/loginchainspi.md",
+  "sourceDirName": "dataway/spi",
+  "slug": "/dataway/spi/loginchainspi",
+  "permalink": "/en/docs/dataway/spi/loginchainspi",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataway/spi/loginchainspi.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "id": "loginchainspi",
+    "sidebar_position": 4,
+    "title": "d.LoginChainSpi",
+    "description": "DataQL Dataway SPI,LoginPerformChainSpi,LoginTokenChainSpi"
+  },
+  "sidebar": "dataway",
+  "previous": {
+    "title": "c.FxSqlCheckChainSpi",
+    "permalink": "/en/docs/dataway/spi/fxsqlcheckchainspi"
+  },
+  "next": {
+    "title": "e.LookupListener",
+    "permalink": "/en/docs/dataway/spi/lookuplistener"
+  }
+}

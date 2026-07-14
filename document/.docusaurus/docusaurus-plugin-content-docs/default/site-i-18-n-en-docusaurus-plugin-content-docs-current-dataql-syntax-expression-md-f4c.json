@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/syntax/expression",
+  "id": "dataql/syntax/expression",
+  "title": "e.表达式",
+  "description": "DataQL 具备完整的表达式计算能力，这使得数据在转换过程中在需要数值计算的情况上变得非常好用。",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataql/syntax/expression.md",
+  "sourceDirName": "dataql/syntax",
+  "slug": "/dataql/syntax/expression",
+  "permalink": "/en/docs/dataql/syntax/expression",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/syntax/expression.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 5,
+  "frontMatter": {
+    "id": "expression",
+    "sidebar_position": 5,
+    "title": "e.表达式",
+    "description": "DataQL 具备完整的表达式计算能力，这使得数据在转换过程中在需要数值计算的情况上变得非常好用。"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "d.语句",
+    "permalink": "/en/docs/dataql/syntax/statements"
+  },
+  "next": {
+    "title": "f.值域",
+    "permalink": "/en/docs/dataql/syntax/valuescope"
+  }
+}

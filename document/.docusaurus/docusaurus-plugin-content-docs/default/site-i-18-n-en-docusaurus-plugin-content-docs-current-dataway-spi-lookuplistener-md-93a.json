@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataway/spi/lookuplistener",
+  "id": "dataway/spi/lookuplistener",
+  "title": "e.LookupListener",
+  "description": "DataQL Dataway SPI,LookupConnectionListener,LookupDataSourceListener",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataway/spi/lookuplistener.md",
+  "sourceDirName": "dataway/spi",
+  "slug": "/dataway/spi/lookuplistener",
+  "permalink": "/en/docs/dataway/spi/lookuplistener",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataway/spi/lookuplistener.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 5,
+  "frontMatter": {
+    "id": "lookuplistener",
+    "sidebar_position": 5,
+    "title": "e.LookupListener",
+    "description": "DataQL Dataway SPI,LookupConnectionListener,LookupDataSourceListener"
+  },
+  "sidebar": "dataway",
+  "previous": {
+    "title": "d.LoginChainSpi",
+    "permalink": "/en/docs/dataway/spi/loginchainspi"
+  },
+  "next": {
+    "title": "f.PreExecuteChainSpi",
+    "permalink": "/en/docs/dataway/spi/preexecutechainspi"
+  }
+}

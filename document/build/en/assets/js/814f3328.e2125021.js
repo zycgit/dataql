@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdbvisitor_doc=self.webpackChunkdbvisitor_doc||[]).push([[2535],{5641:e=>{e.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"Dataway \u8ba9 Spring Boot \u4e0d\u518d\u9700\u8981 Controller\u3001Service\u3001DAO\u3001Mapper","permalink":"/en/blog/whydataway"}]}')}}]);

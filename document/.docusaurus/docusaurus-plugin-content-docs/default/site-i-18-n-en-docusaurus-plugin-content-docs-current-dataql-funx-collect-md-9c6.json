@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/funx/collect",
+  "id": "dataql/funx/collect",
+  "title": "b.集合函数库",
+  "description": "DataQL FunctionX库函数，集合函数库",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataql/funx/collect.md",
+  "sourceDirName": "dataql/funx",
+  "slug": "/dataql/funx/collect",
+  "permalink": "/en/docs/dataql/funx/collect",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/funx/collect.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "id": "collect",
+    "sidebar_position": 2,
+    "title": "b.集合函数库",
+    "description": "DataQL FunctionX库函数，集合函数库"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "a.转换函数库",
+    "permalink": "/en/docs/dataql/funx/convert"
+  },
+  "next": {
+    "title": "c.时间日历函数库",
+    "permalink": "/en/docs/dataql/funx/datetime"
+  }
+}

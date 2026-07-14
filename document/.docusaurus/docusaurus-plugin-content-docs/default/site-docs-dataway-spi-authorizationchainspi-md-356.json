@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataway/spi/authorizationchainspi",
+  "id": "dataway/spi/authorizationchainspi",
+  "title": "a.AuthorizationChainSpi",
+  "description": "DataQL Dataway SPI,AuthorizationChainSpi",
+  "source": "@site/docs/dataway/spi/authorizationchainspi.md",
+  "sourceDirName": "dataway/spi",
+  "slug": "/dataway/spi/authorizationchainspi",
+  "permalink": "/docs/dataway/spi/authorizationchainspi",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataway/spi/authorizationchainspi.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "id": "authorizationchainspi",
+    "sidebar_position": 1,
+    "title": "a.AuthorizationChainSpi",
+    "description": "DataQL Dataway SPI,AuthorizationChainSpi"
+  },
+  "sidebar": "dataway",
+  "previous": {
+    "title": "c.API 管理指南",
+    "permalink": "/docs/dataway/ui/apimanager"
+  },
+  "next": {
+    "title": "b.CompilerSpiListener",
+    "permalink": "/docs/dataway/spi/compilerspilistener"
+  }
+}

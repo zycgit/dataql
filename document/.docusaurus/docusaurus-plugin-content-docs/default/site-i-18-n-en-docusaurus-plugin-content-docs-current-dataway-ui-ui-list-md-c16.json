@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataway/ui/ui-list",
+  "id": "dataway/ui/ui-list",
+  "title": "a.UI 列表页",
+  "description": "DataQL Dataway UI 列表页。",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataway/ui/ui-list.md",
+  "sourceDirName": "dataway/ui",
+  "slug": "/dataway/ui/ui-list",
+  "permalink": "/en/docs/dataway/ui/ui-list",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataway/ui/ui-list.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "id": "ui-list",
+    "sidebar_position": 1,
+    "title": "a.UI 列表页",
+    "description": "DataQL Dataway UI 列表页。"
+  },
+  "sidebar": "dataway",
+  "previous": {
+    "title": "a.在程序中调用",
+    "permalink": "/en/docs/dataway/func/use-in-program"
+  },
+  "next": {
+    "title": "b.UI 新建/编辑页",
+    "permalink": "/en/docs/dataway/ui/ui-editor"
+  }
+}

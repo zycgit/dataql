@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/develop/instruction",
+  "id": "dataql/develop/instruction",
+  "title": "e.指令系统",
+  "description": "DataQL 开发手册，QIL 指令集、构造指令、存储指令、结束指令、运算指令、控制指令、函数指令、辅助指令",
+  "source": "@site/docs/dataql/develop/instruction.md",
+  "sourceDirName": "dataql/develop",
+  "slug": "/dataql/develop/instruction",
+  "permalink": "/docs/dataql/develop/instruction",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/develop/instruction.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 7,
+  "frontMatter": {
+    "id": "instruction",
+    "sidebar_position": 7,
+    "title": "e.指令系统",
+    "description": "DataQL 开发手册，QIL 指令集、构造指令、存储指令、结束指令、运算指令、控制指令、函数指令、辅助指令"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "d.外部代码片段",
+    "permalink": "/docs/dataql/develop/fragment"
+  },
+  "next": {
+    "title": "a.SQL执行器",
+    "permalink": "/docs/dataql/sql/about"
+  }
+}

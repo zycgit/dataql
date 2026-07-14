@@ -1,0 +1,26 @@
+{
+  "unversionedId": "dataway/spi/resultprocesschainspi",
+  "id": "dataway/spi/resultprocesschainspi",
+  "title": "g.ResultProcessChainSpi",
+  "description": "DataQL Dataway SPI,ResultProcessChainSpi",
+  "source": "@site/docs/dataway/spi/resultprocesschainspi.md",
+  "sourceDirName": "dataway/spi",
+  "slug": "/dataway/spi/resultprocesschainspi",
+  "permalink": "/docs/dataway/spi/resultprocesschainspi",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataway/spi/resultprocesschainspi.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 7,
+  "frontMatter": {
+    "id": "resultprocesschainspi",
+    "sidebar_position": 7,
+    "title": "g.ResultProcessChainSpi",
+    "description": "DataQL Dataway SPI,ResultProcessChainSpi"
+  },
+  "sidebar": "dataway",
+  "previous": {
+    "title": "f.PreExecuteChainSpi",
+    "permalink": "/docs/dataway/spi/preexecutechainspi"
+  }
+}

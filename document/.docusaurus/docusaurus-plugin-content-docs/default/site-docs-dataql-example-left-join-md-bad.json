@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/example/left_join",
+  "id": "dataql/example/left_join",
+  "title": "连接两个数据集(left join)",
+  "description": "DataQL 样例集锦，通过 DataQL 查询实现将两个数据集以 left join 的形式连接到一起成为一个集合数据",
+  "source": "@site/docs/dataql/example/left_join.md",
+  "sourceDirName": "dataql/example",
+  "slug": "/dataql/example/left_join",
+  "permalink": "/docs/dataql/example/left_join",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/example/left_join.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 6,
+  "frontMatter": {
+    "id": "left_join",
+    "sidebar_position": 6,
+    "title": "连接两个数据集(left join)",
+    "description": "DataQL 样例集锦，通过 DataQL 查询实现将两个数据集以 left join 的形式连接到一起成为一个集合数据"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "行列转换（行数量任意）",
+    "permalink": "/docs/dataql/example/row_to_col"
+  },
+  "next": {
+    "title": "集合分组",
+    "permalink": "/docs/dataql/example/group_by"
+  }
+}

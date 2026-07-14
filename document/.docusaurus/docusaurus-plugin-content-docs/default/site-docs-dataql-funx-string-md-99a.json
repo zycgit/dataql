@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/funx/string",
+  "id": "dataql/funx/string",
+  "title": "e.字符串函数库",
+  "description": "DataQL FunctionX库函数，字符串函数库",
+  "source": "@site/docs/dataql/funx/string.md",
+  "sourceDirName": "dataql/funx",
+  "slug": "/dataql/funx/string",
+  "permalink": "/docs/dataql/funx/string",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/funx/string.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 5,
+  "frontMatter": {
+    "id": "string",
+    "sidebar_position": 5,
+    "title": "e.字符串函数库",
+    "description": "DataQL FunctionX库函数，字符串函数库"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "d.Json函数库",
+    "permalink": "/docs/dataql/funx/json"
+  },
+  "next": {
+    "title": "f.状态函数库",
+    "permalink": "/docs/dataql/funx/state"
+  }
+}

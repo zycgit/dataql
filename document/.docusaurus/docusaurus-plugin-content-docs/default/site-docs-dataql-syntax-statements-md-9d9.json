@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/syntax/statements",
+  "id": "dataql/syntax/statements",
+  "title": "d.语句",
+  "description": "DataQL 一共有 8 种语句、var语句、run语句、return语句、throw语句、exit语句、if语句、else语句、hint语句、import语句",
+  "source": "@site/docs/dataql/syntax/statements.md",
+  "sourceDirName": "dataql/syntax",
+  "slug": "/dataql/syntax/statements",
+  "permalink": "/docs/dataql/syntax/statements",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/syntax/statements.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "id": "statements",
+    "sidebar_position": 4,
+    "title": "d.语句",
+    "description": "DataQL 一共有 8 种语句、var语句、run语句、return语句、throw语句、exit语句、if语句、else语句、hint语句、import语句"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "c.数值",
+    "permalink": "/docs/dataql/syntax/numbers"
+  },
+  "next": {
+    "title": "e.表达式",
+    "permalink": "/docs/dataql/syntax/expression"
+  }
+}

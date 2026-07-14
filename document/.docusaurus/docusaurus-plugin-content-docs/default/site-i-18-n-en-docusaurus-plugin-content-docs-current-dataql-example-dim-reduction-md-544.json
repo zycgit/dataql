@@ -1,0 +1,26 @@
+{
+  "unversionedId": "dataql/example/dim_reduction",
+  "id": "dataql/example/dim_reduction",
+  "title": "高维数组降维",
+  "description": "DataQL 样例集锦，通过 DataQL 查询将一个高维数组降维降级为一维数组",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataql/example/dim_reduction.md",
+  "sourceDirName": "dataql/example",
+  "slug": "/dataql/example/dim_reduction",
+  "permalink": "/en/docs/dataql/example/dim_reduction",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/example/dim_reduction.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 8,
+  "frontMatter": {
+    "id": "dim_reduction",
+    "sidebar_position": 8,
+    "title": "高维数组降维",
+    "description": "DataQL 样例集锦，通过 DataQL 查询将一个高维数组降维降级为一维数组"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "集合分组",
+    "permalink": "/en/docs/dataql/example/group_by"
+  }
+}

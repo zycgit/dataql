@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/sql/MyBatis",
+  "id": "dataql/sql/MyBatis",
+  "title": "d.MyBatis执行器",
+  "description": "DataQL的 MyBatis执行器，@@MyBatis 扩展可以执行部分 MyBatis标签、DataQL 动态SQL执行器",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataql/sql/mybaits.md",
+  "sourceDirName": "dataql/sql",
+  "slug": "/dataql/sql/MyBatis",
+  "permalink": "/en/docs/dataql/sql/MyBatis",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/sql/mybaits.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "id": "MyBatis",
+    "sidebar_position": 4,
+    "title": "d.MyBatis执行器",
+    "description": "DataQL的 MyBatis执行器，@@MyBatis 扩展可以执行部分 MyBatis标签、DataQL 动态SQL执行器"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "c.配置和方言",
+    "permalink": "/en/docs/dataql/sql/dialect"
+  },
+  "next": {
+    "title": "a.转换函数库",
+    "permalink": "/en/docs/dataql/funx/convert"
+  }
+}

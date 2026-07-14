@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/example/like_for",
+  "id": "dataql/example/like_for",
+  "title": "仿for循环遍历",
+  "description": "DataQL 样例集锦，通过 DataQL 查询模拟一个for循环遍历",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataql/example/like_for.md",
+  "sourceDirName": "dataql/example",
+  "slug": "/dataql/example/like_for",
+  "permalink": "/en/docs/dataql/example/like_for",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/example/like_for.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "id": "like_for",
+    "sidebar_position": 3,
+    "title": "仿for循环遍历",
+    "description": "DataQL 样例集锦，通过 DataQL 查询模拟一个for循环遍历"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "为数据集进行排名",
+    "permalink": "/en/docs/dataql/example/dataset_ranking"
+  },
+  "next": {
+    "title": "生成 Tree 结构",
+    "permalink": "/en/docs/dataql/example/build_tree"
+  }
+}

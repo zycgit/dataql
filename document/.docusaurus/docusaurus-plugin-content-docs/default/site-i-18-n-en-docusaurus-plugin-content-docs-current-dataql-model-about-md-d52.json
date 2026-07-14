@@ -1,0 +1,30 @@
+{
+  "unversionedId": "dataql/model/about",
+  "id": "dataql/model/about",
+  "title": "a.介绍",
+  "description": "DataQL 数据模型、ListModel模型、数据模型介绍",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/dataql/model/about.md",
+  "sourceDirName": "dataql/model",
+  "slug": "/dataql/model/about",
+  "permalink": "/en/docs/dataql/model/about",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/dataql/model/about.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "id": "about",
+    "sidebar_position": 1,
+    "title": "a.介绍",
+    "description": "DataQL 数据模型、ListModel模型、数据模型介绍"
+  },
+  "sidebar": "engine",
+  "previous": {
+    "title": "k.代码片段",
+    "permalink": "/en/docs/dataql/syntax/fragment"
+  },
+  "next": {
+    "title": "b.ValueModel",
+    "permalink": "/en/docs/dataql/model/value"
+  }
+}

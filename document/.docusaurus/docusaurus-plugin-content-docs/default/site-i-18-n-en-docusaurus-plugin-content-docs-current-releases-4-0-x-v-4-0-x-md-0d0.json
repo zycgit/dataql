@@ -1,0 +1,27 @@
+{
+  "unversionedId": "releases/4.0.x/v4.0.x",
+  "id": "releases/4.0.x/v4.0.x",
+  "title": "v4.0.x (2019-05-09~31)",
+  "description": "跟随其它项目更新，涉及的版本",
+  "source": "@site/i18n/en/docusaurus-plugin-content-docs/current/releases/4.0.x/v4.0.x.md",
+  "sourceDirName": "releases/4.0.x",
+  "slug": "/releases/4.0.x/v4.0.x",
+  "permalink": "/en/docs/releases/4.0.x/v4.0.x",
+  "draft": false,
+  "editUrl": "https://gitee.com/zycgit/dataql-doc/tree/master/docs/releases/4.0.x/v4.0.x.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {
+    "id": "v4.0.x",
+    "title": "v4.0.x (2019-05-09~31)"
+  },
+  "sidebar": "releases",
+  "previous": {
+    "title": "v4.0.x",
+    "permalink": "/en/docs/category/v40x"
+  },
+  "next": {
+    "title": "v3.2.x",
+    "permalink": "/en/docs/category/v32x"
+  }
+}
