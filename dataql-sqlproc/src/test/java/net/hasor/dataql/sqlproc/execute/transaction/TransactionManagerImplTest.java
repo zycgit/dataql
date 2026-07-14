@@ -12,15 +12,15 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class TransactionManagerImplTest {
-    private String                        jdbcUrl;
-    private TransactionConnectionProvider connectionProvider;
-    private TransactionManager            transactionManager;
+    private String              jdbcUrl;
+    private TransactionProvider connectionProvider;
+    private TransactionManager  transactionManager;
 
     @Before
     public void setupDatabase() throws Exception {
         this.jdbcUrl = "jdbc:h2:mem:manager_" + UUID.randomUUID().toString().replace("-", "") + ";DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=2000";
         ConnectionProvider provider = (name, hints) -> this.rawConnection();
-        this.connectionProvider = new TransactionConnectionProvider(provider);
+        this.connectionProvider = new TransactionProvider(provider);
         this.transactionManager = this.connectionProvider.findTransactionManager(null);
         try (Connection connection = this.rawConnection(); Statement statement = connection.createStatement()) {
             statement.execute("CREATE TABLE tx_item (id BIGINT AUTO_INCREMENT PRIMARY KEY, label VARCHAR(100))");

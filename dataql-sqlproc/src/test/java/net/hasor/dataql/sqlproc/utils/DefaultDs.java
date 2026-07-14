@@ -22,6 +22,7 @@ import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Logger;
 
 public class DefaultDs implements DataSource, Closeable {
     private String                              url;
@@ -72,8 +73,8 @@ public class DefaultDs implements DataSource, Closeable {
     }
 
     @Override
-    public java.util.logging.Logger getParentLogger() {
-        return java.util.logging.Logger.getLogger(java.util.logging.Logger.GLOBAL_LOGGER_NAME);
+    public Logger getParentLogger() {
+        return Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     }
 
     public String getUrl() {

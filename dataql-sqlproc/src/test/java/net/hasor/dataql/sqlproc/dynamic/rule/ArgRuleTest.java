@@ -28,7 +28,7 @@ public class ArgRuleTest {
 
         //
         Map<String, Object> ctx2 = CollectionUtils.asMap("name", "abc");
-        PlanDynamicSql segment2 = DynamicParsed.getParsedSql("#{name,mode=out,jdbcType=123,typeHandler=net.hasor.dataql.sqlproc.types.number.ShortTypeHandler}");
+        PlanDynamicSql segment2 = DynamicParsed.getParsedSql("#{name,mode=out,jdbcType=123,typeHandler=" + ShortTypeHandler.class.getName() + "}");
         SqlBuilder sqlBuilder2 = segment2.buildQuery(ctx2, new TestQueryContext());
         assert sqlBuilder2.getSqlString().equals("?");
         assert sqlBuilder2.getArgs().length == 1;
@@ -50,7 +50,7 @@ public class ArgRuleTest {
     @Test
     public void ruleTest_7() throws SQLException {
         Map<String, Object> ctx = CollectionUtils.asMap("name", "abc");
-        PlanDynamicSql segment = DynamicParsed.getParsedSql("#{name,mode=out,jdbcType=123,typeHandler=net.hasor.dataql.sqlproc.types.string.StringTypeHandler}");
+        PlanDynamicSql segment = DynamicParsed.getParsedSql("#{name,mode=out,jdbcType=123,typeHandler=" + StringTypeHandler.class.getName() + "}");
 
         SqlBuilder sqlBuilder1 = segment.buildQuery(ctx, new TestQueryContext());
         assert sqlBuilder1.getSqlString().equals("?");

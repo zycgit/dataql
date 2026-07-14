@@ -2,13 +2,14 @@ package net.hasor.dataql.sqlproc.types.handler;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.Year;
 import net.hasor.dataql.sqlproc.types.time.SqlTimestampAsYearTypeHandler;
 import org.junit.Test;
 
 public class SqlTimestampAsYearTypeHandlerTest extends TypeHandlerMockSupport {
     @Test
     public void testYear() throws Throwable {
-        java.time.Year val = java.time.Year.now();
+        Year val = Year.now();
         try (PreparedStatement ps = conn.prepareStatement("insert into tb_h2_types (c_timestamp) values (?)")) {
             new SqlTimestampAsYearTypeHandler().setParameter(ps, 1, val, null);
             ps.executeUpdate();
@@ -17,7 +18,7 @@ public class SqlTimestampAsYearTypeHandlerTest extends TypeHandlerMockSupport {
             try (ResultSet rs = ps.executeQuery()) {
                 rs.next();
                 Object res = new SqlTimestampAsYearTypeHandler().getResult(rs, 1);
-                assert res instanceof java.time.Year;
+                assert res instanceof Year;
                 assert val.equals(res);
             }
         }

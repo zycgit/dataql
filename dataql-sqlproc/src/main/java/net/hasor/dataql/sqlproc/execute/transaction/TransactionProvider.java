@@ -22,11 +22,11 @@ import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
  * Coordinates SQL fragment connections and transaction managers by datasource name.
  * Transaction state is bound to the current thread.
  */
-public class TransactionConnectionProvider implements ConnectionProvider, Closeable {
+public class TransactionProvider implements ConnectionProvider, Closeable {
     private final ConnectionProvider                               delegate;
     private final ThreadLocal<Map<String, TransactionManagerImpl>> contexts = ThreadLocal.withInitial(HashMap::new);
 
-    public TransactionConnectionProvider(ConnectionProvider delegate) {
+    public TransactionProvider(ConnectionProvider delegate) {
         this.delegate = Objects.requireNonNull(delegate, "connectionProvider is null.");
     }
 

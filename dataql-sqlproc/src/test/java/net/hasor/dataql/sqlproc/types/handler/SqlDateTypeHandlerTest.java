@@ -1,6 +1,7 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.sql.CallableStatement;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.HashMap;
@@ -13,7 +14,7 @@ public class SqlDateTypeHandlerTest extends TypeHandlerMockSupport {
     public void testSqlDateTypeHandler_CallableStatement() throws Throwable {
         SqlDateTypeHandler handler = new SqlDateTypeHandler();
         Map<String, Object> values = new HashMap<>();
-        java.sql.Date val = new java.sql.Date(System.currentTimeMillis());
+        Date val = new Date(System.currentTimeMillis());
         values.put("getDate", val);
 
         CallableStatement cs = mockCallableStatement(values);
@@ -23,7 +24,7 @@ public class SqlDateTypeHandlerTest extends TypeHandlerMockSupport {
 
     @Test
     public void testSqlDate() throws Throwable {
-        java.sql.Date val = new java.sql.Date(System.currentTimeMillis());
+        Date val = new Date(System.currentTimeMillis());
         try (PreparedStatement ps = conn.prepareStatement("insert into tb_h2_types (c_date) values (?)")) {
             new SqlDateTypeHandler().setParameter(ps, 1, val, null);
             ps.executeUpdate();
@@ -32,7 +33,7 @@ public class SqlDateTypeHandlerTest extends TypeHandlerMockSupport {
             try (ResultSet rs = ps.executeQuery()) {
                 rs.next();
                 Object res = new SqlDateTypeHandler().getResult(rs, 1);
-                assert res instanceof java.sql.Date;
+                assert res instanceof Date;
                 assert val.toString().equals(res.toString()); // Date comparison loose
             }
         }

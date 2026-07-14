@@ -1,4 +1,5 @@
 package net.hasor.dataql.kernel;
+import net.hasor.dataql.host.HostConfiguration;
 import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataql.kernel.CustomizeScope;
 import net.hasor.dataql.kernel.Finder;
@@ -213,7 +214,7 @@ public class RouRuntimeTest extends AbstractTestResource implements HintValue {
         //
         QueryModel queryModel = CompilerHelper.queryParser("return list[2]");
         QIL qil = CompilerHelper.queryCompiler(queryModel, arguments, ClassPathResourceLoader.INSTANCE);
-        Query query = new QueryManager().createQuery(qil);
+        Query query = new QueryManager(new HostConfiguration().getHostContext()).newBuilder().createQuery(qil);
         //
         query.addShareVar("list", Arrays.asList("a", "b", "c", "d"));
         DataModel dataModel = query.execute().getData();

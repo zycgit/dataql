@@ -1,5 +1,7 @@
 package net.hasor.dataql.sqlproc.types.handler;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.Array;
 import java.sql.CallableStatement;
@@ -34,11 +36,11 @@ public class ArrayTypeHandlerTest extends TypeHandlerMockSupport {
 
     private ResultSet mockResultSetForArray(Object[] content) {
         // A simple Mock ResultSet that iterates over content
-        return (ResultSet) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[] { ResultSet.class }, new java.lang.reflect.InvocationHandler() {
+        return (ResultSet) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[] { ResultSet.class }, new InvocationHandler() {
             int index = -1;
 
             @Override
-            public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args) throws Throwable {
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                 if ("next".equals(method.getName())) {
                     index++;
                     return index < content.length;

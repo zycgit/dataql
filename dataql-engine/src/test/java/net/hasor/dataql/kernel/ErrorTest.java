@@ -1,13 +1,12 @@
 package net.hasor.dataql.kernel;
 import net.hasor.dataql.ConfigOption;
+import net.hasor.dataql.host.HostConfiguration;
+import net.hasor.dataql.host.QueryBuilder;
 import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataql.AbstractTestResource;
 import net.hasor.dataql.domain.DataModel;
 import net.hasor.dataql.domain.ValueModel;
 import net.hasor.dataql.compiler.CompilerArguments;
-import net.hasor.dataql.kernel.QueryRuntimeException;
-import net.hasor.dataql.kernel.ThrowRuntimeException;
-import net.hasor.dataql.host.QueryManager;
 import net.hasor.test.dataql.udfs.ErrorUdf;
 import org.junit.Test;
 
@@ -15,11 +14,11 @@ public class ErrorTest extends AbstractTestResource {
     @Test
     public void udf_error() throws QueryRuntimeException {
         String qlString = "";
-        qlString = qlString + "import 'net.hasor.test.dataql.udfs.ErrorUdf' as err;\n";
+        qlString = qlString + "import '" + ErrorUdf.class.getName() + "' as err;\n";
         qlString = qlString + "return err(a)";
         //
         try {
-            QueryManager dataQL = new QueryManager();
+            QueryBuilder dataQL = new QueryManager(new HostConfiguration().getHostContext()).newBuilder();
             DataModel dataModel = dataQL.createQuery(qlString).execute().getData();
             assert false;
         } catch (Exception e) {
@@ -36,7 +35,7 @@ public class ErrorTest extends AbstractTestResource {
         qlString = qlString + "var abc = err(); return 12345";
         //
         try {
-            QueryManager dataQL = new QueryManager();
+            QueryBuilder dataQL = new QueryManager(new HostConfiguration().getHostContext()).newBuilder();
             dataQL.configOption(ConfigOption.CODE_LOCATION, CompilerArguments.CodeLocationEnum.TERM);
             DataModel dataModel = dataQL.createQuery(qlString).execute().getData();
             assert false;
@@ -55,7 +54,7 @@ public class ErrorTest extends AbstractTestResource {
         qlString = qlString + "return null / dat1";
         //
         try {
-            QueryManager dataQL = new QueryManager();
+            QueryBuilder dataQL = new QueryManager(new HostConfiguration().getHostContext()).newBuilder();
             dataQL.configOption(ConfigOption.CODE_LOCATION, CompilerArguments.CodeLocationEnum.TERM);
             DataModel dataModel = dataQL.createQuery(qlString).execute().getData();
             assert false;

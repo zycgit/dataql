@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package net.hasor.dataql.sqlproc.dynamic.rule;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +45,7 @@ public class TestQueryContext implements ExecuteContext {
     }
 
     @Override
-    public java.sql.Connection findConnection(String sourceName, Hints hints) throws SQLException {
+    public Connection findConnection(String sourceName, Hints hints) throws SQLException {
         throw new SQLException("connection '" + sourceName + "' not configured");
     }
 

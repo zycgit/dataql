@@ -4,6 +4,7 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import net.hasor.dataql.sqlproc.types.time.SqlTimestampAsDateTypeHandler;
@@ -19,13 +20,13 @@ public class SqlTimestampAsDateTypeHandlerTest extends TypeHandlerMockSupport {
 
         CallableStatement cs = mockCallableStatement(values);
         Object result = handler.getResult(cs, 1);
-        assert result instanceof java.util.Date;
-        assert val.getTime() == ((java.util.Date) result).getTime();
+        assert result instanceof Date;
+        assert val.getTime() == ((Date) result).getTime();
     }
 
     @Test
     public void testUtilDate() throws Throwable {
-        java.util.Date val = new java.util.Date();
+        Date val = new Date();
         try (PreparedStatement ps = conn.prepareStatement("insert into tb_h2_types (c_timestamp) values (?)")) {
             new SqlTimestampAsDateTypeHandler().setParameter(ps, 1, val, null);
             ps.executeUpdate();
@@ -34,9 +35,9 @@ public class SqlTimestampAsDateTypeHandlerTest extends TypeHandlerMockSupport {
             try (ResultSet rs = ps.executeQuery()) {
                 rs.next();
                 Object res = new SqlTimestampAsDateTypeHandler().getResult(rs, 1);
-                assert res instanceof java.util.Date;
+                assert res instanceof Date;
                 // Timestamp to Date might have precision issues or milliseconds
-                assert Math.abs(val.getTime() - ((java.util.Date) res).getTime()) < 1000;
+                assert Math.abs(val.getTime() - ((Date) res).getTime()) < 1000;
             }
         }
     }

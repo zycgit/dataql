@@ -111,7 +111,7 @@ public class QueryTypeDataQLHintTest extends AbstractSqlProcTest {
     private QueryBuilder dataQL() {
         HostConfiguration configuration = new HostConfiguration();
         configuration.addAttachment(ConnectionProvider.class, (name, hints) -> rawConnection());
-        return new QueryManager().newBuilder(configuration.getHostContext());
+        return new QueryManager(configuration.getHostContext()).newBuilder();
     }
 
     private Connection rawConnection() throws SQLException {

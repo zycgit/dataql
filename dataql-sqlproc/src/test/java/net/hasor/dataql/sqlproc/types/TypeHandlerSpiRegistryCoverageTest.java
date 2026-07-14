@@ -23,7 +23,7 @@ public class TypeHandlerSpiRegistryCoverageTest {
         // JDBC type mappings
         assert TypeHandlerRegistry.toSqlType(String.class) == Types.VARCHAR;
         assert TypeHandlerRegistry.toSqlType(Integer.class) == Types.INTEGER;
-        assert TypeHandlerRegistry.toSqlType("java.lang.String") == Types.VARCHAR;
+        assert TypeHandlerRegistry.toSqlType(String.class.getName()) == Types.VARCHAR;
         assert TypeHandlerRegistry.toSqlType(System.class) == Types.OTHER;
     }
 

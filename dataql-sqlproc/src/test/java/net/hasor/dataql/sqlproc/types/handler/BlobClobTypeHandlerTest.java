@@ -8,6 +8,7 @@ import java.util.Map;
 import net.hasor.dataql.sqlproc.types.bytes.BlobAsBytesTypeHandler;
 import net.hasor.dataql.sqlproc.types.bytes.BlobAsBytesWrapTypeHandler;
 import net.hasor.dataql.sqlproc.types.string.ClobAsStringTypeHandler;
+import net.hasor.dataql.sqlproc.types.string.NClobAsStringTypeHandler;
 import org.junit.Test;
 
 public class BlobClobTypeHandlerTest extends TypeHandlerMockSupport {
@@ -57,7 +58,7 @@ public class BlobClobTypeHandlerTest extends TypeHandlerMockSupport {
 
     @Test
     public void testNClobAsStringTypeHandler_CallableStatement() throws Throwable {
-        net.hasor.dataql.sqlproc.types.string.NClobAsStringTypeHandler handler = new net.hasor.dataql.sqlproc.types.string.NClobAsStringTypeHandler();
+        NClobAsStringTypeHandler handler = new NClobAsStringTypeHandler();
         Map<String, Object> values = new HashMap<>();
         String val = "nclob-test";
 

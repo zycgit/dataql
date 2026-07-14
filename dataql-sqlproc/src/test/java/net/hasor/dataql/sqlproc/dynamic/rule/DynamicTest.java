@@ -221,7 +221,7 @@ public class DynamicTest {
                 "abc = #{name}",         //
                 "abc = ?");
         assertRule(Arrays.asList("eventType"),//
-                "abc = #{eventType,javaType=java.lang.Integer}",//
+                "abc = #{eventType,javaType=" + Integer.class.getName() + "}",//
                 "abc = ?");
 
         //arg2
@@ -230,7 +230,7 @@ public class DynamicTest {
                 "abc = ? and cba = ?");
 
         //expr
-        String sql = "abc = #{eventType,mode=INOUT,jdbcType=INT,typeHandler=net.hasor.dataql.sqlproc.dynamic.rule.dto.MyTypeHandler}";
+        String sql = "abc = #{eventType,mode=INOUT,jdbcType=INT,typeHandler=" + MyTypeHandler.class.getName() + "}";
         PlanDynamicSql segment = DynamicParsed.getParsedSql(sql);
         Map<String, Object> ctx = CollectionUtils.asMap("eventType", "12345");
         SqlBuilder sqlBuilder = segment.buildQuery(ctx, new TestQueryContext());

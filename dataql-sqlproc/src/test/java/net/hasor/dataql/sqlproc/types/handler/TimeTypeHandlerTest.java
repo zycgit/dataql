@@ -2,8 +2,10 @@ package net.hasor.dataql.sqlproc.types.handler;
 
 import java.lang.reflect.Proxy;
 import java.sql.CallableStatement;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.*;
 import java.time.chrono.JapaneseDate;
@@ -13,12 +15,16 @@ import net.hasor.dataql.sqlproc.types.time.*;
 import org.junit.Test;
 
 public class TimeTypeHandlerTest extends TypeHandlerMockSupport {
+    private static long getTime(Object value) throws ReflectiveOperationException {
+        return (Long) value.getClass().getMethod("getTime").invoke(value);
+    }
+
 
     @Test
     public void testSqlDateTypeHandler_CallableStatement() throws Throwable {
         SqlDateTypeHandler handler = new SqlDateTypeHandler();
         Map<String, Object> values = new HashMap<>();
-        java.sql.Date val = new java.sql.Date(System.currentTimeMillis());
+        Date val = new Date(System.currentTimeMillis());
         values.put("getDate", val);
 
         CallableStatement cs = mockCallableStatement(values);
@@ -35,8 +41,8 @@ public class TimeTypeHandlerTest extends TypeHandlerMockSupport {
 
         CallableStatement cs = mockCallableStatement(values);
         Object result = handler.getResult(cs, 1);
-        assert result instanceof java.util.Date;
-        assert val.getTime() == ((java.util.Date) result).getTime();
+        assert result != null;
+        assert val.getTime() == getTime(result);
     }
 
     @Test
@@ -55,7 +61,7 @@ public class TimeTypeHandlerTest extends TypeHandlerMockSupport {
     public void testSqlTimeTypeHandler_CallableStatement() throws Throwable {
         SqlTimeTypeHandler handler = new SqlTimeTypeHandler();
         Map<String, Object> values = new HashMap<>();
-        java.sql.Time val = new java.sql.Time(System.currentTimeMillis());
+        Time val = new Time(System.currentTimeMillis());
         values.put("getTime", val);
 
         CallableStatement cs = mockCallableStatement(values);
@@ -65,7 +71,7 @@ public class TimeTypeHandlerTest extends TypeHandlerMockSupport {
 
     @Test
     public void testSqlDate() throws Throwable {
-        java.sql.Date val = new java.sql.Date(System.currentTimeMillis());
+        Date val = new Date(System.currentTimeMillis());
         try (PreparedStatement ps = conn.prepareStatement("insert into tb_h2_types (c_date) values (?)")) {
             new SqlDateTypeHandler().setParameter(ps, 1, val, null);
             ps.executeUpdate();
@@ -74,7 +80,7 @@ public class TimeTypeHandlerTest extends TypeHandlerMockSupport {
             try (ResultSet rs = ps.executeQuery()) {
                 rs.next();
                 Object res = new SqlDateTypeHandler().getResult(rs, 1);
-                assert res instanceof java.sql.Date;
+                assert res instanceof Date;
                 assert val.toString().equals(res.toString()); // Date comparison loose
             }
         }
@@ -82,7 +88,7 @@ public class TimeTypeHandlerTest extends TypeHandlerMockSupport {
 
     @Test
     public void testUtilDate() throws Throwable {
-        java.util.Date val = new java.util.Date();
+        Timestamp val = new Timestamp(System.currentTimeMillis());
         try (PreparedStatement ps = conn.prepareStatement("insert into tb_h2_types (c_timestamp) values (?)")) {
             new SqlTimestampAsDateTypeHandler().setParameter(ps, 1, val, null);
             ps.executeUpdate();
@@ -91,9 +97,9 @@ public class TimeTypeHandlerTest extends TypeHandlerMockSupport {
             try (ResultSet rs = ps.executeQuery()) {
                 rs.next();
                 Object res = new SqlTimestampAsDateTypeHandler().getResult(rs, 1);
-                assert res instanceof java.util.Date;
+                assert res != null;
                 // Timestamp to Date might have precision issues or milliseconds
-                assert Math.abs(val.getTime() - ((java.util.Date) res).getTime()) < 1000;
+                assert Math.abs(val.getTime() - getTime(res)) < 1000;
             }
         }
     }
@@ -154,7 +160,7 @@ public class TimeTypeHandlerTest extends TypeHandlerMockSupport {
 
     @Test
     public void testYear() throws Throwable {
-        java.time.Year val = java.time.Year.now();
+        Year val = Year.now();
         try (PreparedStatement ps = conn.prepareStatement("insert into tb_h2_types (c_timestamp) values (?)")) {
             new SqlTimestampAsYearTypeHandler().setParameter(ps, 1, val, null);
             ps.executeUpdate();
@@ -163,7 +169,7 @@ public class TimeTypeHandlerTest extends TypeHandlerMockSupport {
             try (ResultSet rs = ps.executeQuery()) {
                 rs.next();
                 Object res = new SqlTimestampAsYearTypeHandler().getResult(rs, 1);
-                assert res instanceof java.time.Year;
+                assert res instanceof Year;
                 assert val.equals(res);
             }
         }
@@ -171,7 +177,7 @@ public class TimeTypeHandlerTest extends TypeHandlerMockSupport {
 
     @Test
     public void testMonth() throws Throwable {
-        java.time.Month val = java.time.Month.MAY;
+        Month val = Month.MAY;
         try (PreparedStatement ps = conn.prepareStatement("insert into tb_h2_types (c_timestamp) values (?)")) {
             new SqlTimestampAsMonthTypeHandler().setParameter(ps, 1, val, null);
             ps.executeUpdate();
@@ -180,7 +186,7 @@ public class TimeTypeHandlerTest extends TypeHandlerMockSupport {
             try (ResultSet rs = ps.executeQuery()) {
                 rs.next();
                 Object res = new SqlTimestampAsMonthTypeHandler().getResult(rs, 1);
-                assert res instanceof java.time.Month;
+                assert res instanceof Month;
                 assert val.equals(res);
             }
         }
@@ -190,7 +196,7 @@ public class TimeTypeHandlerTest extends TypeHandlerMockSupport {
     public void testJapaneseDateAsSqlDate() throws Throwable {
         JapaneseDateAsSqlDateTypeHandler handler = new JapaneseDateAsSqlDateTypeHandler();
         Map<String, Object> values = new HashMap<>();
-        java.sql.Date sqlDate = java.sql.Date.valueOf(LocalDate.now());
+        Date sqlDate = Date.valueOf(LocalDate.now());
         values.put("getDate", sqlDate);
 
         CallableStatement cs = mockCallableStatement(values);
@@ -320,23 +326,23 @@ public class TimeTypeHandlerTest extends TypeHandlerMockSupport {
 
         // Static helpers
         assert JapaneseDateAsSqlDateTypeHandler.toJapaneseDate(null) == null;
-        assert JapaneseDateAsSqlDateTypeHandler.toJapaneseDate((java.util.Date) null) == null;
+        assert JapaneseDateAsSqlDateTypeHandler.toJapaneseDate((Timestamp) null) == null;
 
-        java.sql.Date sqlDate = java.sql.Date.valueOf(LocalDate.of(2023, 1, 1));
+        Date sqlDate = Date.valueOf(LocalDate.of(2023, 1, 1));
         assert JapaneseDateAsSqlDateTypeHandler.toJapaneseDate(sqlDate).toString().equals(JapaneseDate.from(LocalDate.of(2023, 1, 1)).toString());
-        assert JapaneseDateAsSqlDateTypeHandler.toJapaneseDate(new java.util.Date(sqlDate.getTime())).toString().equals(JapaneseDate.from(LocalDate.of(2023, 1, 1)).toString());
+        assert JapaneseDateAsSqlDateTypeHandler.toJapaneseDate(new Timestamp(sqlDate.getTime())).toString().equals(JapaneseDate.from(LocalDate.of(2023, 1, 1)).toString());
 
         // setParameter
         Map<Integer, Object> captured = new HashMap<>();
         PreparedStatement ps = mockPreparedStatement(captured);
         JapaneseDate jDate = JapaneseDate.from(LocalDate.of(2022, 2, 2));
         handler.setParameter(ps, 1, jDate, null);
-        assert captured.get(1) instanceof java.sql.Date;
+        assert captured.get(1) instanceof Date;
         assert captured.get(1).toString().equals("2022-02-02");
 
         // getResult
         Map<String, Object> values = new HashMap<>();
-        values.put("getDate", java.sql.Date.valueOf("2023-03-03"));
+        values.put("getDate", Date.valueOf("2023-03-03"));
         ResultSet rs = mockResultSet(values);
         JapaneseDate res = (JapaneseDate) handler.getResult(rs, 1);
         assert res.equals(JapaneseDate.from(LocalDate.of(2023, 3, 3)));

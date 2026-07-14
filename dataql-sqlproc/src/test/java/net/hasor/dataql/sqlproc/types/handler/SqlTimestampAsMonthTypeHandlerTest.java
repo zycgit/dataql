@@ -2,13 +2,14 @@ package net.hasor.dataql.sqlproc.types.handler;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.Month;
 import net.hasor.dataql.sqlproc.types.time.SqlTimestampAsMonthTypeHandler;
 import org.junit.Test;
 
 public class SqlTimestampAsMonthTypeHandlerTest extends TypeHandlerMockSupport {
     @Test
     public void testMonth() throws Throwable {
-        java.time.Month val = java.time.Month.MAY;
+        Month val = Month.MAY;
         try (PreparedStatement ps = conn.prepareStatement("insert into tb_h2_types (c_timestamp) values (?)")) {
             new SqlTimestampAsMonthTypeHandler().setParameter(ps, 1, val, null);
             ps.executeUpdate();
@@ -17,7 +18,7 @@ public class SqlTimestampAsMonthTypeHandlerTest extends TypeHandlerMockSupport {
             try (ResultSet rs = ps.executeQuery()) {
                 rs.next();
                 Object res = new SqlTimestampAsMonthTypeHandler().getResult(rs, 1);
-                assert res instanceof java.time.Month;
+                assert res instanceof Month;
                 assert val.equals(res);
             }
         }

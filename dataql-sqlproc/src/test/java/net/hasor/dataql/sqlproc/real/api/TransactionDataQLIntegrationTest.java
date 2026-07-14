@@ -11,7 +11,7 @@ import net.hasor.dataql.host.Query;
 import net.hasor.dataql.host.QueryBuilder;
 import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
-import net.hasor.dataql.sqlproc.execute.transaction.TransactionConnectionProvider;
+import net.hasor.dataql.sqlproc.execute.transaction.TransactionProvider;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -300,7 +300,7 @@ public class TransactionDataQLIntegrationTest {
         configuration.addAttachment(ConnectionProvider.class, (sourceName, hints) -> wrapConnection(rawConnection()));
 
         try {
-            new QueryManager().newBuilder(configuration.getHostContext()).createQuery("""
+            new QueryManager(configuration.getHostContext()).newBuilder().createQuery("""
                     import 'net.hasor.dataql.sqlproc.execute.transaction.TransactionUdfSource' as tran;
                     return tran.required(() -> {
                         return true;
@@ -314,12 +314,12 @@ public class TransactionDataQLIntegrationTest {
 
     private QueryBuilder dataQL() {
         HostConfiguration configuration = new HostConfiguration();
-        configuration.addAttachment(ConnectionProvider.class, new TransactionConnectionProvider((sourceName, hints) -> {
+        configuration.addAttachment(ConnectionProvider.class, new TransactionProvider((sourceName, hints) -> {
             this.sourceName.set(sourceName);
             this.tenantHint.set(hints == null ? null : hints.getHint("tenant"));
             return wrapConnection(rawConnection());
         }));
-        return new QueryManager().newBuilder(configuration.getHostContext());
+        return new QueryManager(configuration.getHostContext()).newBuilder();
     }
 
     private void executeExpectFailure(String dataql) {

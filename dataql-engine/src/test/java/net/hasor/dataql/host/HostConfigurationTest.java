@@ -26,7 +26,7 @@ public class HostConfigurationTest {
         };
         HostConfiguration parent = new HostConfiguration(resourceLoader, null);
         HostConfiguration configuration = new HostConfiguration(parent);
-        QueryManager queryManager = new QueryManager(configuration.getHostContext());
+        QueryBuilder queryManager = new QueryManager(configuration.getHostContext()).newBuilder();
 
         Query query = queryManager.createQuery("import @\"custom.ql\" as custom; return custom()");
         DataModel dataModel = query.execute().getData();

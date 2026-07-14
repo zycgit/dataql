@@ -246,7 +246,7 @@ public class QueryTypeDataQLIntegrationTest extends AbstractSqlProcTest {
     }
 
     private QueryBuilder dataQL() {
-        return new QueryManager().newBuilder(hostConfiguration().getHostContext());
+        return new QueryManager(hostConfiguration().getHostContext()).newBuilder();
     }
 
     private HostConfiguration hostConfiguration() {

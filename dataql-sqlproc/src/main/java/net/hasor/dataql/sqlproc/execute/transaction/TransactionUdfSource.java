@@ -75,22 +75,15 @@ public class TransactionUdfSource extends AbstractUdfSource {
         String sourceName = SqlHintNames.getValue(hints, SqlHintNames.FRAGMENT_SQL_DATA_SOURCE);
         Isolation isolation = this.resolveIsolation(hints);
 
-        if (this.context == null) {
-            throw new IllegalStateException("TransactionUdfSource must be created by HostContext.");
-        }
-        TransactionConnectionProvider txProvider = this.findTransactionConnectionProvider();
-        TransactionManager txManager = txProvider.findTransactionManager(sourceName);
-        TransactionStatus status = null;
+        TransactionManager txManager = this.findTransactionConnectionProvider().findTransactionManager(sourceName);
+        TransactionStatus status = txManager.begin(hints, propagation, isolation);
         try {
-            status = txManager.begin(hints, propagation, isolation);
             return udf.call(hints);
         } catch (Throwable e) {
-            if (status != null) {
-                status.setRollback();
-            }
+            status.setRollback();
             throw e;
         } finally {
-            if (status != null && !status.isCompleted()) {
+            if (!status.isCompleted()) {
                 txManager.commit(status);
             }
         }
@@ -104,28 +97,14 @@ public class TransactionUdfSource extends AbstractUdfSource {
         return Isolation.valueOf(isolation.trim().toUpperCase().replace('-', '_'));
     }
 
-    private TransactionConnectionProvider findTransactionConnectionProvider() {
-        TransactionConnectionProvider txProvider = this.getAttachment(TransactionConnectionProvider.class);
-        if (txProvider != null) {
-            return txProvider;
+    private TransactionProvider findTransactionConnectionProvider() {
+        if (this.context == null) {
+            throw new IllegalStateException("TransactionUdfSource must be created by HostContext.");
         }
-
-        ConnectionProvider provider = this.getAttachment(ConnectionProvider.class);
-        if (provider instanceof TransactionConnectionProvider transactionProvider) {
-            return transactionProvider;
+        ConnectionProvider provider = this.context.getAttachment(ConnectionProvider.class);
+        if (provider instanceof TransactionProvider tx) {
+            return tx;
         }
-        if (provider != null) {
-            throw new IllegalStateException("ConnectionProvider must be TransactionConnectionProvider when using transaction functions.");
-        } else {
-            throw new IllegalStateException("TransactionConnectionProvider must be registered as HostContext attachment.");
-        }
-    }
-
-    private <T> T getAttachment(Class<T> attachmentType) {
-        try {
-            return this.context.getAttachment(attachmentType);
-        } catch (IllegalStateException e) {
-            return null;
-        }
+        throw new IllegalStateException("ConnectionProvider must be TransactionConnectionProvider when using transaction functions.");
     }
 }

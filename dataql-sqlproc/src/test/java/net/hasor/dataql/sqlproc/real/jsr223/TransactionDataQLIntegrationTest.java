@@ -11,7 +11,7 @@ import javax.script.ScriptEngineManager;
 import net.hasor.dataql.host.jsr223.QueryScriptContext;
 import net.hasor.dataql.kernel.QueryResult;
 import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
-import net.hasor.dataql.sqlproc.execute.transaction.TransactionConnectionProvider;
+import net.hasor.dataql.sqlproc.execute.transaction.TransactionProvider;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -301,7 +301,7 @@ public class TransactionDataQLIntegrationTest {
     private QueryResult eval(String dataql) throws Exception {
         ScriptEngine engine = new ScriptEngineManager().getEngineByName("dataql");
         QueryScriptContext context = (QueryScriptContext) engine.getContext();
-        context.addAttachment(ConnectionProvider.class, new TransactionConnectionProvider((sourceName, hints) -> {
+        context.addAttachment(ConnectionProvider.class, new TransactionProvider((sourceName, hints) -> {
             this.sourceName.set(sourceName);
             this.tenantHint.set(hints == null ? null : hints.getHint("tenant"));
             return wrapConnection(rawConnection());

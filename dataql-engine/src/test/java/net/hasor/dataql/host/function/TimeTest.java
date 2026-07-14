@@ -1,8 +1,10 @@
 package net.hasor.dataql.host.function;
-import net.hasor.dataql.host.QueryManager;
+import net.hasor.dataql.host.HostConfiguration;
+import net.hasor.dataql.host.QueryBuilder;
 import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataql.domain.DataModel;
 import net.hasor.dataql.domain.ValueModel;
+import net.hasor.dataql.host.function.basic.DateTimeUdfSource;
 import net.hasor.dataql.kernel.QueryRuntimeException;
 import org.junit.Test;
 
@@ -15,11 +17,11 @@ public class TimeTest {
     @Test
     public void now() throws IOException, QueryRuntimeException {
         String qlString = "";
-        qlString = qlString + "import 'net.hasor.dataql.host.function.basic.DateTimeUdfSource' as time;";
+        qlString = qlString + "import '" + DateTimeUdfSource.class.getName() + "' as time;";
         qlString = qlString + "return time.now()";
         //
         long t1 = System.currentTimeMillis();
-        QueryManager dataQL = new QueryManager();
+        QueryBuilder dataQL = new QueryManager(new HostConfiguration().getHostContext()).newBuilder();
         DataModel dataModel = dataQL.createQuery(qlString).execute().getData();
         //
         long t2 = ((ValueModel) dataModel).asLong();
@@ -30,10 +32,10 @@ public class TimeTest {
     @Test
     public void time() throws IOException, QueryRuntimeException {
         String qlString = "";
-        qlString = qlString + "import 'net.hasor.dataql.host.function.basic.DateTimeUdfSource' as time;";
+        qlString = qlString + "import '" + DateTimeUdfSource.class.getName() + "' as time;";
         qlString = qlString + "var now = time.now() ; return (time.year(now) + '-' + time.month(now) + '-' + time.day(now))";
         //
-        QueryManager dataQL = new QueryManager();
+        QueryBuilder dataQL = new QueryManager(new HostConfiguration().getHostContext()).newBuilder();
         DataModel dataModel = dataQL.createQuery(qlString).execute().getData();
         //
         String format = new SimpleDateFormat("yyyy-M-d").format(new Date());
@@ -44,10 +46,10 @@ public class TimeTest {
     @Test
     public void format() throws IOException, QueryRuntimeException {
         String qlString = "";
-        qlString = qlString + "import 'net.hasor.dataql.host.function.basic.DateTimeUdfSource' as time;";
+        qlString = qlString + "import '" + DateTimeUdfSource.class.getName() + "' as time;";
         qlString = qlString + "return time.format(time.now(),'yyyy-MM-dd')";
         //
-        QueryManager dataQL = new QueryManager();
+        QueryBuilder dataQL = new QueryManager(new HostConfiguration().getHostContext()).newBuilder();
         DataModel dataModel = dataQL.createQuery(qlString).execute().getData();
         //
         String format = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
@@ -58,10 +60,10 @@ public class TimeTest {
     @Test
     public void parse() throws IOException, QueryRuntimeException, ParseException {
         String qlString = "";
-        qlString = qlString + "import 'net.hasor.dataql.host.function.basic.DateTimeUdfSource' as time;";
+        qlString = qlString + "import '" + DateTimeUdfSource.class.getName() + "' as time;";
         qlString = qlString + "return time.parser('2017-03-15 12:44:56','yyyy-MM-dd hh:mm:ss')";
         //
-        QueryManager dataQL = new QueryManager();
+        QueryBuilder dataQL = new QueryManager(new HostConfiguration().getHostContext()).newBuilder();
         DataModel dataModel = dataQL.createQuery(qlString).execute().getData();
         //
         long format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").parse("2017-03-15 12:44:56").getTime();

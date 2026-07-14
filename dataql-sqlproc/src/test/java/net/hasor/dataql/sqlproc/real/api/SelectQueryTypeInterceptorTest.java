@@ -114,7 +114,7 @@ public class SelectQueryTypeInterceptorTest extends AbstractSqlProcTest {
         configuration.addAttachment(ConnectionProvider.class, (sourceName, hints) -> rawConnection());
         ExecuteContext queryContext = configuration.getAttachment(ExecuteContext.class);
         customizer.accept(queryContext);
-        return new QueryManager().newBuilder(configuration.getHostContext());
+        return new QueryManager(configuration.getHostContext()).newBuilder();
     }
 
     private Connection rawConnection() throws SQLException {

@@ -1,8 +1,10 @@
 package net.hasor.dataql.host.function;
-import net.hasor.dataql.host.QueryManager;
+import net.hasor.dataql.host.HostConfiguration;
+import net.hasor.dataql.host.QueryBuilder;
 import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataql.domain.DataModel;
 import net.hasor.dataql.domain.ListModel;
+import net.hasor.dataql.host.function.basic.StateUdfSource;
 import net.hasor.dataql.kernel.QueryRuntimeException;
 import org.junit.Test;
 
@@ -12,10 +14,10 @@ public class StateTest {
     @Test
     public void decNumber() throws IOException, QueryRuntimeException {
         String qlString = "";
-        qlString = qlString + "import 'net.hasor.dataql.host.function.basic.StateUdfSource' as state;";
+        qlString = qlString + "import '" + StateUdfSource.class.getName() + "' as state;";
         qlString = qlString + "var decNum = state.decNumber(0); return [ decNum(),decNum(),decNum() ]";
         //
-        QueryManager dataQL = new QueryManager();
+        QueryBuilder dataQL = new QueryManager(new HostConfiguration().getHostContext()).newBuilder();
         DataModel dataModel = dataQL.createQuery(qlString).execute().getData();
         //
         assert ((ListModel) dataModel).getValue(0).asLong() == 1;
@@ -26,10 +28,10 @@ public class StateTest {
     @Test
     public void incNumber() throws IOException, QueryRuntimeException {
         String qlString = "";
-        qlString = qlString + "import 'net.hasor.dataql.host.function.basic.StateUdfSource' as state;";
+        qlString = qlString + "import '" + StateUdfSource.class.getName() + "' as state;";
         qlString = qlString + "var decNum = state.incNumber(0); return [ decNum(),decNum(),decNum() ]";
         //
-        QueryManager dataQL = new QueryManager();
+        QueryBuilder dataQL = new QueryManager(new HostConfiguration().getHostContext()).newBuilder();
         DataModel dataModel = dataQL.createQuery(qlString).execute().getData();
         //
         assert ((ListModel) dataModel).getValue(0).asLong() == -1;

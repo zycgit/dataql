@@ -14,21 +14,6 @@
  * limitations under the License.
  */
 package net.hasor.dataql;
-import net.hasor.dataql.host.HostConfiguration;
-import net.hasor.dataql.host.QueryManager;
-import net.hasor.cobble.ResourcesUtils;
-import net.hasor.cobble.StringUtils;
-import net.hasor.cobble.io.IOUtils;
-import net.hasor.cobble.logging.Logger;
-import net.hasor.cobble.logging.LoggerFactory;
-import net.hasor.dataql.parser.QueryModel;
-import net.hasor.dataql.parser.ast.AstVisitor;
-import net.hasor.dataql.parser.ast.InstVisitorContext;
-import net.hasor.dataql.kernel.Finder;
-import net.hasor.dataql.compiler.CompilerArguments;
-import net.hasor.dataql.compiler.CompilerHelper;
-import net.hasor.dataql.host.Query;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -37,6 +22,20 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import net.hasor.cobble.ResourcesUtils;
+import net.hasor.cobble.StringUtils;
+import net.hasor.cobble.io.IOUtils;
+import net.hasor.cobble.logging.Logger;
+import net.hasor.cobble.logging.LoggerFactory;
+import net.hasor.dataql.compiler.CompilerArguments;
+import net.hasor.dataql.compiler.CompilerHelper;
+import net.hasor.dataql.host.HostConfiguration;
+import net.hasor.dataql.host.Query;
+import net.hasor.dataql.host.QueryManager;
+import net.hasor.dataql.kernel.Finder;
+import net.hasor.dataql.parser.QueryModel;
+import net.hasor.dataql.parser.ast.AstVisitor;
+import net.hasor.dataql.parser.ast.InstVisitorContext;
 
 /**
  * 测试用例
@@ -65,13 +64,13 @@ public class AbstractTestResource {
 
     protected Query compilerQL(String qlString) throws IOException {
         QueryModel queryModel = CompilerHelper.queryParser(qlString);
-        return new QueryManager().createQuery(queryModel, CompilerArguments.DEFAULT);
+        return new QueryManager(new HostConfiguration().getHostContext()).newBuilder().createQuery(queryModel, CompilerArguments.DEFAULT);
     }
 
     protected Query compilerQL(String qlString, Finder finder) throws IOException {
         QueryModel queryModel = CompilerHelper.queryParser(qlString);
         HostConfiguration configuration = new HostConfiguration(finder);
-        return new QueryManager(configuration.getHostContext()).createQuery(queryModel, CompilerArguments.DEFAULT);
+        return new QueryManager(configuration.getHostContext()).newBuilder().createQuery(queryModel, CompilerArguments.DEFAULT);
     }
 
     protected List<String> acceptVisitor(QueryModel queryModel) {

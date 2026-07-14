@@ -54,7 +54,7 @@ public class LambdaRuntimeTest extends AbstractTestResource implements HintValue
     //            }
     //        };
     //        //
-    //        Query compilerQL = compilerQL("import 'net.hasor.test.dataql.udfs.DemoUdf' as foo; return foo().name", finder);
+    //        Query compilerQL = compilerQL("import '" + DemoUdf.class.getName() + "' as foo; return foo().name", finder);
     //        DataModel dataModel = compilerQL.execute().getData();
     //        assert dataModel.isValue();
     //        assert ((ValueModel) dataModel).asString().equals("马三");
@@ -71,7 +71,7 @@ public class LambdaRuntimeTest extends AbstractTestResource implements HintValue
     //            }
     //        };
     //        //
-    //        Query compilerQL = compilerQL("import 'net.hasor.test.dataql.udfs.DemoUdf' as foo; return foo().name", finder);
+    //        Query compilerQL = compilerQL("import '" + DemoUdf.class.getName() + "' as foo; return foo().name", finder);
     //        DataModel dataModel = compilerQL.execute().getData();
     //        assert dataModel.isValue();
     //        assert ((ValueModel) dataModel).asString().equals("马三");

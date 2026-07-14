@@ -105,7 +105,7 @@ public class QueryScriptEngine extends AbstractScriptEngine implements ScriptEng
         if (!(context instanceof QueryScriptContext)) {
             throw new IllegalArgumentException("context must be QueryScriptContext.");
         }
-        if (((QueryScriptContext) context).getHostContext() != this.queryManager.getHostContext()) {
+        if (((QueryScriptContext) context).getHostContext() != this.queryManager.hostContext()) {
             throw new IllegalArgumentException("context hostContext must match engine hostContext.");
         }
     }

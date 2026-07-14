@@ -1,8 +1,9 @@
 package net.hasor.dataql.kernel;
 import com.alibaba.fastjson.JSON;
 import net.hasor.dataql.AbstractTestResource;
-import net.hasor.dataql.host.QueryManager;
+import net.hasor.dataql.host.HostConfiguration;
 import net.hasor.dataql.host.Query;
+import net.hasor.dataql.host.QueryBuilder;
 import net.hasor.dataql.domain.UdfModel;
 import net.hasor.dataql.host.QueryManager;
 import org.junit.Test;
@@ -11,7 +12,7 @@ import java.io.IOException;
 
 public class RecursionTest extends AbstractTestResource {
 
-    private void queryTest(QueryManager dataQL, String testCase) throws IOException {
+    private void queryTest(QueryBuilder dataQL, String testCase) throws IOException {
         Query query = dataQL.createQuery(getScript("/net_hasor_dataql_adv/" + testCase + ".ql"));
         String queryResult = getScript("/net_hasor_dataql_adv/" + testCase + ".result");
         //
@@ -21,12 +22,12 @@ public class RecursionTest extends AbstractTestResource {
     }
 
     private void queryTest(String testCase) throws IOException {
-        queryTest(new QueryManager(), testCase);
+        queryTest(new QueryManager(new HostConfiguration().getHostContext()).newBuilder(), testCase);
     }
 
     @Test
     public void returnLambda() throws Throwable {
-        Query query = new QueryManager().createQuery(getScript("/net_hasor_dataql_adv/return_lambda.ql"));
+        Query query = new QueryManager(new HostConfiguration().getHostContext()).newBuilder().createQuery(getScript("/net_hasor_dataql_adv/return_lambda.ql"));
         UdfModel testUdf = (UdfModel) query.execute().getData();
         //
         assert testUdf.call(new Object[] { 1 }).unwrap().equals("性别：男");
