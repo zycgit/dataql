@@ -81,4 +81,24 @@ public class RecursionTest extends AbstractTestResource {
     public void special_tree_test() throws IOException {
         queryTest("special_tree");
     }
+
+    @Test
+    public void recursion_test() throws IOException {
+        queryTest("recursion");
+    }
+
+    @Test
+    public void totree_test() throws IOException {
+        queryTest("totree");
+    }
+
+    @Test
+    public void mapjoin_test() throws IOException {
+        queryTest("mapjoin");
+    }
+
+    @Test
+    public void datav_url_test() throws IOException {
+        queryTest("datav_url");
+    }
 }

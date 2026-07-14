@@ -1,10 +1,7 @@
-import "net.hasor.dataql.fx.basic.CollectionUdfSource" as collec;
-import "net.hasor.dataql.fx.basic.DateTimeUdfSource" as time2;
-import "net.hasor.dataql.fx.basic.StringUdfSource" as string;
-import 'net.hasor.dataql.fx.basic.CompareUdfSource' as compare;
-import "net.hasor.dataql.fx.encryt.HmacUdfSource" as hmac;
-import "net.hasor.dataql.fx.encryt.DigestUdfSource" as digest;
-import 'net.hasor.dataql.fx.encryt.CodecUdfSource' as codec;
+import "net.hasor.dataql.host.function.basic.CollectionUdfSource" as collec;
+import "net.hasor.dataql.host.function.basic.StringUdfSource" as string;
+import 'net.hasor.dataql.host.function.basic.CompareUdfSource' as compare;
+import 'net.hasor.dataql.host.function.encryt.CodecUdfSource' as codec;
 
 //
 var screenID = "1c006f1b16ebaa77f455d8550a88"
@@ -51,7 +48,7 @@ var signParamStr = collec.map2string(tmpParam,"&",(key,value) -> {
 var timeNow = 1585664817053;//time2.now();
 var token = tokenMap[screenID].token;
 var stringToSign = string.join([screenID, timeNow,signParamStr],"|");
-var signature = hmac.hmacSHA256_string(token,stringToSign)
+var signature = codec.hmacString('HmacSHA256', token, stringToSign)
 
 // 最终的 URL
 var queryParams = {
