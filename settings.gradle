@@ -1,0 +1,30 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'dataql-parent'
+
+include 'dataql-engine'
+include 'dataql-sqlproc'
+include 'dataway-dao'
+include 'dataway-node'
+include 'dataway-console'
+include 'dataway-web'
+
+project(':dataql-engine').projectDir = file('kernel/dataql-engine')
+project(':dataql-sqlproc').projectDir = file('kernel/dataql-sqlproc')
+project(':dataway-dao').projectDir = file('platform/dataway-dao')
+project(':dataway-node').projectDir = file('platform/dataway-node')
+project(':dataway-console').projectDir = file('platform/dataway-console')
+project(':dataway-web').projectDir = file('platform/dataway-web')

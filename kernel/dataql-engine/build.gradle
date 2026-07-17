@@ -1,0 +1,21 @@
+plugins {
+    id 'java-library'
+    id 'dataql.central-publish'
+    id 'antlr'
+}
+
+ext.pomName = 'DataQL Engine'
+description = 'The hasor DataQL project.'
+
+dependencies {
+    api "org.antlr:antlr4-runtime:${property('lib.antlr')}"
+    api "net.hasor:cobble-all:${property('lib.cobble')}"
+    compileOnly "com.alibaba:fastjson:${property('lib.fastjson')}"
+
+    antlr "org.antlr:antlr4:${property('lib.antlr')}"
+    testImplementation "com.alibaba:fastjson:${property('lib.fastjson')}"
+}
+
+tasks.named('generateGrammarSource') {
+    arguments += ['-visitor', '-package', 'net.hasor.dataql.parser']
+}

@@ -336,7 +336,7 @@ public final class TypeHandlerRegistry {
     }
 
     private TypeHandler createByClass(Class<?> typeHandlerClass, Class<?> argType) {
-        return ClassUtils.newInstance(typeHandlerClass);
+        return (TypeHandler) ClassUtils.newInstance(typeHandlerClass);
     }
 
     private TypeHandler createByConstructor(Constructor<?> typeHandlerConstructor, Class<?> argType) {

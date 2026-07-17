@@ -1,0 +1,31 @@
+plugins {
+    id 'java-library'
+    id 'application'
+    id 'net.hasor.boot' version '5.0.1'
+}
+
+ext.pomName = 'Dataway Console'
+description = 'Dataway web console based on Hasor Boot and Hasor Web.'
+
+dependencies {
+    api project(':dataql-engine')
+    api project(':dataql-sqlproc')
+    api project(':dataway-dao')
+    api project(':dataway-web')
+
+    api "net.hasor:hasor-boot-tomcat:${property('lib.hasor')}"
+    api "net.hasor:hasor-web:${property('lib.hasor')}"
+    api "com.alibaba:fastjson:${property('lib.fastjson')}"
+
+    runtimeOnly "com.h2database:h2:${property('lib.h2')}"
+    runtimeOnly 'org.slf4j:slf4j-simple:1.7.36'
+}
+
+application {
+    mainClass = 'net.hasor.dataway.DatawayConsoleApplication'
+}
+
+tasks.named('bootJar') {
+    mainClass = application.mainClass
+    loaderClasspath.from(configurations.detachedConfiguration(dependencies.create("net.hasor:hasor-boot-loader:${project.property('lib.hasor')}")))
+}
