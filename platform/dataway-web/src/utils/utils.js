@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import {ElMessageBox} from 'element-plus';
 
 /***/
 const statusTagInfo = (status) => {
@@ -35,7 +35,7 @@ const methodTagInfo = (httpMethod) => {
 };
 
 const errorBox = (content) => {
-    Vue.prototype.$alert(content, 'Error', {confirmButtonText: 'OK'});
+    ElMessageBox.alert(content, 'Error', {confirmButtonText: 'OK'});
 };
 
 const fixGetRequestBody = (httpMethod, requestBody) => {

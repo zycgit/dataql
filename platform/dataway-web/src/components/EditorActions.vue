@@ -3,7 +3,7 @@
     <el-button-group>
       <!-- 设置 -->
       <el-tooltip class="item" effect="dark" content="More Settings" placement="bottom-end">
-        <el-button size="mini" round @click.native="handleMoreAction">
+        <el-button size="small" round @click="handleMoreAction">
           <svg class="icon" aria-hidden="true">
             <use xlink:href="#iconmore" />
           </svg>
@@ -11,7 +11,7 @@
       </el-tooltip>
       <!-- 保存 -->
       <el-tooltip class="item" effect="dark" content="Save" placement="bottom-end">
-        <el-button size="mini" round @click.native="handleSaveAction">
+        <el-button size="small" round @click="handleSaveAction">
           <svg class="icon" aria-hidden="true">
             <use xlink:href="#iconsave" />
           </svg>
@@ -19,7 +19,7 @@
       </el-tooltip>
       <!-- 执行 -->
       <el-tooltip class="item" effect="dark" content="Execute Query" placement="bottom-end">
-        <el-button size="mini" round @click.native="handleExecuteAction">
+        <el-button size="small" round @click="handleExecuteAction">
           <svg class="icon" aria-hidden="true">
             <use xlink:href="#iconexecute" />
           </svg>
@@ -27,7 +27,7 @@
       </el-tooltip>
       <!-- 冒烟 -->
       <el-tooltip class="item" effect="dark" content="Smoke Test" placement="bottom-end">
-        <el-button size="mini" round :disabled="disabledBtn('testAction')" @click.native="handleTestAction">
+        <el-button size="small" round :disabled="disabledBtn('testAction')" @click="handleTestAction">
           <svg class="icon" aria-hidden="true">
             <use xlink:href="#icontest" />
           </svg>
@@ -35,7 +35,7 @@
       </el-tooltip>
       <!-- 发布 -->
       <el-tooltip class="item" effect="dark" content="Publish" placement="bottom-end">
-        <el-button size="mini" round :disabled="disabledBtn('publishAction')" @click.native="handlePublishAction">
+        <el-button size="small" round :disabled="disabledBtn('publishAction')" @click="handlePublishAction">
           <svg class="icon" aria-hidden="true">
             <use xlink:href="#iconrelease" />
           </svg>
@@ -46,16 +46,28 @@
     <el-button-group>
       <!-- 历史 -->
       <el-tooltip class="item" effect="dark" content="Release History List" placement="bottom-end">
-        <el-button v-popover:releaseHistoryPopover size="mini" round :disabled="disabledBtn('historyAction')" @click.native="handleHistoryAction">
-          <svg class="icon" aria-hidden="true">
-            <use xlink:href="#iconhistory" />
-          </svg>
-        </el-button>
+        <el-popover placement="bottom" title="History Version" width="250" trigger="click">
+          <template #reference>
+            <el-button size="small" round :disabled="disabledBtn('historyAction')" @click="handleHistoryAction">
+              <svg class="icon" aria-hidden="true">
+                <use xlink:href="#iconhistory" />
+              </svg>
+            </el-button>
+          </template>
+          <el-timeline style="max-height: 300px;overflow-y: scroll; padding-top: 5px;">
+            <el-timeline-item v-for="history in historyList" :key="history.historyId" :color="historyIconColor(history.status)" :hide-timestamp="true" size="large">
+              <span>{{ history.time }}</span>
+              <el-button size="small" circle style="float:right;margin-top: 5px;" @click="handleRecoverAction(history.historyId)">
+                <el-icon><Edit /></el-icon>
+              </el-button>
+            </el-timeline-item>
+          </el-timeline>
+        </el-popover>
       </el-tooltip>
       <!-- 下线 -->
       <el-tooltip class="item" effect="dark" content="Disable the published Api." placement="bottom-end">
-        <el-button v-if="apiInfo.apiStatus===1 || apiInfo.apiStatus===2" size="mini" round :disabled="disabledBtn('disableAction')"
-                   @click.native="handleDisableAction"
+        <el-button v-if="apiInfo.apiStatus===1 || apiInfo.apiStatus===2" size="small" round :disabled="disabledBtn('disableAction')"
+                   @click="handleDisableAction"
         >
           <svg class="icon" aria-hidden="true">
             <use xlink:href="#icondisable" />
@@ -64,8 +76,8 @@
       </el-tooltip>
       <!-- 删除 -->
       <el-tooltip class="item" effect="dark" content="Permanently delete the Api but keep release history." placement="bottom-end">
-        <el-button v-if="apiInfo.apiStatus===0 || apiInfo.apiStatus===3" size="mini" round :disabled="disabledBtn('deleteAction')"
-                   @click.native="handleDeleteAction"
+        <el-button v-if="apiInfo.apiStatus===0 || apiInfo.apiStatus===3" size="small" round :disabled="disabledBtn('deleteAction')"
+                   @click="handleDeleteAction"
         >
           <svg class="icon" aria-hidden="true">
             <use xlink:href="#icondelete" />
@@ -73,17 +85,7 @@
         </el-button>
       </el-tooltip>
     </el-button-group>
-    <div style="display: block;position: absolute;z-index: 1000;">
-      <el-popover ref="releaseHistoryPopover" placement="bottom" title="History Version" width="250">
-        <el-timeline style="max-height: 300px;overflow-y: scroll; padding-top: 5px;">
-          <el-timeline-item v-for="history in historyList" :key="history.historyId" :color="historyIconColor(history.status)" :hide-timestamp="true" size="large">
-            <span>{{ history.time }}</span>
-            <el-button size="mini" circle icon="el-icon-edit" style="float:right;margin-top: 5px;" @click.native="handleRecoverAction(history.historyId)" />
-          </el-timeline-item>
-        </el-timeline>
-      </el-popover>
-    </div>
-    <el-drawer :visible.sync="moreConfig" :with-header="false" size="70%">
+    <el-drawer v-model="moreConfig" :with-header="false" size="70%">
       <div style="padding: 20px 10px 0px 10px;">
         <el-collapse v-model="drawerConfig.activeNames">
           <el-collapse-item title="Parameters" name="1">
@@ -91,7 +93,7 @@
               <span style="padding-right: 5px;line-height: 24px;">Wrap All Parameters</span>
               <el-switch v-model="optionInfoCopy['wrapAllParameters']" />
               <span style="padding: 5px;line-height: 24px;">to new Parameter</span>
-              <el-input v-model="optionInfoCopy['wrapParameterName']" :disabled="!optionInfoCopy['wrapAllParameters']" size="mini" style="width: 80px; display: inline-block"></el-input>
+              <el-input v-model="optionInfoCopy['wrapParameterName']" :disabled="!optionInfoCopy['wrapAllParameters']" size="small" style="width: 80px; display: inline-block"></el-input>
             </div>
           </el-collapse-item>
           <el-collapse-item title="Cross Domain" name="1">

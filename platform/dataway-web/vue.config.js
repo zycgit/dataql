@@ -5,6 +5,7 @@ module.exports = {
     publicPath: './',
     outputDir: 'dist/META-INF/hasor-framework/dataway-ui',
     runtimeCompiler: true,
+    lintOnSave: false,
     productionSourceMap: false,
     configureWebpack: {
         plugins: [
@@ -26,12 +27,14 @@ module.exports = {
         ]
     },
     chainWebpack: config => {
-        config.output.filename('[name].[hash].js').end();
+        config.output.filename('[name].[fullhash].js').end();
     },
     devServer: {
         host: 'localhost',//target host
         port: 8888,
-        publicPath: '/interface-ui/',
+        devMiddleware: {
+            publicPath: '/interface-ui/',
+        },
         proxy: {
             '/api': {
                 target: 'http://localhost:8080',
@@ -40,6 +43,5 @@ module.exports = {
             }
         },
         open: true,
-        openPage: '/interface-ui/'
     }
 };

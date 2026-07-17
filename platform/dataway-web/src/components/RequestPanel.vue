@@ -3,28 +3,28 @@
     <div class="request-btns" style="height: 30px;">
       <el-button-group>
         <el-tooltip class="item" effect="dark" content="Execute Query" placement="bottom-end">
-          <el-button v-if="this.hideRunBtn === false" class="z-index-top" size="mini" round @click.native="triggerRun">
+          <el-button v-if="this.hideRunBtn === false" class="z-index-top" size="small" round @click="triggerRun">
             <svg class="icon" aria-hidden="true">
               <use xlink:href="#iconexecute"></use>
             </svg>
           </el-button>
         </el-tooltip>
         <el-tooltip v-if="this.panelMode === 'req_parameters'" class="item" effect="dark" placement="bottom-end" content="Format Parameters">
-          <el-button class="z-index-top" size="mini" round @click.native="handleParametersFormatter">
+          <el-button class="z-index-top" size="small" round @click="handleParametersFormatter">
             <svg class="icon" aria-hidden="true">
               <use xlink:href="#iconformat"></use>
             </svg>
           </el-button>
         </el-tooltip>
         <el-tooltip v-if="this.panelMode === 'req_headers'" class="item" effect="dark" placement="bottom-end" content="Add Header">
-          <el-button class="z-index-top" size="mini" round @click.native="handleHeaderAddNew">
+          <el-button class="z-index-top" size="small" round @click="handleHeaderAddNew">
             <svg class="icon" aria-hidden="true">
               <use xlink:href="#iconadd"></use>
             </svg>
           </el-button>
         </el-tooltip>
         <el-tooltip v-if="this.panelMode === 'req_schema'" class="item" effect="dark" placement="bottom-end" content="refresh Schema">
-          <el-button class="z-index-top" size="mini" round @click.native="handleAnalyzeParametersSchema">
+          <el-button class="z-index-top" size="small" round @click="handleAnalyzeParametersSchema">
             <svg class="icon" aria-hidden="true">
               <use xlink:href="#iconanalysis"></use>
             </svg>
@@ -39,27 +39,29 @@
       <el-tab-pane name="req_headers" label="Headers" lazy>
         <el-table ref="requestHeaderTable" :data="headerDataCopy" :height="headerPanelHeight" border empty-text="No Header">
           <el-table-column prop="checked" width="24" :resizable="false">
-            <template slot="header" slot-scope="scope">
+            <template #header="scope">
               <el-checkbox v-model="headerSelectAllStatus" name="type" :indeterminate="headerSelectIndeterminateStatus" @change="handleHeaderCheckAllChange" />
             </template>
-            <template slot-scope="scope">
+            <template #default="scope">
               <el-checkbox v-model="scope.row.checked" name="type" @change="updateIndeterminate" />
             </template>
           </el-table-column>
           <el-table-column prop="name" label="Key" min-width="30%">
-            <template slot-scope="scope">
-              <el-input v-model="scope.row.name" size="mini" placeholder="key of Header" />
+            <template #default="scope">
+              <el-input v-model="scope.row.name" size="small" placeholder="key of Header" />
             </template>
           </el-table-column>
           <el-table-column prop="value" label="Value" :resizable="false">
-            <template slot-scope="scope">
-              <el-input v-model="scope.row.value" size="mini" placeholder="value of Header" />
+            <template #default="scope">
+              <el-input v-model="scope.row.value" size="small" placeholder="value of Header" />
             </template>
           </el-table-column>
           <el-table-column prop="name" width="38" :resizable="false">
-            <template slot-scope="scope">
+            <template #default="scope">
               <el-tooltip class="item" effect="dark" content="Delete" placement="left">
-                <el-button size="mini" type="danger" icon="el-icon-delete" circle @click.native="handleHeaderDelete(scope.row,scope.$index)" />
+                <el-button size="small" type="danger" circle @click="handleHeaderDelete(scope.row,scope.$index)">
+                  <el-icon><Delete /></el-icon>
+                </el-button>
               </el-tooltip>
             </template>
           </el-table-column>
@@ -69,8 +71,8 @@
       <!--        <el-table :data="tableData" :height="headerPanelHeight" row-key="id" border default-expand-all :tree-props="{children: 'children', hasChildren: 'hasChildren'}">-->
       <!--          <el-table-column prop="date" label="Name" :resizable="false" />-->
       <!--          <el-table-column prop="date" label="Type" width="120" :resizable="false">-->
-      <!--            <template slot-scope="scope">-->
-      <!--              <el-select v-model="scope.row.type" style="width: 100%" size="mini" placeholder="Choose">-->
+      <!--            <template #default="scope">-->
+      <!--              <el-select v-model="scope.row.type" style="width: 100%" size="small" placeholder="Choose">-->
       <!--                <el-option label="Any" value="any" />-->
       <!--                <el-option label="Number" value="number" />-->
       <!--                <el-option label="Boolean" value="boolean" />-->
@@ -81,8 +83,8 @@
       <!--            </template>-->
       <!--          </el-table-column>-->
       <!--          <el-table-column prop="date" label="Comment" :resizable="false">-->
-      <!--            <template slot-scope="scope">-->
-      <!--              <el-input v-model="scope.row.defaultOrRefValue" style="width: 100%" size="mini" placeholder="value of Header" />-->
+      <!--            <template #default="scope">-->
+      <!--              <el-input v-model="scope.row.defaultOrRefValue" style="width: 100%" size="small" placeholder="value of Header" />-->
       <!--            </template>-->
       <!--          </el-table-column>-->
       <!--        </el-table>-->

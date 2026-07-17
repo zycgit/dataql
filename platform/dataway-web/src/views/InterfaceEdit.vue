@@ -2,25 +2,29 @@
   <div>
     <div class="monacoEditorHeader">
       <div style="width: 50%; margin-top: 2px; display: inline-flex;">
-        <el-select v-model="apiInfo.select" placeholder="Choose" style="width: 95px;padding-right: 5px;" size="mini">
+        <el-select v-model="apiInfo.select" placeholder="Choose" style="width: 95px;padding-right: 5px;" size="small">
           <el-option label="POST" value="POST" />
           <el-option label="PUT" value="PUT" />
           <el-option label="GET" value="GET" />
           <el-option label="DELETE" value="DELETE" />
         </el-select>
         <el-tooltip class="item" effect="dark" placement="bottom" :content="apiInfo.comment || defaultComment" :disabled="showComment">
-          <el-input v-model="apiInfo.apiPath" placeholder="the path to access this Api" class="input-with-select" size="mini" :disabled="!editerActions.newMode">
-            <el-button slot="append" icon="el-icon-info" @click.native="handleShowComment" />
+          <el-input v-model="apiInfo.apiPath" placeholder="the path to access this Api" class="input-with-select" size="small" :disabled="!editerActions.newMode">
+            <template #append>
+              <el-button @click="handleShowComment">
+                <el-icon><InfoFilled /></el-icon>
+              </el-button>
+            </template>
           </el-input>
         </el-tooltip>
       </div>
       <div v-if="showComment" class="comment">
-        <el-input v-model="apiInfo.comment" placeholder="Api's comment." size="mini" @input="handleCommentOnchange">
-          <template slot="prepend">Comment</template>
+        <el-input v-model="apiInfo.comment" placeholder="Api's comment." size="small" @input="handleCommentOnchange">
+          <template #prepend>Comment</template>
         </el-input>
       </div>
       <div style="display: inline-table;padding-left: 5px;">
-        <el-radio-group v-model="apiInfo.codeType" size="mini" @change="loadEditorMode">
+        <el-radio-group v-model="apiInfo.codeType" size="small" @change="loadEditorMode">
           <el-tooltip class="item" effect="dark" placement="bottom" content="DataQL language.">
             <el-radio border label="DataQL" />
           </el-tooltip>
@@ -39,7 +43,7 @@
         />
         <div style="display: inline-table;padding-left: 5px;">
           <el-tooltip class="item" effect="dark" placement="top" content="Current Api Status">
-            <el-tag size="mini" style="width: 65px;text-align: center;" :type="tagInfo.css">{{ tagInfo.title }}</el-tag>
+            <el-tag size="small" style="width: 65px;text-align: center;" :type="tagInfo.css">{{ tagInfo.title }}</el-tag>
           </el-tooltip>
         </div>
       </div>
@@ -47,19 +51,19 @@
     <el-divider />
     <div :style="{height: panelHeight + 'px'}">
       <SplitPane :min-percent="10" :default-percent="panelPercentVertical" split="vertical" @resize="handleVerticalSplitResize">
-        <template slot="paneL">
+        <template #paneL>
           <div ref="container" />
         </template>
-        <template slot="paneR">
+        <template #paneR>
           <SplitPane :min-percent="10" :default-percent="panelPercentHorizontal" split="horizontal" @resize="handleHorizontalSplitResize">
-            <template slot="paneL">
+            <template #paneL>
               <RequestPanel ref="editerRequestPanel"
                             :header-data="headerData" :request-body="requestBody" :hide-run-btn="true" :api-info="apiInfo"
                             :option-info="optionData" @onOptionChange="(data)=> { this.optionData = data}"
                             @onHeaderChange="(data)=> { this.headerData = data}" @onRequestBodyChange="(data)=> { this.requestBody = data}"
               />
             </template>
-            <template slot="paneR">
+            <template #paneR>
               <ResponsePanel ref="editerResponsePanel"
                              :response-body="responseBody" :on-edit-page="true" :result-type="responseType"
                              :option-info="optionData" @onOptionChange="(data)=> { this.optionData = data}"
@@ -163,7 +167,7 @@ export default {
         };
         window.addEventListener('resize', this._resize);
     },
-    beforeDestroy() {
+    beforeUnmount() {
         window.removeEventListener('resize', this._resize);
     },
     methods: {

@@ -1,19 +1,19 @@
 <template>
-  <el-container>
+  <el-container class="dataway-app">
     <el-header>
       <el-menu class="el-menu-demo" mode="horizontal">
         <el-menu-item index="1">
           <router-link to="/">
-            <el-link><i class="el-icon-notebook-1" />Interface</el-link>
+            <el-link><el-icon><Notebook /></el-icon>Interface</el-link>
           </router-link>
         </el-menu-item>
         <el-menu-item index="2">
           <router-link to="/new">
-            <el-link><i class="el-icon-plus" />New</el-link>
+            <el-link><el-icon><Plus /></el-icon>New</el-link>
           </router-link>
         </el-menu-item>
         <el-menu-item index="3">
-          <el-link href="https://www.hasor.net/web/dataql/what_is_dataql.html" target="_blank"><i class="el-icon-warning-outline"></i>What is DataQL?</el-link>
+          <el-link href="https://www.hasor.net/web/dataql/what_is_dataql.html" target="_blank"><el-icon><Warning /></el-icon>What is DataQL?</el-link>
         </el-menu-item>
       </el-menu>
       <div v-if="this.defaultOption.showGitButton" class="gitStyle">
@@ -26,8 +26,8 @@
         <span><a target="_blank" href="https://gitee.com/zycgit/hasor/members"><img src="https://gitee.com/zycgit/hasor/badge/fork.svg?theme=white" alt="fork"></a></span>
       </div>
     </el-header>
-    <el-main>
-      <div :style="{height:fullHeight + 'px', overflow: 'hidden'}">
+    <el-main class="dataway-main">
+      <div class="dataway-view" :style="{height:fullHeight + 'px'}">
         <router-view />
       </div>
     </el-main>
@@ -62,5 +62,17 @@ export default {
 .gitStyle span {
   display: inline-block;
   width: 100px;
+}
+
+.dataway-app {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.dataway-main,
+.dataway-view {
+  width: 100%;
+  overflow: hidden;
 }
 </style>

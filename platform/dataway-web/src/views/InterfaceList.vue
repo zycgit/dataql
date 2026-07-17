@@ -1,48 +1,48 @@
 <template>
-  <SplitPane :min-percent="30" :default-percent="panelPercentVertical" split="vertical" @resize="handleVerticalSplitResize">
-    <template slot="paneL">
-      <el-table ref="interfaceTable" height="100%"
+  <SplitPane ref="mainSplitPane" :min-percent="30" :default-percent="panelPercentVertical" split="vertical" @resize="handleVerticalSplitResize">
+    <template #paneL>
+      <el-table ref="interfaceTable" class="interface-table" height="100%"
                 :data="tableData.filter(dat => !apiSearch || dat.path.toLowerCase().includes(apiSearch.toLowerCase()) || dat.comment.toLowerCase().includes(apiSearch.toLowerCase()))"
                 empty-text="No Api" highlight-current-row border lazy stripe
                 @current-change="handleApiDataChange"
       >
         <el-table-column prop="id" width="24" :resizable="false">
-          <template slot="header" class="dir-list-icon">
+          <template #header>
             <el-tooltip class="item" effect="dark" content="Directory" placement="right">
-              <el-link @click="showToggle"><i class="el-icon-menu" /></el-link>
+              <el-link @click="showToggle"><el-icon><Menu /></el-icon></el-link>
             </el-tooltip>
           </template>
-          <template slot-scope="scope">
+          <template #default="scope">
             <el-tooltip class="item" effect="dark" content="Choose to Test" placement="right">
               <el-checkbox v-model="scope.row.checked" name="type" @change="handleApiDataChange(scope.row)" />
             </el-tooltip>
           </template>
         </el-table-column>
         <el-table-column prop="path" label="Api" :show-overflow-tooltip="true" :resizable="false">
-          <template slot="header" slot-scope="scope">
-            <el-input v-model="apiSearch" size="mini" placeholder="search Api" />
+          <template #header="scope">
+            <el-input v-model="apiSearch" size="small" placeholder="search Api" />
           </template>
-          <template slot-scope="scope">
-            <el-tag size="mini" style="float: left;width: 45px;text-align: center;margin-right: 2px;" effect="dark" :type="tableRowMethodTagClassName(scope.row).css">
+          <template #default="scope">
+            <el-tag size="small" style="float: left;width: 45px;text-align: center;margin-right: 2px;" effect="dark" :type="tableRowMethodTagClassName(scope.row).css">
               {{ tableRowMethodTagClassName(scope.row).title }}
             </el-tag>
-            <el-tag size="mini" style="float: left;width: 65px;text-align: center;" :type="tableRowStatusTagClassName(scope.row).css">
+            <el-tag size="small" style="float: left;width: 65px;text-align: center;" :type="tableRowStatusTagClassName(scope.row).css">
               {{ tableRowStatusTagClassName(scope.row).title }}
             </el-tag>
-            <span style="overflow-x: hidden;">{{ requestPath(scope.row.path) }}&nbsp;&nbsp;&nbsp;&nbsp;</span>
-            <span style="color: #adadad;display: contents;float: right; overflow-x: hidden;">[{{ scope.row.comment }}]</span>
+            <span class="api-path">{{ requestPath(scope.row.path) }}</span>
+            <span class="api-comment">[{{ scope.row.comment }}]</span>
           </template>
         </el-table-column>
         <el-table-column prop="id" width="24" :resizable="false">
-          <template slot="header">
+          <template #header>
             <el-tooltip class="item" effect="dark" content="reload Api List" placement="right">
-              <el-link @click="loadList"><i class="el-icon-refresh" /></el-link>
+              <el-link @click="loadList"><el-icon><Refresh /></el-icon></el-link>
             </el-tooltip>
           </template>
-          <template slot-scope="scope">
+          <template #default="scope">
             <router-link :to="'/edit/' + scope.row.id">
               <el-tooltip class="item" effect="dark" content="Edit" placement="right">
-                <el-link><i class="el-icon-edit" /></el-link>
+                <el-link><el-icon><Edit /></el-icon></el-link>
               </el-tooltip>
             </router-link>
           </template>
@@ -50,15 +50,15 @@
       </el-table>
       <el-tree v-show="directoryShow" id="directory-list" :default-expand-all="true" node-key="id" :data="directoryList" :props="defaultProps" @node-click="treeClick" />
     </template>
-    <template slot="paneR">
+    <template #paneR>
       <split-pane :min-percent="30" :default-percent="panelPercentHorizontal" split="horizontal" @resize="handleHorizontalSplitResize">
-        <template slot="paneL">
+        <template #paneL>
           <RequestPanel ref="listRequestPanel"
                         :header-data="headerData" :request-body="requestBody" :api-info="requestApiInfo"
                         @onRun="handleRun" @onHeaderChange="(data)=> { this.headerData = data}" @onRequestBodyChange="(data)=> { this.requestBody = data}"
           />
         </template>
-        <template slot="paneR">
+        <template #paneR>
           <ResponsePanel ref="listResponsePanel"
                          :response-body="responseBody" :on-edit-page="false" :result-type="responseType"
                          @onResponseBodyChange="(data)=> { this.responseBody = data}"
@@ -82,7 +82,7 @@ export default {
     data() {
         return {
             headerPanelHeight: '100%',
-            panelPercentVertical: 50,
+            panelPercentVertical: 40,
             panelPercentHorizontal: 50,
             loading: false,
             //
@@ -103,18 +103,20 @@ export default {
         };
     },
     mounted() {
-        this.handleSplitResize(this.verticalPanelPercent, this.horizontalPanelPercent);
+        this.$nextTick(() => {
+            this.handleSplitResize(this.panelPercentVertical, this.panelPercentHorizontal);
+        });
         //
         const self = this;
         this._resize = () => {
             return (() => {
-                self.handleSplitResize(self.verticalPanelPercent, self.horizontalPanelPercent);
+                self.handleSplitResize(self.panelPercentVertical, self.panelPercentHorizontal);
             })();
         };
         window.addEventListener('resize', this._resize);
         this.loadList();
     },
-    beforeDestroy() {
+    beforeUnmount() {
         window.removeEventListener('resize', this._resize);
     },
     methods: {
@@ -176,7 +178,7 @@ export default {
             this.panelPercentHorizontal = horizontalPercent;
             const horizontalDataNum = horizontalPercent / 100;
             const heightSize = document.documentElement.clientHeight - 60;
-            const widthSize = (document.documentElement.clientWidth * (1 - (this.panelPercentVertical / 100)));
+            const widthSize = (document.documentElement.clientWidth * (1 - (this.panelPercentVertical / 100))) - 5;
             //
             this.$refs.listRequestPanel.doLayout(heightSize * horizontalDataNum, widthSize);
             this.$refs.listResponsePanel.doLayout(heightSize * (1 - horizontalDataNum) + 10, widthSize);
@@ -280,6 +282,30 @@ export default {
 </script>
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style>
+    .interface-table {
+        width: 100%;
+        height: 100%;
+    }
+
+    .api-path {
+        display: inline-block;
+        max-width: calc(100% - 128px);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .api-comment {
+        color: #adadad;
+        display: inline-block;
+        max-width: 45%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
     #directory-list {
         top: 30px;
         left: -4px;

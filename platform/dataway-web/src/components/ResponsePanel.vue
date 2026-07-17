@@ -7,7 +7,7 @@
       <el-button-group>
         <el-tooltip class="item" effect="dark" content="Copy to Clipboard" placement="top-end">
           <el-button v-clipboard:copy="responseBodyCopy" v-clipboard:success="handleJsonResultCopySuccess" v-clipboard:error="handleJsonResultCopyError"
-                     class="z-index-top" size="mini" round
+                     class="z-index-top" size="small" round
           >
             <svg class="icon" aria-hidden="true">
               <use xlink:href="#iconcopy"></use>
@@ -16,7 +16,7 @@
         </el-tooltip>
         <el-tooltip class="item" effect="dark" content="Format Result" placement="top-end">
           <el-button v-if="panelActiveName ==='result_view' && resultType ==='json'"
-                     class="z-index-top" size="mini" round @click.native="handleJsonResultFormatter"
+                     class="z-index-top" size="small" round @click="handleJsonResultFormatter"
           >
             <svg class="icon" aria-hidden="true">
               <use xlink:href="#iconformat"></use>
@@ -25,7 +25,7 @@
         </el-tooltip>
         <el-tooltip class="item" effect="dark" content="Save As Download" placement="top-end">
           <el-button v-if="panelActiveName ==='result_view' && resultType ==='bytes'"
-                     class="z-index-top" size="mini" round @click.native="handleResultDownload"
+                     class="z-index-top" size="small" round @click="handleResultDownload"
           >
             <svg class="icon" aria-hidden="true">
               <use xlink:href="#icondownload"></use>
@@ -34,7 +34,7 @@
         </el-tooltip>
         <el-tooltip class="item" effect="dark" content="Format Structure" placement="top-end">
           <el-button v-if="onEditPage && panelActiveName ==='result_format'"
-                     class="z-index-top" size="mini" round @click.native="handleStructureFormatter"
+                     class="z-index-top" size="small" round @click="handleStructureFormatter"
           >
             <svg class="icon" aria-hidden="true">
               <use xlink:href="#iconformat"></use>

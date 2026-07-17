@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import {ElLoading} from 'element-plus';
 import axios from 'axios';
 import {errorBox} from './utils';
 
@@ -97,10 +97,9 @@ export default function request(
         /**/
     };
     if (newOptions.loading) {
-        const loading = Vue.prototype.$loading({
+        const loading = ElLoading.service({
             lock: true,
             text: 'Loading',
-            spinner: 'el-icon-loading',
             background: 'rgba(0, 0, 0, 0.5)',
         });
         finallyCallback = () => {

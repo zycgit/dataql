@@ -1,7 +1,8 @@
 module.exports = {
     root: true,
     parserOptions: {
-        parser: 'babel-eslint',
+        parser: '@babel/eslint-parser',
+        requireConfigFile: false,
         sourceType: 'module',
     },
     env: {
@@ -21,11 +22,13 @@ module.exports = {
     // add your custom rules here
     //it is base on https://github.com/vuejs/eslint-config-vue
     rules: {
-        'vue/max-attributes-per-line': [2, {singleline: 10, multiline: {max: 5, allowFirstLine: true}}],
+        'vue/max-attributes-per-line': [2, {singleline: {max: 10}, multiline: {max: 5}}],
         'vue/singleline-html-element-content-newline': 'off',
         'vue/multiline-html-element-content-newline': 'off',
-        'vue/name-property-casing': ['error', 'PascalCase'],
         'vue/no-v-html': 'off',
+        'vue/first-attribute-linebreak': 'off',
+        'vue/require-explicit-emits': 'off',
+        'vue/v-on-event-hyphenation': 'off',
         "vue/script-indent": ['error', 4, {'baseIndent': 0}],
         'vue/no-unused-vars': 'off',
         'vue/this-in-template': [0, 'always'],
