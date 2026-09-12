@@ -1,3 +1,10 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 package net.hasor.dataql.host;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.hasor.dataql.AbstractTestResource;
@@ -8,9 +15,7 @@ import net.hasor.dataql.kernel.Finder;
 import net.hasor.test.dataql.udfs.DataBean;
 import net.hasor.test.dataql.udfs.DemoUdf;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class HostConfigurationFinderTest extends AbstractTestResource {
     @Test

@@ -28,3 +28,13 @@ project(':dataway-dao').projectDir = file('platform/dataway-dao')
 project(':dataway-node').projectDir = file('platform/dataway-node')
 project(':dataway-console').projectDir = file('platform/dataway-console')
 project(':dataway-web').projectDir = file('platform/dataway-web')
+
+// Embedded distribution: framework-independent libraries and optional adapters.
+['dataway-core', 'dataway-hasor', 'dataway-solon', 'dataway-spring'].each { name ->
+    include name
+    project(":${name}").projectDir = file("embedded/${name}")
+}
+
+// Runnable examples live alongside the library distributions.
+include 'dataway-embedded-example'
+project(':dataway-embedded-example').projectDir = file('example/dataway-embedded-example')

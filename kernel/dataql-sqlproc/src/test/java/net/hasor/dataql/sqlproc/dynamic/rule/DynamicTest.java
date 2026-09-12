@@ -1,20 +1,26 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 package net.hasor.dataql.sqlproc.dynamic.rule;
-import net.hasor.cobble.CollectionUtils;
-import net.hasor.dataql.sqlproc.types.SqlArg;
-import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
-import net.hasor.dataql.sqlproc.types.SqlMode;
-import net.hasor.dataql.sqlproc.dynamic.rule.dto.MyTypeHandler;
-import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
-import net.hasor.dataql.sqlproc.dynamic.segment.PlanDynamicSql;
-import net.hasor.dataql.sqlproc.dynamic.segment.SqlModifier;
-import org.junit.Test;
-
 import java.sql.JDBCType;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import net.hasor.cobble.CollectionUtils;
+import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
+import net.hasor.dataql.sqlproc.dynamic.rule.dto.MyTypeHandler;
+import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
+import net.hasor.dataql.sqlproc.dynamic.segment.PlanDynamicSql;
+import net.hasor.dataql.sqlproc.dynamic.segment.SqlModifier;
+import net.hasor.dataql.sqlproc.types.SqlArg;
+import net.hasor.dataql.sqlproc.types.SqlMode;
+import org.junit.Test;
 
 public class DynamicTest {
     private static void assertArgCnt(int argCnt, String sql) throws SQLException {
@@ -141,7 +147,7 @@ public class DynamicTest {
         //expr
         String sql = "a = :id.ccc['aaa'][0]";
         PlanDynamicSql segment = DynamicParsed.getParsedSql(sql);
-        Map<String, Object> ctx = CollectionUtils.asMap("id", CollectionUtils.asMap("ccc", CollectionUtils.asMap("aaa", Arrays.asList("abc"))));
+        Map<String, Object> ctx = CollectionUtils.asMap("id", CollectionUtils.asMap("ccc", CollectionUtils.asMap("aaa", List.of("abc"))));
         SqlBuilder sqlBuilder = segment.buildQuery(ctx, new TestQueryContext());
 
         assert segment.getNamedList().get(0).expr().equals("id.ccc['aaa'][0]");
@@ -201,7 +207,7 @@ public class DynamicTest {
         //expr
         String sql = "a = &id.ccc['aaa'][0]";
         PlanDynamicSql segment = DynamicParsed.getParsedSql(sql);
-        Map<String, Object> ctx = CollectionUtils.asMap("id", CollectionUtils.asMap("ccc", CollectionUtils.asMap("aaa", Arrays.asList("abc"))));
+        Map<String, Object> ctx = CollectionUtils.asMap("id", CollectionUtils.asMap("ccc", CollectionUtils.asMap("aaa", List.of("abc"))));
         SqlBuilder sqlBuilder = segment.buildQuery(ctx, new TestQueryContext());
         assert segment.getOriSqlString().equals(sql);
         assert sqlBuilder.getSqlString().equals("a = ?");
@@ -217,10 +223,10 @@ public class DynamicTest {
                 "-- this is comment a = #{name} and b = #{name}");
 
         // arg1
-        assertRule(Arrays.asList("name"),//
+        assertRule(List.of("name"),//
                 "abc = #{name}",         //
                 "abc = ?");
-        assertRule(Arrays.asList("eventType"),//
+        assertRule(List.of("eventType"),//
                 "abc = #{eventType,javaType=" + Integer.class.getName() + "}",//
                 "abc = ?");
 
@@ -279,7 +285,7 @@ public class DynamicTest {
                 "-- this is comment a = @{if,true,:a} and b = @{if,true,:a}");
 
         // arg1
-        assertRule(Arrays.asList("aa"),//
+        assertRule(List.of("aa"),//
                 "abc = @{if,true,:aa}",//
                 "abc = ?");
 

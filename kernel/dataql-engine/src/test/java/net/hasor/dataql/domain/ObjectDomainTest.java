@@ -1,15 +1,21 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 package net.hasor.dataql.domain;
-import net.hasor.dataql.AbstractTestResource;
-import net.hasor.test.dataql.udfs.DataBean;
-import org.junit.Test;
-
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import net.hasor.dataql.AbstractTestResource;
+import net.hasor.test.dataql.udfs.DataBean;
+import org.junit.Test;
 
 public class ObjectDomainTest extends AbstractTestResource {
-    private HashMap hashMap = new HashMap() {{
+    private final HashMap hashMap = new HashMap() {{
         put("data_str", "abc");
         put("data_boolean", true);
         put("data_int", 1234);

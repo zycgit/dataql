@@ -1,19 +1,25 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 package net.hasor.dataql.host.function;
-import net.hasor.dataql.host.HostConfiguration;
-import net.hasor.dataql.host.QueryBuilder;
-import net.hasor.dataql.host.QueryManager;
+import java.io.IOException;
+import java.util.List;
+import java.util.Set;
 import net.hasor.dataql.domain.DataModel;
 import net.hasor.dataql.domain.ListModel;
 import net.hasor.dataql.domain.ObjectModel;
 import net.hasor.dataql.domain.ValueModel;
+import net.hasor.dataql.host.HostConfiguration;
+import net.hasor.dataql.host.QueryBuilder;
+import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataql.host.function.basic.CollectionUdfSource;
 import net.hasor.dataql.kernel.QueryRuntimeException;
 import net.hasor.test.dataql.udfs.UserOrderUdfSource;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Set;
 
 public class CollectionTest {
     @Test

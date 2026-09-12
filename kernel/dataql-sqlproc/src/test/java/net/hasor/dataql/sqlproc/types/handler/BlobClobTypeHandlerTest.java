@@ -1,3 +1,10 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.lang.reflect.Proxy;
@@ -15,30 +22,36 @@ public class BlobClobTypeHandlerTest extends TypeHandlerMockSupport {
 
     private Clob mockClob(String content) {
         return (Clob) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[] { Clob.class }, (proxy, method, args) -> {
-            if ("length".equals(method.getName()))
+            if ("length".equals(method.getName())) {
                 return (long) content.length();
-            if ("getSubString".equals(method.getName()))
+            }
+            if ("getSubString".equals(method.getName())) {
                 return content;
+            }
             return null;
         });
     }
 
     private NClob mockNClob(String content) {
         return (NClob) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[] { NClob.class }, (proxy, method, args) -> {
-            if ("length".equals(method.getName()))
+            if ("length".equals(method.getName())) {
                 return (long) content.length();
-            if ("getSubString".equals(method.getName()))
+            }
+            if ("getSubString".equals(method.getName())) {
                 return content;
+            }
             return null;
         });
     }
 
     private Blob mockBlob(byte[] content) {
         return (Blob) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[] { Blob.class }, (proxy, method, args) -> {
-            if ("length".equals(method.getName()))
+            if ("length".equals(method.getName())) {
                 return (long) content.length;
-            if ("getBytes".equals(method.getName()))
+            }
+            if ("getBytes".equals(method.getName())) {
                 return content;
+            }
             return null;
         });
     }

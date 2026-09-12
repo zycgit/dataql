@@ -1,17 +1,9 @@
 /*
- * Copyright 2015-2022 the original author or authors.
+ * Copyright 2015-2026 the original author or authors.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.types;
 import java.math.BigDecimal;
@@ -35,10 +27,10 @@ public class SpiRegistryTest {
     @Test
     public void ruleTest_1() throws ClassNotFoundException {
         assert TypeHandlerRegistry.DEFAULT.getTypeHandler(Boolean.TRUE.getClass()) instanceof BooleanTypeHandler;
-        assert TypeHandlerRegistry.DEFAULT.getTypeHandler(new Byte((byte) 123).getClass()) instanceof ByteTypeHandler;
-        assert TypeHandlerRegistry.DEFAULT.getTypeHandler(new Short((short) 123).getClass()) instanceof ShortTypeHandler;
-        assert TypeHandlerRegistry.DEFAULT.getTypeHandler(new Integer(123).getClass()) instanceof IntegerTypeHandler;
-        assert TypeHandlerRegistry.DEFAULT.getTypeHandler(new Long(123).getClass()) instanceof LongTypeHandler;
+        assert TypeHandlerRegistry.DEFAULT.getTypeHandler(Byte.valueOf((byte) 123).getClass()) instanceof ByteTypeHandler;
+        assert TypeHandlerRegistry.DEFAULT.getTypeHandler(Short.valueOf((short) 123).getClass()) instanceof ShortTypeHandler;
+        assert TypeHandlerRegistry.DEFAULT.getTypeHandler(Integer.valueOf(123).getClass()) instanceof IntegerTypeHandler;
+        assert TypeHandlerRegistry.DEFAULT.getTypeHandler(Long.valueOf(123).getClass()) instanceof LongTypeHandler;
         assert TypeHandlerRegistry.DEFAULT.getTypeHandler(new Float(123.123f).getClass()) instanceof FloatTypeHandler;
         assert TypeHandlerRegistry.DEFAULT.getTypeHandler(new Double(123.123f).getClass()) instanceof DoubleTypeHandler;
         assert TypeHandlerRegistry.DEFAULT.getTypeHandler(new Date().getClass()) instanceof SqlTimestampAsDateTypeHandler;

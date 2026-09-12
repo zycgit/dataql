@@ -1,17 +1,9 @@
 /*
- * Copyright 2015-2022 the original author or authors.
+ * Copyright 2015-2026 the original author or authors.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.utils;
 import java.io.PrintStream;
@@ -88,7 +80,7 @@ public abstract class AbstractDbTest {
         for (Map<String, String> row : newValues) {
             //1.Title
             if (first) {
-                StringBuffer sb = new StringBuffer("");
+                StringBuffer sb = new StringBuffer();
                 for (Entry<String, Integer> titleEnt : titleConfig.entrySet()) {
                     String title = StringUtils.rightPad(titleEnt.getKey(), titleEnt.getValue(), ' ');
                     sb.append(String.format("| %s ", title));
@@ -101,14 +93,14 @@ public abstract class AbstractDbTest {
                 output.append(String.format("|%s|\n", StringUtils.center("", titleLength - 2, "-")));
             }
             //2.Body
-            StringBuffer sb = new StringBuffer("");
+            StringBuffer sb = new StringBuffer();
             for (String colKey : titleConfig.keySet()) {
                 String val = row.get(colKey);
                 String valueStr = StringUtils.rightPad(val, AbstractDbTest.fixLength(val, titleConfig.get(colKey)), ' ');
                 sb.append(String.format("| %s ", valueStr));
             }
             sb.append("|");
-            output.append(sb.toString() + "\n");
+            output.append(sb + "\n");
         }
         output.append(String.format("\\%s/", StringUtils.center("", titleLength - 2, "-")));
         if (out != null) {

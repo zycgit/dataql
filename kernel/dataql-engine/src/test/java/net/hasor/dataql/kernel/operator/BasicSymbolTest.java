@@ -1,18 +1,24 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 package net.hasor.dataql.kernel.operator;
-import net.hasor.dataql.AbstractTestResource;
-import net.hasor.dataql.domain.Hints;
-import net.hasor.dataql.parser.location.LocationUtils;
-import net.hasor.dataql.domain.HintsSet;
-import org.junit.Test;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.HashMap;
+import net.hasor.dataql.AbstractTestResource;
+import net.hasor.dataql.domain.Hints;
+import net.hasor.dataql.domain.HintsSet;
+import net.hasor.dataql.parser.location.LocationUtils;
+import org.junit.Test;
 
 public class BasicSymbolTest extends AbstractTestResource {
-    private OperatorManager om         = OperatorManager.defaultManager();
-    private Hints           optionSet  = new HintsSet();
-    private Hints           decimalSet = new HintsSet() {{
+    private final OperatorManager om        = OperatorManager.defaultManager();
+    private final Hints           optionSet = new HintsSet();
+    private final Hints           decimalSet = new HintsSet() {{
         setHint(Hints.MIN_DECIMAL_WIDTH, "big");
     }};
 
@@ -29,10 +35,10 @@ public class BasicSymbolTest extends AbstractTestResource {
         process = om.findUnaryProcess("-", Number.class);
         assert ((Byte) process.doProcess(LocationUtils.unknownLocation(), "-", new Object[] { (byte) 1 }, optionSet)) == -1;
         assert ((Short) process.doProcess(LocationUtils.unknownLocation(), "-", new Object[] { (short) -1 }, optionSet)) == 1;
-        assert ((Integer) process.doProcess(LocationUtils.unknownLocation(), "-", new Object[] { (int) 10 }, optionSet)) == -10;
+        assert ((Integer) process.doProcess(LocationUtils.unknownLocation(), "-", new Object[] { 10 }, optionSet)) == -10;
         assert ((Long) process.doProcess(LocationUtils.unknownLocation(), "-", new Object[] { (long) -11 }, optionSet)) == 11;
         assert ((Float) process.doProcess(LocationUtils.unknownLocation(), "-", new Object[] { (float) 10.3 }, optionSet)) == -10.3f;
-        assert ((Double) process.doProcess(LocationUtils.unknownLocation(), "-", new Object[] { (double) -11.44 }, optionSet)) == 11.44;
+        assert ((Double) process.doProcess(LocationUtils.unknownLocation(), "-", new Object[] { -11.44 }, optionSet)) == 11.44;
         assert ((BigInteger) process.doProcess(LocationUtils.unknownLocation(), "-", new Object[] { BigInteger.valueOf(1234) }, optionSet)).intValue() == -1234;
         assert ((BigDecimal) process.doProcess(LocationUtils.unknownLocation(), "-", new Object[] { BigDecimal.valueOf(-123.4d) }, optionSet)).doubleValue() == 123.4;
     }
@@ -44,7 +50,7 @@ public class BasicSymbolTest extends AbstractTestResource {
         assert (Integer) process.doProcess(LocationUtils.unknownLocation(), "+", new Object[] { 1, 2 }, optionSet) == 3;
         //
         process = om.findDyadicProcess("+", Integer.class, Long.class);
-        assert (Long) process.doProcess(LocationUtils.unknownLocation(), "+", new Object[] { 1, 2l }, optionSet) == 3;
+        assert (Long) process.doProcess(LocationUtils.unknownLocation(), "+", new Object[] { 1, 2L }, optionSet) == 3;
         //
         process = om.findDyadicProcess("+", BigInteger.class, BigInteger.class);
         BigInteger[] bigInts = new BigInteger[] {//
@@ -71,7 +77,7 @@ public class BasicSymbolTest extends AbstractTestResource {
         assert (Integer) process.doProcess(LocationUtils.unknownLocation(), "-", new Object[] { 1, 2 }, optionSet) == -1;
         //
         process = om.findDyadicProcess("-", Integer.class, Long.class);
-        assert (Long) process.doProcess(LocationUtils.unknownLocation(), "-", new Object[] { 1, 2l }, optionSet) == -1;
+        assert (Long) process.doProcess(LocationUtils.unknownLocation(), "-", new Object[] { 1, 2L }, optionSet) == -1;
         //
         process = om.findDyadicProcess("-", String.class, Long.class);
         assert process == null;
@@ -101,7 +107,7 @@ public class BasicSymbolTest extends AbstractTestResource {
         assert (Integer) process.doProcess(LocationUtils.unknownLocation(), "*", new Object[] { 2, 3 }, optionSet) == 6;
         //
         process = om.findDyadicProcess("*", Integer.class, Long.class);
-        assert (Long) process.doProcess(LocationUtils.unknownLocation(), "*", new Object[] { 2, 3l }, optionSet) == 6;
+        assert (Long) process.doProcess(LocationUtils.unknownLocation(), "*", new Object[] { 2, 3L }, optionSet) == 6;
         //
         process = om.findDyadicProcess("*", String.class, Long.class);
         assert process == null;
@@ -132,8 +138,8 @@ public class BasicSymbolTest extends AbstractTestResource {
         assert process.doProcess(LocationUtils.unknownLocation(), "/", new Object[] { 2.0, 3 }, optionSet).toString().equals("0.6666666666666666");
         //
         process = om.findDyadicProcess("/", Integer.class, Long.class);
-        assert (Long) process.doProcess(LocationUtils.unknownLocation(), "/", new Object[] { 2, 3l }, optionSet) == 0;
-        assert process.doProcess(LocationUtils.unknownLocation(), "/", new Object[] { 2.0, 3l }, optionSet).toString().equals("0.6666666666666666");
+        assert (Long) process.doProcess(LocationUtils.unknownLocation(), "/", new Object[] { 2, 3L }, optionSet) == 0;
+        assert process.doProcess(LocationUtils.unknownLocation(), "/", new Object[] { 2.0, 3L }, optionSet).toString().equals("0.6666666666666666");
         //
         process = om.findDyadicProcess("/", String.class, Long.class);
         assert process == null;
@@ -164,8 +170,8 @@ public class BasicSymbolTest extends AbstractTestResource {
         assert process.doProcess(LocationUtils.unknownLocation(), "%", new Object[] { 2.0, 3 }, optionSet).toString().equals("2.0");
         //
         process = om.findDyadicProcess("%", Integer.class, Long.class);
-        assert (Long) process.doProcess(LocationUtils.unknownLocation(), "%", new Object[] { 2, 3l }, optionSet) == 2;
-        assert process.doProcess(LocationUtils.unknownLocation(), "%", new Object[] { 2.0, 3l }, optionSet).toString().equals("2.0");
+        assert (Long) process.doProcess(LocationUtils.unknownLocation(), "%", new Object[] { 2, 3L }, optionSet) == 2;
+        assert process.doProcess(LocationUtils.unknownLocation(), "%", new Object[] { 2.0, 3L }, optionSet).toString().equals("2.0");
         //
         process = om.findDyadicProcess("%", String.class, Long.class);
         assert process == null;
@@ -197,8 +203,8 @@ public class BasicSymbolTest extends AbstractTestResource {
         assert process.doProcess(LocationUtils.unknownLocation(), "\\", new Object[] { 6.0, 3 }, optionSet).toString().equals("2");
         //
         process = om.findDyadicProcess("\\", Integer.class, Long.class);
-        assert (Long) process.doProcess(LocationUtils.unknownLocation(), "\\", new Object[] { 6, 3l }, optionSet) == 2;
-        assert process.doProcess(LocationUtils.unknownLocation(), "\\", new Object[] { 6.0, 3l }, optionSet).toString().equals("2");
+        assert (Long) process.doProcess(LocationUtils.unknownLocation(), "\\", new Object[] { 6, 3L }, optionSet) == 2;
+        assert process.doProcess(LocationUtils.unknownLocation(), "\\", new Object[] { 6.0, 3L }, optionSet).toString().equals("2");
         //
         process = om.findDyadicProcess("\\", String.class, Long.class);
         assert process == null;
@@ -226,7 +232,7 @@ public class BasicSymbolTest extends AbstractTestResource {
     public void plus2_test() throws Exception {
         OperatorProcess process = null;
         process = om.findDyadicProcess("+", String.class, Long.class);
-        assert process.doProcess(LocationUtils.unknownLocation(), "+", new Object[] { "1", 2l }, optionSet).equals("12");
+        assert process.doProcess(LocationUtils.unknownLocation(), "+", new Object[] { "1", 2L }, optionSet).equals("12");
         //
         process = om.findDyadicProcess("+", String.class, HashMap.class);
         assert process.doProcess(LocationUtils.unknownLocation(), "+", new Object[] { "1", new HashMap<>() }, optionSet).equals("1{}");
@@ -236,7 +242,7 @@ public class BasicSymbolTest extends AbstractTestResource {
     public void eq_test() throws Exception {
         OperatorProcess process = null;
         process = om.findDyadicProcess("==", String.class, Long.class);
-        assert process.doProcess(LocationUtils.unknownLocation(), "==", new Object[] { "1", 2l }, optionSet).equals(false);
+        assert process.doProcess(LocationUtils.unknownLocation(), "==", new Object[] { "1", 2L }, optionSet).equals(false);
         //
         process = om.findDyadicProcess("==", String.class, HashMap.class);
         assert process.doProcess(LocationUtils.unknownLocation(), "==", new Object[] { "1", new HashMap<>() }, optionSet).equals(false);
@@ -271,7 +277,7 @@ public class BasicSymbolTest extends AbstractTestResource {
     public void ne_test() throws Exception {
         OperatorProcess process = null;
         process = om.findDyadicProcess("!=", String.class, Long.class);
-        assert process.doProcess(LocationUtils.unknownLocation(), "!=", new Object[] { "1", 2l }, optionSet).equals(true);
+        assert process.doProcess(LocationUtils.unknownLocation(), "!=", new Object[] { "1", 2L }, optionSet).equals(true);
         //
         process = om.findDyadicProcess("!=", String.class, HashMap.class);
         assert process.doProcess(LocationUtils.unknownLocation(), "!=", new Object[] { "1", new HashMap<>() }, optionSet).equals(true);
@@ -293,7 +299,7 @@ public class BasicSymbolTest extends AbstractTestResource {
     public void ne2_test() throws Exception {
         OperatorProcess process = null;
         process = om.findDyadicProcess("!=", String.class, Long.class);
-        assert process.doProcess(LocationUtils.unknownLocation(), "!=", new Object[] { "1", 2l }, optionSet).equals(true);
+        assert process.doProcess(LocationUtils.unknownLocation(), "!=", new Object[] { "1", 2L }, optionSet).equals(true);
         //
         process = om.findDyadicProcess("!=", String.class, HashMap.class);
         assert process.doProcess(LocationUtils.unknownLocation(), "!=", new Object[] { "1", new HashMap<>() }, optionSet).equals(true);

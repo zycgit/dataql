@@ -1,3 +1,10 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.lang.reflect.Proxy;
@@ -14,10 +21,12 @@ abstract class TypeHandlerMockSupport extends AbstractSqlProcTest {
             String name = method.getName();
             if (name.startsWith("get") && args != null && args.length > 0) {
                 Object val = returnValues.get(name);
-                if (val != null)
+                if (val != null) {
                     return val;
-                if ("getObject".equals(name))
+                }
+                if ("getObject".equals(name)) {
                     return returnValues.get("default");
+                }
             }
             if ("wasNull".equals(name)) {
                 return returnValues.getOrDefault("wasNull", false);
@@ -39,13 +48,16 @@ abstract class TypeHandlerMockSupport extends AbstractSqlProcTest {
         return (ResultSet) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[] { ResultSet.class }, (proxy, method, args) -> {
             String name = method.getName();
             if (name.startsWith("get")) {
-                if (values.containsKey(name))
+                if (values.containsKey(name)) {
                     return values.get(name);
-                if (values.containsKey("default"))
+                }
+                if (values.containsKey("default")) {
                     return values.get("default");
+                }
             }
-            if ("wasNull".equals(name))
+            if ("wasNull".equals(name)) {
                 return values.getOrDefault("wasNull", false);
+            }
             return null;
         });
     }

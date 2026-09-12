@@ -1,14 +1,20 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 package net.hasor.dataql.kernel;
+import java.io.IOException;
 import com.alibaba.fastjson.JSON;
 import net.hasor.dataql.AbstractTestResource;
+import net.hasor.dataql.domain.UdfModel;
 import net.hasor.dataql.host.HostConfiguration;
 import net.hasor.dataql.host.Query;
 import net.hasor.dataql.host.QueryBuilder;
-import net.hasor.dataql.domain.UdfModel;
 import net.hasor.dataql.host.QueryManager;
 import org.junit.Test;
-
-import java.io.IOException;
 
 public class RecursionTest extends AbstractTestResource {
 

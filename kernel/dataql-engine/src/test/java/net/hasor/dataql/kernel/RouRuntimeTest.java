@@ -1,23 +1,27 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 package net.hasor.dataql.kernel;
-import net.hasor.dataql.host.HostConfiguration;
-import net.hasor.dataql.host.QueryManager;
-import net.hasor.dataql.kernel.CustomizeScope;
-import net.hasor.dataql.kernel.Finder;
-import net.hasor.cobble.loader.providers.ClassPathResourceLoader;
-import net.hasor.dataql.*;
-import net.hasor.dataql.compiler.qil.QIL;
-import net.hasor.dataql.domain.*;
-import net.hasor.dataql.parser.QueryModel;
-import net.hasor.dataql.compiler.CompilerArguments;
-import net.hasor.dataql.host.Query;
-import net.hasor.dataql.compiler.CompilerHelper;
-import net.hasor.test.dataql.udfs.DataBean;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import net.hasor.cobble.loader.providers.ClassPathResourceLoader;
+import net.hasor.dataql.AbstractTestResource;
+import net.hasor.dataql.compiler.CompilerArguments;
+import net.hasor.dataql.compiler.CompilerHelper;
+import net.hasor.dataql.compiler.qil.QIL;
+import net.hasor.dataql.domain.*;
+import net.hasor.dataql.host.HostConfiguration;
+import net.hasor.dataql.host.Query;
+import net.hasor.dataql.host.QueryManager;
+import net.hasor.dataql.parser.QueryModel;
+import net.hasor.test.dataql.udfs.DataBean;
+import org.junit.Test;
 
 public class RouRuntimeTest extends AbstractTestResource implements HintValue {
     @Test
@@ -110,7 +114,7 @@ public class RouRuntimeTest extends AbstractTestResource implements HintValue {
         assert ((ListModel) dataModel).getValue(2).asInt() == 3;
     }
 
-    private Map<String, Object> object_list_map1 = new HashMap<String, Object>() {{
+    private final Map<String, Object> object_list_map1 = new HashMap<String, Object>() {{
         put("list", new ArrayList<Object>() {{
             add("1");
             add("2");
@@ -118,7 +122,7 @@ public class RouRuntimeTest extends AbstractTestResource implements HintValue {
             add("4");
         }});
     }};
-    private Map<String, Object> object_list_map2 = new HashMap<String, Object>() {{
+    private final Map<String, Object> object_list_map2 = new HashMap<String, Object>() {{
         put("list", DomainHelper.convertTo(new ArrayList<Object>() {{
             add("1");
             add("2");

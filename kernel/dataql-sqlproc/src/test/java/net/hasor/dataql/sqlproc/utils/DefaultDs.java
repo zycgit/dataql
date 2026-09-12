@@ -1,10 +1,11 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 package net.hasor.dataql.sqlproc.utils;
-import net.hasor.cobble.CollectionUtils;
-import net.hasor.cobble.function.EConsumer;
-import net.hasor.cobble.io.IOUtils;
-import net.hasor.dbvisitor.transaction.ConnectionProxy;
-
-import javax.sql.DataSource;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -23,6 +24,11 @@ import java.util.Queue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
+import javax.sql.DataSource;
+import net.hasor.cobble.CollectionUtils;
+import net.hasor.cobble.function.EConsumer;
+import net.hasor.cobble.io.IOUtils;
+import net.hasor.dbvisitor.transaction.ConnectionProxy;
 
 public class DefaultDs implements DataSource, Closeable {
     private String                              url;
@@ -30,10 +36,10 @@ public class DefaultDs implements DataSource, Closeable {
     private String                              username;
     private String                              password;
     private List<String>                        initSql;
-    private EConsumer<Connection, SQLException> consumer;
-    private Lock                                syncLock = new ReentrantLock();
-    private Queue<Connection>                   freeConn = new LinkedList<>();
-    private Queue<Connection>                   usedConn = new LinkedList<>();
+    private       EConsumer<Connection, SQLException> consumer;
+    private final Lock                                syncLock = new ReentrantLock();
+    private final Queue<Connection>                   freeConn = new LinkedList<>();
+    private final Queue<Connection> usedConn = new LinkedList<>();
 
     /** Returns 0, indicating the default system timeout is to be used. */
     @Override
@@ -203,16 +209,19 @@ public class DefaultDs implements DataSource, Closeable {
         public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
             // Invocation on ConnectionProxy interface coming in...
             switch (method.getName()) {
-                case "getTargetConnection":
+                case "getTargetConnection": {
                     // Handle getTargetConnection method: return underlying Connection.
                     return this.target;
-                case "equals":
+                }
+                case "equals": {
                     // Only consider equal when proxies are identical.
                     return proxy == args[0];
-                case "hashCode":
+                }
+                case "hashCode": {
                     // Use hashCode of PersistenceManager proxy.
                     return System.identityHashCode(proxy);
-                case "close":
+                }
+                case "close": {
                     if (this.close) {
                         throw new SQLException("conn is closed.");
                     } else {
@@ -226,6 +235,7 @@ public class DefaultDs implements DataSource, Closeable {
                             syncLock.unlock();
                         }
                     }
+                }
             }
             // Invoke method on target Connection.
             try {

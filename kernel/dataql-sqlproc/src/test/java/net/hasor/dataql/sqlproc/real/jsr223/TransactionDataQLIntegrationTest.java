@@ -1,3 +1,10 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 package net.hasor.dataql.sqlproc.real.jsr223;
 
 import java.lang.reflect.InvocationTargetException;
@@ -14,10 +21,7 @@ import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
 import net.hasor.dataql.sqlproc.execute.transaction.TransactionProvider;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class TransactionDataQLIntegrationTest {
     private String                   jdbcUrl;
@@ -82,19 +86,19 @@ public class TransactionDataQLIntegrationTest {
     public void requiredTransactionRollsBackWhenDataQLFails() throws Exception {
         try {
             eval("""
-                import 'net.hasor.dataql.sqlproc.execute.transaction.TransactionUdfSource' as tran;
-                var addItem = @@insertSql(label)<%
-                    INSERT INTO tx_item (label) VALUES (:label)
-                %>;
-                var failSql = @@insertSql()<%
-                    INSERT INTO missing_table (label) VALUES ('rollback')
-                %>;
-                return tran.required(() -> {
-                    run addItem("rollback");
-                    run failSql();
-                    return true;
-                });
-                """);
+                    import 'net.hasor.dataql.sqlproc.execute.transaction.TransactionUdfSource' as tran;
+                    var addItem = @@insertSql(label)<%
+                        INSERT INTO tx_item (label) VALUES (:label)
+                    %>;
+                    var failSql = @@insertSql()<%
+                        INSERT INTO missing_table (label) VALUES ('rollback')
+                    %>;
+                    return tran.required(() -> {
+                        run addItem("rollback");
+                        run failSql();
+                        return true;
+                    });
+                    """);
             fail("transaction should roll back when SQL execution fails.");
         } catch (Throwable e) {
             assertEquals(0, count("rollback"));

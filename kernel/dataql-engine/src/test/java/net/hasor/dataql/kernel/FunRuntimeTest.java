@@ -1,19 +1,21 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 package net.hasor.dataql.kernel;
-import net.hasor.dataql.AbstractTestResource;
-import net.hasor.dataql.domain.HintValue;
-import net.hasor.dataql.host.Query;
-import net.hasor.dataql.domain.Udf;
-import net.hasor.dataql.domain.DataModel;
-import net.hasor.dataql.domain.DomainHelper;
-import net.hasor.dataql.domain.ValueModel;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import net.hasor.dataql.AbstractTestResource;
+import net.hasor.dataql.domain.*;
+import net.hasor.dataql.host.Query;
+import org.junit.Test;
 
 public class FunRuntimeTest extends AbstractTestResource implements HintValue {
-    private Map<String, Object> object_list_map = new HashMap<String, Object>() {{
+    private final Map<String, Object> object_list_map = new HashMap<String, Object>() {{
         put("list", new ArrayList<Object>() {{
             add("1");
             add("2");

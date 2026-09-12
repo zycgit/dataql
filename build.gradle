@@ -1,3 +1,10 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 plugins {
     id 'com.gradleup.shadow' version '9.2.2' apply false
 }
@@ -6,14 +13,47 @@ allprojects {
     group = 'net.hasor'
 }
 
+def embeddedModules = ['dataway-core', 'dataway-hasor', 'dataway-solon', 'dataway-spring', 'dataway-embedded-example']
+tasks.register('embeddedCheck') {
+    group = 'verification'
+    description = 'Verify only the embedded distribution and its framework adapters.'
+    dependsOn embeddedModules.collect { ":${it}:check" }
+    dependsOn 'verifyEmbeddedBoundaries'
+}
+tasks.register('verifyEmbeddedBoundaries') {
+    group = 'verification'
+    description = 'Reject framework and legacy JSON dependencies in the embedded core.'
+    doLast {
+        def forbidden = project(':dataway-core').configurations.runtimeClasspath.incoming.resolutionResult.allComponents.findAll { component ->
+            def id = component.moduleVersion
+            id != null && (id.group.startsWith('org.springframework') || id.group == 'org.noear' ||
+                    id.group in ['javax.servlet', 'jakarta.servlet'] ||
+                    (id.group == 'net.hasor' && id.name.startsWith('hasor-')) ||
+                    (id.group == 'com.alibaba' && id.name == 'fastjson'))
+        }
+        if (!forbidden.empty) {
+            throw new GradleException("dataway-core has forbidden runtime dependencies: ${forbidden*.moduleVersion}")
+        }
+    }
+}
+tasks.register('embeddedDist') {
+    group = 'distribution'
+    description = 'Build the runnable embedded example and all adapter libraries.'
+    dependsOn embeddedModules.collect { ":${it}:assemble" }
+    dependsOn ':dataway-embedded-example:installDist'
+}
+
 subprojects {
+    def embeddedProject = embeddedModules.contains(project.name)
+    def javaVersion = embeddedProject ? 21 : 17
+
     plugins.withType(JavaPlugin).configureEach {
         java {
-            toolchain.languageVersion = JavaLanguageVersion.of(17)
+            toolchain.languageVersion = JavaLanguageVersion.of(javaVersion)
         }
         tasks.withType(JavaCompile).configureEach {
             options.encoding = 'UTF-8'
-            options.release = 17
+            options.release = javaVersion
         }
         tasks.withType(Javadoc).configureEach {
             options.encoding = 'UTF-8'
@@ -21,14 +61,93 @@ subprojects {
             failOnError = false
         }
         tasks.withType(Test).configureEach {
-            useJUnit()
-            ignoreFailures = true
+            if (embeddedProject) {
+                useJUnitPlatform()
+            } else {
+                useJUnit()
+            }
+            ignoreFailures = !embeddedProject
             jvmArgs '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
                     '--add-opens', 'java.base/java.lang.reflect=ALL-UNNAMED',
                     '--add-opens', 'java.base/java.io=ALL-UNNAMED',
                     '--add-opens', 'java.base/java.net=ALL-UNNAMED'
         }
         tasks.withType(GenerateModuleMetadata).configureEach { enabled = false }
-        dependencies { testImplementation "junit:junit:${property('lib.junit')}" }
+        dependencies {
+            if (embeddedProject) {
+                testImplementation platform('org.junit:junit-bom:6.1.3')
+                testImplementation 'org.junit.jupiter:junit-jupiter'
+                testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+                testRuntimeOnly 'org.slf4j:slf4j-simple:2.0.17'
+            } else {
+                testImplementation "junit:junit:${property('lib.junit')}"
+            }
+        }
+
+        plugins.withId('maven-publish') {
+            apply plugin: 'signing'
+            java {
+                withSourcesJar()
+                withJavadocJar()
+            }
+            publishing {
+                publications {
+                    mavenJava(MavenPublication) {
+                        from components.java
+                        pom {
+                            name = providers.provider { project.findProperty('pomName') ?: project.name }
+                            description = providers.provider { project.description ?: project.name }
+                            url = 'https://www.hasor.net/'
+                            licenses { license { name = 'The Apache Software License, Version 2.0'; url = 'https://www.apache.org/licenses/LICENSE-2.0.txt' } }
+                            developers { developer { name = '赵永春(Mr.Zhao)'; email = 'zyc@hasor.net' } }
+                            scm {
+                                connection = 'scm:git:git@gitee.com:zycgit/dataql.git'
+                                developerConnection = connection
+                                url = 'https://gitee.com/zycgit/dataql'
+                                tag = 'HEAD'
+                            }
+                            withXml {
+                                def excluded = new LinkedHashSet()
+                                ['compileOnly', 'testImplementation', 'testRuntimeOnly', 'shaded', 'antlr', 'antlrTool'].each { configName ->
+                                    def configuration = configurations.findByName(configName)
+                                    if (configuration) {
+                                        excluded.addAll(configuration.dependencies)
+                                    }
+                                }
+                                def dependenciesNode = asNode().dependencies[0]
+                                excluded.each { dep ->
+                                    def groupId = dep.group ?: project.group
+                                    dependenciesNode?.dependency?.findAll {
+                                        it.groupId.text() == groupId.toString() && it.artifactId.text() == dep.name
+                                    }?.each {
+                                        dependenciesNode.remove(it)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (findProperty('centralBundleDir')) {
+                    repositories { maven { name = 'centralBundle'; url = uri(findProperty('centralBundleDir')) } }
+                }
+            }
+            afterEvaluate {
+                if (plugins.hasPlugin('com.gradleup.shadow')) {
+                    def publication = publishing.publications.mavenJava
+                    publication.setArtifacts([])
+                    publication.artifact(tasks.shadowJar) { classifier = null }
+                    publication.artifact(tasks.sourcesJar)
+                    publication.artifact(tasks.javadocJar)
+                }
+            }
+            signing {
+                required { findProperty('centralRelease') == 'true' }
+                def key = findProperty('maven.central.signing_key')
+                if (key) {
+                    useInMemoryPgpKeys(key.replace('\\n', '\n'), findProperty('maven.central.signing_password'))
+                }
+                sign publishing.publications.mavenJava
+            }
+        }
     }
 }

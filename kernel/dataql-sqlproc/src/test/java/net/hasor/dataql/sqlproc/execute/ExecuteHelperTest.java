@@ -1,3 +1,10 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 package net.hasor.dataql.sqlproc.execute;
 
 
@@ -57,8 +64,9 @@ public class ExecuteHelperTest {
     @Test
     public void formatLongString() {
         char[] cs = new char[3000];
-        for (int i = 0; i < cs.length; i++)
+        for (int i = 0; i < cs.length; i++) {
             cs[i] = 'x';
+        }
         BoundSql sql = new BoundSql.BoundSqlObj("SELECT * FROM t", new Object[] { new String(cs) });
         String s = ExecuteHelper.fmtBoundSql(sql).toString();
         assertTrue(s.length() < 2200 && s.contains("...'"));

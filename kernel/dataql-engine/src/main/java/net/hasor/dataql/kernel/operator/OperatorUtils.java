@@ -1,17 +1,9 @@
 /*
- * Copyright 2015-2022 the original author or authors.
+ * Copyright 2015-2026 the original author or authors.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.kernel.operator;
 import java.math.BigDecimal;
@@ -389,35 +381,46 @@ public class OperatorUtils {
 
     private static Number newReal(int realType, long value) {
         switch (realType) {
-            case BOOL:
+            case BOOL: {
                 return (value == 0) ? 0 : 1;
-            case BYTE:
+            }
+            case BYTE: {
                 return (byte) value;
-            case SHORT:
+            }
+            case SHORT: {
                 return (short) value;
+            }
             case CHAR:
-            case INT:
+            case INT: {
                 return (int) value;
-            default:
+            }
+            default: {
                 return value;
+            }
         }
     }
 
     private static Number newReal(int realType, BigInteger value) {
         switch (realType) {
-            case BOOL:
+            case BOOL: {
                 return BigInteger.ZERO.compareTo(value) == 0 ? 0 : 1;
-            case BYTE:
+            }
+            case BYTE: {
                 return value.byteValue();
-            case SHORT:
+            }
+            case SHORT: {
                 return value.shortValue();
+            }
             case CHAR:
-            case INT:
+            case INT: {
                 return value.intValue();
-            case LONG:
+            }
+            case LONG: {
                 return value.longValue();
-            default:
+            }
+            default: {
                 return value;
+            }
         }
     }
 
@@ -446,12 +449,15 @@ public class OperatorUtils {
             case BYTE:
             case SHORT:
             case CHAR:
-            case INT:
+            case INT: {
                 return newReal(maxType, intValue(obj1) + intValue(obj2));
-            case LONG:
+            }
+            case LONG: {
                 return newReal(maxType, longValue(obj1) + longValue(obj2));
-            default:
+            }
+            default: {
                 return newReal(maxType, bigIntValue(obj1).add(bigIntValue(obj2)));
+            }
         }
     }
 
@@ -463,12 +469,15 @@ public class OperatorUtils {
             case BYTE:
             case SHORT:
             case CHAR:
-            case INT:
+            case INT: {
                 return newReal(maxType, intValue(obj1) - intValue(obj2));
-            case LONG:
+            }
+            case LONG: {
                 return newReal(maxType, longValue(obj1) - longValue(obj2));
-            default:
+            }
+            default: {
                 return newReal(maxType, bigIntValue(obj1).subtract(bigIntValue(obj2)));
+            }
         }
     }
 
@@ -480,12 +489,15 @@ public class OperatorUtils {
             case BYTE:
             case SHORT:
             case CHAR:
-            case INT:
+            case INT: {
                 return newReal(maxType, (long) intValue(obj1) * intValue(obj2));
-            case LONG:
+            }
+            case LONG: {
                 return newReal(maxType, longValue(obj1) * longValue(obj2));
-            default:
+            }
+            default: {
                 return newReal(maxType, bigIntValue(obj1).multiply(bigIntValue(obj2)));
+            }
         }
     }
 
@@ -497,12 +509,15 @@ public class OperatorUtils {
             case BYTE:
             case SHORT:
             case CHAR:
-            case INT:
+            case INT: {
                 return newReal(maxType, intValue(obj1) / intValue(obj2));
-            case LONG:
+            }
+            case LONG: {
                 return newReal(maxType, longValue(obj1) / longValue(obj2));
-            default:
+            }
+            default: {
                 return newReal(maxType, bigIntValue(obj1).divide(bigIntValue(obj2)));
+            }
         }
     }
 
@@ -514,12 +529,15 @@ public class OperatorUtils {
             case BYTE:
             case SHORT:
             case CHAR:
-            case INT:
+            case INT: {
                 return newReal(maxType, intValue(obj1) % intValue(obj2));
-            case LONG:
+            }
+            case LONG: {
                 return newReal(maxType, longValue(obj1) % longValue(obj2));
-            default:
+            }
+            default: {
                 return newReal(maxType, bigIntValue(obj1).mod(bigIntValue(obj2)));
+            }
         }
     }
 
@@ -531,12 +549,15 @@ public class OperatorUtils {
             case BYTE:
             case SHORT:
             case CHAR:
-            case INT:
+            case INT: {
                 return newReal(maxType, -intValue(obj));
-            case LONG:
+            }
+            case LONG: {
                 return newReal(maxType, -longValue(obj));
-            default:
+            }
+            default: {
                 return newReal(maxType, bigIntValue(obj).negate());
+            }
         }
     }
 
@@ -544,12 +565,15 @@ public class OperatorUtils {
     private static Number decimalAdd(Number obj1, Number obj2) {
         int maxType = getNumericType(obj1, obj2);
         switch (maxType) {
-            case FLOAT:
+            case FLOAT: {
                 return newReal(maxType, floatValue(obj1) + floatValue(obj2));
-            case DOUBLE:
+            }
+            case DOUBLE: {
                 return newReal(maxType, doubleValue(obj1) + doubleValue(obj2));
-            default:
+            }
+            default: {
                 return newReal(maxType, bigDecimalValue(obj1).add(bigDecimalValue(obj2)));
+            }
         }
     }
 
@@ -557,12 +581,15 @@ public class OperatorUtils {
     private static Number decimalSubtract(Number obj1, Number obj2) {
         int maxType = getNumericType(obj1, obj2);
         switch (maxType) {
-            case FLOAT:
+            case FLOAT: {
                 return newReal(maxType, floatValue(obj1) - floatValue(obj2));
-            case DOUBLE:
+            }
+            case DOUBLE: {
                 return newReal(maxType, doubleValue(obj1) - doubleValue(obj2));
-            default:
+            }
+            default: {
                 return newReal(maxType, bigDecimalValue(obj1).subtract(bigDecimalValue(obj2)));
+            }
         }
     }
 
@@ -570,12 +597,15 @@ public class OperatorUtils {
     private static Number decimalMultiply(Number obj1, Number obj2) {
         int maxType = getNumericType(obj1, obj2);
         switch (maxType) {
-            case FLOAT:
+            case FLOAT: {
                 return newReal(maxType, floatValue(obj1) * floatValue(obj2));
-            case DOUBLE:
+            }
+            case DOUBLE: {
                 return newReal(maxType, doubleValue(obj1) * doubleValue(obj2));
-            default:
+            }
+            default: {
                 return newReal(maxType, bigDecimalValue(obj1).multiply(bigDecimalValue(obj2)));
+            }
         }
     }
 
@@ -583,12 +613,15 @@ public class OperatorUtils {
     private static Number decimalDivide(Number obj1, Number obj2, int precision, RoundingEnum roundingEnum) {
         int maxType = getNumericType(obj1, obj2);
         switch (maxType) {
-            case FLOAT:
+            case FLOAT: {
                 return newReal(maxType, floatValue(obj1) / floatValue(obj2));
-            case DOUBLE:
+            }
+            case DOUBLE: {
                 return newReal(maxType, doubleValue(obj1) / doubleValue(obj2));
-            default:
+            }
+            default: {
                 return newReal(maxType, bigDecimalValue(obj1).divide(bigDecimalValue(obj2), precision, roundingEnum.getModeNum()));
+            }
         }
     }
 
@@ -596,12 +629,15 @@ public class OperatorUtils {
     private static Number decimalAliquot(Number obj1, Number obj2) {
         int maxType = getNumericType(obj1, obj2);
         switch (maxType) {
-            case FLOAT:
+            case FLOAT: {
                 return newReal(maxType, (int) (floatValue(obj1) / floatValue(obj2)));
-            case DOUBLE:
+            }
+            case DOUBLE: {
                 return newReal(maxType, (long) (doubleValue(obj1) / doubleValue(obj2)));
-            default:
+            }
+            default: {
                 return newReal(maxType, bigDecimalValue(obj1).divideToIntegralValue(bigDecimalValue(obj2)));
+            }
         }
     }
 
@@ -609,12 +645,15 @@ public class OperatorUtils {
     private static Number decimalMod(Number obj1, Number obj2) {
         int maxType = getNumericType(obj1, obj2);
         switch (maxType) {
-            case FLOAT:
+            case FLOAT: {
                 return newReal(maxType, floatValue(obj1) % floatValue(obj2));
-            case DOUBLE:
+            }
+            case DOUBLE: {
                 return newReal(maxType, doubleValue(obj1) % doubleValue(obj2));
-            default:
+            }
+            default: {
                 return newReal(maxType, bigDecimalValue(obj1).remainder(bigDecimalValue(obj2)));
+            }
         }
     }
 
@@ -622,12 +661,15 @@ public class OperatorUtils {
     private static Number decimalNegate(Number obj) {
         int maxType = getNumericType(obj);
         switch (maxType) {
-            case FLOAT:
+            case FLOAT: {
                 return newReal(maxType, -floatValue(obj));
-            case DOUBLE:
+            }
+            case DOUBLE: {
                 return newReal(maxType, -doubleValue(obj));
-            default:
+            }
+            default: {
                 return newReal(maxType, bigDecimalValue(obj).negate());
+            }
         }
     }
 

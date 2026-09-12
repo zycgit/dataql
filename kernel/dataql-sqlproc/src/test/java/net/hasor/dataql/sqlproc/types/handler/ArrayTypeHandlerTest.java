@@ -1,3 +1,10 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 package net.hasor.dataql.sqlproc.types.handler;
 
 import java.lang.reflect.InvocationHandler;
@@ -17,10 +24,12 @@ public class ArrayTypeHandlerTest extends TypeHandlerMockSupport {
 
     private Array mockArray(Object content) {
         return (Array) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[] { Array.class }, (proxy, method, args) -> {
-            if ("getArray".equals(method.getName()))
+            if ("getArray".equals(method.getName())) {
                 return content;
-            if ("free".equals(method.getName()))
+            }
+            if ("free".equals(method.getName())) {
                 return null;
+            }
             if ("getResultSet".equals(method.getName())) {
                 // Mock ResultSet for PgArrayTypeHandler
                 // This is complex. PgArrayTypeHandler expects a ResultSet with "VALUE" column.
@@ -45,14 +54,18 @@ public class ArrayTypeHandlerTest extends TypeHandlerMockSupport {
                     index++;
                     return index < content.length;
                 }
-                if ("close".equals(method.getName()))
+                if ("close".equals(method.getName())) {
                     return null;
-                if ("getObject".equals(method.getName()))
+                }
+                if ("getObject".equals(method.getName())) {
                     return content[index];
-                if ("getString".equals(method.getName()))
+                }
+                if ("getString".equals(method.getName())) {
                     return content[index].toString();
-                if ("getBytes".equals(method.getName()))
+                }
+                if ("getBytes".equals(method.getName())) {
                     return content[index]; // simple cast
+                }
                 return null;
             }
         });

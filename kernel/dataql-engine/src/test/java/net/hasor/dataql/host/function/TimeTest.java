@@ -1,17 +1,23 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 package net.hasor.dataql.host.function;
-import net.hasor.dataql.host.HostConfiguration;
-import net.hasor.dataql.host.QueryBuilder;
-import net.hasor.dataql.host.QueryManager;
-import net.hasor.dataql.domain.DataModel;
-import net.hasor.dataql.domain.ValueModel;
-import net.hasor.dataql.host.function.basic.DateTimeUdfSource;
-import net.hasor.dataql.kernel.QueryRuntimeException;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import net.hasor.dataql.domain.DataModel;
+import net.hasor.dataql.domain.ValueModel;
+import net.hasor.dataql.host.HostConfiguration;
+import net.hasor.dataql.host.QueryBuilder;
+import net.hasor.dataql.host.QueryManager;
+import net.hasor.dataql.host.function.basic.DateTimeUdfSource;
+import net.hasor.dataql.kernel.QueryRuntimeException;
+import org.junit.Test;
 
 public class TimeTest {
     @Test

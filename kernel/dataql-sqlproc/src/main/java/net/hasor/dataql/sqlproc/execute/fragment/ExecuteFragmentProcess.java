@@ -1,17 +1,9 @@
 /*
- * Copyright 2015-2022 the original author or authors.
+ * Copyright 2015-2026 the original author or authors.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute.fragment;
 import java.io.IOException;
@@ -24,7 +16,6 @@ import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.domain.HintsProxy;
 import net.hasor.dataql.sqlproc.ConfigFormatType;
 import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
-import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
 import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 
 /**
@@ -43,7 +34,7 @@ public class ExecuteFragmentProcess extends AbstractSqlFragment {
     }
 
     @Override
-    protected SqlConfig buildConfig(String fragmentString, Hints hints) {
+    protected FragmentConfig buildConfig(String fragmentString, Hints hints) {
         FragmentBody fragmentBody = parseFragmentBody(fragmentString);
         if (fragmentBody.queryType != null) {
             return super.buildConfig(fragmentBody.fragmentString, typeHints(hints, fragmentBody.queryType));
@@ -102,13 +93,16 @@ public class ExecuteFragmentProcess extends AbstractSqlFragment {
         for (String raw : lines) {
             String line = raw.trim();
             if (!inBlock) {
-                if (StringUtils.isBlank(line))
+                if (StringUtils.isBlank(line)) {
                     continue;
-                if (line.startsWith("--") || line.startsWith("//"))
+                }
+                if (line.startsWith("--") || line.startsWith("//")) {
                     continue;
+                }
                 if (line.startsWith("/*")) {
-                    if (line.contains("*/"))
+                    if (line.contains("*/")) {
                         line = line.substring(line.indexOf("*/") + 2).trim();
+                    }
                     if (StringUtils.isBlank(line)) {
                         inBlock = true;
                         continue;
@@ -119,11 +113,13 @@ public class ExecuteFragmentProcess extends AbstractSqlFragment {
                 if (line.contains("*/")) {
                     line = line.substring(line.indexOf("*/") + 2).trim();
                     inBlock = false;
-                } else
+                } else {
                     continue;
+                }
             }
-            if (StringUtils.isBlank(line))
+            if (StringUtils.isBlank(line)) {
                 continue;
+            }
 
             return valueOfSql(line);
         }
@@ -148,16 +144,21 @@ public class ExecuteFragmentProcess extends AbstractSqlFragment {
 
     private static QueryType valueOfSql(String sqlString) {
         String lower = sqlString.toLowerCase();
-        if (lower.startsWith("insert") || lower.startsWith("replace"))
+        if (lower.startsWith("insert") || lower.startsWith("replace")) {
             return QueryType.Insert;
-        if (lower.startsWith("update"))
+        }
+        if (lower.startsWith("update")) {
             return QueryType.Update;
-        if (lower.startsWith("delete"))
+        }
+        if (lower.startsWith("delete")) {
             return QueryType.Delete;
-        if (lower.startsWith("select") || lower.startsWith("with"))
+        }
+        if (lower.startsWith("select") || lower.startsWith("with")) {
             return QueryType.Select;
-        if (lower.startsWith("call") || lower.startsWith("exec") || lower.startsWith("{call"))
+        }
+        if (lower.startsWith("call") || lower.startsWith("exec") || lower.startsWith("{call")) {
             return QueryType.Call;
+        }
         return QueryType.Execute;
     }
 

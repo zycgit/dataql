@@ -1,3 +1,10 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 package net.hasor.dataql.sqlproc.execute.fragment;
 
 import java.sql.Connection;
@@ -11,7 +18,6 @@ import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dialect.PageObject;
 import net.hasor.dataql.sqlproc.dialect.PageResult;
-import net.hasor.dataql.sqlproc.types.SqlArg;
 import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
 import net.hasor.dataql.sqlproc.execute.RootStatement;
@@ -20,12 +26,10 @@ import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionInterceptor;
 import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionInvocation;
 import net.hasor.dataql.sqlproc.execute.interceptor.SqlInfo;
 import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
+import net.hasor.dataql.sqlproc.types.SqlArg;
 import org.junit.After;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class SelectQueryTypeInterceptorTest extends AbstractSqlProcTest {
     @After

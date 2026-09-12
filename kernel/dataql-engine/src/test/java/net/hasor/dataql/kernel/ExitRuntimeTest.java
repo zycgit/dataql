@@ -1,12 +1,17 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 package net.hasor.dataql.kernel;
 import net.hasor.dataql.AbstractTestResource;
-import net.hasor.dataql.domain.HintValue;
-import net.hasor.dataql.host.Query;
-import net.hasor.dataql.kernel.QueryResult;
 import net.hasor.dataql.domain.DataModel;
+import net.hasor.dataql.domain.HintValue;
 import net.hasor.dataql.domain.ObjectModel;
 import net.hasor.dataql.domain.ValueModel;
-import net.hasor.dataql.kernel.ThrowRuntimeException;
+import net.hasor.dataql.host.Query;
 import org.junit.Test;
 
 public class ExitRuntimeTest extends AbstractTestResource implements HintValue {

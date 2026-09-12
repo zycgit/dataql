@@ -1,17 +1,9 @@
 /*
- * Copyright 2015-2022 the original author or authors.
+ * Copyright 2015-2026 the original author or authors.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute.fragment;
 
@@ -45,10 +37,10 @@ import static net.hasor.dataql.sqlproc.SqlHintValue.FRAGMENT_SQL_QUERY_BY_PAGE_E
  * 注入 Hints，子类覆写 {@link #queryType(String, Hints)} 读取即可。
  */
 public abstract class AbstractSqlFragment implements FragmentProcess {
-    private final ConfigResolveRoot      configResolve = new ConfigResolveRoot();
-    private final Map<String, SqlConfig> configCache   = new ConcurrentHashMap<>();
-    private final RootStatement          rootStatement;
-    private final ExecuteContext         context;
+    private final ConfigResolveRoot          configResolve = new ConfigResolveRoot();
+    private final Map<String, FragmentConfig> fragmentCache = new ConcurrentHashMap<>();
+    private final RootStatement              rootStatement;
+    private final ExecuteContext             context;
 
     protected AbstractSqlFragment(ExecuteContext context) {
         this.context = Objects.requireNonNull(context, "exeContext is null");
@@ -83,7 +75,7 @@ public abstract class AbstractSqlFragment implements FragmentProcess {
         return cacheKey.toString();
     }
 
-    protected SqlConfig buildConfig(String fragmentString, Hints hints) {
+    protected FragmentConfig buildConfig(String fragmentString, Hints hints) {
         Object hintValue = hints.getHint(HintNames.FRAGMENT_TYPE.name());
         String fragmentType = hintValue == null ? null : hintValue.toString();
         QueryType type = QueryType.valueOfTag(fragmentType);
@@ -96,13 +88,16 @@ public abstract class AbstractSqlFragment implements FragmentProcess {
         String cacheKey = buildCacheKey(fragmentString, queryType, formatType, hints);
 
         String fragmentName = queryType.getTagString();
-        return this.configCache.computeIfAbsent(cacheKey, k -> {
+        return this.fragmentCache.computeIfAbsent(cacheKey, k -> {
             SqlConfig config = switch (formatType) {
                 case Text -> this.configResolve.parsePlainConfig(fragmentName, hints, fragmentString);
                 case Xml -> this.configResolve.parseXmlConfig(fragmentName, hints, fragmentString);
-                default -> throw new UnsupportedOperationException("fragment type '" + fragmentType + "' Unsupported.");
+                default -> {
+                    throw new UnsupportedOperationException("fragment type '" + fragmentType + "' Unsupported.");
+                }
             };
-            return config;
+            List<SqlExecutionInterceptor> interceptors = this.context.filterInterceptors(queryType, fragmentString, hints);
+            return new FragmentConfig(config, interceptors);
         });
     }
 
@@ -117,9 +112,9 @@ public abstract class AbstractSqlFragment implements FragmentProcess {
 
     protected Object executeFragment(Hints hints, Map<String, Object> params, String fragmentString) throws Throwable {
         Hints fragmentHints = this.resolveHints(hints);
-        SqlConfig config = buildConfig(fragmentString, fragmentHints);
-        List<SqlExecutionInterceptor> interceptors = this.context.filterInterceptors(config.getType(), fragmentString, fragmentHints);
-        FragmentConfig fragmentConfig = new FragmentConfig(config, interceptors);
+        FragmentConfig fragmentConfig = buildConfig(fragmentString, fragmentHints);
+        SqlConfig config = fragmentConfig.config();
+        List<SqlExecutionInterceptor> interceptors = fragmentConfig.interceptors();
 
         String byPage = SqlHintNames.getValue(fragmentHints, FRAGMENT_SQL_QUERY_BY_PAGE);
         if (config.getType() == QueryType.Select && StringUtils.equalsIgnoreCase(FRAGMENT_SQL_QUERY_BY_PAGE_ENABLE, byPage)) {

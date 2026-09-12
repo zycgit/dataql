@@ -1,24 +1,30 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 package net.hasor.dataql.kernel;
-import com.alibaba.fastjson.JSON;
-import net.hasor.dataql.AbstractTestResource;
-import net.hasor.dataql.domain.HintValue;
-import net.hasor.dataql.host.Query;
-import net.hasor.dataql.domain.DataModel;
-import net.hasor.dataql.domain.ListModel;
-import net.hasor.dataql.domain.ObjectModel;
-import net.hasor.test.dataql.udfs.DataBean;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import com.alibaba.fastjson.JSON;
+import net.hasor.dataql.AbstractTestResource;
+import net.hasor.dataql.domain.DataModel;
+import net.hasor.dataql.domain.HintValue;
+import net.hasor.dataql.domain.ListModel;
+import net.hasor.dataql.domain.ObjectModel;
+import net.hasor.dataql.host.Query;
+import net.hasor.test.dataql.udfs.DataBean;
+import org.junit.Test;
 
 public class FmtObjRuntimeTest extends AbstractTestResource implements HintValue {
-    private Map<String, Object> object_list_map0 = new HashMap<String, Object>() {{
+    private final Map<String, Object> object_list_map0 = new HashMap<String, Object>() {{
         put("dataList", new ArrayList<>());
     }};
-    private Map<String, Object> object_list_map1 = new HashMap<String, Object>() {{
+    private final Map<String, Object> object_list_map1 = new HashMap<String, Object>() {{
         put("dataList", new ArrayList<Object>() {{
             add(new DataBean(1));
             add(new DataBean(2));
@@ -26,10 +32,10 @@ public class FmtObjRuntimeTest extends AbstractTestResource implements HintValue
         }});
     }};
     //
-    private Map<String, Object> object_list_map2 = new HashMap<String, Object>() {{
+    private final Map<String, Object> object_list_map2 = new HashMap<String, Object>() {{
         put("dataList", new DataBean[0]);
     }};
-    private Map<String, Object> object_list_map3 = new HashMap<String, Object>() {{
+    private final Map<String, Object> object_list_map3 = new HashMap<String, Object>() {{
         put("dataList", new DataBean[] {//
                 new DataBean(1),//
                 new DataBean(2),//

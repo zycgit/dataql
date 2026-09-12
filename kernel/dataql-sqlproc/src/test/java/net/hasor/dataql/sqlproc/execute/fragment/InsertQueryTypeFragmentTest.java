@@ -1,3 +1,10 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 package net.hasor.dataql.sqlproc.execute.fragment;
 
 import java.util.Collections;
@@ -7,9 +14,7 @@ import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dynamic.config.*;
 import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class InsertQueryTypeFragmentTest extends AbstractFragmentProcessTest {
     @Test
@@ -137,7 +142,7 @@ public class InsertQueryTypeFragmentTest extends AbstractFragmentProcessTest {
         }
 
         private SqlConfig config(HintsSet hints, String fragmentString) {
-            return buildConfig(fragmentString, resolveHints(hints));
+            return buildConfig(fragmentString, resolveHints(hints)).config();
         }
     }
 }

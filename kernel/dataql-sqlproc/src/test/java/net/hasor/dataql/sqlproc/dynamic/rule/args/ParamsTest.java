@@ -1,31 +1,22 @@
 /*
- * Copyright 2015-2022 the original author or authors.
+ * Copyright 2015-2026 the original author or authors.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.dynamic.rule.args;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 import net.hasor.cobble.BeanUtils;
 import net.hasor.dataql.sqlproc.dynamic.args.BeanSqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.args.MapSqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.args.SqlArgDisposer;
 import net.hasor.dataql.sqlproc.utils.AbstractDbTest;
-import static net.hasor.dataql.sqlproc.utils.TestUtils.beanForData1;
 import net.hasor.dataql.sqlproc.utils.UserInfo;
 import org.junit.Test;
-
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
+import static net.hasor.dataql.sqlproc.utils.TestUtils.beanForData1;
 
 /***
  *

@@ -1,16 +1,22 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 package net.hasor.dataql.sqlproc.dynamic.rule;
-import net.hasor.cobble.CollectionUtils;
-import net.hasor.dataql.sqlproc.types.SqlArg;
-import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
-import net.hasor.dataql.sqlproc.dynamic.rule.dto.MyTypeHandler;
-import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
-import net.hasor.dataql.sqlproc.dynamic.segment.PlanDynamicSql;
-import org.junit.Test;
-
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import net.hasor.cobble.CollectionUtils;
+import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
+import net.hasor.dataql.sqlproc.dynamic.rule.dto.MyTypeHandler;
+import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
+import net.hasor.dataql.sqlproc.dynamic.segment.PlanDynamicSql;
+import net.hasor.dataql.sqlproc.types.SqlArg;
+import org.junit.Test;
 
 public class InRuleTest {
     @Test
