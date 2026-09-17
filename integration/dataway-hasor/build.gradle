@@ -11,8 +11,8 @@ plugins {
 }
 
 dependencies {
-    api project(':dataway-core')
-    api 'org.noear:solon:4.1.0'
-    testImplementation 'org.noear:solon-test:4.1.0'
-    testRuntimeOnly 'org.noear:solon-server-smarthttp:4.1.0'
+    api project(':dataway-embedded')
+    api 'net.hasor:hasor-web:5.2.0'
+    compileOnly 'javax.servlet:javax.servlet-api:4.0.1'
+    testImplementation 'javax.servlet:javax.servlet-api:4.0.1'
 }

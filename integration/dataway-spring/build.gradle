@@ -11,7 +11,7 @@ plugins {
 }
 
 dependencies {
-    api project(':dataway-core')
+    api project(':dataway-embedded')
     api platform('org.springframework.boot:spring-boot-dependencies:4.1.1')
     api 'org.springframework.boot:spring-boot-starter-webmvc'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
