@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Copyright 2015-2026 the original author or authors.
+
+ Licensed under the Apache License, Version 2.0.
+ See the LICENSE.txt file for the full license.
+ https://www.apache.org/licenses/LICENSE-2.0
+-->
+<config xmlns="https://www.hasor.net/sechma/main">
+    <!-- Complete Dataway options; loaded through Hasor Settings. -->
+    <dataway>
+        <api-enabled>false</api-enabled>
+        <api-prefix>/api</api-prefix>
+        <admin-enabled>false</admin-enabled>
+        <admin-prefix>/dataway/api</admin-prefix>
+        <admin-ui>/dataway</admin-ui>
+    </dataway>
+</config>

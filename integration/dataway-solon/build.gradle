@@ -13,6 +13,8 @@ plugins {
 dependencies {
     api project(':dataway-embedded')
     api 'org.noear:solon:4.1.0'
+    implementation 'org.noear:solon-handle:4.1.0'
     testImplementation 'org.noear:solon-test:4.1.0'
+    testImplementation 'com.h2database:h2:2.5.250'
     testRuntimeOnly 'org.noear:solon-server-smarthttp:4.1.0'
 }

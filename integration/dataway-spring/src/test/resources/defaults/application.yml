@@ -1,0 +1,13 @@
+# Copyright 2015-2026 the original author or authors.
+#
+# Licensed under the Apache License, Version 2.0.
+# See the LICENSE.txt file for the full license.
+# https://www.apache.org/licenses/LICENSE-2.0
+
+# Complete Dataway options; loaded through Spring YAML configuration.
+dataway:
+  api-enabled: false
+  api-prefix: "/api"
+  admin-enabled: false
+  admin-prefix: "/dataway/api"
+  admin-ui: "/dataway"

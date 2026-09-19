@@ -6,26 +6,35 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.spring;
-
 import javax.sql.DataSource;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.DatawayBuilder;
-import net.hasor.dataway.DatawayConfigurer;
+import net.hasor.dataway.spi.DatawayConfigurer;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.Environment;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-/** Supplies host configuration and resources to the core, then mounts its HTTP entries. */
+/**
+ * Assembles the shared core on demand and registers MVC controller entries.
+ * Entry switches default to false; routing configuration stays in this integration.
+ */
 @AutoConfiguration(afterName = "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration")
 public class DatawayAutoConfiguration {
+    private static final String CONFIG_PREFIX = "dataway";
+
     @Bean
+    @Lazy
     @ConditionalOnMissingBean(Dataway.class)
-    public Dataway dataway(Environment env, ObjectProvider<DataSource> sources, ListableBeanFactory beans, ObjectProvider<DatawayConfigurer> configurers) {
-        DatawayBuilder builder = Dataway.builder().configuration(env::getProperty).dataSource(sources::getIfUnique).dataSources(() -> {
+    public Dataway dataway(ObjectProvider<DataSource> sources, ListableBeanFactory beans, ObjectProvider<DatawayConfigurer> configurers) {
+        DatawayBuilder builder = Dataway.builder().dataSource(sources::getIfUnique).dataSources(() -> {
             return beans.getBeansOfType(DataSource.class);
         });
 
@@ -35,7 +44,14 @@ public class DatawayAutoConfiguration {
 
     @Bean
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-    public DatawayServletInitializer datawayServletInitializer(Dataway dataway) {
-        return new DatawayServletInitializer(dataway);
+    public DatawayMvcRegistrar datawayMvcRegistrar(ObjectProvider<Dataway> cores, Environment environment, @Qualifier("requestMappingHandlerMapping") ObjectProvider<RequestMappingHandlerMapping> mappings) {
+        Binder binder = Binder.get(environment);
+        boolean apiEnabled = binder.bind(CONFIG_PREFIX + ".api-enabled", Boolean.class).orElse(false);
+        boolean adminEnabled = binder.bind(CONFIG_PREFIX + ".admin-enabled", Boolean.class).orElse(false);
+        Dataway dataway = apiEnabled || adminEnabled ? cores.getObject() : null;
+        String apiPrefix = binder.bind(CONFIG_PREFIX + ".api-prefix", String.class).orElse("/api");
+        String adminPrefix = binder.bind(CONFIG_PREFIX + ".admin-prefix", String.class).orElse("/dataway/api");
+        String uiPrefix = binder.bind(CONFIG_PREFIX + ".admin-ui", String.class).orElse("/dataway");
+        return new DatawayMvcRegistrar(dataway, apiEnabled, adminEnabled, apiPrefix, adminPrefix, uiPrefix, mappings);
     }
 }

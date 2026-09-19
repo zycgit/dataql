@@ -6,35 +6,23 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.solon;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.DatawayBuilder;
-import net.hasor.dataway.service.DatawayService;
-import net.hasor.dataway.web.*;
-import org.noear.solon.core.AppContext;
-import org.noear.solon.core.Plugin;
+import net.hasor.dataway.web.WebHandler;
+import org.noear.solon.core.*;
 
-/** Install with app.pluginAdd(0, new DatawayPlugin(service)); reads the host Solon configuration. */
+/**
+ * Install with app.pluginAdd(0, new DatawayPlugin(builder)); reads the host Solon configuration.
+ * Reads routing prefixes from Solon Props. Entry switches are owned by this integration.
+ */
 public final class DatawayPlugin implements Plugin {
     private final DatawayBuilder builder;
     private final Dataway        dataway;
 
     public DatawayPlugin() {
         this(Dataway.builder());
-    }
-
-    public DatawayPlugin(DatawayService service) {
-        this(Dataway.builder().service(service));
-    }
-
-    public DatawayPlugin(DatawayService service, WebOptions options) {
-        this(Dataway.builder().service(service).webOptions(options));
-    }
-
-    public DatawayPlugin(WebOptions options) {
-        this(Dataway.builder().webOptions(options));
     }
 
     public DatawayPlugin(DatawayBuilder builder) {
@@ -49,42 +37,51 @@ public final class DatawayPlugin implements Plugin {
 
     @Override
     public void start(AppContext context) {
+        Props properties = context.app().cfg().getProp("dataway");
+        boolean apiEnabled = properties.getBool("api-enabled", false);
+        boolean adminEnabled = properties.getBool("admin-enabled", false);
         Dataway dataway = this.dataway;
+        if (!apiEnabled && !adminEnabled && dataway == null) {
+            return;
+        }
         if (dataway == null) {
-            dataway = this.builder.configuration(context.app().cfg()::get).build();
+            dataway = this.builder.build();
         }
         context.wrapAndPut(Dataway.class, dataway);
 
-        if (dataway.getService() != null) {
-            context.wrapAndPut(DatawayService.class, dataway.getService());
+        String apiPrefix = properties.get("api-prefix", "/api");
+        String adminPrefix = properties.get("admin-prefix", "/dataway/api");
+        String uiPrefix = properties.get("admin-ui", "/dataway");
+
+        // API
+        if (apiEnabled) {
+            WebHandler apiHandler = dataway.getApiHandler();
+            List<String> apiPaths = apiHandler.paths().stream().map(path -> apiPrefix + path).toList();
+            register(context, apiPrefix, apiHandler, apiPaths);
         }
 
-        for (WebHandler handler : dataway.getHandlers().values()) {
-            this.register(context, handler);
+        // Admin API
+        if (adminEnabled) {
+            WebHandler adminHandler = dataway.getAdminHandler();
+            List<String> adminPaths = adminHandler.paths().stream().map(path -> adminPrefix + path).toList();
+            register(context, adminPrefix, adminHandler, adminPaths);
+
+            // Admin UI
+            WebHandler uiHandler = dataway.getUiHandler();
+            List<String> uiPaths = uiHandler.paths().stream().map(path -> uiPrefix + path).toList();
+            register(context, uiPrefix, uiHandler, uiPaths);
         }
     }
 
-    private void register(AppContext context, WebHandler handler) {
-        context.app().router().filter(100, (request, chain) -> {
-            String path = request.pathNew();
-            if (!handler.matches(path)) {
-                chain.doFilter(request);
-                return;
-            }
-
-            Map<String, String> headers = new LinkedHashMap<>();
-            request.headerNames().forEach(name -> headers.put(name, request.header(name)));
-            String method = request.method();
-            String queryString = request.queryString();
-            var body = request.bodyAsStream();
-            String principalName = request.attr(RequestAttribute.PRINCIPAL.getKey());
-
-            WebRequest webRequest = new WebRequest(method, path, queryString, headers, body, principalName);
-            WebResponse result = handler.handle(webRequest);
-            request.status(result.status());
-            result.headers().forEach(request::headerSet);
-            request.output(result.body());
-            request.setHandled(true);
-        });
+    private void register(AppContext context, String prefix, WebHandler handler, List<String> paths) {
+        var controller = new DatawayController(prefix, handler);
+        var bean = new BeanWrap(context, DatawayController.class, controller);
+        for (String path : paths) {
+            String mapping = path.endsWith("/*") ? path + "*" : path;
+            var loader = FactoryManager.getGlobal().createLoader(bean, false);
+            loader.withPathPrefix(mapping).load((actionPath, method, index, action) -> {
+                context.app().router().add(mapping, method, index, action);
+            });
+        }
     }
 }

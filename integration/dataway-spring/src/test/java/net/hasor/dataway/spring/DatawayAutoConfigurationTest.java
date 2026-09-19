@@ -6,7 +6,7 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.spring;
-
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -15,216 +15,222 @@ import java.security.Principal;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.sql.DataSource;
 import jakarta.servlet.Filter;
-import jakarta.servlet.FilterRegistration;
-import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import net.hasor.dataway.Dataway;
-import net.hasor.dataway.DatawayConfigurer;
-import net.hasor.dataway.authorization.Operation;
-import net.hasor.dataway.exception.DatawayException;
-import net.hasor.dataway.execution.CallContext;
-import net.hasor.dataway.function.FxRuntime;
-import net.hasor.dataway.model.ApiDefinition;
-import net.hasor.dataway.model.ScriptType;
-import net.hasor.dataway.repository.ApiRepository;
+import net.hasor.dataway.authorization.UserIdentity;
+import net.hasor.dataway.dal.ApiDefinition;
+import net.hasor.dataway.dal.ScriptType;
 import net.hasor.dataway.service.DatawayService;
-import net.hasor.dataway.web.WebEntry;
+import net.hasor.dataway.spi.CallContext;
+import net.hasor.dataway.spi.DatawayConfigurer;
+import net.hasor.dataway.spi.DatawayException;
+import net.hasor.dataway.spi.DatawayInterceptor;
+import net.hasor.dataway.web.DatawayUiHandler;
+import net.hasor.dataway.web.RequestAttribute;
 import net.hasor.dataway.web.WebHandler;
-import net.hasor.dataway.web.WebOptions;
 import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.env.YamlPropertySourceLoader;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.servlet.context.AnnotationConfigServletWebServerApplicationContext;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
-import org.springframework.core.env.MapPropertySource;
-import org.springframework.mock.web.MockFilterChain;
+import org.springframework.boot.webmvc.autoconfigure.DispatcherServletAutoConfiguration;
+import org.springframework.boot.webmvc.autoconfigure.WebMvcAutoConfiguration;
+import org.springframework.core.env.EnumerablePropertySource;
+import org.springframework.core.env.PropertySource;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
-
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 class DatawayAutoConfigurationTest {
-    private final WebApplicationContextRunner context = new WebApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(DatawayAutoConfiguration.class));
+    private final WebApplicationContextRunner context = new WebApplicationContextRunner().withConfiguration(AutoConfigurations.of(DatawayAutoConfiguration.class, WebMvcAutoConfiguration.class));
 
     @Test
-    void coreControlsOptOutAndRepositoryRequirements() {
-        context.withPropertyValues("dataway.embedded.enabled=false").run(c -> {
-            assertNull(c.getStartupFailure());
-            Dataway dataway = c.getBean(Dataway.class);
-            assertFalse(dataway.isEnabled());
-            assertNull(dataway.getService());
-            assertTrue(mount(c.getBean(DatawayServletInitializer.class)).isEmpty());
-        });
-        context.run(c -> assertNotNull(c.getStartupFailure()));
+    void disabledDefaultsDoNotAssembleCoreOrRegisterMappings() throws Exception {
+        for (boolean fromFile : new boolean[] { false, true }) {
+            var runner = context.withBean(DatawayConfigurer.class, () -> builder -> builder.dataSource(() -> {
+                throw new AssertionError("Disabled entries must not acquire storage");
+            }));
+
+            if (fromFile) {
+                var defaults = configuration("defaults/application.yml");
+                runner = runner.withInitializer(c -> c.getEnvironment().getPropertySources().addLast(defaults));
+            }
+
+            runner.run(c -> {
+                assertNull(c.getStartupFailure());
+                assertFalse(c.getSourceApplicationContext().getBeanFactory().containsSingleton("dataway"));
+                assertTrue(mappings(c.getBean(RequestMappingHandlerMapping.class)).isEmpty());
+            });
+        }
+        context.withPropertyValues("dataway.api-enabled=true").run(c -> assertNotNull(c.getStartupFailure()));
     }
 
     @Test
-    void springOnlyExposesCoreAndServletIntegrationAndCollectsTheCoreSpi() {
-        DatawayConfigurer extension = builder -> {
-            builder.inMemory(true);
-            builder.configureRuntime(runtime -> runtime.function("answer", (hints, args) -> "managed"));
-        };
-        context.withBean(DatawayConfigurer.class, () -> extension).run(c -> {
-            assertNull(c.getStartupFailure());
+    void sameCoreSpiAndSuppliedInstanceRemainSupported() {
+        context.withBean(DatawayConfigurer.class, () -> builder -> builder.dataSource(TestDatabase.create())).run(c -> {
             Dataway dataway = c.getBean(Dataway.class);
-            publish(dataway.getService(), "return answer();");
-            assertEquals("managed", dataway.getService().invokeApi("/hello", Map.of()));
-            assertTrue(c.getBeansOfType(FxRuntime.class).isEmpty());
-            assertTrue(c.getBeansOfType(ApiRepository.class).isEmpty());
+            publish(dataway.getService(), "return 'configured';");
+            assertEquals("configured", dataway.getService().invokeApi("/hello", Map.of()));
             assertTrue(c.getBeansOfType(DatawayService.class).isEmpty());
             assertTrue(c.getBeansOfType(WebHandler.class).isEmpty());
-            assertTrue(c.getBeansOfType(WebOptions.class).isEmpty());
             assertTrue(c.getBeansOfType(FilterRegistrationBean.class).isEmpty());
-            assertEquals(100, c.getBean(DatawayServletInitializer.class).getOrder());
-            assertThrows(ClassNotFoundException.class, () -> Class.forName("net.hasor.core.AppContext"));
+        });
+        Dataway supplied = Dataway.builder().dataSource(TestDatabase.create()).build();
+        context.withBean(Dataway.class, () -> supplied).withBean(DatawayConfigurer.class, () -> builder -> fail("Already assembled")).withPropertyValues("dataway.api-enabled=true").run(c -> {
+            assertNull(c.getStartupFailure());
+            assertSame(supplied, c.getBean(Dataway.class));
+            assertEquals(1, mappings(c.getBean(RequestMappingHandlerMapping.class)).size());
         });
     }
 
     @Test
-    void suppliedCoreInstanceIsMountedWithoutReassemblyOrConfigurationRebinding() {
-        WebOptions options = new WebOptions();
-        options.setApiPrefix("/assembled");
-        Dataway supplied = Dataway.builder().inMemory(true).webOptions(options).build();
-        context.withBean(Dataway.class, () -> supplied)
-                .withBean(DatawayConfigurer.class, () -> builder -> fail("Core was already assembled"))
-                .withPropertyValues("dataway.embedded.api-prefix=/unused").run(c -> {
-                    assertNull(c.getStartupFailure());
-                    assertSame(supplied, c.getBean(Dataway.class));
-                    assertEquals("/assembled", c.getBean(Dataway.class).getHandlers().get(WebEntry.API).pathPrefix());
-                    assertEquals(1, mount(c.getBean(DatawayServletInitializer.class)).size());
-                });
-    }
-
-    @Test
-    void serviceSuppliedThroughCoreSpiDoesNotRequireAnotherRepositoryOrDatasource() {
-        DatawayService service = Dataway.builder().inMemory(true).build().getService();
-        context.withPropertyValues("dataway.embedded.initialize-schema=true")
-                .withBean(DatawayConfigurer.class, () -> builder -> builder.service(service)
-                        .configureRuntime(runtime -> fail("Unexpected runtime assembly")))
-                .run(c -> {
-                    assertNull(c.getStartupFailure());
-                    assertSame(service, c.getBean(Dataway.class).getService());
-                });
-    }
-
-    @Test
-    void everyEnabledCombinationIsMountedAsSeparateServletFilters() {
-        for (int mask = 0; mask < 8; mask++) {
+    void allSwitchCombinationsUseConfiguredMvcMappings() throws Exception {
+        var configured = configuration("configured/application.yml");
+        for (int mask = 0; mask < 4; mask++) {
             boolean api = (mask & 1) != 0;
             boolean admin = (mask & 2) != 0;
-            boolean ui = (mask & 4) != 0;
-            context.withPropertyValues("dataway.embedded.in-memory=true", "dataway.embedded.api-enabled=" + api,
-                    "dataway.embedded.admin-enabled=" + admin, "dataway.embedded.ui-enabled=" + ui,
-                    "dataway.embedded.admin-token=spring-test-token",
-                    "dataway.embedded.api-prefix=/open/v2", "dataway.embedded.admin-prefix=/ops/manage",
-                    "dataway.embedded.ui-prefix=/tools/console").run(c -> {
+            context.withBean(DataSource.class, TestDatabase::create).withInitializer(c -> c.getEnvironment().getPropertySources().addLast(configured)).withPropertyValues("dataway.api-enabled=" + api, "dataway.admin-enabled=" + admin).run(c -> {
                 assertNull(c.getStartupFailure());
-                Dataway dataway = c.getBean(Dataway.class);
-                Map<String, Registration> filters = mount(c.getBean(DatawayServletInitializer.class));
-                assertEquals(dataway.getHandlers().size(), filters.size());
-                assertEquals(api, filters.containsKey(WebEntry.API.getRegistrationName()));
-                assertEquals(admin, filters.containsKey(WebEntry.ADMIN.getRegistrationName()));
-                assertEquals(ui, filters.containsKey(WebEntry.UI.getRegistrationName()));
-                for (var entry : dataway.getHandlers().entrySet()) {
-                    ArgumentCaptor<String[]> paths = ArgumentCaptor.forClass(String[].class);
-                    Registration registration = filters.get(entry.getKey().getRegistrationName());
-                    verify(registration.dynamic()).addMappingForUrlPatterns(any(), eq(false), paths.capture());
-                    String prefix = entry.getValue().pathPrefix();
-                    assertArrayEquals(new String[] { prefix, prefix + "/*" }, paths.getValue());
+                var paths = mappings(c.getBean(RequestMappingHandlerMapping.class));
+                assertEquals((api ? 1 : 0) + (admin ? 2 : 0), paths.size());
+                if (api) {
+                    assertEquals(Set.of("/open/v2", "/open/v2/{*path}"), paths.get("datawayApi"));
                 }
-                if (ui) {
-                    var page = new MockHttpServletRequest("GET", "/host/tools/console/");
-                    page.setContextPath("/host");
-                    var response = new MockHttpServletResponse();
-                    filters.get(WebEntry.UI.getRegistrationName()).filter().doFilter(page, response, new MockFilterChain());
-                    assertTrue(response.getContentAsString().contains("content=\"../../ops/manage/\""));
-                    assertTrue(response.getContentAsString().contains("content=\"../../open/v2/\""));
-                }
-                if (ui && !admin) {
-                    var request = new MockHttpServletRequest("GET", "/host/tools/console/unrelated");
-                    request.setContextPath("/host");
-                    var chain = new MockFilterChain();
-                    filters.get(WebEntry.UI.getRegistrationName()).filter()
-                            .doFilter(request, new MockHttpServletResponse(), chain);
-                    assertSame(request, chain.getRequest());
+                if (admin) {
+                    assertEquals(Set.of("/ops/manage", "/ops/manage/{*path}"), paths.get("datawayAdmin"));
+                    assertEquals(Set.of("/tools/console", "/tools/console/", "/tools/console/assets/app.js", "/tools/console/assets/app.css", "/tools/console/config.json"), paths.get("datawayUi"));
                 }
             });
         }
     }
 
     @Test
-    void uiOnlyDoesNotNeedDatabaseOrExecutionServices() {
-        context.withPropertyValues("dataway.embedded.api-enabled=false", "dataway.embedded.ui-enabled=true")
-                .withBean(DatawayConfigurer.class, () -> builder -> builder
-                        .dataSource(() -> { throw new AssertionError("UI must not resolve a datasource"); }))
-                .run(c -> {
-                    assertNull(c.getStartupFailure());
-                    assertNull(c.getBean(Dataway.class).getService());
-                    assertNotNull(c.getBean(Dataway.class).getHandlers().get(WebEntry.UI));
-                });
+    void hostMvcInterceptorSuppliesIdentityAndCanDenyEveryEntry() {
+        context.withBean(DataSource.class, TestDatabase::create).withBean(WebMvcConfigurer.class, DatawayAutoConfigurationTest::hostMvc).withBean(DatawayConfigurer.class, () -> builder -> builder.identityProvider(request -> {
+            assertEquals("visited", request.getAttribute("host.mvc"));
+            return request.getIdentity();
+        })).withPropertyValues("dataway.api-enabled=true", "dataway.admin-enabled=true").run(c -> {
+            var mvc = MockMvcBuilders.webAppContextSetup(c.getSourceApplicationContext()).build();
+            publish(c.getBean(Dataway.class).getService(), "return 'ok';");
+            for (String path : new String[] { "/api/hello", "/dataway/api/apis", "/dataway/assets/app.js" }) {
+                assertEquals(401, mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get(path)).andReturn().getResponse().getStatus());
+                var result = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get(path).header("X-Test-User", "user")).andReturn();
+                assertInstanceOf(HandlerMethod.class, result.getHandler());
+                assertEquals(200, result.getResponse().getStatus());
+            }
+            assertEquals(404, mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/dataway/host-route")).andReturn().getResponse().getStatus());
+        });
     }
 
     @Test
-    void webOptionsSubclassIsInjectedThroughTheSameCoreSpi() {
-        WebOptions options = new WebOptions() {
+    void bodyAccessIsLazyAndUsesTheRequestWrapperSelectedByHost() throws Exception {
+        var reads = new AtomicInteger();
+        var input = new MockHttpServletRequest("POST", "/api/example");
+        input.setContentType("application/json");
+        var wrapped = new HttpServletRequestWrapper(input) {
             @Override
-            public String getApiPrefix() {
-                return "/tenant-one" + super.getApiPrefix();
+            public jakarta.servlet.ServletInputStream getInputStream() {
+                reads.incrementAndGet();
+                return new org.springframework.mock.web.DelegatingServletInputStream(new java.io.ByteArrayInputStream("{\"name\":\"host-cached\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8)));
             }
         };
-        context.withPropertyValues("dataway.embedded.in-memory=true", "dataway.embedded.api-prefix=/open")
-                .withBean(DatawayConfigurer.class, () -> builder -> builder.webOptions(options)).run(c -> {
-                    assertNull(c.getStartupFailure());
-                    Dataway dataway = c.getBean(Dataway.class);
-                    assertSame(options, dataway.getWebOptions());
-                    assertEquals("/tenant-one/open", dataway.getHandlers().get(WebEntry.API).pathPrefix());
-                });
-        context.withPropertyValues("dataway.embedded.in-memory=true", "dataway.embedded.api-prefix=/bad?path")
-                .run(c -> assertNotNull(c.getStartupFailure()));
+        var request = new SpringWebRequest(wrapped);
+        assertEquals(0, reads.get());
+        assertTrue(new String(request.getBody().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).contains("host-cached"));
+        assertEquals(1, reads.get());
     }
 
     @Test
-    void adminAuthorizationComesFromTheCoreSpiAndReceivesServletIdentity() {
-        context.withPropertyValues("dataway.embedded.in-memory=true", "dataway.embedded.admin-enabled=true")
-                .run(c -> assertNotNull(c.getStartupFailure()));
-        context.withPropertyValues("dataway.embedded.in-memory=true", "dataway.embedded.admin-enabled=true")
-                .withBean(DatawayConfigurer.class, () -> builder -> builder.getWebOptions()
-                        .setAdminAuthorizer(request -> "admin".equals(request.principal())))
-                .run(c -> {
-                    assertNull(c.getStartupFailure());
-                    var filters = mount(c.getBean(DatawayServletInitializer.class));
-                    var request = new MockHttpServletRequest("GET", "/dataway/api/apis");
-                    request.setUserPrincipal(() -> "admin");
-                    var response = new MockHttpServletResponse();
-                    filters.get(WebEntry.ADMIN.getRegistrationName()).filter()
-                            .doFilter(request, response, new MockFilterChain());
-                    assertEquals(200, response.getStatus());
+    void replayableHostRequestSurvivesMvcBodyInspectionBeforeDataway() {
+        context.withBean(DataSource.class, TestDatabase::create).withBean(WebMvcConfigurer.class, () -> new WebMvcConfigurer() {
+            @Override
+            public void addInterceptors(InterceptorRegistry registry) {
+                registry.addInterceptor(new HandlerInterceptor() {
+                    @Override
+                    public boolean preHandle(HttpServletRequest request, jakarta.servlet.http.HttpServletResponse response, Object handler) throws Exception {
+                        assertInstanceOf(HandlerMethod.class, handler);
+                        assertTrue(new String(request.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).contains("host-body"));
+                        request.setAttribute(RequestAttribute.IDENTITY.getKey(), UserIdentity.authenticated("host-user"));
+                        return true;
+                    }
                 });
+            }
+        }).withPropertyValues("dataway.api-enabled=true").run(c -> {
+            var service = c.getBean(Dataway.class).getService();
+            service.save(new ApiDefinition("echo", "POST", "/echo", ScriptType.DATAQL, "return ${name};", ""), 0, CallContext.LOCAL);
+            service.publish("echo", 1, CallContext.LOCAL);
+            Filter replay = (input, output, chain) -> {
+                byte[] cached = input.getInputStream().readAllBytes();
+                var wrapped = new HttpServletRequestWrapper((HttpServletRequest) input) {
+                    @Override
+                    public jakarta.servlet.ServletInputStream getInputStream() {
+                        return new org.springframework.mock.web.DelegatingServletInputStream(new java.io.ByteArrayInputStream(cached));
+                    }
+                };
+                chain.doFilter(wrapped, output);
+            };
+            var mvc = MockMvcBuilders.webAppContextSetup(c.getSourceApplicationContext()).addFilters(replay).build();
+            var result = mvc.perform(post("/api/echo").contentType("application/json").content("{\"name\":\"host-body\"}")).andReturn().getResponse();
+            assertEquals(200, result.getStatus());
+            assertEquals("\"host-body\"", result.getContentAsString());
+        });
+    }
+
+    private static Map<String, Set<String>> mappings(RequestMappingHandlerMapping mapping) {
+        Map<String, Set<String>> result = new LinkedHashMap<>();
+        mapping.getHandlerMethods().forEach((info, method) -> {
+            if (method.getBean() instanceof DatawayController) {
+                result.put(info.getName(), info.getPatternValues());
+            }
+        });
+        return result;
+    }
+
+    private static WebMvcConfigurer hostMvc() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addInterceptors(InterceptorRegistry registry) {
+                registry.addInterceptor(new HandlerInterceptor() {
+                    @Override
+                    public boolean preHandle(HttpServletRequest request, jakarta.servlet.http.HttpServletResponse response, Object handler) {
+                        if (!(handler instanceof HandlerMethod method) || !(method.getBean() instanceof DatawayController)) {
+                            return true;
+                        }
+                        String user = request.getHeader("X-Test-User");
+                        if (user == null) {
+                            response.setStatus(401);
+                            return false;
+                        }
+                        request.setAttribute("host.mvc", "visited");
+                        request.setAttribute(RequestAttribute.IDENTITY.getKey(), UserIdentity.authenticated(user));
+                        return true;
+                    }
+                });
+            }
+        };
     }
 
     @Test
     void actualServletServerMountsThreeCoreEntriesAfterHostAuthentication() throws Exception {
-        JdbcDataSource source = new JdbcDataSource();
-        source.setURL("jdbc:h2:mem:spring_" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1");
+        JdbcDataSource source = TestDatabase.create();
+        AtomicInteger uiRequests = new AtomicInteger();
         try (var application = new AnnotationConfigServletWebServerApplicationContext()) {
-            application.getEnvironment().getPropertySources().addFirst(new MapPropertySource("dataway-test", Map.of(
-                    "dataway.embedded.initialize-schema", "true",
-                    "dataway.embedded.admin-enabled", "true",
-                    "dataway.embedded.ui-enabled", "true",
-                    "dataway.embedded.admin-token", "native-token",
-                    "dataway.embedded.api-prefix", "/open/v2",
-                    "dataway.embedded.admin-prefix", "/ops/manage",
-                    "dataway.embedded.ui-prefix", "/tools/console")));
+            application.getEnvironment().getPropertySources().addFirst(configuration("configured/application.yml"));
             application.registerBean(DataSource.class, () -> source);
             application.registerBean(TomcatServletWebServerFactory.class, () -> {
                 var factory = new TomcatServletWebServerFactory(0);
@@ -237,7 +243,8 @@ class DatawayAutoConfigurationTest {
                     var authenticated = new HttpServletRequestWrapper((HttpServletRequest) input) {
                         @Override
                         public Principal getUserPrincipal() {
-                            return () -> "native-user";
+                            String user = getHeader("X-Test-User");
+                            return user == null ? null : () -> user;
                         }
                     };
                     chain.doFilter(authenticated, output);
@@ -248,40 +255,75 @@ class DatawayAutoConfigurationTest {
                 registration.addUrlPatterns("/*");
                 return registration;
             });
-            application.registerBean(DatawayConfigurer.class, () -> builder -> builder.configureService(service -> {
-                service.authorization((operation, api, call) -> {
-                    if (operation == Operation.INVOKE && !"native-user".equals(call.principal())) {
-                        throw new DatawayException(403, "Host filter must run first");
+            application.registerBean(DatawayConfigurer.class, () -> builder -> {
+                DatawayInterceptor policy = (action, chain) -> {
+                    if (action.getCallContext().source().equals("HTTP") && !"native-user".equals(action.getIdentity().getId())) {
+                        throw new DatawayException(401, "Host filter must establish identity");
                     }
+                    return chain.proceed();
+                };
+                builder.accessInterceptor(policy).actionInterceptor(policy);
+                builder.configureService(service -> service.interceptor((invocation, next) -> {
+                    if (invocation.parameters().containsKey("download")) {
+                        return net.hasor.dataway.web.SerializationInfo.ofStream("application/pdf", new java.io.ByteArrayInputStream(new byte[] { 0, 1, (byte) 255 })).withHeader("Content-Disposition", "attachment; filename=result.pdf");
+                    }
+                    return next.proceed(invocation);
+                }));
+                builder.uiHandler(dataway -> {
+                    var ui = new DatawayUiHandler(dataway);
+                    return (request, response) -> {
+                        uiRequests.incrementAndGet();
+                        ui.handle(request, response);
+                    };
                 });
-            }));
-            application.register(DatawayAutoConfiguration.class);
+            });
+            application.register(DatawayAutoConfiguration.class, WebMvcAutoConfiguration.class, DispatcherServletAutoConfiguration.class);
+            application.registerBean(org.springframework.web.servlet.config.annotation.WebMvcConfigurer.class, () -> hostMvc());
             application.refresh();
-            publish(application.getBean(Dataway.class).getService(), "return 'spring';");
+            Dataway dataway = application.getBean(Dataway.class);
+
+            assertNotNull(dataway.getApiHandler());
+            assertNotNull(dataway.getAdminHandler());
+            assertNotNull(dataway.getUiHandler());
+
+            publish(dataway.getService(), "return 'spring';");
+            try (var connection = source.getConnection(); var statement = connection.createStatement(); var rows = statement.executeQuery("SELECT COUNT(*) FROM dw_embedded_api")) {
+                assertTrue(rows.next());
+                assertEquals(1, rows.getInt(1));
+            }
             String base = "http://127.0.0.1:" + application.getWebServer().getPort() + "/host";
             try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()) {
-                assertEquals("\"spring\"", get(client, base + "/open/v2/hello", null).body());
+                assertEquals("\"spring\"", get(client, base + "/open/v2/hello", "native-user").body());
+                var binary = client.send(HttpRequest.newBuilder(URI.create(base + "/open/v2/hello?download=true")).header("X-Test-User", "native-user").build(), HttpResponse.BodyHandlers.ofByteArray());
+                assertEquals(200, binary.statusCode());
+                assertEquals("application/pdf", binary.headers().firstValue("Content-Type").orElseThrow());
+                assertArrayEquals(new byte[] { 0, 1, (byte) 255 }, binary.body());
                 assertEquals(401, get(client, base + "/ops/manage/apis", null).statusCode());
-                assertEquals(200, get(client, base + "/ops/manage/apis", "native-token").statusCode());
-                assertEquals(200, get(client, base + "/tools/console/", null).statusCode());
-                assertEquals(200, get(client, base + "/tools/console/assets/app.js", null).statusCode());
+                assertEquals(200, get(client, base + "/ops/manage/apis", "native-user").statusCode());
+                var page = get(client, base + "/tools/console/", "native-user");
+                assertEquals(200, page.statusCode());
+                assertEquals(200, get(client, base + "/tools/console/assets/app.js", "native-user").statusCode());
+                var redirect = get(client, base + "/tools/console", "native-user");
+                assertEquals(308, redirect.statusCode());
+                assertEquals("console/", redirect.headers().firstValue("Location").orElseThrow());
+                assertEquals(3, uiRequests.get());
+                assertEquals(404, get(client, base + "/tools/console/host-route", null).statusCode());
+                assertEquals(404, get(client, base + "/tools/console-other", null).statusCode());
                 assertEquals(404, get(client, base + "/host-route", null).statusCode());
+                assertEquals(3, uiRequests.get(), "The container must not send host paths to the UI handler");
+                assertEquals(401, get(client, base + "/tools/console/assets/app.css", null).statusCode());
+                assertEquals(3, uiRequests.get(), "Resource denial must happen before the custom handler");
+
             }
         }
     }
 
-    private static Map<String, Registration> mount(DatawayServletInitializer initializer) throws Exception {
-        ServletContext servletContext = mock(ServletContext.class);
-        Map<String, Registration> entries = new LinkedHashMap<>();
-        when(servletContext.addFilter(anyString(), any(Filter.class))).thenAnswer(call -> {
-            String name = call.getArgument(0);
-            DatawayFilter filter = call.getArgument(1);
-            FilterRegistration.Dynamic dynamic = mock(FilterRegistration.Dynamic.class);
-            assertNull(entries.put(name, new Registration(filter, dynamic)));
-            return dynamic;
-        });
-        initializer.onStartup(servletContext);
-        return entries;
+    private static PropertySource<?> configuration(String resource) throws IOException {
+        var source = new YamlPropertySourceLoader().load("dataway-test", new ClassPathResource(resource)).getFirst();
+        var properties = assertInstanceOf(EnumerablePropertySource.class, source);
+        Set<String> expectedKeys = Set.of("dataway.api-enabled", "dataway.api-prefix", "dataway.admin-enabled", "dataway.admin-prefix", "dataway.admin-ui");
+        assertEquals(expectedKeys, Set.of(properties.getPropertyNames()));
+        return source;
     }
 
     private static void publish(DatawayService service, String script) {
@@ -289,14 +331,12 @@ class DatawayAutoConfigurationTest {
         service.publish("one", 1, CallContext.LOCAL);
     }
 
-    private static HttpResponse<String> get(HttpClient client, String uri, String token) throws Exception {
+    private static HttpResponse<String> get(HttpClient client, String uri, String user) throws Exception {
         var request = HttpRequest.newBuilder(URI.create(uri)).timeout(Duration.ofSeconds(10));
-        if (token != null) {
-            request.header("Authorization", "Bearer " + token);
+        if (user != null) {
+            request.header("X-Test-User", user);
         }
         return client.send(request.build(), HttpResponse.BodyHandlers.ofString());
     }
 
-    private record Registration(DatawayFilter filter, FilterRegistration.Dynamic dynamic) {
-    }
 }
