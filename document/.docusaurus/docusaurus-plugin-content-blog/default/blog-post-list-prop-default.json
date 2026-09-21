@@ -1,9 +1,0 @@
-{
-  "title": "Recent posts",
-  "items": [
-    {
-      "title": "Dataway 让 Spring Boot 不再需要 Controller、Service、DAO、Mapper",
-      "permalink": "/en/blog/whydataway"
-    }
-  ]
-}

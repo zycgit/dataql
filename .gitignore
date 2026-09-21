@@ -11,7 +11,7 @@ dependency-reduced-pom.xml
 
 # nodejs
 package-lock.json
-!platform/dataway-web/package-lock.json
+!dataway/platform/dataway-web/package-lock.json
 node_modules
 dist
 npm-debug.log*
@@ -39,3 +39,8 @@ logs/*
 hasor-dataql/logs/*
 hasor-rsf/logs/*
 hasor-work
+
+# docs
+.docusaurus
+.cache-loader
+document/build/
