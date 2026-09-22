@@ -6,12 +6,13 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.dal;
-
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Common storage contract for database, configuration-service and user implementations.
- * Reads must observe committed data. Filters use exact, case-sensitive equality combined with AND.
+ * Reads follow the current transaction and must not expose other transactions' partial writes. Filters use exact, case-sensitive equality combined with AND.
  * Each returned record includes ID and REVISION. Providers must preserve unmodified fields.
  * INFO routes are unique by (METHOD, PATH); RELEASE permits historical copies of a route.
  */
@@ -25,7 +26,9 @@ public interface ApiDataAccessLayer {
     /**
      * Entries are created through this access layer. Implementations validate them before writing.
      * Callers must not modify entries while write is running.
-     * Apply all mutations atomically and in order, or apply none. CREATE starts at revision 1;
+     * Apply all mutations atomically and in order, or apply none. When joining a host transaction,
+     * final commit/rollback belongs to the host; failure must roll back or mark rollback-only.
+     * CREATE starts at revision 1;
      * UPDATE compares version and increments it; DELETE compares before removing.
      * Conflicts throw DataConflictException. A process-local lock or sequential remote writes
      * do not satisfy this contract. Configuration stores must use an atomic CAS unit containing
@@ -51,8 +54,7 @@ public interface ApiDataAccessLayer {
     }
 
     /** Initialize an entry obtained from the overridable no-argument factory. */
-    default DataMutation create(EntityType entityType, OperationType operationType, String id,
-            long version, Map<FieldDef, String> fields) {
+    default DataMutation create(EntityType entityType, OperationType operationType, String id, long version, Map<FieldDef, String> fields) {
         DataMutation mutation = create();
         mutation.setEntityType(entityType);
         mutation.setOperationType(operationType);
