@@ -6,17 +6,11 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.solon;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.ServiceLoader;
-import java.util.ServiceConfigurationError;
-import net.hasor.dataway.dal.ApiDataAccessLayer;
-import net.hasor.dataway.dal.MetadataContext;
-import net.hasor.dataway.dal.MetadataProvider;
 import java.util.List;
+import java.util.Objects;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.DatawayBuilder;
+import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.web.WebHandler;
 import org.noear.solon.core.*;
 
@@ -84,6 +78,24 @@ public final class DatawayPlugin implements Plugin {
             List<String> uiPaths = uiHandler.paths().stream().map(path -> uiPrefix + path).toList();
             register(context, uiPrefix, uiHandler, uiPaths);
         }
+    }
+
+    private ApiDataAccessLayer getDataAccessLayer(AppContext context) {
+        String name = context.app().cfg().getProperty("dataway.metadata.bean", "").trim();
+        if (!name.isEmpty()) {
+            Object bean = context.getBean(name);
+            if (!(bean instanceof ApiDataAccessLayer access)) {
+                throw new IllegalStateException("Missing or invalid ApiDataAccessLayer bean: " + name);
+            }
+            return access;
+        }
+
+        List<ApiDataAccessLayer> beans = context.getBeansOfType(ApiDataAccessLayer.class).stream().distinct().toList();
+        if (beans.size() != 1) {
+            throw new IllegalStateException("Expected one ApiDataAccessLayer bean; found " + beans.size() + "; configure dataway.metadata.bean");
+        }
+
+        return beans.getFirst();
     }
 
     private void register(AppContext context, String prefix, WebHandler handler, List<String> paths) {

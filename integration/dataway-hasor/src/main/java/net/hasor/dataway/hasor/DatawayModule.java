@@ -6,16 +6,17 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.hasor;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
 import net.hasor.cobble.setting.Settings;
 import net.hasor.core.ApiBinder;
+import net.hasor.core.AppContext;
 import net.hasor.core.HasorUtils;
 import net.hasor.core.Module;
+import net.hasor.core.spi.AppContextAware;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.DatawayBuilder;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
-import net.hasor.dataway.dal.MetadataContext;
-import net.hasor.dataway.dal.MetadataProvider;
 import net.hasor.dataway.web.WebHandler;
 import net.hasor.web.WebApiBinder;
 
@@ -23,7 +24,8 @@ import net.hasor.web.WebApiBinder;
  * Registers the API, management API and UI independently in an existing Hasor application.
  * Reads routing prefixes from Hasor Settings, including hconfig.xml. Entry switches are owned by this integration.
  */
-public final class DatawayModule implements Module {
+public final class DatawayModule implements Module, AppContextAware {
+    private              AppContext     appContext;
     private static final String         CONFIG_PREFIX = "dataway.";
     private final        DatawayBuilder builder;
     private final        Dataway        dataway;
@@ -40,6 +42,11 @@ public final class DatawayModule implements Module {
     public DatawayModule(Dataway dataway) {
         this.dataway = Objects.requireNonNull(dataway);
         this.builder = null;
+    }
+
+    @Override
+    public void setAppContext(AppContext appContext) {
+        this.appContext = Objects.requireNonNull(appContext);
     }
 
     @Override

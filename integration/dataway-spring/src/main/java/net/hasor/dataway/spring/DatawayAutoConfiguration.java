@@ -6,13 +6,10 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.spring;
-import java.util.*;
 import javax.sql.DataSource;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.DatawayBuilder;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
-import net.hasor.dataway.dal.MetadataContext;
-import net.hasor.dataway.dal.MetadataProvider;
 import net.hasor.dataway.spi.DatawayConfigurer;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -47,6 +44,11 @@ public class DatawayAutoConfiguration {
         builder.defaultDataAccessLayer(() -> this.createDataAccessLayer(metadataContext));
         configurers.orderedStream().forEach(builder::configure);
         return builder.build();
+    }
+
+    private ApiDataAccessLayer getDataAccessLayer(ConfigurableListableBeanFactory beans, Environment environment) {
+        String name = Binder.get(environment).bind("dataway.metadata.bean", String.class).orElse("").trim();
+        return name.isEmpty() ? beans.getBean(ApiDataAccessLayer.class) : beans.getBean(name, ApiDataAccessLayer.class);
     }
 
     @Bean
