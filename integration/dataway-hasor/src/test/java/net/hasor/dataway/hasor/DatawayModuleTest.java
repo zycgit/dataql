@@ -483,6 +483,63 @@ class DatawayModuleTest {
         }
     }
 
+    @Test
+    void controllerPreservesRepeatedHeadersAndCookiesWithoutReadingBody() throws Exception {
+        Map<String, List<String>> input = Map.of("X-Repeat", List.of("one", "two"), "Cookie", List.of("id=first; id=second"));
+        var request = proxy(HttpServletRequest.class, (p, method, args) -> switch (method.getName()) {
+            case "getRequestURI" -> "/host/api/cookies";
+            case "getContextPath" -> "/host";
+            case "getMethod" -> "GET";
+            case "getHeaderNames" -> Collections.enumeration(input.keySet());
+            case "getHeaders" -> Collections.enumeration(input.get(args[0]));
+            case "getInputStream" -> throw new AssertionError("Header and cookie access must not read the body");
+            default -> null;
+        });
+        Map<String, List<String>> outputHeaders = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        outputHeaders.put("Set-Cookie", new ArrayList<>(List.of("host=existing")));
+        var output = new ByteArrayOutputStream();
+        var response = proxy(HttpServletResponse.class, (p, method, args) -> {
+            if (method.getName().equals("setHeader")) {
+                outputHeaders.put((String) args[0], new ArrayList<>(List.of((String) args[1])));
+            } else if (method.getName().equals("addHeader")) {
+                outputHeaders.computeIfAbsent((String) args[0], key -> new ArrayList<>()).add((String) args[1]);
+            } else if (method.getName().equals("getOutputStream")) {
+                return new ServletOutputStream() {
+                    public void write(int value) {
+                        output.write(value);
+                    }
+
+                    public boolean isReady() {
+                        return true;
+                    }
+
+                    public void setWriteListener(WriteListener listener) {
+                    }
+                };
+            }
+            return method.getReturnType() == boolean.class ? false : null;
+        });
+        var controller = new DatawayController("/api", (webRequest, webResponse) -> {
+            assertEquals("/cookies", webRequest.getPathInfo());
+            assertEquals(List.of("one", "two"), webRequest.getHeaderValues().get("x-repeat"));
+            assertEquals(List.of("first", "second"), webRequest.getCookies().get("id"));
+            webResponse.setHeader("X-Result", "first");
+            webResponse.addHeader("x-result", "second");
+            webResponse.setCookie(new net.hasor.dataway.web.WebCookie("one", "1"));
+            webResponse.setCookie(new net.hasor.dataway.web.WebCookie("two", "2"));
+            webResponse.write(200, Map.of()).write(42);
+        });
+        var invoker = proxy(Invoker.class, (p, method, args) -> switch (method.getName()) {
+            case "getHttpRequest" -> request;
+            case "getHttpResponse" -> response;
+            default -> null;
+        });
+        controller.execute(invoker);
+        assertEquals(List.of("first", "second"), outputHeaders.get("X-Result"));
+        assertEquals(List.of("host=existing", "one=1; Path=/", "two=2; Path=/"), outputHeaders.get("Set-Cookie"));
+        assertArrayEquals(new byte[] { 42 }, output.toByteArray());
+    }
+
     private static Properties enabledProperties() {
         var settings = new Properties();
         settings.setProperty("dataway.api-enabled", "true");

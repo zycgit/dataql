@@ -20,6 +20,12 @@ public class SolonMetadataContext implements MetadataContext {
     }
 
     @Override
+    public ClassLoader getClassLoader() {
+        ClassLoader loader = this.context.getClassLoader();
+        return loader == null ? SolonMetadataContext.class.getClassLoader() : loader;
+    }
+
+    @Override
     public String getProperty(String key, String defaultValue) {
         return this.context.app().cfg().getProperty(key, defaultValue);
     }

@@ -8,6 +8,7 @@
 package net.hasor.dataway.hasor;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.web.RequestAttribute;
@@ -35,9 +36,9 @@ public class DatawayController {
         webRequest.setPathInfo(path.substring(this.prefix.length()));
         webRequest.setQuery(request.getQueryString());
 
-        Map<String, String> headers = new LinkedHashMap<>();
-        Collections.list(request.getHeaderNames()).forEach(name -> headers.put(name, request.getHeader(name)));
-        webRequest.setHeaders(headers);
+        Map<String, List<String>> headers = new LinkedHashMap<>();
+        Collections.list(request.getHeaderNames()).forEach(name -> headers.put(name, Collections.list(request.getHeaders(name))));
+        webRequest.setHeaderValues(headers);
 
         Object identity = request.getAttribute(RequestAttribute.IDENTITY.getKey());
         if (identity instanceof UserIdentity user) {

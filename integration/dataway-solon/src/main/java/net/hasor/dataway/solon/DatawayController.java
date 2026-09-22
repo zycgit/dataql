@@ -6,7 +6,9 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.solon;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.web.RequestAttribute;
@@ -32,9 +34,9 @@ public class DatawayController {
         webRequest.setPathInfo(path.substring(this.prefix.length()));
         webRequest.setQuery(context.queryString());
 
-        Map<String, String> headers = new LinkedHashMap<>();
-        context.headerNames().forEach(name -> headers.put(name, context.header(name)));
-        webRequest.setHeaders(headers);
+        Map<String, List<String>> headers = new LinkedHashMap<>();
+        context.headerNames().forEach(name -> headers.put(name, Arrays.asList(context.headerValues(name))));
+        webRequest.setHeaderValues(headers);
 
         UserIdentity identity = context.attr(RequestAttribute.IDENTITY.getKey());
         if (identity != null) {

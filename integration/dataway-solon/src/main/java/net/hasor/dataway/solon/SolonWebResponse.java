@@ -8,7 +8,6 @@
 package net.hasor.dataway.solon;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Map;
 import net.hasor.dataway.web.WebResponse;
 import org.noear.solon.core.handle.Context;
 
@@ -20,12 +19,20 @@ public class SolonWebResponse extends WebResponse {
     }
 
     @Override
-    protected OutputStream openBody(int status, Map<String, String> headers) throws IOException {
+    protected OutputStream openBody(int status) throws IOException {
         this.context.status(status);
-        headers.forEach(this.context::headerSet);
         this.context.setHandled(true);
         this.context.setRendered(true);
         return this.context.outputStream();
+    }
+
+    @Override
+    protected void writeHeader(String name, String value, boolean append) {
+        if (append) {
+            this.context.headerAdd(name, value);
+        } else {
+            this.context.headerSet(name, value);
+        }
     }
 
     @Override

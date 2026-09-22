@@ -6,12 +6,17 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.solon;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.ServiceLoader;
+import java.util.ServiceConfigurationError;
+import net.hasor.dataway.dal.ApiDataAccessLayer;
+import net.hasor.dataway.dal.MetadataContext;
+import net.hasor.dataway.dal.MetadataProvider;
+import java.util.List;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.DatawayBuilder;
-import net.hasor.dataway.dal.DeferredDataAccessLayer;
-import net.hasor.dataway.dal.MetadataLoader;
 import net.hasor.dataway.web.WebHandler;
 import org.noear.solon.core.*;
 

@@ -20,6 +20,12 @@ public class HasorMetadataContext implements MetadataContext, AppContextAware {
     }
 
     @Override
+    public ClassLoader getClassLoader() {
+        ClassLoader loader = this.context.getClassLoader();
+        return loader == null ? HasorMetadataContext.class.getClassLoader() : loader;
+    }
+
+    @Override
     public String getProperty(String key, String defaultValue) {
         return this.context.getSettings().getString(key, defaultValue);
     }

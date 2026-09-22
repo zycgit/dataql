@@ -104,6 +104,27 @@ class DatawayPluginTest {
             var binary = client.send(HttpRequest.newBuilder(URI.create(base + "/api/hello?download=true")).header("X-Test-User", "host-user").build(), HttpResponse.BodyHandlers.ofByteArray());
             assertEquals(200, binary.statusCode());
             assertEquals("application/pdf", binary.headers().firstValue("Content-Type").orElseThrow());
+            service.save(new ApiDefinition("cookies", "GET", "/cookies", ScriptType.DATAQL, """
+                    import 'net.hasor.dataway.function.WebUdfSource' as w;
+                    var a = w.setHeader('X-Result', 'first');
+                    var b = w.addHeader('X-Result', 'second');
+                    var c = w.setCookie('one', '1');
+                    var d = w.setCookie('two', '2', {'httpOnly': true});
+                    return {'headers': w.headerArray('X-Repeat'), 'cookies': w.cookieArray('id')};
+                    """, ""), 0, CallContext.LOCAL);
+            service.publish("cookies", 1, CallContext.LOCAL);
+            var cookies = client.send(HttpRequest.newBuilder(URI.create(base + "/api/cookies"))//
+                    .header("X-Test-User", "host-user").header("X-Repeat", "one").header("X-Repeat", "two")//
+                    .header("Cookie", "id=first; id=second").build(), HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, cookies.statusCode());
+            assertEquals(java.util.List.of("first", "second"), cookies.headers().allValues("X-Result"));
+            assertEquals(java.util.List.of("one=1; Path=/", "two=2; Path=/; HttpOnly"), cookies.headers().allValues("Set-Cookie"));
+            var cookieBody = tools.jackson.databind.json.JsonMapper.builder().build().readTree(cookies.body());
+            assertEquals("one", cookieBody.get("headers").get(0).asText());
+            assertEquals("two", cookieBody.get("headers").get(1).asText());
+            assertEquals("first", cookieBody.get("cookies").get(0).asText());
+            assertEquals("second", cookieBody.get("cookies").get(1).asText());
+
             assertArrayEquals(new byte[] { 0, 1, (byte) 255 }, binary.body());
             assertEquals("host", get(client, base + "/health", null).body());
             assertEquals(200, get(client, base + "/dataway/", "host-user").statusCode());
@@ -331,17 +352,7 @@ class DatawayPluginTest {
             assertNotNull(stream, resource);
             properties.load(stream);
         }
-        Set<String> expectedKeys = Set.of("dataway.api-enabled", "dataway.api-prefix", "dataway.admin-enabled", "dataway.admin-prefix", "dataway.admin-ui",
-                "dataway.metadata.type",
-                "dataway.metadata.bean",
-                "dataway.metadata.jdbc.executor",
-                "dataway.metadata.jdbc.data-source",
-                "dataway.metadata.jdbc.transaction-manager",
-                "dataway.metadata.jdbc.table-prefix",
-                "dataway.metadata.nacos.config-service",
-                "dataway.metadata.nacos.data-id",
-                "dataway.metadata.nacos.group",
-                "dataway.metadata.nacos.timeout-millis");
+        Set<String> expectedKeys = Set.of("dataway.api-enabled", "dataway.api-prefix", "dataway.admin-enabled", "dataway.admin-prefix", "dataway.admin-ui", "dataway.metadata.type", "dataway.metadata.bean", "dataway.metadata.jdbc.executor", "dataway.metadata.jdbc.data-source", "dataway.metadata.jdbc.transaction-manager", "dataway.metadata.jdbc.table-prefix", "dataway.metadata.nacos.config-service", "dataway.metadata.nacos.data-id", "dataway.metadata.nacos.group", "dataway.metadata.nacos.timeout-millis");
         assertEquals(expectedKeys, properties.stringPropertyNames());
         return properties;
     }

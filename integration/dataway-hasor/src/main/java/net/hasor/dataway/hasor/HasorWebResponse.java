@@ -9,7 +9,6 @@ package net.hasor.dataway.hasor;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 import net.hasor.dataway.web.WebResponse;
 
@@ -21,10 +20,18 @@ public class HasorWebResponse extends WebResponse {
     }
 
     @Override
-    protected OutputStream openBody(int status, Map<String, String> headers) throws IOException {
+    protected OutputStream openBody(int status) throws IOException {
         this.response.setStatus(status);
-        headers.forEach(this.response::setHeader);
         return this.response.getOutputStream();
+    }
+
+    @Override
+    protected void writeHeader(String name, String value, boolean append) {
+        if (append) {
+            this.response.addHeader(name, value);
+        } else {
+            this.response.setHeader(name, value);
+        }
     }
 
     @Override

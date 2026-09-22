@@ -6,16 +6,16 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.hasor;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import net.hasor.cobble.setting.Settings;
 import net.hasor.core.ApiBinder;
 import net.hasor.core.HasorUtils;
 import net.hasor.core.Module;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.DatawayBuilder;
-import net.hasor.dataway.dal.DeferredDataAccessLayer;
-import net.hasor.dataway.dal.MetadataLoader;
+import net.hasor.dataway.dal.ApiDataAccessLayer;
+import net.hasor.dataway.dal.MetadataContext;
+import net.hasor.dataway.dal.MetadataProvider;
 import net.hasor.dataway.web.WebHandler;
 import net.hasor.web.WebApiBinder;
 
