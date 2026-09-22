@@ -14,5 +14,21 @@
         <admin-enabled>false</admin-enabled>
         <admin-prefix>/dataway/api</admin-prefix>
         <admin-ui>/dataway</admin-ui>
+        <metadata>
+            <type></type>
+            <bean></bean>
+            <jdbc>
+                <executor></executor>
+                <data-source></data-source>
+                <transaction-manager></transaction-manager>
+                <table-prefix></table-prefix>
+            </jdbc>
+            <nacos>
+                <config-service></config-service>
+                <data-id>dataway-store.json</data-id>
+                <group>HASOR_DATAWAY</group>
+                <timeout-millis>3000</timeout-millis>
+            </nacos>
+        </metadata>
     </dataway>
 </config>

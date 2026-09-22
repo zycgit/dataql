@@ -7,6 +7,7 @@
  */
 package net.hasor.dataway.solon;
 import java.util.Map;
+import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.service.model.ApiDefinition;
 import net.hasor.dataway.service.model.ScriptType;
@@ -21,8 +22,9 @@ class SolonTransactionTest {
     @Test
     void hostTransactionRollsBackPluginAssembledDatawayAndThenCanCommit() throws Throwable {
         var source = TestDatabase.create();
-        Solon.start(SolonTransactionTest.class, new String[] { "--server.port=0", "--dataway.admin-enabled=true" }, app -> {
-            app.pluginAdd(0, new DatawayPlugin(Dataway.builder().dataSource(source)));
+        Solon.start(SolonTransactionTest.class, new String[] { "--server.port=0", "--dataway.admin-enabled=true", "--dataway.metadata.type=jdbc", "--dataway.metadata.jdbc.data-source=metadataSource" }, app -> {
+            app.pluginAdd(0, new DatawayPlugin());
+            app.context().wrapAndPut("metadataSource", source);
         });
         try {
             Dataway dataway = Solon.context().getBean(Dataway.class);

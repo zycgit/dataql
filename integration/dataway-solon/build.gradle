@@ -13,9 +13,17 @@ plugins {
 dependencies {
     api project(':dataway-embedded')
     api 'org.noear:solon:4.1.0'
-    api 'org.noear:solon-data:4.1.0'
     implementation 'org.noear:solon-handle:4.1.0'
+
+    // optional
+    compileOnly project(':dataway-meta-jdbc')
+    compileOnly 'org.noear:solon-data:4.1.0'
+
+    // for test
     testImplementation 'org.noear:solon-test:4.1.0'
-    testImplementation 'com.h2database:h2:2.5.250'
     testRuntimeOnly 'org.noear:solon-server-smarthttp:4.1.0'
+    testImplementation project(':dataway-meta-jdbc')
+    testImplementation 'org.noear:solon-data:4.1.0'
+    testImplementation 'com.h2database:h2:2.5.250'
+    testImplementation project(':dataway-meta-nacos')
 }

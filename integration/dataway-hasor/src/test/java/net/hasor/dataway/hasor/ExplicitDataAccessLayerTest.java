@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Properties;
 import net.hasor.core.Hasor;
 import net.hasor.dataway.Dataway;
-import net.hasor.dataway.dal.jdbc.JdbcExecutor;
 import net.hasor.dataway.dal.jdbc.LocalJdbcExecutor;
 import net.hasor.dataway.service.model.ApiDefinition;
 import net.hasor.dataway.service.model.ScriptType;
@@ -19,16 +18,35 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class LazyJdbcExecutorTest {
+class ExplicitDataAccessLayerTest {
+    @Test
+    void unavailableProviderFailsDuringContainerStartup() {
+        var settings = new Properties();
+        settings.setProperty("dataway.admin-enabled", "true");
+        settings.setProperty("dataway.metadata.type", "missing-provider");
+        var failure = assertThrows(Throwable.class, () -> {
+            try (var ignored = Hasor.create().loadSettings(settings).build(new DatawayModule())) {
+                fail("Startup must reject an unavailable provider");
+            }
+        });
+        assertFalse(failure instanceof AssertionError);
+        while (failure.getCause() != null) {
+            failure = failure.getCause();
+        }
+        assertTrue(failure.getMessage().contains("missing-provider"));
+    }
+
     @Test
     void moduleUsesTheHostBoundTransactionComponent() throws Throwable {
         var source = TestDatabase.create();
         var host = new LocalJdbcExecutor(source);
         var settings = new Properties();
         settings.setProperty("dataway.admin-enabled", "true");
-        try (var context = Hasor.create().loadSettings(settings).build(binder -> {
-            binder.bindType(JdbcExecutor.class).toInstance(host);
-        }, new DatawayModule(Dataway.builder().dataSource(source)))) {
+        settings.setProperty("dataway.metadata.type", "jdbc");
+        settings.setProperty("dataway.metadata.jdbc.executor", "metadataExecutor");
+        try (var context = Hasor.create().loadSettings(settings).build(new DatawayModule(), binder -> {
+            binder.bindType(net.hasor.dataway.dal.jdbc.JdbcExecutor.class).nameWith("metadataExecutor").toInstance(host);
+        })) {
             Dataway dataway = context.getInstance(Dataway.class);
             var api = new ApiDefinition("one", "GET", "/one", ScriptType.DATAQL, "return 1;", "");
             assertThrows(IllegalStateException.class, () -> host.execute(connection -> {

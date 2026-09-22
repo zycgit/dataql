@@ -8,6 +8,7 @@
 package net.hasor.dataway.spring;
 import javax.sql.DataSource;
 import net.hasor.dataway.Dataway;
+import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 import net.hasor.dataway.service.model.ApiDefinition;
 import net.hasor.dataway.service.model.ScriptType;
 import net.hasor.dataway.spi.CallContext;
@@ -28,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class SpringTransactionTest {
     @Test
     void nativeTransactionalRollbackIncludesDatawayDraftAndRelease() {
-        try (var context = new AnnotationConfigApplicationContext(HostConfig.class, DatawayAutoConfiguration.class)) {
+        try (var context = createContext()) {
             HostService host = context.getBean(HostService.class);
             assertThrows(IllegalStateException.class, host::rollback);
             var jdbc = new JdbcTemplate(context.getBean(DataSource.class));
@@ -43,7 +44,7 @@ class SpringTransactionTest {
 
     @Test
     void caughtBatchConflictMarksTheHostTransactionRollbackOnly() {
-        try (var context = new AnnotationConfigApplicationContext(HostConfig.class, DatawayAutoConfiguration.class)) {
+        try (var context = createContext()) {
             assertThrows(UnexpectedRollbackException.class, () -> context.getBean(HostService.class).catchConflict());
             var jdbc = new JdbcTemplate(context.getBean(DataSource.class));
             assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM interface_info", Integer.class));
@@ -55,13 +56,21 @@ class SpringTransactionTest {
     void transactionAwareDatasourceProxyUsesTheSameSpringResource() {
         DataSource source = TestDatabase.create();
         var manager = new JdbcTransactionManager(source);
-        Dataway dataway = Dataway.builder().dataSource(new TransactionAwareDataSourceProxy(source)).databaseExecutor(new SpringJdbcExecutor(source, manager)).build();
+        Dataway dataway = Dataway.builder().dataSource(new TransactionAwareDataSourceProxy(source)).dataAccessLayer(new JdbcDataAccessLayer(new SpringJdbcExecutor(new TransactionAwareDataSourceProxy(source), manager), "")).build();
         var transaction = new org.springframework.transaction.support.TransactionTemplate(manager);
         transaction.executeWithoutResult(status -> {
             dataway.getService().save(api("one"), 0, CallContext.LOCAL);
             status.setRollbackOnly();
         });
         assertTrue(dataway.getService().list(CallContext.LOCAL).isEmpty());
+    }
+
+    private static AnnotationConfigApplicationContext createContext() {
+        var context = new AnnotationConfigApplicationContext();
+        context.getEnvironment().getPropertySources().addFirst(new org.springframework.core.env.MapPropertySource("metadata", java.util.Map.of("dataway.metadata.type", "jdbc", "dataway.metadata.jdbc.data-source", "source", "dataway.metadata.jdbc.transaction-manager", "transactionManager")));
+        context.register(HostConfig.class, DatawayAutoConfiguration.class);
+        context.refresh();
+        return context;
     }
 
     private static ApiDefinition api(String id) {

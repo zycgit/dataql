@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class DatawayModuleTest {
     @Test
     void commonCoreSetupCanBePassedAsBuilderOrAssembledInstance() throws Throwable {
-        DatawayConfigurer setup = builder -> builder.dataSource(TestDatabase.create()).configureRuntime(runtime -> runtime.function("frameworkName", (hints, args) -> "hasor-spi"));
+        DatawayConfigurer setup = builder -> builder.dataSource(TestDatabase.create()).dataAccessLayer(TestDatabase.dataAccessLayer()).configureRuntime(runtime -> runtime.function("frameworkName", (hints, args) -> "hasor-spi"));
         for (boolean assembled : new boolean[] { false, true }) {
             var builder = Dataway.builder().configure(setup);
             Dataway prepared = assembled ? builder.build() : null;
@@ -226,7 +226,7 @@ class DatawayModuleTest {
         var settings = new java.util.Properties();
         settings.setProperty("dataway.admin-enabled", "true");
         settings.setProperty("dataway.admin-ui", "/console");
-        var builder = Dataway.builder().dataSource(TestDatabase.create());
+        var builder = Dataway.builder().dataSource(TestDatabase.create()).dataAccessLayer(TestDatabase.dataAccessLayer());
         try (var context = Hasor.create().loadSettings(settings).build(new DatawayModule(builder))) {
             Dataway dataway = context.getInstance(Dataway.class);
             assertNotNull(dataway.getApiHandler());
@@ -239,7 +239,7 @@ class DatawayModuleTest {
     @Test
     void nativeConfigurationFileConfiguresHandlersAndHostMappings() throws Throwable {
         JdbcDataSource source = dataSource();
-        var builder = Dataway.builder().dataSource(source);
+        var builder = Dataway.builder().dataSource(source).dataAccessLayer(new net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer(source, ""));
         try (var context = Hasor.create().mainSettingWith("configured/hconfig.xml").build(new DatawayModule(builder))) {
             Dataway dataway = context.getInstance(Dataway.class);
 
@@ -283,7 +283,7 @@ class DatawayModuleTest {
             Properties properties = new Properties();
             properties.setProperty("dataway.api-enabled", Boolean.toString(enabled));
             properties.setProperty("dataway.admin-enabled", Boolean.toString(enabled));
-            try (var context = Hasor.create().mainSettingWith("configured/hconfig.xml").loadSettings(properties).build(new DatawayModule(Dataway.builder().dataSource(TestDatabase.create())))) {
+            try (var context = Hasor.create().mainSettingWith("configured/hconfig.xml").loadSettings(properties).build(new DatawayModule(Dataway.builder().dataSource(TestDatabase.create()).dataAccessLayer(TestDatabase.dataAccessLayer())))) {
                 Dataway dataway = context.findBindingBean(null, Dataway.class);
 
                 if (enabled) {
@@ -318,7 +318,7 @@ class DatawayModuleTest {
             });
             default -> null;
         });
-        var builder = Dataway.builder().dataSource(TestDatabase.create()).identityProvider(request -> {
+        var builder = Dataway.builder().dataSource(TestDatabase.create()).dataAccessLayer(TestDatabase.dataAccessLayer()).identityProvider(request -> {
             identities.put(request.getPath(), request.getIdentity());
             return request.getIdentity();
         });
@@ -388,7 +388,7 @@ class DatawayModuleTest {
 
     @Test
     void uiRemainsStaticAcrossServletContextsAndPrefixes() throws Throwable {
-        Dataway dataway = Dataway.builder().dataSource(TestDatabase.create()).build();
+        Dataway dataway = Dataway.builder().dataSource(TestDatabase.create()).dataAccessLayer(TestDatabase.dataAccessLayer()).build();
         var settings = enabledSettings();
         settings.setSetting("dataway.api-prefix", "/v1.0");
         settings.setSetting("dataway.admin-prefix", "/ops/manage.v2");
@@ -419,7 +419,7 @@ class DatawayModuleTest {
             default -> null;
         });
         AtomicInteger intercepted = new AtomicInteger();
-        var builder = Dataway.builder().dataSource(TestDatabase.create()).identityProvider(request -> {
+        var builder = Dataway.builder().dataSource(TestDatabase.create()).dataAccessLayer(TestDatabase.dataAccessLayer()).identityProvider(request -> {
             assertEquals("host-user", request.getAttribute("host.user"));
             return UserIdentity.authenticated("host-user");
         });

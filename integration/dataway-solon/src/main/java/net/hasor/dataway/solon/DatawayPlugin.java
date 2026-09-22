@@ -10,7 +10,8 @@ import java.util.List;
 import java.util.Objects;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.DatawayBuilder;
-import net.hasor.dataway.dal.jdbc.JdbcExecutor;
+import net.hasor.dataway.dal.DeferredDataAccessLayer;
+import net.hasor.dataway.dal.MetadataLoader;
 import net.hasor.dataway.web.WebHandler;
 import org.noear.solon.core.*;
 
@@ -47,9 +48,10 @@ public final class DatawayPlugin implements Plugin {
         }
 
         if (dataway == null) {
-            this.builder.defaultDatabaseExecutor(source -> {
-                JdbcExecutor executor = context.getBean(JdbcExecutor.class);
-                return executor == null ? new SolonJdbcExecutor(source) : executor;
+            this.builder.defaultDataAccessLayer(() -> {
+                var access = new DeferredDataAccessLayer(() -> MetadataLoader.create(new SolonMetadataContext(context)));
+                context.lifecycle(access::initialize);
+                return access;
             });
             dataway = this.builder.build();
         }

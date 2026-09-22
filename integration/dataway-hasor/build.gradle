@@ -13,9 +13,11 @@ plugins {
 dependencies {
     api project(':dataway-embedded')
     api 'net.hasor:hasor-web:5.2.0'
-    compileOnly 'javax.servlet:javax.servlet-api:4.0.1'
-    testImplementation 'javax.servlet:javax.servlet-api:4.0.1'
-    testImplementation 'com.h2database:h2:2.5.250'
-    // Host MVC rendering infrastructure requires its own JSON provider.
+    api 'javax.servlet:javax.servlet-api:4.0.1'
+
+    // for test
     testRuntimeOnly 'com.google.code.gson:gson:2.12.1'
+    testImplementation project(':dataway-meta-jdbc')
+    testImplementation 'com.h2database:h2:2.5.250'
+    testImplementation project(':dataway-meta-nacos')
 }

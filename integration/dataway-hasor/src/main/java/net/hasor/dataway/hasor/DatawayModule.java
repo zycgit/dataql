@@ -10,10 +10,12 @@ import java.util.List;
 import java.util.Objects;
 import net.hasor.cobble.setting.Settings;
 import net.hasor.core.ApiBinder;
+import net.hasor.core.HasorUtils;
 import net.hasor.core.Module;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.DatawayBuilder;
-import net.hasor.dataway.dal.jdbc.JdbcExecutor;
+import net.hasor.dataway.dal.DeferredDataAccessLayer;
+import net.hasor.dataway.dal.MetadataLoader;
 import net.hasor.dataway.web.WebHandler;
 import net.hasor.web.WebApiBinder;
 
@@ -51,11 +53,12 @@ public final class DatawayModule implements Module {
         }
 
         if (dataway == null) {
-            var binding = binder.getBindInfo(JdbcExecutor.class);
-            if (binding != null) {
-                var provider = binder.getProvider(binding);
-                this.builder.defaultDatabaseExecutor(source -> new LazyJdbcExecutor(provider));
-            }
+            this.builder.defaultDataAccessLayer(() -> {
+                var context = HasorUtils.autoAware(binder.getEventContext(), new HasorMetadataContext());
+                var access = new DeferredDataAccessLayer(() -> MetadataLoader.create(context));
+                binder.lazyLoad(app -> access.initialize());
+                return access;
+            });
             dataway = this.builder.build();
         }
         binder.bindType(Dataway.class).toInstance(dataway);

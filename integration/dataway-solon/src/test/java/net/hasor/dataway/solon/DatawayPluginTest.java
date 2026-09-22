@@ -56,7 +56,7 @@ class DatawayPluginTest {
             return chain.proceed();
         };
 
-        Dataway dataway = Dataway.builder().dataSource(TestDatabase.create()).configure(builder -> builder.configureRuntime(runtime -> {
+        Dataway dataway = Dataway.builder().dataSource(TestDatabase.create()).dataAccessLayer(TestDatabase.dataAccessLayer()).configure(builder -> builder.configureRuntime(runtime -> {
             runtime.function("frameworkName", (hints, args) -> "solon");
         })).configureService(serviceBuilder -> serviceBuilder.interceptor((invocation, next) -> {
             if (invocation.parameters().containsKey("download")) {
@@ -203,7 +203,7 @@ class DatawayPluginTest {
         Map<String, String> previous = configurationSnapshot();
         int port = availablePort();
         JdbcDataSource source = dataSource();
-        var builder = Dataway.builder().dataSource(source);
+        var builder = Dataway.builder().dataSource(source).dataAccessLayer(new net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer(source, ""));
         try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()) {
             var app = Solon.start(DatawayPluginTest.class, new String[] { "--cfg=configured/app.properties", "--server.port=" + port, "--server.contextPath=/host" }, a -> a.pluginAdd(0, new DatawayPlugin(builder)));
             Dataway dataway = app.context().getBean(Dataway.class);
@@ -277,7 +277,7 @@ class DatawayPluginTest {
             for (boolean enabled : new boolean[] { true, false }) {
                 int port = availablePort();
                 try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()) {
-                    var app = Solon.start(DatawayPluginTest.class, new String[] { "--cfg=configured/app.properties", "--server.port=" + port, "--server.contextPath=/host", "--dataway.api-enabled=" + enabled, "--dataway.admin-enabled=" + enabled }, a -> a.pluginAdd(0, new DatawayPlugin(Dataway.builder().dataSource(TestDatabase.create()))));
+                    var app = Solon.start(DatawayPluginTest.class, new String[] { "--cfg=configured/app.properties", "--server.port=" + port, "--server.contextPath=/host", "--dataway.api-enabled=" + enabled, "--dataway.admin-enabled=" + enabled }, a -> a.pluginAdd(0, new DatawayPlugin(Dataway.builder().dataSource(TestDatabase.create()).dataAccessLayer(TestDatabase.dataAccessLayer()))));
                     Dataway dataway = app.context().getBean(Dataway.class);
 
                     String base = "http://127.0.0.1:" + port + "/host";
@@ -307,7 +307,7 @@ class DatawayPluginTest {
         try {
             for (String contextPath : new String[] { "", "/tenant/host" }) {
                 int port = availablePort();
-                var builder = Dataway.builder().dataSource(TestDatabase.create());
+                var builder = Dataway.builder().dataSource(TestDatabase.create()).dataAccessLayer(TestDatabase.dataAccessLayer());
                 try (HttpClient client = HttpClient.newHttpClient()) {
                     Solon.start(DatawayPluginTest.class, new String[] { "--server.port=" + port, "--server.contextPath=" + contextPath, "--dataway.api-enabled=true", "--dataway.admin-enabled=true", "--dataway.api-prefix=/v1.0", "--dataway.admin-prefix=/ops/manage.v2", "--dataway.admin-ui=/console.v2" }, app -> app.pluginAdd(0, new DatawayPlugin(builder)));
                     String origin = "http://127.0.0.1:" + port;
@@ -331,7 +331,17 @@ class DatawayPluginTest {
             assertNotNull(stream, resource);
             properties.load(stream);
         }
-        Set<String> expectedKeys = Set.of("dataway.api-enabled", "dataway.api-prefix", "dataway.admin-enabled", "dataway.admin-prefix", "dataway.admin-ui");
+        Set<String> expectedKeys = Set.of("dataway.api-enabled", "dataway.api-prefix", "dataway.admin-enabled", "dataway.admin-prefix", "dataway.admin-ui",
+                "dataway.metadata.type",
+                "dataway.metadata.bean",
+                "dataway.metadata.jdbc.executor",
+                "dataway.metadata.jdbc.data-source",
+                "dataway.metadata.jdbc.transaction-manager",
+                "dataway.metadata.jdbc.table-prefix",
+                "dataway.metadata.nacos.config-service",
+                "dataway.metadata.nacos.data-id",
+                "dataway.metadata.nacos.group",
+                "dataway.metadata.nacos.timeout-millis");
         assertEquals(expectedKeys, properties.stringPropertyNames());
         return properties;
     }

@@ -60,6 +60,18 @@ class DatawayAutoConfigurationTest {
     private final WebApplicationContextRunner context = new WebApplicationContextRunner().withConfiguration(AutoConfigurations.of(DatawayAutoConfiguration.class, WebMvcAutoConfiguration.class));
 
     @Test
+    void unavailableProviderFailsWhenAnEntryIsEnabled() {
+        context.withPropertyValues("dataway.admin-enabled=true", "dataway.metadata.type=missing-provider").run(c -> {
+            Throwable failure = c.getStartupFailure();
+            assertNotNull(failure);
+            while (failure.getCause() != null) {
+                failure = failure.getCause();
+            }
+            assertTrue(failure.getMessage().contains("missing-provider"));
+        });
+    }
+
+    @Test
     void disabledDefaultsDoNotAssembleCoreOrRegisterMappings() throws Exception {
         for (boolean fromFile : new boolean[] { false, true }) {
             var runner = context.withBean(DatawayConfigurer.class, () -> builder -> builder.dataSource(() -> {
@@ -82,7 +94,7 @@ class DatawayAutoConfigurationTest {
 
     @Test
     void sameCoreSpiAndSuppliedInstanceRemainSupported() {
-        context.withBean(DatawayConfigurer.class, () -> builder -> builder.dataSource(TestDatabase.create())).run(c -> {
+        context.withBean(DatawayConfigurer.class, () -> builder -> builder.dataSource(TestDatabase.create()).dataAccessLayer(TestDatabase.dataAccessLayer())).run(c -> {
             Dataway dataway = c.getBean(Dataway.class);
             publish(dataway.getService(), "return 'configured';");
             assertEquals("configured", dataway.getService().invokeApi("/hello", Map.of()));
@@ -90,7 +102,7 @@ class DatawayAutoConfigurationTest {
             assertTrue(c.getBeansOfType(WebHandler.class).isEmpty());
             assertTrue(c.getBeansOfType(FilterRegistrationBean.class).isEmpty());
         });
-        Dataway supplied = Dataway.builder().dataSource(TestDatabase.create()).build();
+        Dataway supplied = Dataway.builder().dataSource(TestDatabase.create()).dataAccessLayer(TestDatabase.dataAccessLayer()).build();
         context.withBean(Dataway.class, () -> supplied).withBean(DatawayConfigurer.class, () -> builder -> fail("Already assembled")).withPropertyValues("dataway.api-enabled=true").run(c -> {
             assertNull(c.getStartupFailure());
             assertSame(supplied, c.getBean(Dataway.class));
@@ -104,7 +116,7 @@ class DatawayAutoConfigurationTest {
         for (int mask = 0; mask < 4; mask++) {
             boolean api = (mask & 1) != 0;
             boolean admin = (mask & 2) != 0;
-            context.withBean(DataSource.class, TestDatabase::create).withInitializer(c -> c.getEnvironment().getPropertySources().addLast(configured)).withPropertyValues("dataway.api-enabled=" + api, "dataway.admin-enabled=" + admin).run(c -> {
+            context.withBean("metadataStorage", DatawayConfigurer.class, () -> builder -> builder.dataAccessLayer(TestDatabase.dataAccessLayer())).withBean(DataSource.class, TestDatabase::create).withInitializer(c -> c.getEnvironment().getPropertySources().addLast(configured)).withPropertyValues("dataway.api-enabled=" + api, "dataway.admin-enabled=" + admin).run(c -> {
                 assertNull(c.getStartupFailure());
                 var paths = mappings(c.getBean(RequestMappingHandlerMapping.class));
                 assertEquals((api ? 1 : 0) + (admin ? 2 : 0), paths.size());
@@ -121,7 +133,7 @@ class DatawayAutoConfigurationTest {
 
     @Test
     void hostMvcInterceptorSuppliesIdentityAndCanDenyEveryEntry() {
-        context.withBean(DataSource.class, TestDatabase::create).withBean(WebMvcConfigurer.class, DatawayAutoConfigurationTest::hostMvc).withBean(DatawayConfigurer.class, () -> builder -> builder.identityProvider(request -> {
+        context.withBean("metadataStorage", DatawayConfigurer.class, () -> builder -> builder.dataAccessLayer(TestDatabase.dataAccessLayer())).withBean(DataSource.class, TestDatabase::create).withBean(WebMvcConfigurer.class, DatawayAutoConfigurationTest::hostMvc).withBean(DatawayConfigurer.class, () -> builder -> builder.dataAccessLayer(TestDatabase.dataAccessLayer()).identityProvider(request -> {
             assertEquals("visited", request.getAttribute("host.mvc"));
             return request.getIdentity();
         })).withPropertyValues("dataway.api-enabled=true", "dataway.admin-enabled=true").run(c -> {
@@ -157,7 +169,7 @@ class DatawayAutoConfigurationTest {
 
     @Test
     void replayableHostRequestSurvivesMvcBodyInspectionBeforeDataway() {
-        context.withBean(DataSource.class, TestDatabase::create).withBean(WebMvcConfigurer.class, () -> new WebMvcConfigurer() {
+        context.withBean("metadataStorage", DatawayConfigurer.class, () -> builder -> builder.dataAccessLayer(TestDatabase.dataAccessLayer())).withBean(DataSource.class, TestDatabase::create).withBean(WebMvcConfigurer.class, () -> new WebMvcConfigurer() {
             @Override
             public void addInterceptors(InterceptorRegistry registry) {
                 registry.addInterceptor(new HandlerInterceptor() {
@@ -256,6 +268,7 @@ class DatawayAutoConfigurationTest {
                 return registration;
             });
             application.registerBean(DatawayConfigurer.class, () -> builder -> {
+                builder.dataAccessLayer(new net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer(source, ""));
                 DatawayInterceptor policy = (action, chain) -> {
                     if (action.getCallContext().source().equals("HTTP") && !"native-user".equals(action.getIdentity().getId())) {
                         throw new DatawayException(401, "Host filter must establish identity");
@@ -321,7 +334,7 @@ class DatawayAutoConfigurationTest {
     private static PropertySource<?> configuration(String resource) throws IOException {
         var source = new YamlPropertySourceLoader().load("dataway-test", new ClassPathResource(resource)).getFirst();
         var properties = assertInstanceOf(EnumerablePropertySource.class, source);
-        Set<String> expectedKeys = Set.of("dataway.api-enabled", "dataway.api-prefix", "dataway.admin-enabled", "dataway.admin-prefix", "dataway.admin-ui");
+        Set<String> expectedKeys = Set.of("dataway.api-enabled", "dataway.api-prefix", "dataway.admin-enabled", "dataway.admin-prefix", "dataway.admin-ui", "dataway.metadata.type", "dataway.metadata.bean", "dataway.metadata.jdbc.executor", "dataway.metadata.jdbc.data-source", "dataway.metadata.jdbc.transaction-manager", "dataway.metadata.jdbc.table-prefix", "dataway.metadata.nacos.config-service", "dataway.metadata.nacos.data-id", "dataway.metadata.nacos.group", "dataway.metadata.nacos.timeout-millis");
         assertEquals(expectedKeys, Set.of(properties.getPropertyNames()));
         return source;
     }

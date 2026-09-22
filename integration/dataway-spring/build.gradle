@@ -11,10 +11,18 @@ plugins {
 }
 
 dependencies {
-    api project(':dataway-embedded')
     api platform('org.springframework.boot:spring-boot-dependencies:4.1.1')
+    api project(':dataway-embedded')
     api 'org.springframework.boot:spring-boot-starter-webmvc'
-    api 'org.springframework:spring-jdbc'
+
+    // optional
+    compileOnly project(':dataway-meta-jdbc')
+    compileOnly 'org.springframework:spring-jdbc'
+
+    // for test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation project(':dataway-meta-jdbc')
+    testImplementation 'org.springframework:spring-jdbc'
     testImplementation 'com.h2database:h2:2.5.250'
+    testImplementation project(':dataway-meta-nacos')
 }
