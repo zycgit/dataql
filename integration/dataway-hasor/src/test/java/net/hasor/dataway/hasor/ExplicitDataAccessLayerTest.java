@@ -20,6 +20,25 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ExplicitDataAccessLayerTest {
     @Test
+    void explicitStorageOrServiceDoesNotRequireAContainerMetadataBean() throws Throwable {
+        var settings = new Properties();
+        settings.setProperty("dataway.admin-enabled", "true");
+        settings.setProperty("dataway.metadata.bean", "missing");
+        var prepared = Dataway.builder().dataAccessLayer(TestDatabase.dataAccessLayer()).build();
+        for (boolean suppliedService : new boolean[] { false, true }) {
+            var builder = Dataway.builder();
+            if (suppliedService) {
+                builder.service(prepared.getService());
+            } else {
+                builder.dataAccessLayer(TestDatabase.dataAccessLayer());
+            }
+            try (var context = Hasor.create().loadSettings(settings).build(new DatawayModule(builder))) {
+                assertTrue(context.getInstance(Dataway.class).getService().list(CallContext.LOCAL).isEmpty());
+            }
+        }
+    }
+
+    @Test
     void namedAccessLayerDoesNotFallBackOnMissingOrWrongType() throws Throwable {
         for (String name : new String[] { "first", "missing", "wrong", "" }) {
             var settings = new Properties();

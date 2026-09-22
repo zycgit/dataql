@@ -14,9 +14,7 @@ import java.util.function.Supplier;
 import net.hasor.cobble.provider.Provider;
 import net.hasor.cobble.setting.Settings;
 import net.hasor.core.ApiBinder;
-import net.hasor.core.AppContext;
 import net.hasor.core.Module;
-import net.hasor.core.spi.ContextInitializeListener;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.DatawayBuilder;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
@@ -29,7 +27,6 @@ import net.hasor.web.binder.MappingDef;
  * Reads routing prefixes from Hasor Settings, including hconfig.xml. Entry switches are owned by this integration.
  */
 public final class DatawayModule implements Module {
-    private              AppContext     appContext;
     private static final String         CONFIG_PREFIX = "dataway.";
     private final        DatawayBuilder builder;
     private final        Dataway        dataway;
@@ -60,12 +57,21 @@ public final class DatawayModule implements Module {
 
         Supplier<Dataway> provider;
         if (dataway == null) {
-            binder.bindSpiListener(ContextInitializeListener.class, this::init);
-            this.builder.defaultDataAccessLayer(() -> this.getDataAccessLayer(settings));
-
             var factory = Provider.of((Callable<Dataway>) this.builder::build).asSingle();
-            var binding = binder.bindType(Dataway.class).toProvider(factory).toInfo();
-            provider = binder.getProvider(binding);
+            var binding = binder.bindType(Dataway.class).toProvider(factory);
+            if (this.builder.requiresDefaultDataAccessLayer()) {
+                String name = settings.getString(CONFIG_PREFIX + "metadata.bean", "").trim();
+                this.builder.defaultDataAccessLayer(binder.getProvider(name, ApiDataAccessLayer.class));
+                if (name.isEmpty()) {
+                    binding.dependsOn(ApiDataAccessLayer.class);
+                } else {
+                    binding.dependsOn(name, ApiDataAccessLayer.class);
+                }
+            }
+
+            var info = binding.asEagerSingleton().toInfo();
+            binder.lazyLoad(context -> context.getInstance(info));
+            provider = binder.getProvider(info);
         } else {
             binder.bindType(Dataway.class).toInstance(dataway);
             provider = () -> this.dataway;
@@ -91,29 +97,6 @@ public final class DatawayModule implements Module {
             String uiPrefix = settings.getString(CONFIG_PREFIX + "admin-ui", "/dataway");
             this.register(web, uiPrefix, provider, Dataway::getUiHandler);
         }
-    }
-
-    private void init(AppContext context) {
-        this.appContext = Objects.requireNonNull(context);
-        context.getInstance(Dataway.class);
-    }
-
-    private ApiDataAccessLayer getDataAccessLayer(Settings settings) {
-        String name = settings.getString("dataway.metadata.bean", "").trim();
-        if (!name.isEmpty()) {
-            var binding = this.appContext.findBindingRegister(name, ApiDataAccessLayer.class);
-            if (binding == null) {
-                throw new IllegalStateException("Missing ApiDataAccessLayer bean: " + name);
-            }
-            return this.appContext.getInstance(binding);
-        }
-
-        var bindings = this.appContext.findBindingRegister(ApiDataAccessLayer.class);
-        if (bindings.size() != 1) {
-            throw new IllegalStateException("Expected one ApiDataAccessLayer bean; found " + bindings.size() + "; configure dataway.metadata.bean");
-        }
-
-        return this.appContext.getInstance(bindings.getFirst());
     }
 
     private void register(WebApiBinder web, String prefix, Supplier<Dataway> provider, Function<Dataway, WebHandler> entry) {
