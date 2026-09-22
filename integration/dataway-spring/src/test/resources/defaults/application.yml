@@ -12,15 +12,4 @@ dataway:
   admin-prefix: "/dataway/api"
   admin-ui: "/dataway"
   metadata:
-    type: ""
     bean: ""
-    jdbc:
-      executor: ""
-      data-source: ""
-      transaction-manager: ""
-      table-prefix: ""
-    nacos:
-      config-service: ""
-      data-id: "dataway-store.json"
-      group: "HASOR_DATAWAY"
-      timeout-millis: "3000"

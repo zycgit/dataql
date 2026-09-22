@@ -20,20 +20,46 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ExplicitDataAccessLayerTest {
     @Test
-    void unavailableProviderFailsDuringContainerStartup() {
+    void namedAccessLayerDoesNotFallBackOnMissingOrWrongType() throws Throwable {
+        for (String name : new String[] { "first", "missing", "wrong", "" }) {
+            var settings = new Properties();
+            settings.setProperty("dataway.admin-enabled", "true");
+            settings.setProperty("dataway.metadata.bean", name);
+            org.junit.jupiter.api.function.Executable start = () -> {
+                try (var context = Hasor.create().loadSettings(settings).build(new DatawayModule(), binder -> {
+                    binder.bindType(net.hasor.dataway.dal.ApiDataAccessLayer.class).nameWith("first").toInstance(TestDatabase.dataAccessLayer());
+                    binder.bindType(net.hasor.dataway.dal.ApiDataAccessLayer.class).nameWith("second").toInstance(TestDatabase.dataAccessLayer());
+                    binder.bindType(String.class).nameWith("wrong").toInstance("not a storage layer");
+                })) {
+                    assertTrue(context.getInstance(Dataway.class).getService().list(CallContext.LOCAL).isEmpty());
+                }
+            };
+            if (name.equals("first")) {
+                start.execute();
+            } else {
+                Throwable failure = assertThrows(Throwable.class, start);
+                while (failure.getCause() != null) {
+                    failure = failure.getCause();
+                }
+                assertTrue(failure.getMessage().contains("ApiDataAccessLayer"));
+            }
+        }
+    }
+
+    @Test
+    void missingAccessLayerFailsDuringContainerStartup() {
         var settings = new Properties();
         settings.setProperty("dataway.admin-enabled", "true");
-        settings.setProperty("dataway.metadata.type", "missing-provider");
         var failure = assertThrows(Throwable.class, () -> {
             try (var ignored = Hasor.create().loadSettings(settings).build(new DatawayModule())) {
-                fail("Startup must reject an unavailable provider");
+                fail("Startup must reject a missing access layer");
             }
         });
         assertFalse(failure instanceof AssertionError);
         while (failure.getCause() != null) {
             failure = failure.getCause();
         }
-        assertTrue(failure.getMessage().contains("missing-provider"));
+        assertTrue(failure.getMessage().contains("ApiDataAccessLayer"));
     }
 
     @Test
@@ -42,10 +68,8 @@ class ExplicitDataAccessLayerTest {
         var host = new LocalJdbcExecutor(source);
         var settings = new Properties();
         settings.setProperty("dataway.admin-enabled", "true");
-        settings.setProperty("dataway.metadata.type", "jdbc");
-        settings.setProperty("dataway.metadata.jdbc.executor", "metadataExecutor");
         try (var context = Hasor.create().loadSettings(settings).build(new DatawayModule(), binder -> {
-            binder.bindType(net.hasor.dataway.dal.jdbc.JdbcExecutor.class).nameWith("metadataExecutor").toInstance(host);
+            binder.bindType(net.hasor.dataway.dal.ApiDataAccessLayer.class).toInstance(new net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer(host, ""));
         })) {
             Dataway dataway = context.getInstance(Dataway.class);
             var api = new ApiDefinition("one", "GET", "/one", ScriptType.DATAQL, "return 1;", "");

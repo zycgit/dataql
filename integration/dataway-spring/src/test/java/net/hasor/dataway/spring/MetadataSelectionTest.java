@@ -8,11 +8,12 @@
 package net.hasor.dataway.spring;
 import javax.sql.DataSource;
 import net.hasor.dataway.Dataway;
+import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
-import net.hasor.dataway.dal.jdbc.LocalJdbcExecutor;
 import net.hasor.dataway.spi.CallContext;
 import net.hasor.dataway.spi.DatawayConfigurer;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.BeanNotOfRequiredTypeException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.NoUniqueBeanDefinitionException;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
@@ -22,68 +23,52 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class MetadataSelectionTest {
     @Test
-    void namedAndPrimaryBeansAreResolvedWithoutCreatingNewResources() {
+    void namedAndPrimaryAccessLayersUseContainerSelection() {
         var beans = new DefaultListableBeanFactory();
-        var first = TestDatabase.create();
-        var second = TestDatabase.create();
+        var first = new JdbcDataAccessLayer(TestDatabase.create(), "");
+        var second = new JdbcDataAccessLayer(TestDatabase.create(), "");
         beans.registerSingleton("first", first);
-        var definition = new RootBeanDefinition(DataSource.class, () -> second);
+        var definition = new RootBeanDefinition(ApiDataAccessLayer.class, () -> second);
         definition.setPrimary(true);
         beans.registerBeanDefinition("second", definition);
-        var context = new SpringMetadataContext(beans, new MockEnvironment());
-        assertSame(first, context.getBean("first", DataSource.class));
-        assertSame(second, context.getBean("", DataSource.class));
-        assertThrows(NoSuchBeanDefinitionException.class, () -> context.getBean("missing", DataSource.class));
-    }
-
-    @Test
-    void ambiguousResourcesFailRatherThanSelectingArbitrarily() {
-        var beans = new DefaultListableBeanFactory();
-        beans.registerSingleton("first", TestDatabase.create());
-        beans.registerSingleton("second", TestDatabase.create());
-        var environment = new MockEnvironment().withProperty("dataway.metadata.type", "jdbc");
-        assertThrows(NoUniqueBeanDefinitionException.class, () -> this.assemble(beans, environment));
-    }
-
-    @Test
-    void explicitAccessAndExistingBeanTakePriorityOverConfiguredProvider() {
-        var access = new JdbcDataAccessLayer(TestDatabase.create(), "");
-        var beans = new DefaultListableBeanFactory();
-        beans.registerSingleton("custom", access);
-        var environment = new MockEnvironment().withProperty("dataway.metadata.type", "missing");
-        assertTrue(this.assemble(beans, environment).getService().list(CallContext.LOCAL).isEmpty());
-        beans.destroySingletons();
-        beans.registerSingleton("customizer", (DatawayConfigurer) builder -> builder.dataAccessLayer(access));
-        var dataway = this.assemble(beans, environment);
-        assertTrue(dataway.getService().list(net.hasor.dataway.spi.CallContext.LOCAL).isEmpty());
-    }
-
-    @Test
-    void missingSelectionAndMissingProviderFailWithActionableMessages() {
         var environment = new MockEnvironment();
+        var primary = this.assemble(beans, environment);
+        primary.getService().save(new net.hasor.dataway.service.model.ApiDefinition("primary", "GET", "/primary", net.hasor.dataway.service.model.ScriptType.DATAQL, "return 1;", ""), 0, CallContext.LOCAL);
+        environment.setProperty("dataway.metadata.bean", "first");
+        assertTrue(this.assemble(beans, environment).getService().list(CallContext.LOCAL).isEmpty());
+        environment.setProperty("dataway.metadata.bean", "second");
+        assertEquals(1, this.assemble(beans, environment).getService().list(CallContext.LOCAL).size());
+    }
+
+    @Test
+    void missingAmbiguousAndWrongNamedBeansFailWithoutFallback() {
         var beans = new DefaultListableBeanFactory();
-        assertTrue(assertThrows(IllegalStateException.class, () -> this.assemble(beans, environment)).getMessage().contains("dataway.metadata.type"));
-        environment.setProperty("dataway.metadata.type", "absent");
-        assertTrue(assertThrows(IllegalStateException.class, () -> this.assemble(beans, environment)).getMessage().contains("No metadata provider 'absent'"));
+        var environment = new MockEnvironment();
+        assertThrows(NoSuchBeanDefinitionException.class, () -> this.assemble(beans, environment));
+        beans.registerSingleton("first", new JdbcDataAccessLayer(TestDatabase.create(), ""));
+        beans.registerSingleton("second", new JdbcDataAccessLayer(TestDatabase.create(), ""));
+        assertThrows(NoUniqueBeanDefinitionException.class, () -> this.assemble(beans, environment));
         environment.setProperty("dataway.metadata.bean", "missing");
         assertThrows(NoSuchBeanDefinitionException.class, () -> this.assemble(beans, environment));
+        beans.registerSingleton("wrong", "not a storage layer");
+        environment.setProperty("dataway.metadata.bean", "wrong");
+        assertThrows(BeanNotOfRequiredTypeException.class, () -> this.assemble(beans, environment));
     }
 
     @Test
-    void suppliedExecutorIsUsedWithoutRequiringDatasourceOrTransactionManager() {
+    void blankNameUsesTypeAndExplicitBuilderAccessBypassesLookup() {
         var beans = new DefaultListableBeanFactory();
-        var executor = new LocalJdbcExecutor(TestDatabase.create());
-        beans.registerSingleton("hostExecutor", executor);
-        var environment = new MockEnvironment().withProperty("dataway.metadata.type", "jdbc").withProperty("dataway.metadata.jdbc.executor", "hostExecutor").withProperty("dataway.metadata.jdbc.data-source", "unused");
+        var access = new JdbcDataAccessLayer(TestDatabase.create(), "");
+        beans.registerSingleton("custom", access);
+        var environment = new MockEnvironment().withProperty("dataway.metadata.bean", "  ");
+        assertTrue(this.assemble(beans, environment).getService().list(CallContext.LOCAL).isEmpty());
+        beans.destroySingletons();
+        environment.setProperty("dataway.metadata.bean", "missing");
+        beans.registerSingleton("customizer", (DatawayConfigurer) builder -> builder.dataAccessLayer(access));
         assertTrue(this.assemble(beans, environment).getService().list(CallContext.LOCAL).isEmpty());
     }
 
     private Dataway assemble(DefaultListableBeanFactory beans, MockEnvironment environment) {
-        return new DatawayAutoConfiguration().dataway(          //
-                beans.getBeanProvider(DataSource.class),        //
-                beans,                                          //
-                beans.getBeanProvider(DatawayConfigurer.class), //
-                environment);
+        return new DatawayAutoConfiguration().dataway(beans.getBeanProvider(DataSource.class), beans, beans.getBeanProvider(DatawayConfigurer.class), environment);
     }
-
 }

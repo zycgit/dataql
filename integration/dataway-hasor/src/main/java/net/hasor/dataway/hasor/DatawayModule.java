@@ -99,6 +99,24 @@ public final class DatawayModule implements Module, AppContextAware {
         }
     }
 
+    private ApiDataAccessLayer getDataAccessLayer(Settings settings) {
+        String name = settings.getString("dataway.metadata.bean", "").trim();
+        if (!name.isEmpty()) {
+            var binding = this.appContext.findBindingRegister(name, ApiDataAccessLayer.class);
+            if (binding == null) {
+                throw new IllegalStateException("Missing ApiDataAccessLayer bean: " + name);
+            }
+            return this.appContext.getInstance(binding);
+        }
+
+        var bindings = this.appContext.findBindingRegister(ApiDataAccessLayer.class);
+        if (bindings.size() != 1) {
+            throw new IllegalStateException("Expected one ApiDataAccessLayer bean; found " + bindings.size() + "; configure dataway.metadata.bean");
+        }
+
+        return this.appContext.getInstance(bindings.getFirst());
+    }
+
     private void register(WebApiBinder web, String prefix, WebHandler handler, List<String> paths) {
         web.mappingTo(paths.toArray(String[]::new)).with(new DatawayController(prefix, handler));
     }

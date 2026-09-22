@@ -8,6 +8,7 @@
 package net.hasor.dataway.spring;
 import javax.sql.DataSource;
 import net.hasor.dataway.Dataway;
+import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 import net.hasor.dataway.service.model.ApiDefinition;
 import net.hasor.dataway.service.model.ScriptType;
@@ -67,7 +68,6 @@ class SpringTransactionTest {
 
     private static AnnotationConfigApplicationContext createContext() {
         var context = new AnnotationConfigApplicationContext();
-        context.getEnvironment().getPropertySources().addFirst(new org.springframework.core.env.MapPropertySource("metadata", java.util.Map.of("dataway.metadata.type", "jdbc", "dataway.metadata.jdbc.data-source", "source", "dataway.metadata.jdbc.transaction-manager", "transactionManager")));
         context.register(HostConfig.class, DatawayAutoConfiguration.class);
         context.refresh();
         return context;
@@ -90,6 +90,11 @@ class SpringTransactionTest {
         @Bean
         PlatformTransactionManager transactionManager(DataSource source) {
             return new JdbcTransactionManager(source);
+        }
+
+        @Bean
+        ApiDataAccessLayer metadataStore(DataSource source, PlatformTransactionManager manager) {
+            return new JdbcDataAccessLayer(new SpringJdbcExecutor(source, manager), "");
         }
 
         @Bean

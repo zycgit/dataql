@@ -6,20 +6,20 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.solon.metadata;
-
 import java.lang.reflect.Proxy;
-import java.util.Map;
 import com.alibaba.nacos.api.config.ConfigService;
 import net.hasor.dataway.Dataway;
+import net.hasor.dataway.dal.nacos.NacosDataAccessLayer;
+import net.hasor.dataway.solon.DatawayPlugin;
 import net.hasor.dataway.spi.CallContext;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 import org.noear.solon.Solon;
-import net.hasor.dataway.solon.DatawayPlugin;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NacosMetadataTest {
     private ConfigService client() {
-        return (ConfigService) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[] {ConfigService.class}, (proxy, method, args) -> {
+        return (ConfigService) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[] { ConfigService.class }, (proxy, method, args) -> {
             if (method.getName().equals("getConfig")) {
                 assertEquals("host-store", args[0]);
                 assertEquals("HOST_GROUP", args[1]);
@@ -40,17 +40,13 @@ class NacosMetadataTest {
     }
 
     @Test
-    void containerSuppliesClientToTheServiceLoaderProvider() throws Throwable {
+    void containerSuppliesNacosAccessLayer() throws Throwable {
         try {
-            Solon.start(NacosMetadataTest.class, new String[] {"--server.port=0",
-                    "--dataway.admin-enabled=true",
-                    "--dataway.metadata.type=nacos",
-                    "--dataway.metadata.nacos.config-service=hostClient",
-                    "--dataway.metadata.nacos.data-id=host-store",
-                    "--dataway.metadata.nacos.group=HOST_GROUP",
-                    "--dataway.metadata.nacos.timeout-millis=1500"}, app -> {
+            Solon.start(NacosMetadataTest.class, new String[] { "--server.port=0", "--dataway.admin-enabled=true", "--dataway.metadata.bean=metadataStore" }, app -> {
                 app.pluginAdd(0, new DatawayPlugin());
-                app.pluginAdd(100, context -> context.wrapAndPut("hostClient", client()));
+                app.pluginAdd(100, context -> {
+                    context.wrapAndPut("metadataStore", new NacosDataAccessLayer(this.client(), "host-store", "HOST_GROUP", 1500));
+                });
             });
             assertTrue(Solon.context().getBean(Dataway.class).getService().list(CallContext.LOCAL).isEmpty());
         } finally {

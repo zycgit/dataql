@@ -60,14 +60,37 @@ class DatawayAutoConfigurationTest {
     private final WebApplicationContextRunner context = new WebApplicationContextRunner().withConfiguration(AutoConfigurations.of(DatawayAutoConfiguration.class, WebMvcAutoConfiguration.class));
 
     @Test
-    void unavailableProviderFailsWhenAnEntryIsEnabled() {
-        context.withPropertyValues("dataway.admin-enabled=true", "dataway.metadata.type=missing-provider").run(c -> {
+    void mvcMappingUsesTypeAndPrimaryInsteadOfARequiredBeanName() {
+        var runner = new WebApplicationContextRunner().withConfiguration(AutoConfigurations.of(DatawayAutoConfiguration.class)).withBean(Dataway.class, () -> Dataway.builder().dataAccessLayer(TestDatabase.dataAccessLayer()).build()).withPropertyValues("dataway.api-enabled=true", "dataway.admin-enabled=true").withBean("hostRoutes", RequestMappingHandlerMapping.class, RequestMappingHandlerMapping::new);
+        runner.run(c -> {
+            assertNull(c.getStartupFailure());
+            assertFalse(c.containsBean("requestMappingHandlerMapping"));
+            assertEquals(3, mappings(c.getBean("hostRoutes", RequestMappingHandlerMapping.class)).size());
+        });
+        runner.withBean("primaryRoutes", RequestMappingHandlerMapping.class, RequestMappingHandlerMapping::new, definition -> definition.setPrimary(true)).run(c -> {
+            assertNull(c.getStartupFailure());
+            assertTrue(mappings(c.getBean("hostRoutes", RequestMappingHandlerMapping.class)).isEmpty());
+            assertEquals(3, mappings(c.getBean("primaryRoutes", RequestMappingHandlerMapping.class)).size());
+        });
+        runner.withBean("otherRoutes", RequestMappingHandlerMapping.class, RequestMappingHandlerMapping::new).run(c -> {
             Throwable failure = c.getStartupFailure();
             assertNotNull(failure);
             while (failure.getCause() != null) {
                 failure = failure.getCause();
             }
-            assertTrue(failure.getMessage().contains("missing-provider"));
+            assertInstanceOf(org.springframework.beans.factory.NoUniqueBeanDefinitionException.class, failure);
+        });
+    }
+
+    @Test
+    void missingAccessLayerFailsWhenAnEntryIsEnabled() {
+        context.withPropertyValues("dataway.admin-enabled=true").run(c -> {
+            Throwable failure = c.getStartupFailure();
+            assertNotNull(failure);
+            while (failure.getCause() != null) {
+                failure = failure.getCause();
+            }
+            assertTrue(failure.getMessage().contains("ApiDataAccessLayer"));
         });
     }
 
@@ -355,7 +378,7 @@ class DatawayAutoConfigurationTest {
     private static PropertySource<?> configuration(String resource) throws IOException {
         var source = new YamlPropertySourceLoader().load("dataway-test", new ClassPathResource(resource)).getFirst();
         var properties = assertInstanceOf(EnumerablePropertySource.class, source);
-        Set<String> expectedKeys = Set.of("dataway.api-enabled", "dataway.api-prefix", "dataway.admin-enabled", "dataway.admin-prefix", "dataway.admin-ui", "dataway.metadata.type", "dataway.metadata.bean", "dataway.metadata.jdbc.executor", "dataway.metadata.jdbc.data-source", "dataway.metadata.jdbc.transaction-manager", "dataway.metadata.jdbc.table-prefix", "dataway.metadata.nacos.config-service", "dataway.metadata.nacos.data-id", "dataway.metadata.nacos.group", "dataway.metadata.nacos.timeout-millis");
+        Set<String> expectedKeys = Set.of("dataway.api-enabled", "dataway.api-prefix", "dataway.admin-enabled", "dataway.admin-prefix", "dataway.admin-ui", "dataway.metadata.bean");
         assertEquals(expectedKeys, Set.of(properties.getPropertyNames()));
         return source;
     }

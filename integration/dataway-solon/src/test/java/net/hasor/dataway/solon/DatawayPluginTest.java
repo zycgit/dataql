@@ -352,7 +352,13 @@ class DatawayPluginTest {
             assertNotNull(stream, resource);
             properties.load(stream);
         }
-        Set<String> expectedKeys = Set.of("dataway.api-enabled", "dataway.api-prefix", "dataway.admin-enabled", "dataway.admin-prefix", "dataway.admin-ui", "dataway.metadata.type", "dataway.metadata.bean", "dataway.metadata.jdbc.executor", "dataway.metadata.jdbc.data-source", "dataway.metadata.jdbc.transaction-manager", "dataway.metadata.jdbc.table-prefix", "dataway.metadata.nacos.config-service", "dataway.metadata.nacos.data-id", "dataway.metadata.nacos.group", "dataway.metadata.nacos.timeout-millis");
+        Set<String> expectedKeys = Set.of(//
+                "dataway.api-enabled",    //
+                "dataway.api-prefix",     //
+                "dataway.admin-enabled",  //
+                "dataway.admin-prefix",   //
+                "dataway.admin-ui",       //
+                "dataway.metadata.bean");
         assertEquals(expectedKeys, properties.stringPropertyNames());
         return properties;
     }
@@ -362,6 +368,7 @@ class DatawayPluginTest {
         for (String key : configuration("configured/app.properties").stringPropertyNames()) {
             previous.put(key, System.getProperty(key));
         }
+
         previous.put("cfg", System.getProperty("cfg"));
         return previous;
     }
@@ -392,6 +399,7 @@ class DatawayPluginTest {
         if (user != null) {
             request.header("X-Test-User", user);
         }
+
         return client.send(request.build(), HttpResponse.BodyHandlers.ofString());
     }
 }

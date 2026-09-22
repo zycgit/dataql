@@ -12,15 +12,4 @@ dataway:
   admin-prefix: "/ops/manage"
   admin-ui: "/tools/console"
   metadata:
-    type: "jdbc"
     bean: ""
-    jdbc:
-      executor: ""
-      data-source: "metadataSource"
-      transaction-manager: "metadataTransactionManager"
-      table-prefix: "dw_"
-    nacos:
-      config-service: "metadataClient"
-      data-id: "host-store"
-      group: "HOST_GROUP"
-      timeout-millis: "1500"

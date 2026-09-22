@@ -12,7 +12,6 @@ import net.hasor.dataway.DatawayBuilder;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.spi.DatawayConfigurer;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -40,8 +39,7 @@ public class DatawayAutoConfiguration {
             return beans.getBeansOfType(DataSource.class);
         });
 
-        var metadataContext = new SpringMetadataContext(beans, environment);
-        builder.defaultDataAccessLayer(() -> this.createDataAccessLayer(metadataContext));
+        builder.defaultDataAccessLayer(() -> this.getDataAccessLayer(beans, environment));
         configurers.orderedStream().forEach(builder::configure);
         return builder.build();
     }
@@ -53,7 +51,7 @@ public class DatawayAutoConfiguration {
 
     @Bean
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-    public DatawayMvcRegistrar datawayMvcRegistrar(ObjectProvider<Dataway> cores, Environment environment, @Qualifier("requestMappingHandlerMapping") ObjectProvider<RequestMappingHandlerMapping> mappings) {
+    public DatawayMvcRegistrar datawayMvcRegistrar(ObjectProvider<Dataway> cores, Environment environment, ObjectProvider<RequestMappingHandlerMapping> mappings) {
         Binder binder = Binder.get(environment);
         boolean apiEnabled = binder.bind(CONFIG_PREFIX + ".api-enabled", Boolean.class).orElse(false);
         boolean adminEnabled = binder.bind(CONFIG_PREFIX + ".admin-enabled", Boolean.class).orElse(false);

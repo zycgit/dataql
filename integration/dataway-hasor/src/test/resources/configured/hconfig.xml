@@ -15,20 +15,7 @@
         <admin-prefix>/ops/manage</admin-prefix>
         <admin-ui>/tools/console</admin-ui>
         <metadata>
-            <type>jdbc</type>
             <bean></bean>
-            <jdbc>
-                <executor></executor>
-                <data-source>metadataSource</data-source>
-                <transaction-manager>metadataTransactionManager</transaction-manager>
-                <table-prefix>dw_</table-prefix>
-            </jdbc>
-            <nacos>
-                <config-service>metadataClient</config-service>
-                <data-id>host-store</data-id>
-                <group>HOST_GROUP</group>
-                <timeout-millis>1500</timeout-millis>
-            </nacos>
         </metadata>
     </dataway>
 </config>

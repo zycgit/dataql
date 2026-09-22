@@ -10,11 +10,14 @@ import java.lang.reflect.Proxy;
 import java.util.Map;
 import com.alibaba.nacos.api.config.ConfigService;
 import net.hasor.dataway.Dataway;
+import net.hasor.dataway.dal.ApiDataAccessLayer;
+import net.hasor.dataway.dal.nacos.NacosDataAccessLayer;
 import net.hasor.dataway.spi.CallContext;
 import net.hasor.dataway.spring.DatawayAutoConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NacosMetadataTest {
     private ConfigService client() {
@@ -39,10 +42,10 @@ class NacosMetadataTest {
     }
 
     @Test
-    void containerSuppliesClientToTheServiceLoaderProvider() throws Throwable {
+    void containerSuppliesNacosAccessLayer() throws Throwable {
         try (var context = new AnnotationConfigApplicationContext()) {
-            context.getEnvironment().getPropertySources().addFirst(new org.springframework.core.env.MapPropertySource("metadata", Map.of("dataway.admin-enabled", "true", "dataway.metadata.type", "nacos", "dataway.metadata.nacos.config-service", "hostClient", "dataway.metadata.nacos.data-id", "host-store", "dataway.metadata.nacos.group", "HOST_GROUP", "dataway.metadata.nacos.timeout-millis", "1500")));
-            context.registerBean("hostClient", ConfigService.class, this::client);
+            context.getEnvironment().getPropertySources().addFirst(new org.springframework.core.env.MapPropertySource("metadata", Map.of("dataway.admin-enabled", "true", "dataway.metadata.bean", "metadataStore")));
+            context.registerBean("metadataStore", ApiDataAccessLayer.class, () -> new NacosDataAccessLayer(this.client(), "host-store", "HOST_GROUP", 1500));
             context.register(DatawayAutoConfiguration.class);
             context.refresh();
             assertTrue(context.getBean(Dataway.class).getService().list(CallContext.LOCAL).isEmpty());

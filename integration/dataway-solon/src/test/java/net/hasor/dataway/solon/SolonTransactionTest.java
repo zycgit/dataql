@@ -7,8 +7,8 @@
  */
 package net.hasor.dataway.solon;
 import java.util.Map;
-import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 import net.hasor.dataway.Dataway;
+import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 import net.hasor.dataway.service.model.ApiDefinition;
 import net.hasor.dataway.service.model.ScriptType;
 import net.hasor.dataway.spi.CallContext;
@@ -20,11 +20,40 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class SolonTransactionTest {
     @Test
+    void namedAccessLayerDoesNotFallBackOnMissingOrWrongType() throws Throwable {
+        for (String name : new String[] { "first", "missing", "wrong", "" }) {
+            try {
+                Solon.start(SolonTransactionTest.class, new String[] { "--server.port=0", "--dataway.admin-enabled=true", "--dataway.metadata.bean=" + name }, app -> {
+                    app.context().wrapAndPut("first", new JdbcDataAccessLayer(TestDatabase.create(), ""));
+                    app.context().wrapAndPut("second", new JdbcDataAccessLayer(TestDatabase.create(), ""));
+                    app.context().wrapAndPut("wrong", "not a storage layer");
+                });
+                org.junit.jupiter.api.function.Executable start = () -> {
+                    new DatawayPlugin().start(Solon.context());
+                    Solon.context().getBean(Dataway.class).getService().list(CallContext.LOCAL);
+                };
+                if (name.equals("first")) {
+                    start.execute();
+                    assertTrue(Solon.context().getBean(Dataway.class).getService().list(CallContext.LOCAL).isEmpty());
+                } else {
+                    Throwable failure = assertThrows(Throwable.class, start);
+                    while (failure.getCause() != null) {
+                        failure = failure.getCause();
+                    }
+                    assertTrue(failure.getMessage().contains("ApiDataAccessLayer"));
+                }
+            } finally {
+                Solon.stopBlock(false, 0);
+            }
+        }
+    }
+
+    @Test
     void hostTransactionRollsBackPluginAssembledDatawayAndThenCanCommit() throws Throwable {
         var source = TestDatabase.create();
-        Solon.start(SolonTransactionTest.class, new String[] { "--server.port=0", "--dataway.admin-enabled=true", "--dataway.metadata.type=jdbc", "--dataway.metadata.jdbc.data-source=metadataSource" }, app -> {
+        Solon.start(SolonTransactionTest.class, new String[] { "--server.port=0", "--dataway.admin-enabled=true" }, app -> {
             app.pluginAdd(0, new DatawayPlugin());
-            app.context().wrapAndPut("metadataSource", source);
+            app.context().wrapAndPut(net.hasor.dataway.dal.ApiDataAccessLayer.class, new JdbcDataAccessLayer(new SolonJdbcExecutor(source), ""));
         });
         try {
             Dataway dataway = Solon.context().getBean(Dataway.class);
