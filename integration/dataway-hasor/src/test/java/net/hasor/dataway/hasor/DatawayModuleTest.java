@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.hasor;
-
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
@@ -24,10 +23,10 @@ import net.hasor.core.ApiBinder;
 import net.hasor.core.Hasor;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.authorization.UserIdentity;
-import net.hasor.dataway.dal.ApiDefinition;
-import net.hasor.dataway.dal.ScriptType;
 import net.hasor.dataway.service.DatawayService;
 import net.hasor.dataway.service.FxRuntime;
+import net.hasor.dataway.service.model.ApiDefinition;
+import net.hasor.dataway.service.model.ScriptType;
 import net.hasor.dataway.spi.CallContext;
 import net.hasor.dataway.spi.DatawayConfigurer;
 import net.hasor.dataway.web.RequestAttribute;
@@ -61,7 +60,7 @@ class DatawayModuleTest {
     @Test
     void actualHasorContainerInstallsIndependentService() throws Throwable {
         var runtime = FxRuntime.builder().build();
-        var service = DatawayService.builder(runtime, TestDatabase.repository()).build();
+        var service = DatawayService.builder(runtime, TestDatabase.dataAccessLayer()).build();
         service.save(new ApiDefinition("hello", "GET", "/hello", ScriptType.DATAQL, "return 'hasor';", ""), 0, CallContext.LOCAL);
         service.publish("hello", 1, CallContext.LOCAL);
         try (var context = Hasor.create().loadSettings(enabledProperties()).build(new DatawayModule(Dataway.builder().service(service)))) {
@@ -74,7 +73,7 @@ class DatawayModuleTest {
 
     @Test
     void registeredMvcControllerUsesConfiguredMappingAndTranslatesContextPath() throws Throwable {
-        var service = DatawayService.builder(FxRuntime.builder().build(), TestDatabase.repository()).build();
+        var service = DatawayService.builder(FxRuntime.builder().build(), TestDatabase.dataAccessLayer()).build();
         service.save(new ApiDefinition("hello", "GET", "/hello", ScriptType.DATAQL, "return ${name};", ""), 0, CallContext.LOCAL);
         service.publish("hello", 1, CallContext.LOCAL);
         var settings = new DefaultSettings();
@@ -164,7 +163,7 @@ class DatawayModuleTest {
 
     @Test
     void enabledCoreEntriesHaveSeparateMappings() throws Throwable {
-        var service = DatawayService.builder(FxRuntime.builder().build(), TestDatabase.repository()).build();
+        var service = DatawayService.builder(FxRuntime.builder().build(), TestDatabase.dataAccessLayer()).build();
         for (int mask = 0; mask < 4; mask++) {
             boolean api = (mask & 1) != 0;
             boolean admin = (mask & 2) != 0;
@@ -249,7 +248,7 @@ class DatawayModuleTest {
             assertNotNull(dataway.getUiHandler());
 
             dataway.getService().save(new ApiDefinition("stored", "GET", "/stored", ScriptType.DATAQL, "return 1;", ""), 0, CallContext.LOCAL);
-            try (var connection = source.getConnection(); var statement = connection.createStatement(); var rows = statement.executeQuery("SELECT COUNT(*) FROM dw_embedded_api")) {
+            try (var connection = source.getConnection(); var statement = connection.createStatement(); var rows = statement.executeQuery("SELECT COUNT(*) FROM interface_info")) {
                 assertTrue(rows.next());
                 assertEquals(1, rows.getInt(1));
             }

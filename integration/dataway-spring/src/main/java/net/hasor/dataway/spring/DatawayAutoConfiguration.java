@@ -9,6 +9,7 @@ package net.hasor.dataway.spring;
 import javax.sql.DataSource;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.DatawayBuilder;
+import net.hasor.dataway.dal.jdbc.JdbcExecutor;
 import net.hasor.dataway.spi.DatawayConfigurer;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -20,6 +21,8 @@ import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.Environment;
+import org.springframework.jdbc.support.JdbcTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 /**
@@ -36,6 +39,22 @@ public class DatawayAutoConfiguration {
     public Dataway dataway(ObjectProvider<DataSource> sources, ListableBeanFactory beans, ObjectProvider<DatawayConfigurer> configurers) {
         DatawayBuilder builder = Dataway.builder().dataSource(sources::getIfUnique).dataSources(() -> {
             return beans.getBeansOfType(DataSource.class);
+        });
+
+        builder.defaultDatabaseExecutor(source -> {
+            JdbcExecutor executor = beans.getBeanProvider(JdbcExecutor.class).getIfAvailable();
+            if (executor != null) {
+                return executor;
+            }
+            PlatformTransactionManager manager = beans.getBeanProvider(PlatformTransactionManager.class).getIfUnique();
+            if (manager == null) {
+                var managers = beans.getBeansOfType(PlatformTransactionManager.class);
+                if (!managers.isEmpty()) {
+                    throw new IllegalStateException("Select the Dataway transaction manager through JdbcExecutor");
+                }
+                manager = new JdbcTransactionManager(source);
+            }
+            return new SpringJdbcExecutor(source, manager);
         });
 
         configurers.orderedStream().forEach(builder::configure);

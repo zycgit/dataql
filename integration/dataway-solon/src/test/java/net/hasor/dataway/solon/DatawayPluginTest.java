@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.solon;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URI;
@@ -22,10 +21,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
-import net.hasor.dataway.dal.ApiDefinition;
-import net.hasor.dataway.dal.ScriptType;
 import net.hasor.dataway.service.DatawayService;
 import net.hasor.dataway.service.FxRuntime;
+import net.hasor.dataway.service.model.ApiDefinition;
+import net.hasor.dataway.service.model.ScriptType;
 import net.hasor.dataway.spi.CallContext;
 import net.hasor.dataway.spi.DatawayException;
 import net.hasor.dataway.spi.DatawayInterceptor;
@@ -56,6 +55,7 @@ class DatawayPluginTest {
             }
             return chain.proceed();
         };
+
         Dataway dataway = Dataway.builder().dataSource(TestDatabase.create()).configure(builder -> builder.configureRuntime(runtime -> {
             runtime.function("frameworkName", (hints, args) -> "solon");
         })).configureService(serviceBuilder -> serviceBuilder.interceptor((invocation, next) -> {
@@ -70,6 +70,7 @@ class DatawayPluginTest {
                 ui.handle(request, response);
             };
         }).build();
+
         var service = dataway.getService();
         service.save(new ApiDefinition("hello", "GET", "/hello", ScriptType.DATAQL, "return frameworkName();", ""), 0, CallContext.LOCAL);
         service.publish("hello", 1, CallContext.LOCAL);
@@ -93,6 +94,7 @@ class DatawayPluginTest {
             a.router().get("/health", ctx -> ctx.output("host"));
             a.router().get("/dataway/host-route", ctx -> ctx.output("host-nested"));
         });
+
         try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()) {
             assertSame(service, app.context().getBean(Dataway.class).getService());
             assertNull(app.context().getBean(DatawayService.class));
@@ -130,7 +132,7 @@ class DatawayPluginTest {
             }
             boolean api = (mask & 1) != 0;
             boolean admin = (mask & 2) != 0;
-            var service = DatawayService.builder(FxRuntime.builder().build(), TestDatabase.repository()).build();
+            var service = DatawayService.builder(FxRuntime.builder().build(), TestDatabase.dataAccessLayer()).build();
             service.save(new ApiDefinition("hello", "GET", "/hello", ScriptType.DATAQL, "return 'solon';", ""), 0, CallContext.LOCAL);
             service.publish("hello", 1, CallContext.LOCAL);
             var app = Solon.start(DatawayPluginTest.class, new String[] { "--server.port=" + port, "--server.contextPath=/host", "--solon.app.name=dataway-entry-test" }, a -> {
@@ -216,7 +218,7 @@ class DatawayPluginTest {
             var service = dataway.getService();
             service.save(new ApiDefinition("hello", "GET", "/hello", ScriptType.DATAQL, "return 'from-config';", ""), 0, CallContext.LOCAL);
             service.publish("hello", 1, CallContext.LOCAL);
-            try (var connection = source.getConnection(); var statement = connection.createStatement(); var rows = statement.executeQuery("SELECT COUNT(*) FROM dw_embedded_api")) {
+            try (var connection = source.getConnection(); var statement = connection.createStatement(); var rows = statement.executeQuery("SELECT COUNT(*) FROM interface_info")) {
                 assertTrue(rows.next());
                 assertEquals(1, rows.getInt(1));
             }

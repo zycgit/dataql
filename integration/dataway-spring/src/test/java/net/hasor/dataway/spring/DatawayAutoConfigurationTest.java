@@ -23,9 +23,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.authorization.UserIdentity;
-import net.hasor.dataway.dal.ApiDefinition;
-import net.hasor.dataway.dal.ScriptType;
 import net.hasor.dataway.service.DatawayService;
+import net.hasor.dataway.service.model.ApiDefinition;
+import net.hasor.dataway.service.model.ScriptType;
 import net.hasor.dataway.spi.CallContext;
 import net.hasor.dataway.spi.DatawayConfigurer;
 import net.hasor.dataway.spi.DatawayException;
@@ -287,7 +287,7 @@ class DatawayAutoConfigurationTest {
             assertNotNull(dataway.getUiHandler());
 
             publish(dataway.getService(), "return 'spring';");
-            try (var connection = source.getConnection(); var statement = connection.createStatement(); var rows = statement.executeQuery("SELECT COUNT(*) FROM dw_embedded_api")) {
+            try (var connection = source.getConnection(); var statement = connection.createStatement(); var rows = statement.executeQuery("SELECT COUNT(*) FROM interface_info")) {
                 assertTrue(rows.next());
                 assertEquals(1, rows.getInt(1));
             }

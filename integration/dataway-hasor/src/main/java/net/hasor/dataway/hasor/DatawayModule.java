@@ -13,6 +13,7 @@ import net.hasor.core.ApiBinder;
 import net.hasor.core.Module;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.DatawayBuilder;
+import net.hasor.dataway.dal.jdbc.JdbcExecutor;
 import net.hasor.dataway.web.WebHandler;
 import net.hasor.web.WebApiBinder;
 
@@ -48,7 +49,13 @@ public final class DatawayModule implements Module {
         if (!apiEnabled && !adminEnabled && dataway == null) {
             return;
         }
+
         if (dataway == null) {
+            var binding = binder.getBindInfo(JdbcExecutor.class);
+            if (binding != null) {
+                var provider = binder.getProvider(binding);
+                this.builder.defaultDatabaseExecutor(source -> new LazyJdbcExecutor(provider));
+            }
             dataway = this.builder.build();
         }
         binder.bindType(Dataway.class).toInstance(dataway);

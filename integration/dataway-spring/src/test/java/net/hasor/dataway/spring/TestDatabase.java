@@ -6,12 +6,11 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.spring;
-
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.UUID;
-import net.hasor.dataway.dal.providers.db.DbVisitorApiRepository;
+import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 import org.h2.jdbcx.JdbcDataSource;
 import org.h2.tools.RunScript;
 
@@ -36,7 +35,7 @@ public final class TestDatabase {
         return source;
     }
 
-    public static DbVisitorApiRepository repository() {
-        return new DbVisitorApiRepository(create());
+    public static JdbcDataAccessLayer dataAccessLayer() {
+        return new JdbcDataAccessLayer(create(), "");
     }
 }
