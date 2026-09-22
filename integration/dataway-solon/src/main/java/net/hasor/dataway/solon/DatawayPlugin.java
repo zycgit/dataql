@@ -19,8 +19,10 @@ import org.noear.solon.core.*;
  * Reads routing prefixes from Solon Props. Entry switches are owned by this integration.
  */
 public final class DatawayPlugin implements Plugin {
-    private final DatawayBuilder builder;
-    private final Dataway        dataway;
+    /** Order corresponding to Solon's @Init index; dependent initializers must use a larger index. */
+    public static final int            INITIALIZATION_INDEX = 1;
+    private final       DatawayBuilder builder;
+    private final       Dataway        dataway;
 
     public DatawayPlugin() {
         this(Dataway.builder());
@@ -47,36 +49,40 @@ public final class DatawayPlugin implements Plugin {
         }
 
         if (dataway == null) {
-            this.builder.defaultDataAccessLayer(() -> {
-                var access = new DeferredDataAccessLayer(() -> MetadataLoader.create(new SolonMetadataContext(context)));
-                context.lifecycle(access::initialize);
-                return access;
+            // Solon schedules @Init(index = n) at lifecycle rank n + 1.
+            context.lifecycle(INITIALIZATION_INDEX + 1, () -> {
+                this.builder.defaultDataAccessLayer(() -> this.getDataAccessLayer(context));
+                this.register(context, properties, this.builder.build(), apiEnabled, adminEnabled);
             });
-            dataway = this.builder.build();
+            return;
         }
-        context.wrapAndPut(Dataway.class, dataway);
 
-        String apiPrefix = properties.get("api-prefix", "/api");
-        String adminPrefix = properties.get("admin-prefix", "/dataway/api");
-        String uiPrefix = properties.get("admin-ui", "/dataway");
+        this.register(context, properties, dataway, apiEnabled, adminEnabled);
+    }
+
+    private void register(AppContext context, Props properties, Dataway dataway, boolean apiEnabled, boolean adminEnabled) {
+        context.wrapAndPut(Dataway.class, dataway);
 
         // API
         if (apiEnabled) {
+            String apiPrefix = properties.get("api-prefix", "/api");
             WebHandler apiHandler = dataway.getApiHandler();
             List<String> apiPaths = apiHandler.paths().stream().map(path -> apiPrefix + path).toList();
-            register(context, apiPrefix, apiHandler, apiPaths);
+            this.register(context, apiPrefix, apiHandler, apiPaths);
         }
 
         // Admin API
         if (adminEnabled) {
+            String adminPrefix = properties.get("admin-prefix", "/dataway/api");
             WebHandler adminHandler = dataway.getAdminHandler();
             List<String> adminPaths = adminHandler.paths().stream().map(path -> adminPrefix + path).toList();
-            register(context, adminPrefix, adminHandler, adminPaths);
+            this.register(context, adminPrefix, adminHandler, adminPaths);
 
             // Admin UI
+            String uiPrefix = properties.get("admin-ui", "/dataway");
             WebHandler uiHandler = dataway.getUiHandler();
             List<String> uiPaths = uiHandler.paths().stream().map(path -> uiPrefix + path).toList();
-            register(context, uiPrefix, uiHandler, uiPaths);
+            this.register(context, uiPrefix, uiHandler, uiPaths);
         }
     }
 

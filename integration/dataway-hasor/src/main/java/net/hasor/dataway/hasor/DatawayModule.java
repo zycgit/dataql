@@ -8,23 +8,27 @@
 package net.hasor.dataway.hasor;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.Callable;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import net.hasor.cobble.provider.Provider;
 import net.hasor.cobble.setting.Settings;
 import net.hasor.core.ApiBinder;
 import net.hasor.core.AppContext;
-import net.hasor.core.HasorUtils;
 import net.hasor.core.Module;
-import net.hasor.core.spi.AppContextAware;
+import net.hasor.core.spi.ContextInitializeListener;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.DatawayBuilder;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.web.WebHandler;
 import net.hasor.web.WebApiBinder;
+import net.hasor.web.binder.MappingDef;
 
 /**
  * Registers the API, management API and UI independently in an existing Hasor application.
  * Reads routing prefixes from Hasor Settings, including hconfig.xml. Entry switches are owned by this integration.
  */
-public final class DatawayModule implements Module, AppContextAware {
+public final class DatawayModule implements Module {
     private              AppContext     appContext;
     private static final String         CONFIG_PREFIX = "dataway.";
     private final        DatawayBuilder builder;
@@ -45,11 +49,6 @@ public final class DatawayModule implements Module, AppContextAware {
     }
 
     @Override
-    public void setAppContext(AppContext appContext) {
-        this.appContext = Objects.requireNonNull(appContext);
-    }
-
-    @Override
     public void loadModule(ApiBinder binder) {
         Settings settings = binder.getSettings();
         boolean apiEnabled = settings.getBoolean(CONFIG_PREFIX + "api-enabled", false);
@@ -59,44 +58,44 @@ public final class DatawayModule implements Module, AppContextAware {
             return;
         }
 
+        Supplier<Dataway> provider;
         if (dataway == null) {
-            this.builder.defaultDataAccessLayer(() -> {
-                var context = HasorUtils.autoAware(binder.getEventContext(), new HasorMetadataContext());
-                var access = new DeferredDataAccessLayer(() -> MetadataLoader.create(context));
-                binder.lazyLoad(app -> access.initialize());
-                return access;
-            });
-            dataway = this.builder.build();
+            binder.bindSpiListener(ContextInitializeListener.class, this::init);
+            this.builder.defaultDataAccessLayer(() -> this.getDataAccessLayer(settings));
+
+            var factory = Provider.of((Callable<Dataway>) this.builder::build).asSingle();
+            var binding = binder.bindType(Dataway.class).toProvider(factory).toInfo();
+            provider = binder.getProvider(binding);
+        } else {
+            binder.bindType(Dataway.class).toInstance(dataway);
+            provider = () -> this.dataway;
         }
-        binder.bindType(Dataway.class).toInstance(dataway);
 
         WebApiBinder web = binder.tryCast(WebApiBinder.class);
         if (web == null) {
             return; // Java-only Hasor hosts can use the assembled core directly.
         }
 
-        String apiPrefix = settings.getString(CONFIG_PREFIX + "api-prefix", "/api");
-        String adminPrefix = settings.getString(CONFIG_PREFIX + "admin-prefix", "/dataway/api");
-        String uiPrefix = settings.getString(CONFIG_PREFIX + "admin-ui", "/dataway");
-
         // API
         if (apiEnabled) {
-            WebHandler apiHandler = dataway.getApiHandler();
-            List<String> apiPaths = apiHandler.paths().stream().map(path -> apiPrefix + path).toList();
-            register(web, apiPrefix, apiHandler, apiPaths);
+            String prefix = settings.getString(CONFIG_PREFIX + "api-prefix", "/api");
+            this.register(web, prefix, provider, Dataway::getApiHandler);
         }
 
         // Admin API
         if (adminEnabled) {
-            WebHandler adminHandler = dataway.getAdminHandler();
-            List<String> adminPaths = adminHandler.paths().stream().map(path -> adminPrefix + path).toList();
-            register(web, adminPrefix, adminHandler, adminPaths);
+            String prefix = settings.getString(CONFIG_PREFIX + "admin-prefix", "/dataway/api");
+            this.register(web, prefix, provider, Dataway::getAdminHandler);
 
             // Admin UI
-            WebHandler uiHandler = dataway.getUiHandler();
-            List<String> uiPaths = uiHandler.paths().stream().map(path -> uiPrefix + path).toList();
-            register(web, uiPrefix, uiHandler, uiPaths);
+            String uiPrefix = settings.getString(CONFIG_PREFIX + "admin-ui", "/dataway");
+            this.register(web, uiPrefix, provider, Dataway::getUiHandler);
         }
+    }
+
+    private void init(AppContext context) {
+        this.appContext = Objects.requireNonNull(context);
+        context.getInstance(Dataway.class);
     }
 
     private ApiDataAccessLayer getDataAccessLayer(Settings settings) {
@@ -117,7 +116,20 @@ public final class DatawayModule implements Module, AppContextAware {
         return this.appContext.getInstance(bindings.getFirst());
     }
 
-    private void register(WebApiBinder web, String prefix, WebHandler handler, List<String> paths) {
-        web.mappingTo(paths.toArray(String[]::new)).with(new DatawayController(prefix, handler));
+    private void register(WebApiBinder web, String prefix, Supplier<Dataway> provider, Function<Dataway, WebHandler> entry) {
+        if (this.dataway != null) {
+            WebHandler handler = entry.apply(this.dataway);
+            String[] paths = handler.paths().stream().map(path -> prefix + path).toArray(String[]::new);
+            web.mappingTo(paths).with(new DatawayController(prefix, handler));
+            return;
+        }
+
+        var controller = web.bindType(DatawayController.class).uniqueName().toProvider(() -> {
+            return new DatawayController(prefix, entry.apply(provider.get()));
+        }).toInfo();
+        web.bindType(MappingDef.class).uniqueName().toProvider(() -> {
+            List<String> paths = entry.apply(provider.get()).paths().stream().map(path -> prefix + path).toList();
+            return new DatawayMapping(controller, paths);
+        });
     }
 }

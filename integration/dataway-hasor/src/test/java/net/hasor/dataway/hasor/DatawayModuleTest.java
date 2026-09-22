@@ -100,7 +100,7 @@ class DatawayModuleTest {
             default -> null;
         });
 
-        new DatawayModule(Dataway.builder().service(service)).loadModule(binder);
+        new DatawayModule(Dataway.builder().service(service).build()).loadModule(binder);
         assertNotNull(captured.get());
         AtomicReference<String> path = new AtomicReference<>("/host/open/v2/hello");
         var request = proxy(HttpServletRequest.class, (p, method, args) -> switch (method.getName()) {
@@ -203,15 +203,13 @@ class DatawayModuleTest {
                 }
                 default -> null;
             });
-            new DatawayModule(Dataway.builder().service(service)).loadModule(binder);
-            if (api || admin) {
+            new DatawayModule(Dataway.builder().service(service).build()).loadModule(binder);
+            {
                 Dataway assembled = (Dataway) bindings.get(Dataway.class);
                 assertSame(service, assembled.getService());
                 assertNotNull(assembled.getApiHandler());
                 assertNotNull(assembled.getAdminHandler());
                 assertNotNull(assembled.getUiHandler());
-            } else {
-                assertFalse(bindings.containsKey(Dataway.class));
             }
             assertFalse(bindings.containsKey(DatawayService.class));
             assertEquals(api, filters.containsKey("/open/v2"));
@@ -325,7 +323,7 @@ class DatawayModuleTest {
         builder.apiHandler(core -> (request, response) -> response.write(200, Map.of()));
         builder.adminHandler(core -> (request, response) -> response.write(200, Map.of()));
         builder.uiHandler(core -> (request, response) -> response.write(200, Map.of()));
-        new DatawayModule(builder).loadModule(binder);
+        new DatawayModule(builder.build()).loadModule(binder);
         UserIdentity explicit = new UserIdentity("attribute-user", true, Map.of("tenant", "one"));
         for (String prefix : List.of("/api", "/dataway/api", "/dataway")) {
             for (boolean attribute : new boolean[] { false, true }) {
@@ -423,7 +421,21 @@ class DatawayModuleTest {
             assertEquals("host-user", request.getAttribute("host.user"));
             return UserIdentity.authenticated("host-user");
         });
-        builder.apiHandler(core -> (request, response) -> response.write(200, Map.of()).write(new byte[] { 1 }));
+        AtomicReference<Dataway> sharedCore = new AtomicReference<>();
+        builder.apiHandler(core -> {
+            sharedCore.set(core);
+            return new net.hasor.dataway.web.WebHandler() {
+                @Override
+                public List<String> paths() {
+                    return List.of("/custom", "/custom/*");
+                }
+
+                @Override
+                public void handle(net.hasor.dataway.web.WebRequest request, net.hasor.dataway.web.WebResponse response) throws Exception {
+                    response.write(200, Map.of()).write(new byte[] { 1 });
+                }
+            };
+        });
         builder.adminHandler(core -> (request, response) -> response.write(200, Map.of()).write(new byte[] { 2 }));
         builder.uiHandler(core -> (request, response) -> response.write(200, Map.of()).write(new byte[] { 3 }));
         try (var application = Hasor.create(servlet).loadSettings(enabledProperties()).build(binder -> {
@@ -436,11 +448,22 @@ class DatawayModuleTest {
                 return chain.doNext(invoker);
             });
         }, new DatawayModule(builder))) {
+            assertSame(application.getInstance(Dataway.class), sharedCore.get());
+            var mappings = application.findBindingBean(net.hasor.web.binder.MappingDef.class);
+            for (String unmapped : List.of("/api/other", "/dataway/unrelated", "/outside")) {
+                var unmatched = proxy(HttpServletRequest.class, (p, method, args) -> switch (method.getName()) {
+                    case "getRequestURI" -> "/host" + unmapped;
+                    case "getContextPath" -> "/host";
+                    case "getMethod" -> "GET";
+                    default -> null;
+                });
+                assertFalse(mappings.stream().anyMatch(mapping -> mapping.matchingMapping(unmatched)));
+            }
             var mvc = new net.hasor.web.invoker.InvokerContext();
             mvc.initContext(application, new net.hasor.web.binder.OneConfig("test", () -> application));
             try {
                 int expected = 0;
-                for (String path : List.of("/api/example", "/dataway/api/apis", "/dataway/assets/app.js")) {
+                for (String path : List.of("/api/custom/example", "/dataway/api/apis", "/dataway/assets/app.js")) {
                     var requestAttributes = new HashMap<String, Object>();
                     var request = proxy(HttpServletRequest.class, (p, method, args) -> switch (method.getName()) {
                         case "getRequestURI" -> "/host" + path;
