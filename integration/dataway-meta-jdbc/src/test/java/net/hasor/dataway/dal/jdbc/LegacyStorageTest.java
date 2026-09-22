@@ -1,0 +1,301 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
+package net.hasor.dataway.dal.jdbc;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import net.hasor.dataway.TestDatabase;
+import net.hasor.dataway.dal.*;
+import net.hasor.dataway.service.DatawayService;
+import net.hasor.dataway.service.FxRuntime;
+import net.hasor.dataway.service.model.ApiDefinition;
+import net.hasor.dataway.service.model.ScriptType;
+import net.hasor.dataway.spi.CallContext;
+import org.h2.jdbcx.JdbcDataSource;
+import org.h2.tools.RunScript;
+import org.junit.jupiter.api.Test;
+import static net.hasor.dataway.dal.FieldDef.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class LegacyStorageTest {
+    private void script(JdbcDataSource source, String name) throws Exception {
+        try (var connection = source.getConnection();           //
+             var input = getClass().getResourceAsStream(name);  //
+             var reader = new InputStreamReader(input, StandardCharsets.UTF_8)) {
+            RunScript.execute(connection, reader);
+        }
+    }
+
+    private Map<FieldDef, String> fields(String method, String path) {
+        Map<FieldDef, String> data = new EnumMap<>(FieldDef.class);
+        data.put(METHOD, method);
+        data.put(PATH, path);
+        data.put(STATUS, "0");
+        data.put(COMMENT, "legacy");
+        data.put(TYPE, "SQL");
+        data.put(SCRIPT, "SELECT :value");
+        data.put(SCHEMA, "{\"requestSchema\":{\"custom\":true},\"unknown\":42}");
+        data.put(SAMPLE, "{\"requestBody\":{\"value\":7},\"headerData\":[],\"custom\":1}");
+        data.put(OPTION, "{\"custom\":{\"a\":1},\"resultStructure\":false}");
+        data.put(CREATE_TIME, "1600000000000");
+        data.put(GMT_TIME, "1600000000000");
+        return data;
+    }
+
+    @Test
+    void oldSchemaUpgradePreservesFieldsAndExecutesStoredReleaseScript() throws Exception {
+        var source = TestDatabase.empty();
+        script(source, "/legacy-h2.sql");
+        // Seed before adding revisions: these rows have precisely the legacy layout.
+        try (var connection = source.getConnection()) {
+            var fields = fields("GET", "/legacy");
+            try (var statement = connection.prepareStatement("INSERT INTO interface_info VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")) {
+                Object[] values = { "i_old", "GET", "/legacy", "1", "legacy", "SQL", fields.get(SCRIPT), fields.get(SCHEMA), fields.get(SAMPLE), fields.get(OPTION), "1600000000000", "1600000000000" };
+                for (int i = 0; i < values.length; i++) {
+                    statement.setObject(i + 1, values[i]);
+                }
+                statement.executeUpdate();
+            }
+            try (var statement = connection.prepareStatement("INSERT INTO interface_release VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+                Object[] values = { "r_old", "i_old", "GET", "/legacy", "1", "legacy", "SQL", "return 42;", fields.get(SCRIPT), fields.get(SCHEMA), fields.get(SAMPLE), fields.get(OPTION), "1600000000000" };
+                for (int i = 0; i < values.length; i++) {
+                    statement.setObject(i + 1, values[i]);
+                }
+                statement.executeUpdate();
+            }
+        }
+        script(source, "/META-INF/dataway/schema/upgrade/h2.sql");
+        var access = new JdbcDataAccessLayer(source, "");
+        var service = DatawayService.builder(FxRuntime.builder().dataSource(source).build(), access).build();
+        assertEquals(42, ((Number) service.invokeApi("/legacy", Map.of())).intValue());
+        var before = access.getObject(EntityType.INFO, "i_old").orElseThrow();
+        assertEquals("1", before.get(REVISION));
+        assertEquals("SELECT :value", service.getApiById("i_old", CallContext.LOCAL).draft().script());
+        service.save(new ApiDefinition("i_old", "GET", "/legacy", ScriptType.SQL, "SELECT :value + 1", "edited"), 1, CallContext.LOCAL);
+        var after = access.getObject(EntityType.INFO, "i_old").orElseThrow();
+        for (FieldDef field : List.of(SCHEMA, SAMPLE, OPTION, CREATE_TIME)) {
+            assertEquals(before.get(field), after.get(field));
+        }
+        assertEquals(42, ((Number) service.invokeApi("/legacy", Map.of())).intValue());
+        service.publish("i_old", 2, CallContext.LOCAL);
+        assertEquals(10, ((Number) service.invokeApi("/legacy", Map.of("value", 9))).intValue());
+        var active = access.listObjects(EntityType.RELEASE, Map.of(API_ID, "i_old", STATUS, "1")).getFirst();
+        assertEquals("SELECT :value + 1", active.get(SCRIPT_ORI));
+        assertTrue(active.get(SCRIPT).startsWith("var tempCall = @@sql(`value`)"));
+        assertEquals(before.get(OPTION), active.get(OPTION));
+        assertEquals(2, service.history("i_old", CallContext.LOCAL).size());
+        assertEquals("3", access.getObject(EntityType.RELEASE, "r_old").orElseThrow().get(STATUS));
+        // The upgraded unique index permits a second method at the same path.
+        access.createObject(EntityType.INFO, "i_post", fields("POST", "/legacy"));
+        assertEquals(2, access.listObjects(EntityType.INFO, Map.of(PATH, "/legacy")).size());
+    }
+
+    @Test
+    void batchesRollbackEarlierChangesWhenLaterMutationConflicts() {
+        var access = new JdbcDataAccessLayer(TestDatabase.create(), "");
+        access.createObject(EntityType.INFO, "one", fields("GET", "/one"));
+        access.createObject(EntityType.INFO, "two", fields("POST", "/one"));
+        assertThrows(DataConflictException.class, () -> access.write(List.of(access.create(EntityType.INFO, OperationType.UPDATE, "one", 1, Map.of(COMMENT, "changed")), access.create(EntityType.INFO, OperationType.UPDATE, "two", 9, Map.of(COMMENT, "stale")))));
+        assertEquals("legacy", access.getObject(EntityType.INFO, "one").orElseThrow().get(COMMENT));
+        assertEquals("1", access.getObject(EntityType.INFO, "one").orElseThrow().get(REVISION));
+        assertThrows(DataConflictException.class, () -> access.write(List.of(access.create(EntityType.INFO, OperationType.DELETE, "one", 1, Map.of()), access.create(EntityType.INFO, OperationType.CREATE, "duplicate", 0, fields("POST", "/one")))));
+        assertTrue(access.getObject(EntityType.INFO, "one").isPresent());
+        assertEquals(2, access.listObjects(EntityType.INFO, Map.of()).size());
+    }
+
+    @Test
+    void partialUpdatesPreserveDocumentsAndNullIsNotTreatedAsAbsent() {
+        var access = new JdbcDataAccessLayer(TestDatabase.create(), "");
+        access.createObject(EntityType.INFO, "one", fields("GET", "/one"));
+        String original = access.getObject(EntityType.INFO, "one").orElseThrow().get(SAMPLE);
+        access.updateObject(EntityType.INFO, "one", 1, Map.of(COMMENT, "changed"));
+        assertEquals(original, access.getObject(EntityType.INFO, "one").orElseThrow().get(SAMPLE));
+        Map<FieldDef, String> clear = new EnumMap<>(FieldDef.class);
+        clear.put(SAMPLE, null);
+        // Legacy NOT NULL constraint rejects an explicit clear, rather than silently ignoring it.
+        assertThrows(DataAccessException.class, () -> access.updateObject(EntityType.INFO, "one", 2, clear));
+        assertEquals("2", access.getObject(EntityType.INFO, "one").orElseThrow().get(REVISION));
+        assertThrows(IllegalArgumentException.class, () -> access.updateObject(EntityType.INFO, "one", 2, Map.of(API_ID, "bad")));
+        assertEquals("2", access.getObject(EntityType.INFO, "one").orElseThrow().get(REVISION));
+    }
+
+    @Test
+    void tablePrefixIsValidatedAndUsedForBothEntities() throws Exception {
+        var source = TestDatabase.create();
+        try (var connection = source.getConnection(); var statement = connection.createStatement()) {
+            statement.execute("ALTER TABLE interface_info RENAME TO tenant_interface_info");
+            statement.execute("ALTER TABLE interface_release RENAME TO tenant_interface_release");
+        }
+        var access = new JdbcDataAccessLayer(source, "tenant_");
+        var service = DatawayService.builder(FxRuntime.builder().build(), access).build();
+        service.save(new ApiDefinition("one", "GET", "/one", ScriptType.DATAQL, "return true;", ""), 0, CallContext.LOCAL);
+        service.publish("one", 1, CallContext.LOCAL);
+        assertEquals(true, service.invokeApi("/one", Map.of()));
+        assertThrows(IllegalArgumentException.class, () -> new JdbcDataAccessLayer(source, "x;DROP TABLE "));
+    }
+
+    @Test
+    void newSqlApiPublishesSampleParametersAndKeepsMetadataOnOrdinaryEdits() throws Exception {
+        var source = TestDatabase.create();
+        var access = new JdbcDataAccessLayer(source, "");
+        var service = DatawayService.builder(FxRuntime.builder().dataSource(source).build(), access).build();
+        String sample = "{\"requestBody\":{\"value\":0},\"responseBody\":{},\"unknown\":true}";
+        var sql = new ApiDefinition("sql", "POST", "/same", ScriptType.SQL, "SELECT :value + 1", "", "{}", sample, "{\"hostOption\":true}");
+        service.save(sql, 0, CallContext.LOCAL);
+        service.publish("sql", 1, CallContext.LOCAL);
+        assertEquals(9, ((Number) service.invokeApi("POST", "/same", Map.of("value", 8))).intValue());
+        service.save(new ApiDefinition("get", "GET", "/same", ScriptType.DATAQL, "return 'GET';", ""), 0, CallContext.LOCAL);
+        service.publish("get", 1, CallContext.LOCAL);
+        assertEquals("GET", service.invokeApi("GET", "/same", Map.of()));
+        service.save(new ApiDefinition("sql", "POST", "/same", ScriptType.SQL, "SELECT :value + 2", "edit"), 2, CallContext.LOCAL);
+        assertEquals(sample, service.getApiById("sql", CallContext.LOCAL).draft().sample());
+        assertEquals("{\"hostOption\":true}", service.getApiById("sql", CallContext.LOCAL).draft().options());
+    }
+
+    @Test
+    void failedReleaseInsertionRollsBackInfoAndPreviousReleaseTogether() {
+        var access = new JdbcDataAccessLayer(TestDatabase.create(), "");
+        var service = DatawayService.builder(FxRuntime.builder().build(), access).build();
+        service.save(new ApiDefinition("one", "GET", "/one", ScriptType.DATAQL, "return 1;", ""), 0, CallContext.LOCAL);
+        var state = service.publish("one", 1, CallContext.LOCAL);
+        var old = access.getObject(EntityType.RELEASE, state.published().id()).orElseThrow();
+        Map<FieldDef, String> duplicate = new EnumMap<>(old);
+        duplicate.remove(ID);
+        duplicate.remove(REVISION);
+        assertThrows(DataConflictException.class, () -> access.write(List.of(access.create(EntityType.INFO, OperationType.UPDATE, "one", 2, Map.of(COMMENT, "not committed")), access.create(EntityType.RELEASE, OperationType.UPDATE, old.get(ID), 1, Map.of(STATUS, "3")), access.create(EntityType.RELEASE, OperationType.CREATE, old.get(ID), 0, duplicate))));
+        assertEquals("2", access.getObject(EntityType.INFO, "one").orElseThrow().get(REVISION));
+        assertEquals("1", access.getObject(EntityType.RELEASE, old.get(ID)).orElseThrow().get(REVISION));
+        assertEquals("1", access.getObject(EntityType.RELEASE, old.get(ID)).orElseThrow().get(STATUS));
+    }
+
+    @Test
+    void publicationsRemainOrderedWhenClockDoesNotAdvance() {
+        var access = new JdbcDataAccessLayer(TestDatabase.create(), "");
+        var service = DatawayService.builder(FxRuntime.builder().build(), access).clock(java.time.Clock.fixed(java.time.Instant.ofEpochMilli(1000), java.time.ZoneOffset.UTC)).build();
+        service.save(new ApiDefinition("one", "GET", "/one", ScriptType.DATAQL, "return 1;", ""), 0, CallContext.LOCAL);
+        service.publish("one", 1, CallContext.LOCAL);
+        service.publish("one", 2, CallContext.LOCAL);
+        service.disableApi("one", 3, CallContext.LOCAL);
+        var history = service.history("one", CallContext.LOCAL);
+        assertEquals(2, history.size());
+        assertTrue(history.get(1).publishedAt().isAfter(history.get(0).publishedAt()));
+        assertEquals(history.get(1), service.getApiById("one", CallContext.LOCAL).published());
+    }
+
+    @Test
+    void factoryEntriesUseFieldsAndInvalidBatchesDoNotChangeData() {
+        var access = new JdbcDataAccessLayer(TestDatabase.create(), "");
+        DataMutation create = access.create();
+        create.setEntityType(EntityType.INFO);
+        create.setOperationType(OperationType.CREATE);
+        create.setId("one");
+        create.setFields(fields("GET", "/one"));
+        access.write(List.of(create));
+        assertEquals("1", access.getObject(EntityType.INFO, "one").orElseThrow().get(REVISION));
+
+        var invalid = access.create(EntityType.INFO, OperationType.UPDATE, "one", 1, Map.of());
+        invalid.setVersion(-1);
+        var update = access.create(EntityType.INFO, OperationType.UPDATE, "one", 1, Map.of(COMMENT, "changed"));
+        assertThrows(IllegalArgumentException.class, () -> access.write(List.of(update, invalid)));
+        assertEquals("legacy", access.getObject(EntityType.INFO, "one").orElseThrow().get(COMMENT));
+        assertEquals("1", access.getObject(EntityType.INFO, "one").orElseThrow().get(REVISION));
+
+        invalid.setVersion(1);
+        invalid.setFields(Map.of(REVISION, "100"));
+        assertThrows(IllegalArgumentException.class, () -> access.write(List.of(invalid)));
+    }
+
+    @Test
+    void databaseProviderCanOverrideTheMutationFactory() throws Exception {
+        var created = new java.util.concurrent.atomic.AtomicInteger();
+        var access = new JdbcDataAccessLayer(TestDatabase.create(), "") {
+            @Override
+            public DataMutation create() {
+                created.incrementAndGet();
+                return new HostMutation();
+            }
+        };
+        assertInstanceOf(HostMutation.class, access.create(EntityType.INFO, OperationType.UPDATE, "one", 1, Map.of()));
+        created.set(0);
+        var service = DatawayService.builder(FxRuntime.builder().build(), access).build();
+        service.save(new ApiDefinition("one", "GET", "/one", ScriptType.DATAQL, "return true;", ""), 0, CallContext.LOCAL);
+        service.publish("one", 1, CallContext.LOCAL);
+        assertEquals(3, created.get());
+        assertEquals(true, service.invokeApi("/one", Map.of()));
+    }
+
+    private static final class HostMutation extends DataMutation {
+    }
+
+    @Test
+    void unsupportedFieldsAreRejectedBeforeObtainingAConnection() {
+        var source = (javax.sql.DataSource) java.lang.reflect.Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[] { javax.sql.DataSource.class }, (proxy, method, args) -> {
+            throw new AssertionError("Datasource must not be accessed: " + method.getName());
+        });
+        var access = new JdbcDataAccessLayer(source, "");
+        var valid = access.create(EntityType.INFO, OperationType.UPDATE, "one", 1, Map.of(COMMENT, "changed"));
+        var invalid = access.create(EntityType.INFO, OperationType.UPDATE, "two", 1, Map.of(API_ID, "unsupported"));
+        assertThrows(IllegalArgumentException.class, () -> access.write(List.of(valid, invalid)));
+        assertThrows(IllegalArgumentException.class, () -> access.listObjects(EntityType.INFO, Map.of(API_ID, "unsupported")));
+        var invalidRelease = access.create(EntityType.RELEASE, OperationType.UPDATE, "release", 1, Map.of(CREATE_TIME, "0"));
+        assertThrows(IllegalArgumentException.class, () -> access.write(List.of(invalidRelease)));
+    }
+
+    @Test
+    void standaloneContextJoinsItsOuterScopeAndRecoversAfterRollback() throws Exception {
+        var source = TestDatabase.create();
+        var database = new net.hasor.dataway.dal.jdbc.LocalJdbcExecutor(source);
+        var access = new JdbcDataAccessLayer(database, "");
+        assertThrows(IllegalStateException.class, () -> database.execute(connection -> {
+            access.createObject(EntityType.INFO, "one", fields("GET", "/one"));
+            assertTrue(access.getObject(EntityType.INFO, "one").isPresent());
+            throw new IllegalStateException("outer failure");
+        }));
+        assertTrue(access.getObject(EntityType.INFO, "one").isEmpty());
+        access.createObject(EntityType.INFO, "one", fields("GET", "/one"));
+        assertThrows(DataConflictException.class, () -> access.updateObject(EntityType.INFO, "one", 99, Map.of(COMMENT, "stale")));
+        access.updateObject(EntityType.INFO, "one", 1, Map.of(COMMENT, "next batch"));
+        assertEquals("next batch", access.getObject(EntityType.INFO, "one").orElseThrow().get(COMMENT));
+    }
+
+    @Test
+    void executorOwnsConnectionAndWrapsEachQueryOrWholeBatch() throws Exception {
+        var source = TestDatabase.create();
+        var host = new net.hasor.dataway.dal.jdbc.LocalJdbcExecutor(source);
+        var calls = new java.util.concurrent.atomic.AtomicInteger();
+        JdbcExecutor executor = new JdbcExecutor() {
+            @Override
+            public <T> T execute(JdbcCallback<T> callback) throws java.sql.SQLException {
+                calls.incrementAndGet();
+                return host.execute(connection -> {
+                    var borrowed = (java.sql.Connection) java.lang.reflect.Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[] { java.sql.Connection.class }, (proxy, method, args) -> {
+                        assertFalse(Set.of("close", "commit", "rollback", "setAutoCommit").contains(method.getName()), "DAL must not control the supplied connection: " + method.getName());
+                        try {
+                            return method.invoke(connection, args);
+                        } catch (java.lang.reflect.InvocationTargetException e) {
+                            throw e.getCause();
+                        }
+                    });
+                    T result = callback.execute(borrowed);
+                    assertFalse(connection.isClosed());
+                    return result;
+                });
+            }
+        };
+        var access = new JdbcDataAccessLayer(executor, "");
+        assertEquals(0, calls.get());
+        access.write(List.of(access.create(EntityType.INFO, OperationType.CREATE, "one", 0, fields("GET", "/one")), access.create(EntityType.INFO, OperationType.CREATE, "two", 0, fields("GET", "/two"))));
+        assertEquals(1, calls.get());
+        assertEquals(2, access.listObjects(EntityType.INFO, Map.of()).size());
+        assertEquals(2, calls.get());
+    }
+
+}
