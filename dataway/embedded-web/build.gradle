@@ -1,0 +1,56 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
+
+ext.pomName = 'Dataway Embedded Web'
+description = 'Replaceable management console resources for embedded Dataway.'
+
+def npmCommand = System.getProperty('os.name', '').toLowerCase().contains('windows') ? 'npm.cmd' : 'npm'
+def webOutput = layout.projectDirectory.dir('dist')
+
+tasks.register('webInstall', Exec) {
+    workingDir projectDir
+    commandLine npmCommand, 'ci', '--no-audit', '--no-fund'
+    inputs.files('package.json', 'package-lock.json')
+    outputs.file(layout.projectDirectory.file('node_modules/.package-lock.json'))
+}
+
+tasks.register('webBuild', Exec) {
+    dependsOn 'webInstall'
+    workingDir projectDir
+    commandLine npmCommand, 'run', 'build'
+    inputs.dir('src')
+    inputs.dir('public')
+    inputs.files('index.html', 'vite.config.js', 'package.json', 'package-lock.json')
+    outputs.dir(webOutput)
+}
+
+tasks.named('processResources') {
+    dependsOn 'webBuild'
+    from(webOutput) { into 'META-INF/dataway-ui' }
+}
+
+tasks.register('webCheck', Exec) {
+    dependsOn 'webInstall'
+    workingDir projectDir
+    commandLine npmCommand, 'run', 'check'
+}
+
+tasks.named('check') { dependsOn 'webCheck' }
+
+tasks.named('sourcesJar') {
+    from(projectDir) {
+        include 'src/**', 'public/**', '.env.proxy'
+        include 'index.html', 'vite.config.js', 'package.json', 'package-lock.json'
+    }
+}
+
+tasks.named('clean') { delete webOutput }

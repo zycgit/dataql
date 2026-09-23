@@ -1,0 +1,5 @@
+{
+  "adminApi": "api/",
+  "api": "../api/",
+  "showGitButton": true
+}
