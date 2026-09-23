@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import net.hasor.dataway.TestDatabase;
+import net.hasor.dataway.dal.EntityType;
 import net.hasor.dataway.service.DatawayService;
 import net.hasor.dataway.service.FxRuntime;
 import net.hasor.dataway.service.model.ApiDefinition;
@@ -93,6 +94,6 @@ class JdbcDataAccessLayerTest {
         service.save(api("one", "/path", "return 4;"), 1, CallContext.LOCAL);
         assertEquals(409, assertThrows(DatawayException.class, () -> service.deleteApi("one", 1, CallContext.LOCAL)).status());
         assertEquals(2, service.list(CallContext.LOCAL).size());
-        assertTrue(repository.getObject(net.hasor.dataway.dal.EntityType.INFO, "' OR 1=1 --").isEmpty());
+        assertTrue(repository.getObject(EntityType.INFO, "' OR 1=1 --").isEmpty());
     }
 }

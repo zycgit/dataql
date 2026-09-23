@@ -7,6 +7,7 @@
  */
 package net.hasor.dataway.hasor.metadata;
 import java.lang.reflect.Proxy;
+import java.util.Properties;
 import com.alibaba.nacos.api.config.ConfigService;
 import net.hasor.core.Hasor;
 import net.hasor.dataway.Dataway;
@@ -42,7 +43,7 @@ class NacosMetadataTest {
 
     @Test
     void containerSuppliesNacosAccessLayer() throws Throwable {
-        var settings = new java.util.Properties();
+        var settings = new Properties();
         settings.setProperty("dataway.admin-enabled", "true");
         try (var context = Hasor.create().loadSettings(settings).build(new DatawayModule(), binder -> {
             binder.bindType(ApiDataAccessLayer.class).toInstance(new NacosDataAccessLayer(this.client(), "host-store", "HOST_GROUP", 1500));

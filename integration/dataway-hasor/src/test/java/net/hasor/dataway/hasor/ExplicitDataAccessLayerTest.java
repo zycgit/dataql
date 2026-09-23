@@ -10,11 +10,14 @@ import java.util.Map;
 import java.util.Properties;
 import net.hasor.core.Hasor;
 import net.hasor.dataway.Dataway;
+import net.hasor.dataway.dal.ApiDataAccessLayer;
+import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 import net.hasor.dataway.dal.jdbc.LocalJdbcExecutor;
 import net.hasor.dataway.service.model.ApiDefinition;
 import net.hasor.dataway.service.model.ScriptType;
 import net.hasor.dataway.spi.CallContext;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -44,10 +47,10 @@ class ExplicitDataAccessLayerTest {
             var settings = new Properties();
             settings.setProperty("dataway.admin-enabled", "true");
             settings.setProperty("dataway.metadata.bean", name);
-            org.junit.jupiter.api.function.Executable start = () -> {
+            Executable start = () -> {
                 try (var context = Hasor.create().loadSettings(settings).build(new DatawayModule(), binder -> {
-                    binder.bindType(net.hasor.dataway.dal.ApiDataAccessLayer.class).nameWith("first").toInstance(TestDatabase.dataAccessLayer());
-                    binder.bindType(net.hasor.dataway.dal.ApiDataAccessLayer.class).nameWith("second").toInstance(TestDatabase.dataAccessLayer());
+                    binder.bindType(ApiDataAccessLayer.class).nameWith("first").toInstance(TestDatabase.dataAccessLayer());
+                    binder.bindType(ApiDataAccessLayer.class).nameWith("second").toInstance(TestDatabase.dataAccessLayer());
                     binder.bindType(String.class).nameWith("wrong").toInstance("not a storage layer");
                 })) {
                     assertTrue(context.getInstance(Dataway.class).getService().list(CallContext.LOCAL).isEmpty());
@@ -88,7 +91,7 @@ class ExplicitDataAccessLayerTest {
         var settings = new Properties();
         settings.setProperty("dataway.admin-enabled", "true");
         try (var context = Hasor.create().loadSettings(settings).build(new DatawayModule(), binder -> {
-            binder.bindType(net.hasor.dataway.dal.ApiDataAccessLayer.class).toInstance(new net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer(host, ""));
+            binder.bindType(ApiDataAccessLayer.class).toInstance(new JdbcDataAccessLayer(host, ""));
         })) {
             Dataway dataway = context.getInstance(Dataway.class);
             var api = new ApiDefinition("one", "GET", "/one", ScriptType.DATAQL, "return 1;", "");

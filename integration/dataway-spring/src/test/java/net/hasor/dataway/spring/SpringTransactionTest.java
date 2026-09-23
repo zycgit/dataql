@@ -25,6 +25,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.UnexpectedRollbackException;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import static org.junit.jupiter.api.Assertions.*;
 
 class SpringTransactionTest {
@@ -58,7 +59,7 @@ class SpringTransactionTest {
         DataSource source = TestDatabase.create();
         var manager = new JdbcTransactionManager(source);
         Dataway dataway = Dataway.builder().dataSource(new TransactionAwareDataSourceProxy(source)).dataAccessLayer(new JdbcDataAccessLayer(new SpringJdbcExecutor(new TransactionAwareDataSourceProxy(source), manager), "")).build();
-        var transaction = new org.springframework.transaction.support.TransactionTemplate(manager);
+        var transaction = new TransactionTemplate(manager);
         transaction.executeWithoutResult(status -> {
             dataway.getService().save(api("one"), 0, CallContext.LOCAL);
             status.setRollbackOnly();

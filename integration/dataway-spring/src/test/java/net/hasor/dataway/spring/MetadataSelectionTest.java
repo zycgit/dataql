@@ -10,6 +10,8 @@ import javax.sql.DataSource;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
+import net.hasor.dataway.service.model.ApiDefinition;
+import net.hasor.dataway.service.model.ScriptType;
 import net.hasor.dataway.spi.CallContext;
 import net.hasor.dataway.spi.DatawayConfigurer;
 import org.junit.jupiter.api.Test;
@@ -33,7 +35,7 @@ class MetadataSelectionTest {
         beans.registerBeanDefinition("second", definition);
         var environment = new MockEnvironment();
         var primary = this.assemble(beans, environment);
-        primary.getService().save(new net.hasor.dataway.service.model.ApiDefinition("primary", "GET", "/primary", net.hasor.dataway.service.model.ScriptType.DATAQL, "return 1;", ""), 0, CallContext.LOCAL);
+        primary.getService().save(new ApiDefinition("primary", "GET", "/primary", ScriptType.DATAQL, "return 1;", ""), 0, CallContext.LOCAL);
         environment.setProperty("dataway.metadata.bean", "first");
         assertTrue(this.assemble(beans, environment).getService().list(CallContext.LOCAL).isEmpty());
         environment.setProperty("dataway.metadata.bean", "second");

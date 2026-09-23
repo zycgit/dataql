@@ -20,6 +20,7 @@ import net.hasor.dataway.dal.*;
 import net.hasor.dataway.service.model.ApiDefinition;
 import net.hasor.dataway.service.model.ScriptType;
 import net.hasor.dataway.spi.CallContext;
+import net.hasor.dataway.spi.DatawayException;
 import org.junit.jupiter.api.Test;
 import static net.hasor.dataway.dal.FieldDef.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -215,7 +216,7 @@ class NacosDataAccessLayerTest {
         assertEquals("return 42;", server.access().listObjects(EntityType.RELEASE, Map.of()).getFirst().get(SCRIPT_ORI));
         var disabled = restarted.disableApi("one", 2, CallContext.LOCAL);
         assertFalse(disabled.enabled());
-        assertThrows(net.hasor.dataway.spi.DatawayException.class, () -> restarted.invokeApi("/one", Map.of()));
+        assertThrows(DatawayException.class, () -> restarted.invokeApi("/one", Map.of()));
         restarted.deleteApi("one", disabled.revision(), CallContext.LOCAL);
         assertTrue(server.access().listObjects(EntityType.INFO, Map.of()).isEmpty());
         assertTrue(server.access().listObjects(EntityType.RELEASE, Map.of()).isEmpty());

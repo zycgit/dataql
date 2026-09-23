@@ -7,11 +7,20 @@
  */
 package net.hasor.dataway.dal.jdbc;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import javax.sql.DataSource;
 import net.hasor.dataway.TestDatabase;
 import net.hasor.dataway.dal.*;
 import net.hasor.dataway.service.DatawayService;
@@ -179,7 +188,7 @@ class LegacyStorageTest {
     @Test
     void publicationsRemainOrderedWhenClockDoesNotAdvance() {
         var access = new JdbcDataAccessLayer(TestDatabase.create(), "");
-        var service = DatawayService.builder(FxRuntime.builder().build(), access).clock(java.time.Clock.fixed(java.time.Instant.ofEpochMilli(1000), java.time.ZoneOffset.UTC)).build();
+        var service = DatawayService.builder(FxRuntime.builder().build(), access).clock(Clock.fixed(Instant.ofEpochMilli(1000), ZoneOffset.UTC)).build();
         service.save(new ApiDefinition("one", "GET", "/one", ScriptType.DATAQL, "return 1;", ""), 0, CallContext.LOCAL);
         service.publish("one", 1, CallContext.LOCAL);
         service.publish("one", 2, CallContext.LOCAL);
@@ -215,7 +224,7 @@ class LegacyStorageTest {
 
     @Test
     void databaseProviderCanOverrideTheMutationFactory() throws Exception {
-        var created = new java.util.concurrent.atomic.AtomicInteger();
+        var created = new AtomicInteger();
         var access = new JdbcDataAccessLayer(TestDatabase.create(), "") {
             @Override
             public DataMutation create() {
@@ -237,7 +246,7 @@ class LegacyStorageTest {
 
     @Test
     void unsupportedFieldsAreRejectedBeforeObtainingAConnection() {
-        var source = (javax.sql.DataSource) java.lang.reflect.Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[] { javax.sql.DataSource.class }, (proxy, method, args) -> {
+        var source = (DataSource) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[] { DataSource.class }, (proxy, method, args) -> {
             throw new AssertionError("Datasource must not be accessed: " + method.getName());
         });
         var access = new JdbcDataAccessLayer(source, "");
@@ -252,7 +261,7 @@ class LegacyStorageTest {
     @Test
     void standaloneContextJoinsItsOuterScopeAndRecoversAfterRollback() throws Exception {
         var source = TestDatabase.create();
-        var database = new net.hasor.dataway.dal.jdbc.LocalJdbcExecutor(source);
+        var database = new LocalJdbcExecutor(source);
         var access = new JdbcDataAccessLayer(database, "");
         assertThrows(IllegalStateException.class, () -> database.execute(connection -> {
             access.createObject(EntityType.INFO, "one", fields("GET", "/one"));
@@ -269,18 +278,18 @@ class LegacyStorageTest {
     @Test
     void executorOwnsConnectionAndWrapsEachQueryOrWholeBatch() throws Exception {
         var source = TestDatabase.create();
-        var host = new net.hasor.dataway.dal.jdbc.LocalJdbcExecutor(source);
-        var calls = new java.util.concurrent.atomic.AtomicInteger();
+        var host = new LocalJdbcExecutor(source);
+        var calls = new AtomicInteger();
         JdbcExecutor executor = new JdbcExecutor() {
             @Override
-            public <T> T execute(JdbcCallback<T> callback) throws java.sql.SQLException {
+            public <T> T execute(JdbcCallback<T> callback) throws SQLException {
                 calls.incrementAndGet();
                 return host.execute(connection -> {
-                    var borrowed = (java.sql.Connection) java.lang.reflect.Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[] { java.sql.Connection.class }, (proxy, method, args) -> {
+                    var borrowed = (Connection) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[] { Connection.class }, (proxy, method, args) -> {
                         assertFalse(Set.of("close", "commit", "rollback", "setAutoCommit").contains(method.getName()), "DAL must not control the supplied connection: " + method.getName());
                         try {
                             return method.invoke(connection, args);
-                        } catch (java.lang.reflect.InvocationTargetException e) {
+                        } catch (InvocationTargetException e) {
                             throw e.getCause();
                         }
                     });

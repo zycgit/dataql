@@ -6,23 +6,26 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.spring;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.time.Duration;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.sql.DataSource;
 import jakarta.servlet.Filter;
+import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletResponse;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.authorization.UserIdentity;
+import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 import net.hasor.dataway.service.DatawayService;
 import net.hasor.dataway.service.model.ApiDefinition;
 import net.hasor.dataway.service.model.ScriptType;
@@ -32,9 +35,11 @@ import net.hasor.dataway.spi.DatawayException;
 import net.hasor.dataway.spi.DatawayInterceptor;
 import net.hasor.dataway.web.DatawayUiHandler;
 import net.hasor.dataway.web.RequestAttribute;
+import net.hasor.dataway.web.SerializationInfo;
 import net.hasor.dataway.web.WebHandler;
 import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.NoUniqueBeanDefinitionException;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.env.YamlPropertySourceLoader;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
@@ -46,13 +51,16 @@ import org.springframework.boot.webmvc.autoconfigure.WebMvcAutoConfiguration;
 import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.mock.web.DelegatingServletInputStream;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+import tools.jackson.databind.json.JsonMapper;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
@@ -78,7 +86,7 @@ class DatawayAutoConfigurationTest {
             while (failure.getCause() != null) {
                 failure = failure.getCause();
             }
-            assertInstanceOf(org.springframework.beans.factory.NoUniqueBeanDefinitionException.class, failure);
+            assertInstanceOf(NoUniqueBeanDefinitionException.class, failure);
         });
     }
 
@@ -148,7 +156,7 @@ class DatawayAutoConfigurationTest {
                 }
                 if (admin) {
                     assertEquals(Set.of("/ops/manage", "/ops/manage/{*path}"), paths.get("datawayAdmin"));
-                    assertEquals(Set.of("/tools/console", "/tools/console/", "/tools/console/assets/app.js", "/tools/console/assets/app.css", "/tools/console/config.json"), paths.get("datawayUi"));
+                    assertEquals(new HashSet<>(DatawayUiHandler.resourcePaths().stream().map(path -> "/tools/console" + path).toList()), paths.get("datawayUi"));
                 }
             });
         }
@@ -156,19 +164,23 @@ class DatawayAutoConfigurationTest {
 
     @Test
     void hostMvcInterceptorSuppliesIdentityAndCanDenyEveryEntry() {
-        context.withBean("metadataStorage", DatawayConfigurer.class, () -> builder -> builder.dataAccessLayer(TestDatabase.dataAccessLayer())).withBean(DataSource.class, TestDatabase::create).withBean(WebMvcConfigurer.class, DatawayAutoConfigurationTest::hostMvc).withBean(DatawayConfigurer.class, () -> builder -> builder.dataAccessLayer(TestDatabase.dataAccessLayer()).identityProvider(request -> {
-            assertEquals("visited", request.getAttribute("host.mvc"));
-            return request.getIdentity();
-        })).withPropertyValues("dataway.api-enabled=true", "dataway.admin-enabled=true").run(c -> {
+        context.withBean("metadataStorage", DatawayConfigurer.class, () -> builder -> {
+            builder.dataAccessLayer(TestDatabase.dataAccessLayer());
+        }).withBean(DataSource.class, TestDatabase::create).withBean(WebMvcConfigurer.class, DatawayAutoConfigurationTest::hostMvc).withBean(DatawayConfigurer.class, () -> builder -> {
+            builder.dataAccessLayer(TestDatabase.dataAccessLayer()).identityProvider(request -> {
+                assertEquals("visited", request.getAttribute("host.mvc"));
+                return request.getIdentity();
+            });
+        }).withPropertyValues("dataway.api-enabled=true", "dataway.admin-enabled=true").run(c -> {
             var mvc = MockMvcBuilders.webAppContextSetup(c.getSourceApplicationContext()).build();
             publish(c.getBean(Dataway.class).getService(), "return 'ok';");
-            for (String path : new String[] { "/api/hello", "/dataway/api/apis", "/dataway/assets/app.js" }) {
-                assertEquals(401, mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get(path)).andReturn().getResponse().getStatus());
-                var result = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get(path).header("X-Test-User", "user")).andReturn();
+            for (String path : new String[] { "/api/hello", "/dataway/api/api-list", "/dataway/assets/app.js" }) {
+                assertEquals(401, mvc.perform(MockMvcRequestBuilders.get(path)).andReturn().getResponse().getStatus());
+                var result = mvc.perform(MockMvcRequestBuilders.get(path).header("X-Test-User", "user")).andReturn();
                 assertInstanceOf(HandlerMethod.class, result.getHandler());
                 assertEquals(200, result.getResponse().getStatus());
             }
-            assertEquals(404, mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/dataway/host-route")).andReturn().getResponse().getStatus());
+            assertEquals(404, mvc.perform(MockMvcRequestBuilders.get("/dataway/host-route")).andReturn().getResponse().getStatus());
         });
     }
 
@@ -179,14 +191,14 @@ class DatawayAutoConfigurationTest {
         input.setContentType("application/json");
         var wrapped = new HttpServletRequestWrapper(input) {
             @Override
-            public jakarta.servlet.ServletInputStream getInputStream() {
+            public ServletInputStream getInputStream() {
                 reads.incrementAndGet();
-                return new org.springframework.mock.web.DelegatingServletInputStream(new java.io.ByteArrayInputStream("{\"name\":\"host-cached\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+                return new DelegatingServletInputStream(new ByteArrayInputStream("{\"name\":\"host-cached\"}".getBytes(StandardCharsets.UTF_8)));
             }
         };
         var request = new SpringWebRequest(wrapped);
         assertEquals(0, reads.get());
-        assertTrue(new String(request.getBody().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).contains("host-cached"));
+        assertTrue(new String(request.getBody().readAllBytes(), StandardCharsets.UTF_8).contains("host-cached"));
         assertEquals(1, reads.get());
     }
 
@@ -197,9 +209,9 @@ class DatawayAutoConfigurationTest {
             public void addInterceptors(InterceptorRegistry registry) {
                 registry.addInterceptor(new HandlerInterceptor() {
                     @Override
-                    public boolean preHandle(HttpServletRequest request, jakarta.servlet.http.HttpServletResponse response, Object handler) throws Exception {
+                    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
                         assertInstanceOf(HandlerMethod.class, handler);
-                        assertTrue(new String(request.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).contains("host-body"));
+                        assertTrue(new String(request.getInputStream().readAllBytes(), StandardCharsets.UTF_8).contains("host-body"));
                         request.setAttribute(RequestAttribute.IDENTITY.getKey(), UserIdentity.authenticated("host-user"));
                         return true;
                     }
@@ -213,8 +225,8 @@ class DatawayAutoConfigurationTest {
                 byte[] cached = input.getInputStream().readAllBytes();
                 var wrapped = new HttpServletRequestWrapper((HttpServletRequest) input) {
                     @Override
-                    public jakarta.servlet.ServletInputStream getInputStream() {
-                        return new org.springframework.mock.web.DelegatingServletInputStream(new java.io.ByteArrayInputStream(cached));
+                    public ServletInputStream getInputStream() {
+                        return new DelegatingServletInputStream(new ByteArrayInputStream(cached));
                     }
                 };
                 chain.doFilter(wrapped, output);
@@ -242,7 +254,7 @@ class DatawayAutoConfigurationTest {
             public void addInterceptors(InterceptorRegistry registry) {
                 registry.addInterceptor(new HandlerInterceptor() {
                     @Override
-                    public boolean preHandle(HttpServletRequest request, jakarta.servlet.http.HttpServletResponse response, Object handler) {
+                    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
                         if (!(handler instanceof HandlerMethod method) || !(method.getBean() instanceof DatawayController)) {
                             return true;
                         }
@@ -291,7 +303,7 @@ class DatawayAutoConfigurationTest {
                 return registration;
             });
             application.registerBean(DatawayConfigurer.class, () -> builder -> {
-                builder.dataAccessLayer(new net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer(source, ""));
+                builder.dataAccessLayer(new JdbcDataAccessLayer(source, ""));
                 DatawayInterceptor policy = (action, chain) -> {
                     if (action.getCallContext().source().equals("HTTP") && !"native-user".equals(action.getIdentity().getId())) {
                         throw new DatawayException(401, "Host filter must establish identity");
@@ -301,7 +313,7 @@ class DatawayAutoConfigurationTest {
                 builder.accessInterceptor(policy).actionInterceptor(policy);
                 builder.configureService(service -> service.interceptor((invocation, next) -> {
                     if (invocation.parameters().containsKey("download")) {
-                        return net.hasor.dataway.web.SerializationInfo.ofStream("application/pdf", new java.io.ByteArrayInputStream(new byte[] { 0, 1, (byte) 255 })).withHeader("Content-Disposition", "attachment; filename=result.pdf");
+                        return SerializationInfo.ofStream("application/pdf", new ByteArrayInputStream(new byte[] { 0, 1, (byte) 255 })).withHeader("Content-Disposition", "attachment; filename=result.pdf");
                     }
                     return next.proceed(invocation);
                 }));
@@ -314,7 +326,7 @@ class DatawayAutoConfigurationTest {
                 });
             });
             application.register(DatawayAutoConfiguration.class, WebMvcAutoConfiguration.class, DispatcherServletAutoConfiguration.class);
-            application.registerBean(org.springframework.web.servlet.config.annotation.WebMvcConfigurer.class, () -> hostMvc());
+            application.registerBean(WebMvcConfigurer.class, () -> hostMvc());
             application.refresh();
             Dataway dataway = application.getBean(Dataway.class);
 
@@ -346,17 +358,17 @@ class DatawayAutoConfigurationTest {
                         .header("X-Test-User", "native-user").header("X-Repeat", "one").header("X-Repeat", "two")//
                         .header("Cookie", "id=first; id=second").build(), HttpResponse.BodyHandlers.ofString());
                 assertEquals(200, cookies.statusCode());
-                assertEquals(java.util.List.of("first", "second"), cookies.headers().allValues("X-Result"));
-                assertEquals(java.util.List.of("one=1; Path=/", "two=2; Path=/; HttpOnly"), cookies.headers().allValues("Set-Cookie"));
-                var cookieBody = tools.jackson.databind.json.JsonMapper.builder().build().readTree(cookies.body());
+                assertEquals(List.of("first", "second"), cookies.headers().allValues("X-Result"));
+                assertEquals(List.of("one=1; Path=/", "two=2; Path=/; HttpOnly"), cookies.headers().allValues("Set-Cookie"));
+                var cookieBody = JsonMapper.builder().build().readTree(cookies.body());
                 assertEquals("one", cookieBody.get("headers").get(0).asText());
                 assertEquals("two", cookieBody.get("headers").get(1).asText());
                 assertEquals("first", cookieBody.get("cookies").get(0).asText());
                 assertEquals("second", cookieBody.get("cookies").get(1).asText());
 
                 assertArrayEquals(new byte[] { 0, 1, (byte) 255 }, binary.body());
-                assertEquals(401, get(client, base + "/ops/manage/apis", null).statusCode());
-                assertEquals(200, get(client, base + "/ops/manage/apis", "native-user").statusCode());
+                assertEquals(401, get(client, base + "/ops/manage/api-list", null).statusCode());
+                assertEquals(200, get(client, base + "/ops/manage/api-list", "native-user").statusCode());
                 var page = get(client, base + "/tools/console/", "native-user");
                 assertEquals(200, page.statusCode());
                 assertEquals(200, get(client, base + "/tools/console/assets/app.js", "native-user").statusCode());

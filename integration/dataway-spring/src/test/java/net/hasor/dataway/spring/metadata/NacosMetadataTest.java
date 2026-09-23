@@ -16,6 +16,7 @@ import net.hasor.dataway.spi.CallContext;
 import net.hasor.dataway.spring.DatawayAutoConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.core.env.MapPropertySource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -44,7 +45,7 @@ class NacosMetadataTest {
     @Test
     void containerSuppliesNacosAccessLayer() throws Throwable {
         try (var context = new AnnotationConfigApplicationContext()) {
-            context.getEnvironment().getPropertySources().addFirst(new org.springframework.core.env.MapPropertySource("metadata", Map.of("dataway.admin-enabled", "true", "dataway.metadata.bean", "metadataStore")));
+            context.getEnvironment().getPropertySources().addFirst(new MapPropertySource("metadata", Map.of("dataway.admin-enabled", "true", "dataway.metadata.bean", "metadataStore")));
             context.registerBean("metadataStore", ApiDataAccessLayer.class, () -> new NacosDataAccessLayer(this.client(), "host-store", "HOST_GROUP", 1500));
             context.register(DatawayAutoConfiguration.class);
             context.refresh();

@@ -32,7 +32,7 @@ public class LambdaVariable extends InstSet implements Variable {
     /** 添加入参 */
     public void addParam(StringToken name) {
         if (this.paramMap.containsKey(name.getValue())) {
-            throw new java.lang.IllegalStateException(name + " param existing.");
+            throw new IllegalStateException(name + " param existing.");
         }
         this.paramMap.put(name.getValue(), name);
         this.paramList.add(name);

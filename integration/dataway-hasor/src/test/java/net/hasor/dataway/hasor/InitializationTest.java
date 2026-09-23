@@ -13,6 +13,7 @@ import net.hasor.core.Hasor;
 import net.hasor.core.Init;
 import net.hasor.core.Inject;
 import net.hasor.dataway.Dataway;
+import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.dal.EntityType;
 import net.hasor.dataway.dal.FieldDef;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
@@ -30,7 +31,7 @@ class InitializationTest {
             assertTrue(dataway.getService().list(CallContext.LOCAL).isEmpty());
             return (request, response) -> response.write(200, Map.of());
         });
-        try (var context = Hasor.create().loadSettings(settings).build(binder -> binder.bindType(Consumer.class).asEagerSingleton(), new DatawayModule(builder), binder -> binder.bindType(net.hasor.dataway.dal.ApiDataAccessLayer.class).to(InitializedAccess.class).asEagerSingleton())) {
+        try (var context = Hasor.create().loadSettings(settings).build(binder -> binder.bindType(Consumer.class).asEagerSingleton(), new DatawayModule(builder), binder -> binder.bindType(ApiDataAccessLayer.class).to(InitializedAccess.class).asEagerSingleton())) {
             assertTrue(context.getInstance(Consumer.class).initialized);
             assertSame(context.getInstance(Dataway.class), context.getInstance(Consumer.class).dataway);
         }

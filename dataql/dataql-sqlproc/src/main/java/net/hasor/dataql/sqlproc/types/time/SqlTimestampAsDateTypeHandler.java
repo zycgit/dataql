@@ -10,42 +10,44 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Date;
 import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
 
 /**
- * 使用 {@link java.util.Date} 类型读写 jdbc {@link java.sql.Timestamp} 数据。
+ * 使用 {@link Date} 类型读写 jdbc {@link Timestamp} 数据。
  * @author Clinton Begin
  * @author 赵永春 (zyc@hasor.net)
  */
 public class SqlTimestampAsDateTypeHandler extends AbstractTypeHandler {
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
-        ps.setTimestamp(i, new java.sql.Timestamp(((java.util.Date) parameter).getTime()));
+        ps.setTimestamp(i, new Timestamp(((Date) parameter).getTime()));
     }
 
     @Override
-    public java.util.Date getNullableResult(ResultSet rs, String columnName) throws SQLException {
-        java.sql.Timestamp sqlTimestamp = rs.getTimestamp(columnName);
+    public Date getNullableResult(ResultSet rs, String columnName) throws SQLException {
+        Timestamp sqlTimestamp = rs.getTimestamp(columnName);
         if (sqlTimestamp != null) {
-            return new java.util.Date(sqlTimestamp.getTime());
+            return new Date(sqlTimestamp.getTime());
         }
         return null;
     }
 
     @Override
-    public java.util.Date getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
-        java.sql.Timestamp sqlTimestamp = rs.getTimestamp(columnIndex);
+    public Date getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+        Timestamp sqlTimestamp = rs.getTimestamp(columnIndex);
         if (sqlTimestamp != null) {
-            return new java.util.Date(sqlTimestamp.getTime());
+            return new Date(sqlTimestamp.getTime());
         }
         return null;
     }
 
     @Override
-    public java.util.Date getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
-        java.sql.Timestamp sqlTimestamp = cs.getTimestamp(columnIndex);
+    public Date getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
+        Timestamp sqlTimestamp = cs.getTimestamp(columnIndex);
         if (sqlTimestamp != null) {
-            return new java.util.Date(sqlTimestamp.getTime());
+            return new Date(sqlTimestamp.getTime());
         }
         return null;
     }

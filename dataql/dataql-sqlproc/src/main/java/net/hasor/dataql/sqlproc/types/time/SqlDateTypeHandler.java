@@ -7,34 +7,35 @@
  */
 package net.hasor.dataql.sqlproc.types.time;
 import java.sql.CallableStatement;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
 
 /**
- * 读写 {@link java.sql.Date} 类型数据。
+ * 读写 {@link Date} 类型数据。
  * @author Clinton Begin
  * @author 赵永春 (zyc@hasor.net)
  */
 public class SqlDateTypeHandler extends AbstractTypeHandler {
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
-        ps.setDate(i, (java.sql.Date) parameter);
+        ps.setDate(i, (Date) parameter);
     }
 
     @Override
-    public java.sql.Date getNullableResult(ResultSet rs, String columnName) throws SQLException {
+    public Date getNullableResult(ResultSet rs, String columnName) throws SQLException {
         return rs.getDate(columnName);
     }
 
     @Override
-    public java.sql.Date getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+    public Date getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
         return rs.getDate(columnIndex);
     }
 
     @Override
-    public java.sql.Date getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
+    public Date getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
         return cs.getDate(columnIndex);
     }
 }

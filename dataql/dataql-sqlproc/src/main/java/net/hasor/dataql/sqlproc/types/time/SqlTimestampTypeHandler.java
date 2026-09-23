@@ -10,31 +10,32 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
 
 /**
- * 读写 jdbc {@link java.sql.Timestamp} 数据。
+ * 读写 jdbc {@link Timestamp} 数据。
  * @author Clinton Begin
  * @author 赵永春 (zyc@hasor.net)
  */
 public class SqlTimestampTypeHandler extends AbstractTypeHandler {
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
-        ps.setTimestamp(i, (java.sql.Timestamp) parameter);
+        ps.setTimestamp(i, (Timestamp) parameter);
     }
 
     @Override
-    public java.sql.Timestamp getNullableResult(ResultSet rs, String columnName) throws SQLException {
+    public Timestamp getNullableResult(ResultSet rs, String columnName) throws SQLException {
         return rs.getTimestamp(columnName);
     }
 
     @Override
-    public java.sql.Timestamp getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+    public Timestamp getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
         return rs.getTimestamp(columnIndex);
     }
 
     @Override
-    public java.sql.Timestamp getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
+    public Timestamp getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
         return cs.getTimestamp(columnIndex);
     }
 }

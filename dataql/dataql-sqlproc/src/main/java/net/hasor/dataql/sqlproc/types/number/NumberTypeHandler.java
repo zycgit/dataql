@@ -9,6 +9,7 @@ package net.hasor.dataql.sqlproc.types.number;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.sql.*;
+import java.util.Date;
 import net.hasor.cobble.NumberUtils;
 import net.hasor.cobble.io.IOUtils;
 import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
@@ -136,8 +137,8 @@ public class NumberTypeHandler extends AbstractTypeHandler {
             } else {
                 return rs.getDate().getTime();
             }
-        } else if (obj instanceof java.util.Date) {
-            return ((java.util.Date) obj).getTime();
+        } else if (obj instanceof Date) {
+            return ((Date) obj).getTime();
         }
         //
         String stringValue = null;

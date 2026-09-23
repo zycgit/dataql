@@ -77,8 +77,8 @@ public final class TypeHandlerRegistry {
         // java time
         javaTypeToJdbcTypeMap.put(Date.class.getName(), Types.TIMESTAMP);
         javaTypeToJdbcTypeMap.put(java.sql.Date.class.getName(), Types.DATE);
-        javaTypeToJdbcTypeMap.put(java.sql.Timestamp.class.getName(), Types.TIMESTAMP);
-        javaTypeToJdbcTypeMap.put(java.sql.Time.class.getName(), Types.TIME);
+        javaTypeToJdbcTypeMap.put(Timestamp.class.getName(), Types.TIMESTAMP);
+        javaTypeToJdbcTypeMap.put(Time.class.getName(), Types.TIME);
         javaTypeToJdbcTypeMap.put(Instant.class.getName(), Types.TIMESTAMP);
         javaTypeToJdbcTypeMap.put(LocalDateTime.class.getName(), Types.TIMESTAMP);
         javaTypeToJdbcTypeMap.put(LocalDate.class.getName(), Types.DATE);
@@ -133,8 +133,8 @@ public final class TypeHandlerRegistry {
         // java time
         this.register(Date.class, createTypeHandler(SqlTimestampAsDateTypeHandler.class));
         this.register(java.sql.Date.class, createTypeHandler(SqlDateTypeHandler.class));
-        this.register(java.sql.Timestamp.class, createTypeHandler(SqlTimestampTypeHandler.class));
-        this.register(java.sql.Time.class, createTypeHandler(SqlTimeTypeHandler.class));
+        this.register(Timestamp.class, createTypeHandler(SqlTimestampTypeHandler.class));
+        this.register(Time.class, createTypeHandler(SqlTimeTypeHandler.class));
         this.register(Instant.class, createTypeHandler(SqlTimestampAsInstantTypeHandler.class));
         this.register(JapaneseDate.class, createTypeHandler(JapaneseDateAsSqlDateTypeHandler.class));
         this.register(Year.class, createTypeHandler(SqlTimestampAsYearTypeHandler.class));

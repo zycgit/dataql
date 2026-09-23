@@ -7,31 +7,36 @@
  */
 package net.hasor.dataway.hasor;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
+import java.nio.charset.StandardCharsets;
+import java.security.Principal;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.servlet.ReadListener;
-import javax.servlet.ServletInputStream;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.WriteListener;
+import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.hasor.cobble.setting.DefaultSettings;
+import net.hasor.cobble.setting.Settings;
 import net.hasor.core.ApiBinder;
 import net.hasor.core.Hasor;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.authorization.UserIdentity;
+import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 import net.hasor.dataway.service.DatawayService;
 import net.hasor.dataway.service.FxRuntime;
 import net.hasor.dataway.service.model.ApiDefinition;
 import net.hasor.dataway.service.model.ScriptType;
 import net.hasor.dataway.spi.CallContext;
 import net.hasor.dataway.spi.DatawayConfigurer;
-import net.hasor.dataway.web.RequestAttribute;
+import net.hasor.dataway.web.*;
 import net.hasor.web.Invoker;
 import net.hasor.web.WebApiBinder;
+import net.hasor.web.binder.MappingDef;
+import net.hasor.web.binder.OneConfig;
+import net.hasor.web.invoker.InvokerContext;
 import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -158,7 +163,7 @@ class DatawayModuleTest {
         });
         captured.get().execute(invoker);
         assertEquals(200, status.get());
-        assertEquals("\"Ada\"", output.toString(java.nio.charset.StandardCharsets.UTF_8));
+        assertEquals("\"Ada\"", output.toString(StandardCharsets.UTF_8));
     }
 
     @Test
@@ -173,8 +178,8 @@ class DatawayModuleTest {
             settings.setSetting("dataway.api-prefix", "/open/v2");
             settings.setSetting("dataway.admin-prefix", "/ops/manage");
             settings.setSetting("dataway.admin-ui", "/tools/console");
-            var bindings = new java.util.HashMap<Class<?>, Object>();
-            var filters = new java.util.LinkedHashMap<String, DatawayController>();
+            var bindings = new HashMap<Class<?>, Object>();
+            var filters = new LinkedHashMap<String, DatawayController>();
             WebApiBinder binder = proxy(WebApiBinder.class, (p, method, args) -> switch (method.getName()) {
                 case "tryCast" -> p;
                 case "getServletContext" -> servletContext("/host");
@@ -188,7 +193,7 @@ class DatawayModuleTest {
                 case "mappingTo" -> {
                     String[] paths = (String[]) args[0];
                     if (paths[0].equals("/tools/console")) {
-                        assertArrayEquals(new String[] { "/tools/console", "/tools/console/", "/tools/console/assets/app.js", "/tools/console/assets/app.css", "/tools/console/config.json" }, paths);
+                        assertArrayEquals(DatawayUiHandler.resourcePaths().stream().map(path -> "/tools/console" + path).toArray(String[]::new), paths);
                     } else {
                         assertArrayEquals(new String[] { paths[0], paths[0] + "/*" }, paths);
                     }
@@ -221,7 +226,7 @@ class DatawayModuleTest {
 
     @Test
     void enablingManagementAlsoProvidesItsResources() throws Throwable {
-        var settings = new java.util.Properties();
+        var settings = new Properties();
         settings.setProperty("dataway.admin-enabled", "true");
         settings.setProperty("dataway.admin-ui", "/console");
         var builder = Dataway.builder().dataSource(TestDatabase.create()).dataAccessLayer(TestDatabase.dataAccessLayer());
@@ -237,7 +242,7 @@ class DatawayModuleTest {
     @Test
     void nativeConfigurationFileConfiguresHandlersAndHostMappings() throws Throwable {
         JdbcDataSource source = dataSource();
-        var builder = Dataway.builder().dataSource(source).dataAccessLayer(new net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer(source, ""));
+        var builder = Dataway.builder().dataSource(source).dataAccessLayer(new JdbcDataAccessLayer(source, ""));
         try (var context = Hasor.create().mainSettingWith("configured/hconfig.xml").build(new DatawayModule(builder))) {
             Dataway dataway = context.getInstance(Dataway.class);
 
@@ -332,7 +337,7 @@ class DatawayModuleTest {
                     case "getContextPath" -> "/host";
                     case "getMethod" -> "GET";
                     case "getHeaderNames" -> Collections.emptyEnumeration();
-                    case "getUserPrincipal" -> (java.security.Principal) () -> "principal-user";
+                    case "getUserPrincipal" -> (Principal) () -> "principal-user";
                     case "getAttribute" -> attribute && RequestAttribute.IDENTITY.getKey().equals(args[0]) ? explicit : null;
                     case "getInputStream" -> new ServletInputStream() {
                         public int read() {
@@ -397,15 +402,15 @@ class DatawayModuleTest {
             String html = get(filters.get("/console.v2"), pagePath, contextPath);
             assertFalse(html.contains("dataway-admin-api"));
             assertFalse(html.contains("dataway-api"));
-            String result = get(filters.get("/ops/manage.v2"), "/ops/manage.v2/apis", contextPath);
-            assertEquals("[]", result);
+            String result = get(filters.get("/ops/manage.v2"), "/ops/manage.v2/api-list", contextPath);
+            assertTrue(result.contains("\"result\":[]"));
         }
     }
 
     @Test
     void actualHasorMvcChainRunsHostInterceptorBeforeAllControllers() throws Throwable {
         var attributes = new HashMap<String, Object>();
-        var servlet = proxy(javax.servlet.ServletContext.class, (p, method, args) -> switch (method.getName()) {
+        var servlet = proxy(ServletContext.class, (p, method, args) -> switch (method.getName()) {
             case "getContextPath" -> "/host";
             case "getClassLoader" -> getClass().getClassLoader();
             case "getAttribute" -> attributes.get(args[0]);
@@ -424,14 +429,14 @@ class DatawayModuleTest {
         AtomicReference<Dataway> sharedCore = new AtomicReference<>();
         builder.apiHandler(core -> {
             sharedCore.set(core);
-            return new net.hasor.dataway.web.WebHandler() {
+            return new WebHandler() {
                 @Override
                 public List<String> paths() {
                     return List.of("/custom", "/custom/*");
                 }
 
                 @Override
-                public void handle(net.hasor.dataway.web.WebRequest request, net.hasor.dataway.web.WebResponse response) throws Exception {
+                public void handle(WebRequest request, WebResponse response) throws Exception {
                     response.write(200, Map.of()).write(new byte[] { 1 });
                 }
             };
@@ -449,7 +454,7 @@ class DatawayModuleTest {
             });
         }, new DatawayModule(builder))) {
             assertSame(application.getInstance(Dataway.class), sharedCore.get());
-            var mappings = application.findBindingBean(net.hasor.web.binder.MappingDef.class);
+            var mappings = application.findBindingBean(MappingDef.class);
             for (String unmapped : List.of("/api/other", "/dataway/unrelated", "/outside")) {
                 var unmatched = proxy(HttpServletRequest.class, (p, method, args) -> switch (method.getName()) {
                     case "getRequestURI" -> "/host" + unmapped;
@@ -459,11 +464,11 @@ class DatawayModuleTest {
                 });
                 assertFalse(mappings.stream().anyMatch(mapping -> mapping.matchingMapping(unmatched)));
             }
-            var mvc = new net.hasor.web.invoker.InvokerContext();
-            mvc.initContext(application, new net.hasor.web.binder.OneConfig("test", () -> application));
+            var mvc = new InvokerContext();
+            mvc.initContext(application, new OneConfig("test", () -> application));
             try {
                 int expected = 0;
-                for (String path : List.of("/api/custom/example", "/dataway/api/apis", "/dataway/assets/app.js")) {
+                for (String path : List.of("/api/custom/example", "/dataway/api/api-list", "/dataway/assets/app.js")) {
                     var requestAttributes = new HashMap<String, Object>();
                     var request = proxy(HttpServletRequest.class, (p, method, args) -> switch (method.getName()) {
                         case "getRequestURI" -> "/host" + path;
@@ -475,7 +480,9 @@ class DatawayModuleTest {
                         case "getAttribute" -> requestAttributes.get(args[0]);
                         case "setAttribute" -> requestAttributes.put((String) args[0], args[1]);
                         case "isAsyncSupported", "isAsyncStarted" -> false;
-                        case "getInputStream" -> throw new AssertionError("Custom entry must not acquire body");
+                        case "getInputStream" -> {
+                            throw new AssertionError("Custom entry must not acquire body");
+                        }
                         default -> null;
                     });
                     var output = new ByteArrayOutputStream();
@@ -515,7 +522,9 @@ class DatawayModuleTest {
             case "getMethod" -> "GET";
             case "getHeaderNames" -> Collections.enumeration(input.keySet());
             case "getHeaders" -> Collections.enumeration(input.get(args[0]));
-            case "getInputStream" -> throw new AssertionError("Header and cookie access must not read the body");
+            case "getInputStream" -> {
+                throw new AssertionError("Header and cookie access must not read the body");
+            }
             default -> null;
         });
         Map<String, List<String>> outputHeaders = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
@@ -548,8 +557,8 @@ class DatawayModuleTest {
             assertEquals(List.of("first", "second"), webRequest.getCookies().get("id"));
             webResponse.setHeader("X-Result", "first");
             webResponse.addHeader("x-result", "second");
-            webResponse.setCookie(new net.hasor.dataway.web.WebCookie("one", "1"));
-            webResponse.setCookie(new net.hasor.dataway.web.WebCookie("two", "2"));
+            webResponse.setCookie(new WebCookie("one", "1"));
+            webResponse.setCookie(new WebCookie("two", "2"));
             webResponse.write(200, Map.of()).write(42);
         });
         var invoker = proxy(Invoker.class, (p, method, args) -> switch (method.getName()) {
@@ -570,7 +579,7 @@ class DatawayModuleTest {
         return settings;
     }
 
-    private static DefaultSettings enabledSettings() throws java.io.IOException {
+    private static DefaultSettings enabledSettings() throws IOException {
         var settings = new DefaultSettings();
         settings.setSetting("dataway.api-enabled", true);
         settings.setSetting("dataway.admin-enabled", true);
@@ -581,8 +590,8 @@ class DatawayModuleTest {
         return TestDatabase.create();
     }
 
-    private static javax.servlet.ServletContext servletContext(String contextPath) {
-        return proxy(javax.servlet.ServletContext.class, (p, method, args) -> {
+    private static ServletContext servletContext(String contextPath) {
+        return proxy(ServletContext.class, (p, method, args) -> {
             if (method.getName().equals("getContextPath")) {
                 return contextPath;
             }
@@ -590,12 +599,12 @@ class DatawayModuleTest {
         });
     }
 
-    private static Map<String, DatawayController> mountedControllers(Dataway dataway, net.hasor.cobble.setting.Settings settings) {
+    private static Map<String, DatawayController> mountedControllers(Dataway dataway, Settings settings) {
         return mountedControllers(dataway, settings, "/host");
     }
 
-    private static Map<String, DatawayController> mountedControllers(Dataway dataway, net.hasor.cobble.setting.Settings settings, String contextPath) {
-        Map<String, DatawayController> filters = new java.util.LinkedHashMap<>();
+    private static Map<String, DatawayController> mountedControllers(Dataway dataway, Settings settings, String contextPath) {
+        Map<String, DatawayController> filters = new LinkedHashMap<>();
         WebApiBinder binder = proxy(WebApiBinder.class, (p, method, args) -> switch (method.getName()) {
             case "tryCast" -> p;
             case "getServletContext" -> servletContext(contextPath);
@@ -672,7 +681,7 @@ class DatawayModuleTest {
         });
         filter.execute(invoker);
         assertEquals(200, status.get());
-        return output.toString(java.nio.charset.StandardCharsets.UTF_8);
+        return output.toString(StandardCharsets.UTF_8);
     }
 
     private static <T> T proxy(Class<T> type, InvocationHandler handler) {

@@ -6,6 +6,7 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.spring;
+import java.util.Arrays;
 import java.util.Objects;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -64,7 +65,7 @@ public final class DatawayMvcRegistrar implements SmartInitializingSingleton {
 
     private void register(String name, WebHandler handler, String prefix, String... paths) {
         RequestMappingHandlerMapping mapping = this.mappings.getObject();
-        String[] patterns = java.util.Arrays.stream(paths).map(path -> {
+        String[] patterns = Arrays.stream(paths).map(path -> {
             return path.endsWith("/*") ? path.substring(0, path.length() - 2) + "/{*path}" : path;
         }).toArray(String[]::new);
 

@@ -8,11 +8,13 @@
 package net.hasor.dataway.solon;
 import java.util.Map;
 import net.hasor.dataway.Dataway;
+import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 import net.hasor.dataway.service.model.ApiDefinition;
 import net.hasor.dataway.service.model.ScriptType;
 import net.hasor.dataway.spi.CallContext;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 import org.noear.solon.Solon;
 import org.noear.solon.data.annotation.TransactionAnno;
 import org.noear.solon.data.tran.TranUtils;
@@ -28,7 +30,7 @@ class SolonTransactionTest {
                     app.context().wrapAndPut("second", new JdbcDataAccessLayer(TestDatabase.create(), ""));
                     app.context().wrapAndPut("wrong", "not a storage layer");
                 });
-                org.junit.jupiter.api.function.Executable start = () -> {
+                Executable start = () -> {
                     new DatawayPlugin().start(Solon.context());
                     Solon.context().getBean(Dataway.class).getService().list(CallContext.LOCAL);
                 };
@@ -53,7 +55,7 @@ class SolonTransactionTest {
         var source = TestDatabase.create();
         Solon.start(SolonTransactionTest.class, new String[] { "--server.port=0", "--dataway.admin-enabled=true" }, app -> {
             app.pluginAdd(0, new DatawayPlugin());
-            app.context().wrapAndPut(net.hasor.dataway.dal.ApiDataAccessLayer.class, new JdbcDataAccessLayer(new SolonJdbcExecutor(source), ""));
+            app.context().wrapAndPut(ApiDataAccessLayer.class, new JdbcDataAccessLayer(new SolonJdbcExecutor(source), ""));
         });
         try {
             Dataway dataway = Solon.context().getBean(Dataway.class);
