@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkdbvisitor_doc=self.webpackChunkdbvisitor_doc||[]).push([[4362],{156:a=>{a.exports=JSON.parse('{"label":"Dataway","permalink":"/en/blog/tags/dataway","allTagsPath":"/en/blog/tags","count":1}')}}]);

@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkdbvisitor_doc=self.webpackChunkdbvisitor_doc||[]).push([[2703],{4300:a=>{a.exports=JSON.parse('{"label":"DataQL","permalink":"/en/blog/tags/data-ql","allTagsPath":"/en/blog/tags","count":1}')}}]);
