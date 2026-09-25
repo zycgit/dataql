@@ -7,11 +7,8 @@
  */
 package net.hasor.dataway.authorization;
 
-/** Actions grouped by resource access, published API invocation and administration. */
+/** Actions grouped by published API invocation and administration. */
 public enum Operation {
-    // Resources
-    RESOURCE,
-
     // Published APIs
     INVOKE,
 

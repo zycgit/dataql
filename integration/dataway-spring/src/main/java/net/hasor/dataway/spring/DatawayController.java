@@ -13,8 +13,8 @@ import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.hasor.dataway.authorization.UserIdentity;
-import net.hasor.dataway.web.RequestAttribute;
-import net.hasor.dataway.web.WebHandler;
+import net.hasor.dataway.model.WebHandler;
+import net.hasor.dataway.service.RequestAttribute;
 
 /** MVC endpoint; the host's authentication and interceptors run before this method. */
 public class DatawayController {

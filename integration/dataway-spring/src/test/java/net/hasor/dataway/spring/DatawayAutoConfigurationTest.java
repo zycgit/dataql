@@ -24,19 +24,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import net.hasor.dataway.Dataway;
+import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
-import net.hasor.dataway.service.DatawayService;
-import net.hasor.dataway.service.model.ApiDefinition;
-import net.hasor.dataway.service.model.ScriptType;
-import net.hasor.dataway.spi.CallContext;
-import net.hasor.dataway.spi.DatawayConfigurer;
-import net.hasor.dataway.spi.DatawayException;
-import net.hasor.dataway.spi.DatawayInterceptor;
-import net.hasor.dataway.web.DatawayUiHandler;
-import net.hasor.dataway.web.RequestAttribute;
-import net.hasor.dataway.web.SerializationInfo;
-import net.hasor.dataway.web.WebHandler;
+import net.hasor.dataway.model.*;
+import net.hasor.dataway.service.*;
 import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.NoUniqueBeanDefinitionException;
@@ -51,10 +43,13 @@ import org.springframework.boot.webmvc.autoconfigure.WebMvcAutoConfiguration;
 import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.DelegatingServletInputStream;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -166,11 +161,11 @@ class DatawayAutoConfigurationTest {
     void hostMvcInterceptorSuppliesIdentityAndCanDenyEveryEntry() {
         context.withBean("metadataStorage", DatawayConfigurer.class, () -> builder -> {
             builder.dataAccessLayer(TestDatabase.dataAccessLayer());
-        }).withBean(DataSource.class, TestDatabase::create).withBean(WebMvcConfigurer.class, DatawayAutoConfigurationTest::hostMvc).withBean(DatawayConfigurer.class, () -> builder -> {
+        }).withBean(DataSource.class, TestDatabase::create).withBean(WebMvcConfigurer.class, DatawayAutoConfigurationTest::hostMvc).withBean(HostExceptionHandler.class, HostExceptionHandler::new).withBean(DatawayConfigurer.class, () -> builder -> {
             builder.dataAccessLayer(TestDatabase.dataAccessLayer()).identityProvider(request -> {
                 assertEquals("visited", request.getAttribute("host.mvc"));
                 return request.getIdentity();
-            });
+            }).authorizationCheck((identity, operation) -> !"denied-user".equals(identity.getId()));
         }).withPropertyValues("dataway.api-enabled=true", "dataway.admin-enabled=true").run(c -> {
             var mvc = MockMvcBuilders.webAppContextSetup(c.getSourceApplicationContext()).build();
             publish(c.getBean(Dataway.class).getService(), "return 'ok';");
@@ -179,8 +174,35 @@ class DatawayAutoConfigurationTest {
                 var result = mvc.perform(MockMvcRequestBuilders.get(path).header("X-Test-User", "user")).andReturn();
                 assertInstanceOf(HandlerMethod.class, result.getHandler());
                 assertEquals(200, result.getResponse().getStatus());
+                var denied = mvc.perform(MockMvcRequestBuilders.get(path).header("X-Test-User", "denied-user")).andReturn();
+                assertEquals(401, denied.getResponse().getStatus());
+                assertEquals("spring", denied.getResponse().getHeader("X-Host-Error"));
+                assertInstanceOf(DatawayException.class, denied.getResolvedException());
             }
             assertEquals(404, mvc.perform(MockMvcRequestBuilders.get("/dataway/host-route")).andReturn().getResponse().getStatus());
+        });
+    }
+
+    @RestControllerAdvice
+    static class HostExceptionHandler {
+        @ExceptionHandler({ DatawayException.class, IOException.class })
+        ResponseEntity<Map<String, String>> handle(Exception failure) {
+            int status = failure instanceof DatawayException error ? error.status() : 500;
+            return ResponseEntity.status(status).header("X-Host-Error", "spring").body(Map.of("message", "Handled by the host"));
+        }
+    }
+
+    @Test
+    void checkedExceptionsReachHostControllerAdviceUnchanged() {
+        IOException failure = new IOException("host decides the response");
+        context.withBean(HostExceptionHandler.class, HostExceptionHandler::new).withBean(Dataway.class, () -> Dataway.builder().dataAccessLayer(TestDatabase.dataAccessLayer()).apiHandler(core -> (request, response) -> {
+            throw failure;
+        }).build()).withPropertyValues("dataway.api-enabled=true").run(c -> {
+            var mvc = MockMvcBuilders.webAppContextSetup(c.getSourceApplicationContext()).build();
+            var result = mvc.perform(MockMvcRequestBuilders.get("/api/failure")).andReturn();
+            assertSame(failure, result.getResolvedException());
+            assertEquals(500, result.getResponse().getStatus());
+            assertEquals("spring", result.getResponse().getHeader("X-Host-Error"));
         });
     }
 
@@ -219,8 +241,15 @@ class DatawayAutoConfigurationTest {
             }
         }).withPropertyValues("dataway.api-enabled=true").run(c -> {
             var service = c.getBean(Dataway.class).getService();
-            service.save(new ApiDefinition("echo", "POST", "/echo", ScriptType.DATAQL, "return ${name};", ""), 0, CallContext.LOCAL);
-            service.publish("echo", 1, CallContext.LOCAL);
+            ApiDefinition echoApi = new ApiDefinition();
+            echoApi.setId("echo");
+            echoApi.setMethod("POST");
+            echoApi.setPath("/echo");
+            echoApi.setType(ApiScriptType.DATAQL);
+            echoApi.setScript("return ${name};");
+            echoApi.setDescription("");
+            service.save(echoApi, 0, CallContext.local(Operation.SAVE));
+            service.publish("echo", 1, CallContext.local(Operation.PUBLISH));
             Filter replay = (input, output, chain) -> {
                 byte[] cached = input.getInputStream().readAllBytes();
                 var wrapped = new HttpServletRequestWrapper((HttpServletRequest) input) {
@@ -313,7 +342,9 @@ class DatawayAutoConfigurationTest {
                 builder.accessInterceptor(policy).actionInterceptor(policy);
                 builder.configureService(service -> service.interceptor((invocation, next) -> {
                     if (invocation.parameters().containsKey("download")) {
-                        return SerializationInfo.ofStream("application/pdf", new ByteArrayInputStream(new byte[] { 0, 1, (byte) 255 })).withHeader("Content-Disposition", "attachment; filename=result.pdf");
+                        ResultInfo result = ResultInfoUtils.ofStream("application/pdf", new ByteArrayInputStream(new byte[] { 0, 1, (byte) 255 }));
+                        result.getHeaders().put("Content-Disposition", "attachment; filename=result.pdf");
+                        return result;
                     }
                     return next.proceed(invocation);
                 }));
@@ -345,15 +376,22 @@ class DatawayAutoConfigurationTest {
                 var binary = client.send(HttpRequest.newBuilder(URI.create(base + "/open/v2/hello?download=true")).header("X-Test-User", "native-user").build(), HttpResponse.BodyHandlers.ofByteArray());
                 assertEquals(200, binary.statusCode());
                 assertEquals("application/pdf", binary.headers().firstValue("Content-Type").orElseThrow());
-                dataway.getService().save(new ApiDefinition("cookies", "GET", "/cookies", ScriptType.DATAQL, """
+                ApiDefinition cookiesApi = new ApiDefinition();
+                cookiesApi.setId("cookies");
+                cookiesApi.setMethod("GET");
+                cookiesApi.setPath("/cookies");
+                cookiesApi.setType(ApiScriptType.DATAQL);
+                cookiesApi.setScript("""
                         import 'net.hasor.dataway.function.WebUdfSource' as w;
                         var a = w.setHeader('X-Result', 'first');
                         var b = w.addHeader('X-Result', 'second');
                         var c = w.setCookie('one', '1');
                         var d = w.setCookie('two', '2', {'httpOnly': true});
                         return {'headers': w.headerArray('X-Repeat'), 'cookies': w.cookieArray('id')};
-                        """, ""), 0, CallContext.LOCAL);
-                dataway.getService().publish("cookies", 1, CallContext.LOCAL);
+                        """);
+                cookiesApi.setDescription("");
+                dataway.getService().save(cookiesApi, 0, CallContext.local(Operation.SAVE));
+                dataway.getService().publish("cookies", 1, CallContext.local(Operation.PUBLISH));
                 var cookies = client.send(HttpRequest.newBuilder(URI.create(base + "/open/v2/cookies"))//
                         .header("X-Test-User", "native-user").header("X-Repeat", "one").header("X-Repeat", "two")//
                         .header("Cookie", "id=first; id=second").build(), HttpResponse.BodyHandlers.ofString());
@@ -396,8 +434,15 @@ class DatawayAutoConfigurationTest {
     }
 
     private static void publish(DatawayService service, String script) {
-        service.save(new ApiDefinition("one", "GET", "/hello", ScriptType.DATAQL, script, ""), 0, CallContext.LOCAL);
-        service.publish("one", 1, CallContext.LOCAL);
+        ApiDefinition oneApi = new ApiDefinition();
+        oneApi.setId("one");
+        oneApi.setMethod("GET");
+        oneApi.setPath("/hello");
+        oneApi.setType(ApiScriptType.DATAQL);
+        oneApi.setScript(script);
+        oneApi.setDescription("");
+        service.save(oneApi, 0, CallContext.local(Operation.SAVE));
+        service.publish("one", 1, CallContext.local(Operation.PUBLISH));
     }
 
     private static HttpResponse<String> get(HttpClient client, String uri, String user) throws Exception {

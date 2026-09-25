@@ -9,7 +9,7 @@ package net.hasor.dataway.spring;
 import java.io.IOException;
 import java.io.OutputStream;
 import jakarta.servlet.http.HttpServletResponse;
-import net.hasor.dataway.web.WebResponse;
+import net.hasor.dataway.model.WebResponse;
 
 public class SpringWebResponse extends WebResponse {
     private final HttpServletResponse response;

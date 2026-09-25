@@ -7,29 +7,35 @@
  */
 package net.hasor.dataway.web;
 import java.util.Map;
+import net.hasor.dataway.authorization.Operation;
+import net.hasor.dataway.authorization.UserIdentity;
+import net.hasor.dataway.model.ApiRelease;
+import net.hasor.dataway.model.ApiState;
+import net.hasor.dataway.model.ResultInfo;
+import net.hasor.dataway.model.WebResponse;
+import net.hasor.dataway.service.DatawayException;
 import net.hasor.dataway.service.DatawayService;
-import net.hasor.dataway.service.SerializationInfo;
-import net.hasor.dataway.service.model.ApiRelease;
-import net.hasor.dataway.service.model.ApiState;
-import net.hasor.dataway.spi.CallContext;
-import net.hasor.dataway.spi.DatawayException;
 
 /** GET /get-history. Loads a release belonging to the selected API. */
 public final class ApiHistoryGetController extends AbstractApiController {
     public ApiHistoryGetController(DatawayService service) {
-        super(service, "GET");
+        super(service, Operation.HISTORY);
     }
 
     @Override
-    protected SerializationInfo execute(String id, Map<String, String> query, Map<String, Object> body, CallContext context) {
-        ApiState state = this.service.historyState(id, context);
-        String releaseId = query.get("historyId");
-        ApiRelease release = state.history().stream().filter(item -> {
-            return item.id().equals(releaseId);
-        }).findFirst().orElseThrow(() -> {
-            return new DatawayException(404, "Release not found");
-        });
+    protected ResultInfo execute(Map<String, String> query, Map<String, Object> body, UserIdentity identity, Map<String, ?> request, WebResponse response) throws Exception {
+        return this.executeService(() -> {
+            String id = this.id(query, body);
+            ApiState state = this.service.historyState(id, this.getOperation(), identity, request, response);
+            String releaseId = query.get("historyId");
 
-        return this.result(this.documents.detail(release.definition(), state.revision(), this.documents.status(state)));
+            ApiRelease release = state.getHistory().stream().filter(item -> {
+                return item.getId().equals(releaseId);
+            }).findFirst().orElseThrow(() -> {
+                return new DatawayException(404, "Release not found");
+            });
+
+            return this.result(ConvertUtils.detail(release.getDefinition(), state.getRevision(), ConvertUtils.status(state)));
+        });
     }
 }

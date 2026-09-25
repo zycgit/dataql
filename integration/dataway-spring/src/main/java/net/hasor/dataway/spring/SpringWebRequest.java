@@ -9,7 +9,7 @@ package net.hasor.dataway.spring;
 import java.io.IOException;
 import java.io.InputStream;
 import jakarta.servlet.http.HttpServletRequest;
-import net.hasor.dataway.web.WebRequest;
+import net.hasor.dataway.model.WebRequest;
 
 /** Delegates body access to the request passed through the host's MVC chain. */
 public class SpringWebRequest extends WebRequest {

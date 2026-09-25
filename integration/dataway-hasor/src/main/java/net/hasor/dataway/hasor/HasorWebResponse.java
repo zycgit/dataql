@@ -10,7 +10,7 @@ package net.hasor.dataway.hasor;
 import java.io.IOException;
 import java.io.OutputStream;
 import javax.servlet.http.HttpServletResponse;
-import net.hasor.dataway.web.WebResponse;
+import net.hasor.dataway.model.WebResponse;
 
 public class HasorWebResponse extends WebResponse {
     private final HttpServletResponse response;

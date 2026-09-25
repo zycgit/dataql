@@ -11,7 +11,7 @@ import java.util.Objects;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.hasor.dataway.Dataway;
-import net.hasor.dataway.web.WebHandler;
+import net.hasor.dataway.model.WebHandler;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;

@@ -22,12 +22,13 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.sql.DataSource;
 import net.hasor.dataway.TestDatabase;
+import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.dal.*;
+import net.hasor.dataway.model.ApiDefinition;
+import net.hasor.dataway.model.ApiScriptType;
+import net.hasor.dataway.service.CallContext;
 import net.hasor.dataway.service.DatawayService;
 import net.hasor.dataway.service.FxRuntime;
-import net.hasor.dataway.service.model.ApiDefinition;
-import net.hasor.dataway.service.model.ScriptType;
-import net.hasor.dataway.spi.CallContext;
 import org.h2.jdbcx.JdbcDataSource;
 import org.h2.tools.RunScript;
 import org.junit.jupiter.api.Test;
@@ -87,20 +88,27 @@ class LegacyStorageTest {
         assertEquals(42, ((Number) service.invokeApi("/legacy", Map.of())).intValue());
         var before = access.getObject(EntityType.INFO, "i_old").orElseThrow();
         assertEquals("1", before.get(REVISION));
-        assertEquals("SELECT :value", service.getApiById("i_old", CallContext.LOCAL).draft().script());
-        service.save(new ApiDefinition("i_old", "GET", "/legacy", ScriptType.SQL, "SELECT :value + 1", "edited"), 1, CallContext.LOCAL);
+        assertEquals("SELECT :value", service.getApiById("i_old", CallContext.local(Operation.READ)).getDraft().getScript());
+        ApiDefinition i_oldApi = new ApiDefinition();
+        i_oldApi.setId("i_old");
+        i_oldApi.setMethod("GET");
+        i_oldApi.setPath("/legacy");
+        i_oldApi.setType(ApiScriptType.SQL);
+        i_oldApi.setScript("SELECT :value + 1");
+        i_oldApi.setDescription("edited");
+        service.save(i_oldApi, 1, CallContext.local(Operation.SAVE));
         var after = access.getObject(EntityType.INFO, "i_old").orElseThrow();
         for (FieldDef field : List.of(SCHEMA, SAMPLE, OPTION, CREATE_TIME)) {
             assertEquals(before.get(field), after.get(field));
         }
         assertEquals(42, ((Number) service.invokeApi("/legacy", Map.of())).intValue());
-        service.publish("i_old", 2, CallContext.LOCAL);
+        service.publish("i_old", 2, CallContext.local(Operation.PUBLISH));
         assertEquals(10, ((Number) service.invokeApi("/legacy", Map.of("value", 9))).intValue());
         var active = access.listObjects(EntityType.RELEASE, Map.of(API_ID, "i_old", STATUS, "1")).getFirst();
         assertEquals("SELECT :value + 1", active.get(SCRIPT_ORI));
         assertTrue(active.get(SCRIPT).startsWith("var tempCall = @@sql(`value`)"));
         assertEquals(before.get(OPTION), active.get(OPTION));
-        assertEquals(2, service.history("i_old", CallContext.LOCAL).size());
+        assertEquals(2, service.history("i_old", CallContext.local(Operation.HISTORY)).size());
         assertEquals("3", access.getObject(EntityType.RELEASE, "r_old").orElseThrow().get(STATUS));
         // The upgraded unique index permits a second method at the same path.
         access.createObject(EntityType.INFO, "i_post", fields("POST", "/legacy"));
@@ -145,8 +153,15 @@ class LegacyStorageTest {
         }
         var access = new JdbcDataAccessLayer(source, "tenant_");
         var service = DatawayService.builder(FxRuntime.builder().build(), access).build();
-        service.save(new ApiDefinition("one", "GET", "/one", ScriptType.DATAQL, "return true;", ""), 0, CallContext.LOCAL);
-        service.publish("one", 1, CallContext.LOCAL);
+        ApiDefinition oneApi = new ApiDefinition();
+        oneApi.setId("one");
+        oneApi.setMethod("GET");
+        oneApi.setPath("/one");
+        oneApi.setType(ApiScriptType.DATAQL);
+        oneApi.setScript("return true;");
+        oneApi.setDescription("");
+        service.save(oneApi, 0, CallContext.local(Operation.SAVE));
+        service.publish("one", 1, CallContext.local(Operation.PUBLISH));
         assertEquals(true, service.invokeApi("/one", Map.of()));
         assertThrows(IllegalArgumentException.class, () -> new JdbcDataAccessLayer(source, "x;DROP TABLE "));
     }
@@ -157,25 +172,55 @@ class LegacyStorageTest {
         var access = new JdbcDataAccessLayer(source, "");
         var service = DatawayService.builder(FxRuntime.builder().dataSource(source).build(), access).build();
         String sample = "{\"requestBody\":{\"value\":0},\"responseBody\":{},\"unknown\":true}";
-        var sql = new ApiDefinition("sql", "POST", "/same", ScriptType.SQL, "SELECT :value + 1", "", "{}", sample, "{\"hostOption\":true}");
-        service.save(sql, 0, CallContext.LOCAL);
-        service.publish("sql", 1, CallContext.LOCAL);
+        var sql = new ApiDefinition();
+        sql.setId("sql");
+        sql.setMethod("POST");
+        sql.setPath("/same");
+        sql.setType(ApiScriptType.SQL);
+        sql.setScript("SELECT :value + 1");
+        sql.setDescription("");
+        sql.setSchema("{}");
+        sql.setSample(sample);
+        sql.setOptions("{\"hostOption\":true}");
+        service.save(sql, 0, CallContext.local(Operation.SAVE));
+        service.publish("sql", 1, CallContext.local(Operation.PUBLISH));
         assertEquals(9, ((Number) service.invokeApi("POST", "/same", Map.of("value", 8))).intValue());
-        service.save(new ApiDefinition("get", "GET", "/same", ScriptType.DATAQL, "return 'GET';", ""), 0, CallContext.LOCAL);
-        service.publish("get", 1, CallContext.LOCAL);
+        ApiDefinition getApi = new ApiDefinition();
+        getApi.setId("get");
+        getApi.setMethod("GET");
+        getApi.setPath("/same");
+        getApi.setType(ApiScriptType.DATAQL);
+        getApi.setScript("return 'GET';");
+        getApi.setDescription("");
+        service.save(getApi, 0, CallContext.local(Operation.SAVE));
+        service.publish("get", 1, CallContext.local(Operation.PUBLISH));
         assertEquals("GET", service.invokeApi("GET", "/same", Map.of()));
-        service.save(new ApiDefinition("sql", "POST", "/same", ScriptType.SQL, "SELECT :value + 2", "edit"), 2, CallContext.LOCAL);
-        assertEquals(sample, service.getApiById("sql", CallContext.LOCAL).draft().sample());
-        assertEquals("{\"hostOption\":true}", service.getApiById("sql", CallContext.LOCAL).draft().options());
+        ApiDefinition sqlApi = new ApiDefinition();
+        sqlApi.setId("sql");
+        sqlApi.setMethod("POST");
+        sqlApi.setPath("/same");
+        sqlApi.setType(ApiScriptType.SQL);
+        sqlApi.setScript("SELECT :value + 2");
+        sqlApi.setDescription("edit");
+        service.save(sqlApi, 2, CallContext.local(Operation.SAVE));
+        assertEquals(sample, service.getApiById("sql", CallContext.local(Operation.READ)).getDraft().getSample());
+        assertEquals("{\"hostOption\":true}", service.getApiById("sql", CallContext.local(Operation.READ)).getDraft().getOptions());
     }
 
     @Test
     void failedReleaseInsertionRollsBackInfoAndPreviousReleaseTogether() {
         var access = new JdbcDataAccessLayer(TestDatabase.create(), "");
         var service = DatawayService.builder(FxRuntime.builder().build(), access).build();
-        service.save(new ApiDefinition("one", "GET", "/one", ScriptType.DATAQL, "return 1;", ""), 0, CallContext.LOCAL);
-        var state = service.publish("one", 1, CallContext.LOCAL);
-        var old = access.getObject(EntityType.RELEASE, state.published().id()).orElseThrow();
+        ApiDefinition oneApi = new ApiDefinition();
+        oneApi.setId("one");
+        oneApi.setMethod("GET");
+        oneApi.setPath("/one");
+        oneApi.setType(ApiScriptType.DATAQL);
+        oneApi.setScript("return 1;");
+        oneApi.setDescription("");
+        service.save(oneApi, 0, CallContext.local(Operation.SAVE));
+        var state = service.publish("one", 1, CallContext.local(Operation.PUBLISH));
+        var old = access.getObject(EntityType.RELEASE, state.getPublished().getId()).orElseThrow();
         Map<FieldDef, String> duplicate = new EnumMap<>(old);
         duplicate.remove(ID);
         duplicate.remove(REVISION);
@@ -189,14 +234,21 @@ class LegacyStorageTest {
     void publicationsRemainOrderedWhenClockDoesNotAdvance() {
         var access = new JdbcDataAccessLayer(TestDatabase.create(), "");
         var service = DatawayService.builder(FxRuntime.builder().build(), access).clock(Clock.fixed(Instant.ofEpochMilli(1000), ZoneOffset.UTC)).build();
-        service.save(new ApiDefinition("one", "GET", "/one", ScriptType.DATAQL, "return 1;", ""), 0, CallContext.LOCAL);
-        service.publish("one", 1, CallContext.LOCAL);
-        service.publish("one", 2, CallContext.LOCAL);
-        service.disableApi("one", 3, CallContext.LOCAL);
-        var history = service.history("one", CallContext.LOCAL);
+        ApiDefinition oneApi = new ApiDefinition();
+        oneApi.setId("one");
+        oneApi.setMethod("GET");
+        oneApi.setPath("/one");
+        oneApi.setType(ApiScriptType.DATAQL);
+        oneApi.setScript("return 1;");
+        oneApi.setDescription("");
+        service.save(oneApi, 0, CallContext.local(Operation.SAVE));
+        service.publish("one", 1, CallContext.local(Operation.PUBLISH));
+        service.publish("one", 2, CallContext.local(Operation.PUBLISH));
+        service.disableApi("one", 3, CallContext.local(Operation.DISABLE));
+        var history = service.history("one", CallContext.local(Operation.HISTORY));
         assertEquals(2, history.size());
-        assertTrue(history.get(1).publishedAt().isAfter(history.get(0).publishedAt()));
-        assertEquals(history.get(1), service.getApiById("one", CallContext.LOCAL).published());
+        assertTrue(history.get(1).getPublishedAt().isAfter(history.get(0).getPublishedAt()));
+        assertEquals(history.get(1), service.getApiById("one", CallContext.local(Operation.READ)).getPublished());
     }
 
     @Test
@@ -235,8 +287,15 @@ class LegacyStorageTest {
         assertInstanceOf(HostMutation.class, access.create(EntityType.INFO, OperationType.UPDATE, "one", 1, Map.of()));
         created.set(0);
         var service = DatawayService.builder(FxRuntime.builder().build(), access).build();
-        service.save(new ApiDefinition("one", "GET", "/one", ScriptType.DATAQL, "return true;", ""), 0, CallContext.LOCAL);
-        service.publish("one", 1, CallContext.LOCAL);
+        ApiDefinition oneApi = new ApiDefinition();
+        oneApi.setId("one");
+        oneApi.setMethod("GET");
+        oneApi.setPath("/one");
+        oneApi.setType(ApiScriptType.DATAQL);
+        oneApi.setScript("return true;");
+        oneApi.setDescription("");
+        service.save(oneApi, 0, CallContext.local(Operation.SAVE));
+        service.publish("one", 1, CallContext.local(Operation.PUBLISH));
         assertEquals(3, created.get());
         assertEquals(true, service.invokeApi("/one", Map.of()));
     }

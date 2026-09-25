@@ -6,10 +6,9 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.authorization;
-import net.hasor.dataway.model.WebRequest;
 
-/** Resolves the host identity once for each request, including page and asset requests. */
+/** Checks whether the host-resolved identity may perform the entry's operation. */
 @FunctionalInterface
-public interface IdentityProvider {
-    UserIdentity resolve(WebRequest request);
+public interface AuthorizationCheck {
+    boolean check(UserIdentity identity, Operation operation);
 }

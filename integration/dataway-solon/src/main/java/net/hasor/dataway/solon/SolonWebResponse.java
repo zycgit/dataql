@@ -8,7 +8,7 @@
 package net.hasor.dataway.solon;
 import java.io.IOException;
 import java.io.OutputStream;
-import net.hasor.dataway.web.WebResponse;
+import net.hasor.dataway.model.WebResponse;
 import org.noear.solon.core.handle.Context;
 
 public class SolonWebResponse extends WebResponse {

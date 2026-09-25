@@ -11,8 +11,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import net.hasor.dataway.authorization.UserIdentity;
-import net.hasor.dataway.web.RequestAttribute;
-import net.hasor.dataway.web.WebHandler;
+import net.hasor.dataway.model.WebHandler;
+import net.hasor.dataway.service.RequestAttribute;
 import net.hasor.web.Invoker;
 import net.hasor.web.annotation.Any;
 

@@ -10,7 +10,7 @@ import javax.sql.DataSource;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.DatawayBuilder;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
-import net.hasor.dataway.spi.DatawayConfigurer;
+import net.hasor.dataway.service.DatawayConfigurer;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

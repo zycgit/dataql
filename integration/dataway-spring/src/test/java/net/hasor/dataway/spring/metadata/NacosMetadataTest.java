@@ -10,9 +10,10 @@ import java.lang.reflect.Proxy;
 import java.util.Map;
 import com.alibaba.nacos.api.config.ConfigService;
 import net.hasor.dataway.Dataway;
+import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.dal.nacos.NacosDataAccessLayer;
-import net.hasor.dataway.spi.CallContext;
+import net.hasor.dataway.service.CallContext;
 import net.hasor.dataway.spring.DatawayAutoConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -49,7 +50,7 @@ class NacosMetadataTest {
             context.registerBean("metadataStore", ApiDataAccessLayer.class, () -> new NacosDataAccessLayer(this.client(), "host-store", "HOST_GROUP", 1500));
             context.register(DatawayAutoConfiguration.class);
             context.refresh();
-            assertTrue(context.getBean(Dataway.class).getService().list(CallContext.LOCAL).isEmpty());
+            assertTrue(context.getBean(Dataway.class).getService().list(CallContext.local(Operation.LIST)).isEmpty());
         }
     }
 }

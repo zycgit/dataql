@@ -11,7 +11,7 @@ import java.util.Objects;
 import net.hasor.dataway.Dataway;
 import net.hasor.dataway.DatawayBuilder;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
-import net.hasor.dataway.web.WebHandler;
+import net.hasor.dataway.model.WebHandler;
 import org.noear.solon.core.*;
 
 /**

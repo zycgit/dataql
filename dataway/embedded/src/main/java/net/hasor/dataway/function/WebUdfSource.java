@@ -16,8 +16,8 @@ import net.hasor.dataql.host.HostContext;
 import net.hasor.dataql.host.function.AbstractUdfSource;
 import net.hasor.dataql.host.function.UdfName;
 import net.hasor.dataql.host.function.UdfParams;
-import net.hasor.dataway.web.WebCookie;
-import net.hasor.dataway.web.WebResponse;
+import net.hasor.dataway.model.WebCookie;
+import net.hasor.dataway.model.WebResponse;
 
 /** HTTP functions resolve resources from the current execution, never from framework globals. */
 public class WebUdfSource extends AbstractUdfSource {

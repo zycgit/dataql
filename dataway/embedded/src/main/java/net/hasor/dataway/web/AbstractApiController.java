@@ -11,44 +11,37 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
-import net.hasor.dataway.service.*;
-import net.hasor.dataway.spi.CallContext;
-import net.hasor.dataway.spi.DatawayException;
+import net.hasor.dataway.authorization.Operation;
+import net.hasor.dataway.authorization.UserIdentity;
+import net.hasor.dataway.model.ResultInfo;
+import net.hasor.dataway.model.ResultInfoUtils;
+import net.hasor.dataway.model.WebRequest;
+import net.hasor.dataway.model.WebResponse;
+import net.hasor.dataway.service.DatawayException;
+import net.hasor.dataway.service.DatawayService;
+import net.hasor.dataway.service.HttpSupport;
 
-/** Shared request validation and response conventions for the console APIs. */
+/** Shared parameter handling and responses for the console APIs. */
 public abstract class AbstractApiController {
     protected final DatawayService service;
-    protected final ApiDocument    documents = new ApiDocument();
-    private final   String         method;
-    private final   boolean        idRequired;
+    private final   Operation      operation;
 
-    protected AbstractApiController(DatawayService service, String method) {
-        this(service, method, true);
-    }
-
-    protected AbstractApiController(DatawayService service, String method, boolean idRequired) {
+    protected AbstractApiController(DatawayService service, Operation operation) {
         this.service = Objects.requireNonNull(service);
-        this.method = Objects.requireNonNull(method);
-        this.idRequired = idRequired;
+        this.operation = Objects.requireNonNull(operation);
     }
 
-    /** Decodes the host body once and invokes the selected API without committing its response. */
-    public final SerializationInfo handle(WebRequest request, WebResponse response) throws Exception {
+    public final Operation getOperation() {
+        return this.operation;
+    }
+
+    /** Reads request parameters and invokes the selected execution service. */
+    public final ResultInfo handle(WebRequest request, WebResponse response) throws Exception {
+        UserIdentity identity = request.getIdentity();
         Map<String, Object> body = HttpSupport.body(request);
         Map<String, String> query = this.query(request);
-        String id = query.getOrDefault("id", Objects.toString(body.get("id"), null));
-        if (body.containsKey("id") && !Objects.equals(id, body.get("id"))) {
-            throw new DatawayException(400, "Conflicting API ids");
-        }
-        if (!request.getMethod().equals(this.method)) {
-            throw new DatawayException(405, "Method not allowed");
-        }
-        if (this.idRequired && (id == null || id.isBlank())) {
-            throw new DatawayException(400, "id is required");
-        }
-
-        CallContext context = HttpSupport.context(request, response, body, body);
-        return this.execute(id, query, body, context);
+        Map<String, ?> metadata = HttpSupport.metadata(request, body, body);
+        return this.execute(query, body, identity, metadata, response);
     }
 
     private Map<String, String> query(WebRequest request) {
@@ -66,14 +59,30 @@ public abstract class AbstractApiController {
         return result;
     }
 
-    protected abstract SerializationInfo execute(String id, Map<String, String> query, Map<String, Object> body, CallContext context) throws Exception;
+    protected abstract ResultInfo execute(Map<String, String> query, Map<String, Object> body, UserIdentity identity, Map<String, ?> request, WebResponse response) throws Exception;
 
-    protected SerializationInfo result(Object value) {
-        return HttpSupport.json(200, Map.of("success", true, "code", 200, "message", "OK", "result", value));
+    /** Executes the selected service callback; failures belong to the host exception handlers. */
+    protected final ResultInfo executeService(Callable<ResultInfo> action) throws Exception {
+        return action.call();
     }
 
-    protected SerializationInfo result(Object value, long version) {
-        return HttpSupport.json(200, Map.of("success", true, "code", 200, "message", "OK", "result", value, "version", version));
+    protected String id(Map<String, String> query, Map<String, Object> body) {
+        String id = query.getOrDefault("id", Objects.toString(body.get("id"), null));
+        if (body.containsKey("id") && !Objects.equals(id, body.get("id"))) {
+            throw new DatawayException(400, "Conflicting API ids");
+        }
+        if (id == null || id.isBlank()) {
+            throw new DatawayException(400, "id is required");
+        }
+        return id;
+    }
+
+    protected ResultInfo result(Object value) {
+        return ResultInfoUtils.buildSuccess(value);
+    }
+
+    protected ResultInfo result(Object value, long version) {
+        return ResultInfoUtils.buildSuccess(value, version);
     }
 
     protected long version(Map<String, Object> body) {
@@ -81,25 +90,17 @@ public abstract class AbstractApiController {
         if (!(value instanceof Number number) || number.longValue() < 0 || number.doubleValue() != number.longValue()) {
             throw new DatawayException(400, "A non-negative integer version is required");
         }
+
         return number.longValue();
     }
 
     /** Scripts see the simulated business body, never the management command or editor contents. */
-    protected CallContext executionContext(CallContext context, Map<String, Object> parameters) {
-        Map<String, Object> metadata = new LinkedHashMap<>(context.request());
+    protected Map<String, ?> executionRequest(Map<String, ?> request, Map<String, Object> parameters) {
+        Map<String, Object> metadata = new LinkedHashMap<>(request);
         Map<String, Object> input = Collections.unmodifiableMap(new LinkedHashMap<>(parameters));
         metadata.put("parameters", input);
         metadata.put("body", input);
-        return new CallContext(context.source(), context.identity(), metadata, context.response());
+        return Collections.unmodifiableMap(metadata);
     }
 
-    protected SerializationInfo executeScript(Callable<?> action) throws Exception {
-        try {
-            return HttpSupport.result(action.call());
-        } catch (DatawayException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new DatawayException(422, "Script execution failed: " + e.getMessage(), e);
-        }
-    }
 }

@@ -8,12 +8,13 @@
 package net.hasor.dataway.spring;
 import javax.sql.DataSource;
 import net.hasor.dataway.Dataway;
+import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
-import net.hasor.dataway.service.model.ApiDefinition;
-import net.hasor.dataway.service.model.ScriptType;
-import net.hasor.dataway.spi.CallContext;
-import net.hasor.dataway.spi.DatawayException;
+import net.hasor.dataway.model.ApiDefinition;
+import net.hasor.dataway.model.ApiScriptType;
+import net.hasor.dataway.service.CallContext;
+import net.hasor.dataway.service.DatawayException;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -61,10 +62,10 @@ class SpringTransactionTest {
         Dataway dataway = Dataway.builder().dataSource(new TransactionAwareDataSourceProxy(source)).dataAccessLayer(new JdbcDataAccessLayer(new SpringJdbcExecutor(new TransactionAwareDataSourceProxy(source), manager), "")).build();
         var transaction = new TransactionTemplate(manager);
         transaction.executeWithoutResult(status -> {
-            dataway.getService().save(api("one"), 0, CallContext.LOCAL);
+            dataway.getService().save(api("one"), 0, CallContext.local(Operation.SAVE));
             status.setRollbackOnly();
         });
-        assertTrue(dataway.getService().list(CallContext.LOCAL).isEmpty());
+        assertTrue(dataway.getService().list(CallContext.local(Operation.LIST)).isEmpty());
     }
 
     private static AnnotationConfigApplicationContext createContext() {
@@ -75,7 +76,14 @@ class SpringTransactionTest {
     }
 
     private static ApiDefinition api(String id) {
-        return new ApiDefinition(id, "GET", "/one", ScriptType.DATAQL, "return 1;", "");
+        ApiDefinition definition = new ApiDefinition();
+        definition.setId(id);
+        definition.setMethod("GET");
+        definition.setPath("/one");
+        definition.setType(ApiScriptType.DATAQL);
+        definition.setScript("return 1;");
+        definition.setDescription("");
+        return definition;
     }
 
     @Configuration(proxyBeanMethods = false)
@@ -115,8 +123,8 @@ class SpringTransactionTest {
 
         private void saveAndPublish() {
             jdbc.update("INSERT INTO host_work VALUES (1)");
-            dataway.getService().save(api("one"), 0, CallContext.LOCAL);
-            dataway.getService().publish("one", 1, CallContext.LOCAL);
+            dataway.getService().save(api("one"), 0, CallContext.local(Operation.SAVE));
+            dataway.getService().publish("one", 1, CallContext.local(Operation.PUBLISH));
         }
 
         @Transactional
@@ -133,9 +141,9 @@ class SpringTransactionTest {
         @Transactional
         public void catchConflict() {
             jdbc.update("INSERT INTO host_work VALUES (1)");
-            dataway.getService().save(api("one"), 0, CallContext.LOCAL);
+            dataway.getService().save(api("one"), 0, CallContext.local(Operation.SAVE));
             try {
-                dataway.getService().save(api("duplicate"), 0, CallContext.LOCAL);
+                dataway.getService().save(api("duplicate"), 0, CallContext.local(Operation.SAVE));
             } catch (DatawayException e) {
                 assertEquals(409, e.status());
             }

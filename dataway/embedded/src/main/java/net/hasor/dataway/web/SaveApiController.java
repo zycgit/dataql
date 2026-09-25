@@ -8,23 +8,29 @@
 package net.hasor.dataway.web;
 import java.util.Map;
 import java.util.UUID;
+import net.hasor.dataway.authorization.Operation;
+import net.hasor.dataway.authorization.UserIdentity;
+import net.hasor.dataway.model.ApiDefinition;
+import net.hasor.dataway.model.ApiState;
+import net.hasor.dataway.model.ResultInfo;
+import net.hasor.dataway.model.WebResponse;
 import net.hasor.dataway.service.DatawayService;
-import net.hasor.dataway.service.SerializationInfo;
-import net.hasor.dataway.service.model.ApiDefinition;
-import net.hasor.dataway.service.model.ApiState;
-import net.hasor.dataway.spi.CallContext;
 
 /** POST /save-api. Creates or updates a versioned draft. */
 public final class SaveApiController extends AbstractApiController {
     public SaveApiController(DatawayService service) {
-        super(service, "POST");
+        super(service, Operation.SAVE);
     }
 
     @Override
-    protected SerializationInfo execute(String id, Map<String, String> query, Map<String, Object> body, CallContext context) {
-        String target = id.equals("-1") ? UUID.randomUUID().toString() : id;
-        ApiDefinition definition = this.documents.definition(target, body);
-        ApiState saved = this.service.save(definition, this.version(body), context);
-        return this.result(saved.draft().id(), saved.revision());
+    protected ResultInfo execute(Map<String, String> query, Map<String, Object> body, UserIdentity identity, Map<String, ?> request, WebResponse response) throws Exception {
+        return this.executeService(() -> {
+            String id = this.id(query, body);
+            String target = id.equals("-1") ? UUID.randomUUID().toString() : id;
+
+            ApiDefinition definition = ConvertUtils.definition(target, body);
+            ApiState saved = this.service.save(definition, this.version(body), this.getOperation(), identity, request, response);
+            return this.result(saved.getDraft().getId(), saved.getRevision());
+        });
     }
 }

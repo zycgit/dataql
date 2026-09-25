@@ -7,20 +7,26 @@
  */
 package net.hasor.dataway.web;
 import java.util.Map;
+import net.hasor.dataway.authorization.Operation;
+import net.hasor.dataway.authorization.UserIdentity;
+import net.hasor.dataway.model.ApiState;
+import net.hasor.dataway.model.ResultInfo;
+import net.hasor.dataway.model.WebResponse;
 import net.hasor.dataway.service.DatawayService;
-import net.hasor.dataway.service.SerializationInfo;
-import net.hasor.dataway.service.model.ApiState;
-import net.hasor.dataway.spi.CallContext;
 
 /** GET /api-info. Loads request examples for the interface list. */
 public final class ApiInfoController extends AbstractApiController {
     public ApiInfoController(DatawayService service) {
-        super(service, "GET");
+        super(service, Operation.READ);
     }
 
     @Override
-    protected SerializationInfo execute(String id, Map<String, String> query, Map<String, Object> body, CallContext context) {
-        ApiState state = this.service.getApiById(id, context);
-        return this.result(this.documents.detail(state.draft(), state.revision(), this.documents.status(state)));
+    protected ResultInfo execute(Map<String, String> query, Map<String, Object> body, UserIdentity identity, Map<String, ?> request, WebResponse response) throws Exception {
+        return this.executeService(() -> {
+            String id = this.id(query, body);
+
+            ApiState state = this.service.getApiById(id, this.getOperation(), identity, request, response);
+            return this.result(ConvertUtils.detail(state.getDraft(), state.getRevision(), ConvertUtils.status(state)));
+        });
     }
 }

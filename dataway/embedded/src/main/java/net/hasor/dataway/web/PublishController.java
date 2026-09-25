@@ -7,19 +7,25 @@
  */
 package net.hasor.dataway.web;
 import java.util.Map;
+import net.hasor.dataway.authorization.Operation;
+import net.hasor.dataway.authorization.UserIdentity;
+import net.hasor.dataway.model.ResultInfo;
+import net.hasor.dataway.model.WebResponse;
 import net.hasor.dataway.service.DatawayService;
-import net.hasor.dataway.service.SerializationInfo;
-import net.hasor.dataway.spi.CallContext;
 
 /** POST /publish. Publishes a draft as an immutable release. */
 public final class PublishController extends AbstractApiController {
     public PublishController(DatawayService service) {
-        super(service, "POST");
+        super(service, Operation.PUBLISH);
     }
 
     @Override
-    protected SerializationInfo execute(String id, Map<String, String> query, Map<String, Object> body, CallContext context) {
-        long version = this.service.publish(id, this.version(body), context).revision();
-        return this.result(true, version);
+    protected ResultInfo execute(Map<String, String> query, Map<String, Object> body, UserIdentity identity, Map<String, ?> request, WebResponse response) throws Exception {
+        return this.executeService(() -> {
+            String id = this.id(query, body);
+
+            long version = this.service.publish(id, this.version(body), this.getOperation(), identity, request, response).getRevision();
+            return this.result(true, version);
+        });
     }
 }

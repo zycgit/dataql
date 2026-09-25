@@ -10,12 +10,13 @@ import java.util.Map;
 import java.util.Properties;
 import net.hasor.core.Hasor;
 import net.hasor.dataway.Dataway;
+import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 import net.hasor.dataway.dal.jdbc.LocalJdbcExecutor;
-import net.hasor.dataway.service.model.ApiDefinition;
-import net.hasor.dataway.service.model.ScriptType;
-import net.hasor.dataway.spi.CallContext;
+import net.hasor.dataway.model.ApiDefinition;
+import net.hasor.dataway.model.ApiScriptType;
+import net.hasor.dataway.service.CallContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
@@ -36,7 +37,7 @@ class ExplicitDataAccessLayerTest {
                 builder.dataAccessLayer(TestDatabase.dataAccessLayer());
             }
             try (var context = Hasor.create().loadSettings(settings).build(new DatawayModule(builder))) {
-                assertTrue(context.getInstance(Dataway.class).getService().list(CallContext.LOCAL).isEmpty());
+                assertTrue(context.getInstance(Dataway.class).getService().list(CallContext.local(Operation.LIST)).isEmpty());
             }
         }
     }
@@ -53,7 +54,7 @@ class ExplicitDataAccessLayerTest {
                     binder.bindType(ApiDataAccessLayer.class).nameWith("second").toInstance(TestDatabase.dataAccessLayer());
                     binder.bindType(String.class).nameWith("wrong").toInstance("not a storage layer");
                 })) {
-                    assertTrue(context.getInstance(Dataway.class).getService().list(CallContext.LOCAL).isEmpty());
+                    assertTrue(context.getInstance(Dataway.class).getService().list(CallContext.local(Operation.LIST)).isEmpty());
                 }
             };
             if (name.equals("first")) {
@@ -94,16 +95,22 @@ class ExplicitDataAccessLayerTest {
             binder.bindType(ApiDataAccessLayer.class).toInstance(new JdbcDataAccessLayer(host, ""));
         })) {
             Dataway dataway = context.getInstance(Dataway.class);
-            var api = new ApiDefinition("one", "GET", "/one", ScriptType.DATAQL, "return 1;", "");
+            var api = new ApiDefinition();
+            api.setId("one");
+            api.setMethod("GET");
+            api.setPath("/one");
+            api.setType(ApiScriptType.DATAQL);
+            api.setScript("return 1;");
+            api.setDescription("");
             assertThrows(IllegalStateException.class, () -> host.execute(connection -> {
-                dataway.getService().save(api, 0, CallContext.LOCAL);
-                dataway.getService().publish("one", 1, CallContext.LOCAL);
+                dataway.getService().save(api, 0, CallContext.local(Operation.SAVE));
+                dataway.getService().publish("one", 1, CallContext.local(Operation.PUBLISH));
                 throw new IllegalStateException("host failure");
             }));
-            assertTrue(dataway.getService().list(CallContext.LOCAL).isEmpty());
+            assertTrue(dataway.getService().list(CallContext.local(Operation.LIST)).isEmpty());
             host.execute(connection -> {
-                dataway.getService().save(api, 0, CallContext.LOCAL);
-                dataway.getService().publish("one", 1, CallContext.LOCAL);
+                dataway.getService().save(api, 0, CallContext.local(Operation.SAVE));
+                dataway.getService().publish("one", 1, CallContext.local(Operation.PUBLISH));
                 return null;
             });
             assertEquals(1, ((Number) dataway.getService().invokeApi("/one", Map.of())).intValue());

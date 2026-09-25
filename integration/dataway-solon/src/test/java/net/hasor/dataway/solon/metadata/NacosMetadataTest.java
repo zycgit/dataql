@@ -9,9 +9,10 @@ package net.hasor.dataway.solon.metadata;
 import java.lang.reflect.Proxy;
 import com.alibaba.nacos.api.config.ConfigService;
 import net.hasor.dataway.Dataway;
+import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.dal.nacos.NacosDataAccessLayer;
+import net.hasor.dataway.service.CallContext;
 import net.hasor.dataway.solon.DatawayPlugin;
-import net.hasor.dataway.spi.CallContext;
 import org.junit.jupiter.api.Test;
 import org.noear.solon.Solon;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -48,7 +49,7 @@ class NacosMetadataTest {
                     context.wrapAndPut("metadataStore", new NacosDataAccessLayer(this.client(), "host-store", "HOST_GROUP", 1500));
                 });
             });
-            assertTrue(Solon.context().getBean(Dataway.class).getService().list(CallContext.LOCAL).isEmpty());
+            assertTrue(Solon.context().getBean(Dataway.class).getService().list(CallContext.local(Operation.LIST)).isEmpty());
         } finally {
             Solon.stopBlock(false, 0);
         }

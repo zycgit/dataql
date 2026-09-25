@@ -8,12 +8,13 @@
 package net.hasor.dataway.spring;
 import javax.sql.DataSource;
 import net.hasor.dataway.Dataway;
+import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
-import net.hasor.dataway.service.model.ApiDefinition;
-import net.hasor.dataway.service.model.ScriptType;
-import net.hasor.dataway.spi.CallContext;
-import net.hasor.dataway.spi.DatawayConfigurer;
+import net.hasor.dataway.model.ApiDefinition;
+import net.hasor.dataway.model.ApiScriptType;
+import net.hasor.dataway.service.CallContext;
+import net.hasor.dataway.service.DatawayConfigurer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.BeanNotOfRequiredTypeException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -35,11 +36,18 @@ class MetadataSelectionTest {
         beans.registerBeanDefinition("second", definition);
         var environment = new MockEnvironment();
         var primary = this.assemble(beans, environment);
-        primary.getService().save(new ApiDefinition("primary", "GET", "/primary", ScriptType.DATAQL, "return 1;", ""), 0, CallContext.LOCAL);
+        ApiDefinition primaryApi = new ApiDefinition();
+        primaryApi.setId("primary");
+        primaryApi.setMethod("GET");
+        primaryApi.setPath("/primary");
+        primaryApi.setType(ApiScriptType.DATAQL);
+        primaryApi.setScript("return 1;");
+        primaryApi.setDescription("");
+        primary.getService().save(primaryApi, 0, CallContext.local(Operation.SAVE));
         environment.setProperty("dataway.metadata.bean", "first");
-        assertTrue(this.assemble(beans, environment).getService().list(CallContext.LOCAL).isEmpty());
+        assertTrue(this.assemble(beans, environment).getService().list(CallContext.local(Operation.LIST)).isEmpty());
         environment.setProperty("dataway.metadata.bean", "second");
-        assertEquals(1, this.assemble(beans, environment).getService().list(CallContext.LOCAL).size());
+        assertEquals(1, this.assemble(beans, environment).getService().list(CallContext.local(Operation.LIST)).size());
     }
 
     @Test
@@ -63,11 +71,11 @@ class MetadataSelectionTest {
         var access = new JdbcDataAccessLayer(TestDatabase.create(), "");
         beans.registerSingleton("custom", access);
         var environment = new MockEnvironment().withProperty("dataway.metadata.bean", "  ");
-        assertTrue(this.assemble(beans, environment).getService().list(CallContext.LOCAL).isEmpty());
+        assertTrue(this.assemble(beans, environment).getService().list(CallContext.local(Operation.LIST)).isEmpty());
         beans.destroySingletons();
         environment.setProperty("dataway.metadata.bean", "missing");
         beans.registerSingleton("customizer", (DatawayConfigurer) builder -> builder.dataAccessLayer(access));
-        assertTrue(this.assemble(beans, environment).getService().list(CallContext.LOCAL).isEmpty());
+        assertTrue(this.assemble(beans, environment).getService().list(CallContext.local(Operation.LIST)).isEmpty());
     }
 
     private Dataway assemble(DefaultListableBeanFactory beans, MockEnvironment environment) {

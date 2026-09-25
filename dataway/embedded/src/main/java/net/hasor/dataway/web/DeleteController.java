@@ -7,19 +7,25 @@
  */
 package net.hasor.dataway.web;
 import java.util.Map;
+import net.hasor.dataway.authorization.Operation;
+import net.hasor.dataway.authorization.UserIdentity;
+import net.hasor.dataway.model.ResultInfo;
+import net.hasor.dataway.model.WebResponse;
 import net.hasor.dataway.service.DatawayService;
-import net.hasor.dataway.service.SerializationInfo;
-import net.hasor.dataway.spi.CallContext;
 
 /** POST /delete. Deletes the API and its release history. */
 public final class DeleteController extends AbstractApiController {
     public DeleteController(DatawayService service) {
-        super(service, "POST");
+        super(service, Operation.DELETE);
     }
 
     @Override
-    protected SerializationInfo execute(String id, Map<String, String> query, Map<String, Object> body, CallContext context) {
-        this.service.deleteApi(id, this.version(body), context);
-        return this.result(true);
+    protected ResultInfo execute(Map<String, String> query, Map<String, Object> body, UserIdentity identity, Map<String, ?> request, WebResponse response) throws Exception {
+        return this.executeService(() -> {
+            String id = this.id(query, body);
+
+            this.service.deleteApi(id, this.version(body), this.getOperation(), identity, request, response);
+            return this.result(true);
+        });
     }
 }

@@ -9,10 +9,11 @@ package net.hasor.dataway.solon;
 import java.util.List;
 import java.util.Map;
 import net.hasor.dataway.Dataway;
+import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.dal.EntityType;
 import net.hasor.dataway.dal.FieldDef;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
-import net.hasor.dataway.spi.CallContext;
+import net.hasor.dataway.service.CallContext;
 import org.junit.jupiter.api.Test;
 import org.noear.solon.Solon;
 import org.noear.solon.annotation.Init;
@@ -25,7 +26,7 @@ class InitializationTest {
     void containerInitializesStorageBeforeBuildingDatawayAndItsConsumers() throws Throwable {
         String previousBean = System.getProperty("dataway.metadata.bean");
         var builder = Dataway.builder().adminHandler(dataway -> {
-            assertTrue(dataway.getService().list(CallContext.LOCAL).isEmpty());
+            assertTrue(dataway.getService().list(CallContext.local(Operation.LIST)).isEmpty());
             return (request, response) -> response.write(200, Map.of());
         });
         try {
@@ -75,7 +76,7 @@ class InitializationTest {
 
         @Init(index = DatawayPlugin.INITIALIZATION_INDEX + 1)
         public void init() {
-            assertTrue(this.dataway.getService().list(CallContext.LOCAL).isEmpty());
+            assertTrue(this.dataway.getService().list(CallContext.local(Operation.LIST)).isEmpty());
             this.initialized = true;
         }
     }
