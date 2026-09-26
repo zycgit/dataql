@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute.fragment;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
@@ -16,8 +15,8 @@ import net.hasor.dataql.host.function.AbstractUdfSource;
 import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dialect.PageObject;
 import net.hasor.dataql.sqlproc.dialect.PageResult;
-import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 import net.hasor.dataql.sqlproc.execute.RootStatement;
+import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 
 /**
  * 延迟分页查询对象，继承 {@link AbstractUdfSource} 使其可在 DataQL 脚本中调用。

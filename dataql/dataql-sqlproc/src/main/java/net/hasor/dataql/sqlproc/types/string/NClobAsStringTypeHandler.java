@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.types.string;
-
 import java.io.StringReader;
 import java.sql.*;
 import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;

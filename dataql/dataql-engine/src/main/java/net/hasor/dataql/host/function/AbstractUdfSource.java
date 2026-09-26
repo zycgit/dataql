@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.host.function;
-
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.function.Predicate;

@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc;
-
 import net.hasor.dataql.domain.Hints;
 import static net.hasor.dataql.sqlproc.SqlHintValue.*;
 

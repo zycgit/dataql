@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute.fragment;
-
 import java.util.List;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
 import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionInterceptor;

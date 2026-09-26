@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.compiler.qil;
-
 import java.lang.reflect.Field;
 import net.hasor.cobble.StringUtils;
 

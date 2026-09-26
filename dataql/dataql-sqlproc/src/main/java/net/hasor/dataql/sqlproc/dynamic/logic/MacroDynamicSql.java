@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.dynamic.logic;
-
 import net.hasor.dataql.sqlproc.dynamic.segment.PlanDynamicSql;
 
 /**

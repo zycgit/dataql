@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.dynamic.args;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;

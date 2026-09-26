@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.host;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;

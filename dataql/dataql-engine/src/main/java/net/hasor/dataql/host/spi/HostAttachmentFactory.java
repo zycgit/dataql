@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.host.spi;
-
 import net.hasor.dataql.host.HostContext;
 
 /** SPI factory for a host-scoped attachment. */

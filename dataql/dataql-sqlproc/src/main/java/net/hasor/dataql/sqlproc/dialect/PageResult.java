@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.dialect;
-
 import java.util.ArrayList;
 import java.util.List;
 

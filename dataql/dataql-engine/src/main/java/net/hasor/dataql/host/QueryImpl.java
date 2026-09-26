@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.host;
-
 import java.util.HashMap;
 import java.util.Map;
 import net.hasor.dataql.compiler.qil.QIL;

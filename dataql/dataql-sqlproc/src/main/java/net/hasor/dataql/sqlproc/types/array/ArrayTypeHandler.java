@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.types.array;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;

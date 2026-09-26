@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute.fragment;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -24,12 +23,10 @@ import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
 import net.hasor.dataql.sqlproc.dynamic.resolve.ConfigResolve;
 import net.hasor.dataql.sqlproc.dynamic.resolve.ConfigResolveRoot;
-import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 import net.hasor.dataql.sqlproc.execute.RootStatement;
 import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionInterceptor;
-import static net.hasor.dataql.sqlproc.SqlHintNames.FRAGMENT_SQL_DATA_SOURCE;
-import static net.hasor.dataql.sqlproc.SqlHintNames.FRAGMENT_SQL_QUERY_BY_PAGE;
-import static net.hasor.dataql.sqlproc.SqlHintNames.FRAGMENT_SQL_QUERY_BY_PAGE_NUMBER_OFFSET;
+import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
+import static net.hasor.dataql.sqlproc.SqlHintNames.*;
 import static net.hasor.dataql.sqlproc.SqlHintValue.FRAGMENT_SQL_QUERY_BY_PAGE_ENABLE;
 
 /**
@@ -37,10 +34,10 @@ import static net.hasor.dataql.sqlproc.SqlHintValue.FRAGMENT_SQL_QUERY_BY_PAGE_E
  * 注入 Hints，子类覆写 {@link #queryType(String, Hints)} 读取即可。
  */
 public abstract class AbstractSqlFragment implements FragmentProcess {
-    private final ConfigResolveRoot          configResolve = new ConfigResolveRoot();
+    private final ConfigResolveRoot           configResolve = new ConfigResolveRoot();
     private final Map<String, FragmentConfig> fragmentCache = new ConcurrentHashMap<>();
-    private final RootStatement              rootStatement;
-    private final ExecuteContext             context;
+    private final RootStatement               rootStatement;
+    private final ExecuteContext              context;
 
     protected AbstractSqlFragment(ExecuteContext context) {
         this.context = Objects.requireNonNull(context, "exeContext is null");

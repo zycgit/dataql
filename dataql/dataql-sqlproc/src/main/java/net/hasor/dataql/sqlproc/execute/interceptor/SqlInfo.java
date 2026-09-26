@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute.interceptor;
-
 import java.util.Objects;
 import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.domain.HintsReadOnly;

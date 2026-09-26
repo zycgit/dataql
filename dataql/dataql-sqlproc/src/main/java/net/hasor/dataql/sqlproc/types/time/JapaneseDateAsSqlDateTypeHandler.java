@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.types.time;
-
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.chrono.JapaneseDate;

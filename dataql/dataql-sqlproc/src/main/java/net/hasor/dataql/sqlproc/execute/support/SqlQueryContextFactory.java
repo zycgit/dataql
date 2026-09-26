@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute.support;
-
 import net.hasor.dataql.host.HostContext;
 import net.hasor.dataql.host.spi.HostAttachmentFactory;
 

@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.compiler;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -19,7 +18,13 @@ import net.hasor.dataql.compiler.qil.CompilerContext;
 import net.hasor.dataql.compiler.qil.InstQueue;
 import net.hasor.dataql.compiler.qil.Instruction;
 import net.hasor.dataql.compiler.qil.QIL;
-import net.hasor.dataql.parser.*;
+import net.hasor.dataql.parser.DataQLLexer;
+import net.hasor.dataql.parser.DataQLParser;
+import net.hasor.dataql.parser.DataQLParserVisitor;
+import net.hasor.dataql.parser.DefaultDataQLVisitor;
+import net.hasor.dataql.parser.QueryModel;
+import net.hasor.dataql.parser.QueryParseException;
+import net.hasor.dataql.parser.ThrowingErrorListener;
 import net.hasor.dataql.parser.ast.inst.RootBlockSet;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;

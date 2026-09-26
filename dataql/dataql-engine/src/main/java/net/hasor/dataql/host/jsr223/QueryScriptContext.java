@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.host.jsr223;
-
 import java.util.Objects;
 import java.util.function.Supplier;
 import javax.script.SimpleScriptContext;

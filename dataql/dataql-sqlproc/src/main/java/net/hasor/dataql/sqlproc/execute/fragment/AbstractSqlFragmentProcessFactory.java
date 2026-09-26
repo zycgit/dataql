@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute.fragment;
-
 import java.util.function.Function;
 import net.hasor.dataql.host.HostContext;
 import net.hasor.dataql.host.spi.FragmentProcessFactory;

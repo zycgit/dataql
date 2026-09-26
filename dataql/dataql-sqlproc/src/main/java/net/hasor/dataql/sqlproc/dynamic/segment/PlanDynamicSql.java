@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.dynamic.segment;
-
 import java.sql.SQLException;
 import java.util.*;
 import net.hasor.cobble.StringUtils;

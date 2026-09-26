@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.kernel;
-
 import net.hasor.cobble.loader.ResourceLoader;
 
 /** 运行期资源查找器。 */

@@ -6,15 +6,14 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.dynamic.logic;
-
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import net.hasor.dataql.sqlproc.dynamic.DynamicSql;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
-import net.hasor.dataql.sqlproc.types.SqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
 import net.hasor.dataql.sqlproc.dynamic.segment.PlanDynamicSql;
+import net.hasor.dataql.sqlproc.types.SqlArgSource;
 
 /**
  * 多个 SQL 节点组合成一个 SqlNode

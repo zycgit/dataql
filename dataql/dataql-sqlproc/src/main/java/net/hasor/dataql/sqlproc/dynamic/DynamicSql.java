@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.dynamic;
-
 import java.sql.SQLException;
 import java.util.Map;
 import net.hasor.dataql.sqlproc.dynamic.args.MapSqlArgSource;
