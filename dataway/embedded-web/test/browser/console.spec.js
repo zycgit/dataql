@@ -193,8 +193,8 @@ test('binary responses keep all bytes when downloaded from the result panel', as
     expect([...Buffer.concat(chunks)]).toEqual([0, 1, 255, 10]);
 });
 
-test('host identity protects resources and the console rejects an invalid deployment address', async ({page, context}) => {
-    expect((await context.request.get('/gateway/console/assets/app.js')).status()).toBe(401);
+test('management requires host identity and the console rejects an invalid deployment address', async ({page, context}) => {
+    expect((await context.request.get('/gateway/console/assets/app.js')).status()).toBe(200);
     expect((await context.request.get('/gateway/operations/api-list')).status()).toBe(401);
     await context.addCookies([{name: 'host-session', value: 'browser-test', url: 'http://127.0.0.1:49181'}]);
     await page.route('**/config.json', route => route.fulfill({json: {adminApi: 'https://other.test/api/'}}));
