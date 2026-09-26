@@ -8,20 +8,14 @@
 package net.hasor.dataway.service.admin;
 import java.util.List;
 import java.util.Map;
+import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.ref.Tuple;
-import net.hasor.dataway.Dataway;
 import net.hasor.dataway.authorization.AuthorizationCheck;
 import net.hasor.dataway.model.ResultInfo;
 import net.hasor.dataway.model.ResultInfoUtils;
 import net.hasor.dataway.model.WebRequest;
 import net.hasor.dataway.model.WebResponse;
-import net.hasor.dataway.service.AbstractWebHandler;
-import net.hasor.dataway.service.DatawayException;
-import net.hasor.dataway.service.DatawayService;
-import net.hasor.dataway.service.HttpSupport;
-import net.hasor.dataway.service.Interceptor;
-import net.hasor.dataway.service.InterceptorChain;
-import net.hasor.dataway.service.InterceptorContext;
+import net.hasor.dataway.service.*;
 import net.hasor.dataway.web.*;
 
 /** Routes, authorizes and intercepts management requests before invoking the selected controller. */
@@ -56,7 +50,7 @@ public final class DatawayAdminHandler extends AbstractWebHandler {
         }
 
         String method = route.getArg0();
-        if (!request.getMethod().equals(method)) {
+        if (!StringUtils.equalsIgnoreCase(request.getMethod(), method)) {
             throw new DatawayException(405, "Method not allowed");
         }
 
@@ -67,13 +61,13 @@ public final class DatawayAdminHandler extends AbstractWebHandler {
         }
 
         Map<String, ?> metadata = HttpSupport.metadata(request, Map.of(), Map.of());
-        var context = new InterceptorContext(null, null, controller.getOperation(), request.getIdentity(), metadata, response, Map.of());
-        List<Interceptor> interceptors = this.getDataway().getActionInterceptors();
+        var context = new AdminInterceptorContext(null, null, controller.getOperation(), request.getIdentity(), metadata, response, Map.of());
+        List<AdminInterceptor> interceptors = this.getDataway().getActionInterceptors();
 
-        InterceptorChain chain = () -> controller.handle(request, response);
+        AdminInterceptorChain chain = () -> controller.handle(request, response);
         for (int i = interceptors.size() - 1; i >= 0; i--) {
-            Interceptor interceptor = interceptors.get(i);
-            InterceptorChain next = chain;
+            AdminInterceptor interceptor = interceptors.get(i);
+            AdminInterceptorChain next = chain;
             chain = () -> interceptor.invoke(context, next);
         }
 

@@ -7,7 +7,7 @@
  */
 package net.hasor.dataway.model;
 import java.util.Locale;
-import java.util.Objects;
+import net.hasor.cobble.StringUtils;
 
 /** Framework-neutral response cookie; values are supplied in their wire representation. */
 public class WebCookie {
@@ -90,7 +90,7 @@ public class WebCookie {
     }
 
     public String toHeaderValue() {
-        WebResponse.validateHeader(this.name, Objects.requireNonNull(this.value, "cookie value"));
+        WebResponse.validateHeader(this.name, this.value);
         for (int i = 0; i < this.value.length(); i++) {
             char ch = this.value.charAt(i);
             if (ch < 33 || ch > 126 || ch == '"' || ch == ',' || ch == ';' || ch == '\\') {
@@ -121,7 +121,7 @@ public class WebCookie {
                     throw new IllegalArgumentException("Invalid SameSite policy");
                 }
             };
-            if (policy.equals("None") && !this.secure) {
+            if (StringUtils.equalsIgnoreCase(policy, "None") && !this.secure) {
                 throw new IllegalArgumentException("SameSite=None requires Secure");
             }
             header.append("; SameSite=").append(policy);

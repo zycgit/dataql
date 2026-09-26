@@ -25,15 +25,15 @@ public abstract class WebRequest {
     private UserIdentity              identity     = UserIdentity.anonymous();
 
     public void setMethod(String method) {
-        this.method = Objects.requireNonNull(method).toUpperCase(Locale.ROOT);
+        this.method = method.toUpperCase(Locale.ROOT);
     }
 
     public void setPath(String path) {
-        this.path = Objects.requireNonNull(path);
+        this.path = path;
     }
 
     public void setPathInfo(String pathInfo) {
-        this.pathInfo = Objects.requireNonNull(pathInfo);
+        this.pathInfo = pathInfo;
     }
 
     public void setQuery(String query) {
@@ -122,6 +122,6 @@ public abstract class WebRequest {
     }
 
     public void setIdentity(UserIdentity identity) {
-        this.identity = Objects.requireNonNull(identity);
+        this.identity = identity;
     }
 }

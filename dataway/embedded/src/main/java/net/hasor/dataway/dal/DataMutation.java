@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.dal;
-
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
@@ -36,7 +35,7 @@ public class DataMutation {
             throw new IllegalArgumentException("Invalid expected revision");
         }
 
-        Map<FieldDef, String> fields = Objects.requireNonNull(this.getFields(), "fields");
+        Map<FieldDef, String> fields = this.getFields();
         if (fields.containsKey(FieldDef.ID) || fields.containsKey(FieldDef.REVISION)) {
             throw new IllegalArgumentException("ID and revision are controlled by the mutation");
         }

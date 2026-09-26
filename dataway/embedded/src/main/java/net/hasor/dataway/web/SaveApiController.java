@@ -14,12 +14,12 @@ import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ApiState;
 import net.hasor.dataway.model.ResultInfo;
 import net.hasor.dataway.model.WebResponse;
-import net.hasor.dataway.service.DatawayService;
+import net.hasor.dataway.service.admin.AdminService;
 
 /** POST /save-api. Creates or updates a versioned draft. */
 public final class SaveApiController extends AbstractApiController {
-    public SaveApiController(DatawayService service) {
-        super(service, Operation.SAVE);
+    public SaveApiController(AdminService adminService) {
+        super(adminService, Operation.SAVE);
     }
 
     @Override
@@ -29,7 +29,7 @@ public final class SaveApiController extends AbstractApiController {
             String target = id.equals("-1") ? UUID.randomUUID().toString() : id;
 
             ApiDefinition definition = ConvertUtils.definition(target, body);
-            ApiState saved = this.service.save(definition, this.version(body), this.getOperation(), identity, request, response);
+            ApiState saved = this.adminService.save(definition, this.version(body), this.getOperation(), identity, request, response);
             return this.result(saved.getDraft().getId(), saved.getRevision());
         });
     }

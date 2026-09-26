@@ -11,7 +11,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import net.hasor.cobble.StringUtils;
 
 /** Buffers script header changes until the host response is opened. */
 public abstract class WebResponse {
@@ -27,7 +27,7 @@ public abstract class WebResponse {
     public abstract boolean isCommitted();
 
     public final void prepare(WebRequest request) {
-        this.head = request.getMethod().equals("HEAD");
+        this.head = StringUtils.equalsIgnoreCase(request.getMethod(), "HEAD");
     }
 
     public final boolean isStarted() {
@@ -43,7 +43,7 @@ public abstract class WebResponse {
     }
 
     public final void setCookie(WebCookie cookie) {
-        this.addHeader("Set-Cookie", Objects.requireNonNull(cookie).toHeaderValue());
+        this.addHeader("Set-Cookie", cookie.toHeaderValue());
     }
 
     private void changeHeader(String name, String value, boolean append) {
@@ -62,7 +62,6 @@ public abstract class WebResponse {
         if (name == null || !name.matches("[!#$%&'*+.^_`|~0-9A-Za-z-]+")) {
             throw new IllegalArgumentException("Invalid header name");
         }
-        Objects.requireNonNull(value, "header value");
         for (int i = 0; i < value.length(); i++) {
             char ch = value.charAt(i);
             if (ch == 127 || ch < 32 && ch != '\t') {
@@ -75,7 +74,7 @@ public abstract class WebResponse {
         this.requireOpen();
         headers.forEach(WebResponse::validateHeader);
         this.started = true;
-        headers.forEach((name, value) -> this.writeHeader(name, value, name.equalsIgnoreCase("Set-Cookie")));
+        headers.forEach((name, value) -> this.writeHeader(name, value, StringUtils.equalsIgnoreCase(name, "Set-Cookie")));
         for (HeaderChange change : this.changes) {
             this.writeHeader(change.name(), change.value(), change.append());
         }

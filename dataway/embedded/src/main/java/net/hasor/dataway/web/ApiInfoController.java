@@ -12,12 +12,12 @@ import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.model.ApiState;
 import net.hasor.dataway.model.ResultInfo;
 import net.hasor.dataway.model.WebResponse;
-import net.hasor.dataway.service.DatawayService;
+import net.hasor.dataway.service.admin.AdminService;
 
 /** GET /api-info. Loads request examples for the interface list. */
 public final class ApiInfoController extends AbstractApiController {
-    public ApiInfoController(DatawayService service) {
-        super(service, Operation.READ);
+    public ApiInfoController(AdminService adminService) {
+        super(adminService, Operation.READ);
     }
 
     @Override
@@ -25,7 +25,7 @@ public final class ApiInfoController extends AbstractApiController {
         return this.executeService(() -> {
             String id = this.id(query, body);
 
-            ApiState state = this.service.getApiById(id, this.getOperation(), identity, request, response);
+            ApiState state = this.adminService.getApiById(id, this.getOperation(), identity, request, response);
             return this.result(ConvertUtils.detail(state.getDraft(), state.getRevision(), ConvertUtils.status(state)));
         });
     }

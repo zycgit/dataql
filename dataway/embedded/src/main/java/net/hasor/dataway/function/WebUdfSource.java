@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.domain.DataModel;
 import net.hasor.dataql.domain.UdfSource;
 import net.hasor.dataql.host.HostContext;
@@ -25,8 +26,8 @@ public class WebUdfSource extends AbstractUdfSource {
     private final Supplier<WebResponse>    response;
 
     public WebUdfSource(Supplier<Map<String, ?>> request, Supplier<WebResponse> response) {
-        this.request = Objects.requireNonNull(request);
-        this.response = Objects.requireNonNull(response);
+        this.request = request;
+        this.response = response;
     }
 
     /** ServiceLoader constructor; the host supplies the execution-bound instance. */
@@ -111,7 +112,7 @@ public class WebUdfSource extends AbstractUdfSource {
     }
 
     private boolean writeHeader(String name, Object value, boolean append) {
-        String headerValue = Objects.requireNonNull(this.unwrap(value), "header value").toString();
+        String headerValue = this.unwrap(value).toString();
         if (append) {
             this.response().addHeader(name, headerValue);
         } else {
@@ -121,7 +122,6 @@ public class WebUdfSource extends AbstractUdfSource {
     }
 
     private boolean writeHeaders(Map<?, ?> values, boolean append) {
-        Objects.requireNonNull(values, "header map");
         for (var entry : values.entrySet()) {
             Object value = this.unwrap(entry.getValue());
             if (append && value instanceof List<?> list) {
@@ -179,7 +179,7 @@ public class WebUdfSource extends AbstractUdfSource {
             throw new IllegalArgumentException("Cookie requires a name, a value when setting, and optional attributes");
         }
 
-        String value = remove ? "" : Objects.requireNonNull(this.argument(args, 1), "cookie value").toString();
+        String value = remove ? "" : this.argument(args, 1).toString();
         WebCookie cookie = new WebCookie(this.key(args[0]), value);
         Object attributes = this.argument(args, required);
         if (attributes != null) {
@@ -249,7 +249,7 @@ public class WebUdfSource extends AbstractUdfSource {
 
         for (var entry : source.entrySet()) {
             String candidate = entry.getKey().toString();
-            if (key.equalsIgnoreCase(candidate)) {
+            if (StringUtils.equalsIgnoreCase(key, candidate)) {
                 Object value = entry.getValue();
                 return value instanceof List<?> list ? List.copyOf(list) : List.of(value);
             }
@@ -279,7 +279,7 @@ public class WebUdfSource extends AbstractUdfSource {
         }
 
         for (var entry : metadata.entrySet()) {
-            if (name.equalsIgnoreCase(entry.getKey())) {
+            if (StringUtils.equalsIgnoreCase(name, entry.getKey())) {
                 return entry.getValue();
             }
         }

@@ -12,19 +12,19 @@ import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.model.ApiState;
 import net.hasor.dataway.model.ResultInfo;
 import net.hasor.dataway.model.WebResponse;
-import net.hasor.dataway.service.DatawayService;
+import net.hasor.dataway.service.admin.AdminService;
 
 /** GET /api-detail. Loads the editor document and its current version. */
 public final class ApiDetailController extends AbstractApiController {
-    public ApiDetailController(DatawayService service) {
-        super(service, Operation.READ);
+    public ApiDetailController(AdminService adminService) {
+        super(adminService, Operation.READ);
     }
 
     @Override
     protected ResultInfo execute(Map<String, String> query, Map<String, Object> body, UserIdentity identity, Map<String, ?> request, WebResponse response) throws Exception {
         return this.executeService(() -> {
             String id = this.id(query, body);
-            ApiState state = this.service.getApiById(id, this.getOperation(), identity, request, response);
+            ApiState state = this.adminService.getApiById(id, this.getOperation(), identity, request, response);
             return this.result(ConvertUtils.detail(state.getDraft(), state.getRevision(), ConvertUtils.status(state)));
         });
     }

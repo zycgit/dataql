@@ -5,10 +5,10 @@
  * See the LICENSE.txt file for the full license.
  * https://www.apache.org/licenses/LICENSE-2.0
  */
-package net.hasor.dataway.service;
+package net.hasor.dataway.service.admin;
 
 /** Continues the published API call or administration action and returns its result. */
 @FunctionalInterface
-public interface InterceptorChain {
+public interface AdminInterceptorChain {
     Object proceed() throws Exception;
 }

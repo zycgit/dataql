@@ -18,24 +18,24 @@ import net.hasor.dataway.model.ResultInfoUtils;
 import net.hasor.dataway.model.WebRequest;
 import net.hasor.dataway.model.WebResponse;
 import net.hasor.dataway.service.DatawayException;
-import net.hasor.dataway.service.DatawayService;
 import net.hasor.dataway.service.HttpSupport;
+import net.hasor.dataway.service.admin.AdminService;
 
 /** Shared parameter handling and responses for the console APIs. */
 public abstract class AbstractApiController {
-    protected final DatawayService service;
-    private final   Operation      operation;
+    protected final AdminService adminService;
+    private final   Operation    operation;
 
-    protected AbstractApiController(DatawayService service, Operation operation) {
-        this.service = Objects.requireNonNull(service);
-        this.operation = Objects.requireNonNull(operation);
+    protected AbstractApiController(AdminService adminService, Operation operation) {
+        this.adminService = adminService;
+        this.operation = operation;
     }
 
     public final Operation getOperation() {
         return this.operation;
     }
 
-    /** Reads request parameters and invokes the selected execution service. */
+    /** Reads request parameters and invokes the selected console operation. */
     public final ResultInfo handle(WebRequest request, WebResponse response) throws Exception {
         UserIdentity identity = request.getIdentity();
         Map<String, Object> body = HttpSupport.body(request);

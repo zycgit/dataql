@@ -11,12 +11,12 @@ import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.model.ResultInfo;
 import net.hasor.dataway.model.WebResponse;
-import net.hasor.dataway.service.DatawayService;
+import net.hasor.dataway.service.admin.AdminService;
 
 /** POST /publish. Publishes a draft as an immutable release. */
 public final class PublishController extends AbstractApiController {
-    public PublishController(DatawayService service) {
-        super(service, Operation.PUBLISH);
+    public PublishController(AdminService adminService) {
+        super(adminService, Operation.PUBLISH);
     }
 
     @Override
@@ -24,7 +24,7 @@ public final class PublishController extends AbstractApiController {
         return this.executeService(() -> {
             String id = this.id(query, body);
 
-            long version = this.service.publish(id, this.version(body), this.getOperation(), identity, request, response).getRevision();
+            long version = this.adminService.publish(id, this.version(body), this.getOperation(), identity, request, response).getRevision();
             return this.result(true, version);
         });
     }

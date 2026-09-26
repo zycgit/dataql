@@ -11,12 +11,12 @@ import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.model.ResultInfo;
 import net.hasor.dataway.model.WebResponse;
-import net.hasor.dataway.service.DatawayService;
+import net.hasor.dataway.service.admin.AdminService;
 
 /** POST /disable. Disables the published API. */
 public final class DisableController extends AbstractApiController {
-    public DisableController(DatawayService service) {
-        super(service, Operation.DISABLE);
+    public DisableController(AdminService adminService) {
+        super(adminService, Operation.DISABLE);
     }
 
     @Override
@@ -24,7 +24,7 @@ public final class DisableController extends AbstractApiController {
         return this.executeService(() -> {
             String id = this.id(query, body);
 
-            long version = this.service.disableApi(id, this.version(body), this.getOperation(), identity, request, response).getRevision();
+            long version = this.adminService.disableApi(id, this.version(body), this.getOperation(), identity, request, response).getRevision();
             return this.result(true, version);
         });
     }

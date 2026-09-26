@@ -14,14 +14,14 @@ import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.model.ApiState;
 import net.hasor.dataway.model.ResultInfo;
 import net.hasor.dataway.model.WebResponse;
-import net.hasor.dataway.service.DatawayService;
+import net.hasor.dataway.service.admin.AdminService;
 
 /** GET /api-history. Lists releases from newest to oldest. */
 public final class ApiHistoryListController extends AbstractApiController {
     private static final DateTimeFormatter HISTORY_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
 
-    public ApiHistoryListController(DatawayService service) {
-        super(service, Operation.HISTORY);
+    public ApiHistoryListController(AdminService adminService) {
+        super(adminService, Operation.HISTORY);
     }
 
     @Override
@@ -29,7 +29,7 @@ public final class ApiHistoryListController extends AbstractApiController {
         return this.executeService(() -> {
             String id = this.id(query, body);
 
-            ApiState state = this.service.historyState(id, this.getOperation(), identity, request, response);
+            ApiState state = this.adminService.historyState(id, this.getOperation(), identity, request, response);
             return this.result(state.getHistory().reversed().stream().map(release -> {
                 return Map.of(                                              //
                         "historyId", release.getId(),                          //

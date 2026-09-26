@@ -11,12 +11,12 @@ import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.model.ResultInfo;
 import net.hasor.dataway.model.WebResponse;
-import net.hasor.dataway.service.DatawayService;
+import net.hasor.dataway.service.admin.AdminService;
 
 /** POST /delete. Deletes the API and its release history. */
 public final class DeleteController extends AbstractApiController {
-    public DeleteController(DatawayService service) {
-        super(service, Operation.DELETE);
+    public DeleteController(AdminService adminService) {
+        super(adminService, Operation.DELETE);
     }
 
     @Override
@@ -24,7 +24,7 @@ public final class DeleteController extends AbstractApiController {
         return this.executeService(() -> {
             String id = this.id(query, body);
 
-            this.service.deleteApi(id, this.version(body), this.getOperation(), identity, request, response);
+            this.adminService.deleteApi(id, this.version(body), this.getOperation(), identity, request, response);
             return this.result(true);
         });
     }

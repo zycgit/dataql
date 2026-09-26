@@ -6,9 +6,7 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.model;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -17,7 +15,7 @@ import tools.jackson.core.StreamReadFeature;
 import tools.jackson.core.StreamWriteFeature;
 import tools.jackson.databind.json.JsonMapper;
 
-/** Constructs response data and writes it without taking ownership of host streams. */
+/** Constructs response data for JSON, binary and streaming results. */
 public final class ResultInfoUtils {
     public static final JsonMapper JSON = JsonMapper.builder().disable(StreamWriteFeature.AUTO_CLOSE_TARGET).disable(StreamReadFeature.AUTO_CLOSE_SOURCE).build();
 
@@ -69,7 +67,7 @@ public final class ResultInfoUtils {
 
     public static ResultInfo ofBytes(String contentType, byte[] value) {
         ResultInfo result = new ResultInfo();
-        result.setData(Objects.requireNonNull(value));
+        result.setData(value);
         result.setJson(false);
         result.getHeaders().put("Content-Type", contentType);
         result.getHeaders().put("Content-Length", String.valueOf(value.length));
@@ -100,23 +98,7 @@ public final class ResultInfoUtils {
         if (value instanceof InputStream stream) {
             return ofStream("application/octet-stream", stream);
         }
-        return json(200, value);
-    }
 
-    public static void writeTo(ResultInfo result, WebRequest request, WebResponse response) throws IOException {
-        Object data = result.getData();
-        InputStream source = !result.isJson() && data instanceof InputStream stream ? stream : null;
-        try (source) {
-            OutputStream output = response.write(result.getStatus(), result.getHeaders());
-            if (!request.getMethod().equals("HEAD")) {
-                if (source != null) {
-                    source.transferTo(output);
-                } else if (!result.isJson() && data instanceof byte[] bytes) {
-                    output.write(bytes);
-                } else {
-                    JSON.writeValue(output, data);
-                }
-            }
-        }
+        return json(200, value);
     }
 }

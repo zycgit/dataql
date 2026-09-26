@@ -6,26 +6,60 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.service;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.List;
 import java.util.Objects;
-import net.hasor.dataway.Dataway;
-import net.hasor.dataway.model.*;
+import net.hasor.cobble.StringUtils;
+import net.hasor.dataway.authorization.UserIdentity;
+import net.hasor.dataway.model.ResultInfo;
+import net.hasor.dataway.model.ResultInfoUtils;
+import net.hasor.dataway.model.WebRequest;
+import net.hasor.dataway.model.WebResponse;
 
-/** Writes entry results while preserving host exception handling and HEAD semantics. */
-public abstract class AbstractWebHandler implements WebHandler {
+/** Resolves request identity and writes entry results while preserving host exception handling. */
+public abstract class AbstractWebHandler {
     private final Dataway dataway;
 
     protected AbstractWebHandler(Dataway dataway) {
-        this.dataway = Objects.requireNonNull(dataway);
+        this.dataway = dataway;
     }
 
     public final Dataway getDataway() {
         return this.dataway;
     }
 
-    @Override
+    /** Relative paths; a trailing /* denotes a subtree. The host adds its configured prefix. */
+    public List<String> paths() {
+        return List.of("", "/*");
+    }
+
+    /** Invoked after host routing. Failures propagate to the host without an error response. */
     public final void handle(WebRequest request, WebResponse response) throws Exception {
         response.prepare(request);
-        ResultInfoUtils.writeTo(this.handleRequest(request, response), request, response);
+
+        UserIdentity identity = this.dataway.getIdentityProvider().resolve(request);
+        request.setIdentity(Objects.requireNonNull(identity, "IdentityProvider returned null"));
+        ResultInfo result = this.handleRequest(request, response);
+        Object data = result.getData();
+        InputStream source = !result.isJson() && data instanceof InputStream stream ? stream : null;
+        try (source) {
+            OutputStream output = response.write(result.getStatus(), result.getHeaders());
+            if (StringUtils.equalsIgnoreCase(request.getMethod(), "HEAD")) {
+                return;
+            }
+
+            if (source != null) {
+                source.transferTo(output);
+                return;
+            }
+
+            if (!result.isJson() && data instanceof byte[] bytes) {
+                output.write(bytes);
+                return;
+            }
+            ResultInfoUtils.JSON.writeValue(output, data);
+        }
     }
 
     protected abstract ResultInfo handleRequest(WebRequest request, WebResponse response) throws Exception;

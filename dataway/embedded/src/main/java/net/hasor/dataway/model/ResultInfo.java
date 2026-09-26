@@ -7,10 +7,9 @@
  */
 package net.hasor.dataway.model;
 import java.util.Map;
-import java.util.Objects;
 import java.util.TreeMap;
 
-/** Mutable response data; construction and output are handled by ResultInfoUtils. */
+/** Mutable response data with construction helpers provided by ResultInfoUtils. */
 public class ResultInfo {
     private int                 status  = 200;
     private Map<String, String> headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
@@ -30,7 +29,7 @@ public class ResultInfo {
     }
 
     public void setHeaders(Map<String, String> headers) {
-        this.headers = Objects.requireNonNull(headers);
+        this.headers = headers;
     }
 
     public Object getData() {

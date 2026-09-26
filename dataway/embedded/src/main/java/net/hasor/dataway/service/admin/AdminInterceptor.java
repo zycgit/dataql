@@ -5,10 +5,10 @@
  * See the LICENSE.txt file for the full license.
  * https://www.apache.org/licenses/LICENSE-2.0
  */
-package net.hasor.dataway.service;
+package net.hasor.dataway.service.admin;
 
 /** Intercepts a published API call or administration action identified by its explicit operation. */
 @FunctionalInterface
-public interface Interceptor {
-    Object invoke(InterceptorContext context, InterceptorChain chain) throws Exception;
+public interface AdminInterceptor {
+    Object invoke(AdminInterceptorContext context, AdminInterceptorChain chain) throws Exception;
 }

@@ -1,0 +1,187 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
+package net.hasor.dataway.service.script;
+import java.io.InputStream;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import net.hasor.dataql.DataQueryException;
+import net.hasor.dataql.compiler.qil.QIL;
+import net.hasor.dataql.host.QueryBuilder;
+import net.hasor.dataql.kernel.CustomizeScope;
+import net.hasor.dataql.kernel.QueryResult;
+import net.hasor.dataql.kernel.ThrowRuntimeException;
+import net.hasor.dataway.authorization.Operation;
+import net.hasor.dataway.authorization.UserIdentity;
+import net.hasor.dataway.model.ApiDefinition;
+import net.hasor.dataway.model.ResultInfo;
+import tools.jackson.databind.json.JsonMapper;
+
+/** Prepares, intercepts and executes a script, then formats its result. */
+public class DatawayQuery {
+    private static final JsonMapper           JSON = JsonMapper.builder().build();
+    private final        List<ApiInterceptor> interceptors;
+    private final        String               responseFormat;
+    private final        boolean              resultStructure;
+    private final        boolean              wrapAllParameters;
+    private final        String               wrapParameterName;
+    //
+    private final        ApiDefinition        definition;
+    private final        QueryBuilder         queryBuilder;
+    private final        CustomizeScope       scope;
+    private final        QIL                  compiled;
+
+    DatawayQuery(ApiDefinition definition, QIL compiled, List<ApiInterceptor> interceptors, QueryBuilder queryBuilder, CustomizeScope scope, //
+            String responseFormat, boolean resultStructure, boolean wrapAllParameters, String wrapParameterName) {
+        this.definition = definition;
+        this.compiled = compiled;
+        this.interceptors = interceptors;
+        this.queryBuilder = queryBuilder;
+        this.scope = scope;
+
+        this.responseFormat = responseFormat;
+        this.resultStructure = resultStructure;
+        this.wrapAllParameters = wrapAllParameters;
+        this.wrapParameterName = wrapParameterName;
+    }
+
+    //
+
+    /** Prepares parameters, invokes interceptors, and formats results or unhandled execution exceptions. */
+    public Object execute(Operation operation, UserIdentity identity, Map<String, ?> parameters) throws Exception {
+        long started = System.nanoTime();
+
+        // real call
+        ApiInterceptorChain chain = c -> {
+            return this.queryBuilder.createQuery(this.compiled).execute(symbol -> {
+                return switch (symbol) {
+                    case "$" -> c.getParameters();
+                    case "@", "#" -> this.scope.findCustomizeEnvironment(symbol);
+                    default -> {
+                        throw new IllegalArgumentException("Unsupported parameter access modifier: " + symbol);
+                    }
+                };
+            });
+        };
+
+        // chain call
+        for (int i = this.interceptors.size() - 1; i >= 0; i--) {
+            ApiInterceptor interceptor = this.interceptors.get(i);
+            ApiInterceptorChain next = chain;
+            chain = c -> interceptor.invoke(c, next);
+        }
+
+        // do call
+        try {
+            ApiInterceptorContext context = new ApiInterceptorContext(this.definition, operation, identity, parameters);
+            ApiInterceptorContext invocation = this.prepareContext(context);
+            Object result = chain.proceed(invocation);
+            long elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
+            return this.processResult(result, elapsed);
+        } catch (Exception e) {
+            long elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
+            return this.processException(e, elapsed);
+        }
+    }
+
+    //
+
+    private ApiInterceptorContext prepareContext(ApiInterceptorContext context) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        Map<String, ?> defaults = this.scope.findCustomizeEnvironment("$");
+        if (defaults != null) {
+            values.putAll(defaults);
+        }
+
+        values.putAll(context.getParameters());
+        Map<String, ?> parameters = values;
+        if (this.wrapAllParameters) {
+            parameters = Map.of(this.wrapParameterName, values);
+        }
+        return new ApiInterceptorContext(context.getDefinition(), context.getOperation(), context.getIdentity(), parameters);
+    }
+
+    private Object processResult(Object result, long elapsed) {
+        if (!(result instanceof QueryResult r)) {
+            return result;
+        }
+
+        Object value = r.getData().unwrap();
+        if (!this.resultStructure || value instanceof ResultInfo || value instanceof byte[] || value instanceof InputStream) {
+            return value;
+        }
+
+        Map<String, Object> fields = new LinkedHashMap<>();
+        fields.put("success", true);
+        fields.put("message", "OK");
+        fields.put("code", r.getCode());
+        fields.put("location", null);
+        fields.put("lifeCycleTime", elapsed);
+        fields.put("executionTime", r.executionTime());
+        fields.put("value", value);
+        return this.formatResult(fields);
+    }
+
+    private Object processException(Exception error, long elapsed) {
+        if (error instanceof ExecutionException && error.getCause() instanceof Exception cause) {
+            error = cause;
+        }
+
+        Object value = error.getMessage();
+        int code = 500;
+        long executionTime = -1;
+        if (error instanceof ThrowRuntimeException e) {
+            value = e.getResult() == null ? null : e.getResult().unwrap();
+            code = e.getThrowCode();
+            executionTime = e.getExecutionTime();
+        }
+        if (!this.resultStructure && value != null) {
+            return value;
+        }
+
+        String location = "Unknown";
+        if (error instanceof DataQueryException e) {
+            location = e.getLocation().toString();
+        }
+
+        Map<String, Object> fields = new LinkedHashMap<>();
+        fields.put("success", false);
+        fields.put("message", error.getLocalizedMessage());
+        fields.put("code", code);
+        fields.put("location", location);
+        fields.put("lifeCycleTime", elapsed);
+        fields.put("executionTime", executionTime);
+        fields.put("value", value);
+        return this.formatResult(fields);
+    }
+
+    private Object formatResult(Map<String, Object> fields) {
+        Map<?, ?> template = this.responseFormat == null ? null : JSON.readValue(this.responseFormat, Map.class);
+        if (template == null) {
+            return fields;
+        }
+
+        Map<String, Object> formatted = new LinkedHashMap<>();
+        template.forEach((key, placeholder) -> {
+            String field = switch (String.valueOf(placeholder)) {
+                case "@resultStatus" -> "success";
+                case "@resultMessage" -> "message";
+                case "@resultCode" -> "code";
+                case "@blockLocation", "@codeLocation" -> "location";
+                case "@timeLifeCycle" -> "lifeCycleTime";
+                case "@timeExecution" -> "executionTime";
+                case "@resultData" -> "value";
+                default -> null;
+            };
+            formatted.put(key.toString(), field == null ? placeholder : fields.get(field));
+        });
+        return formatted;
+    }
+}
