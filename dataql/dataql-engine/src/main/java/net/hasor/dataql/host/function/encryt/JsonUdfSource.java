@@ -6,7 +6,7 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.host.function.encryt;
-import com.alibaba.fastjson.JSON;
+import net.hasor.dataql.util.JsonUtils;
 import net.hasor.dataql.host.function.AbstractUdfSource;
 
 /**
@@ -17,19 +17,19 @@ import net.hasor.dataql.host.function.AbstractUdfSource;
 public class JsonUdfSource extends AbstractUdfSource {
     /** 把对象 JSON 序列化 */
     public String toJson(Object data) {
-        return JSON.toJSONString(data);
+        return JsonUtils.writeValueAsString(data);
     }
 
     /** 把对象 JSON 序列化（带格式） */
     public String toFmtJson(Object data) {
-        return JSON.toJSONString(data, true);
+        return JsonUtils.writeValueAsPrettyString(data);
     }
 
     /** 解析 JSON */
     public Object fromJson(String data) {
-        if (data == null) {
+        if (data == null || data.isBlank()) {
             return null;
         }
-        return JSON.parse(data);
+        return JsonUtils.readValue(data, Object.class);
     }
 }

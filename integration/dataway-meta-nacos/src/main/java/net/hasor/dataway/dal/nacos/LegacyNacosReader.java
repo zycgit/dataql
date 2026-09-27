@@ -7,7 +7,7 @@
  */
 package net.hasor.dataway.dal.nacos;
 import java.util.*;
-import com.alibaba.nacos.common.utils.JacksonUtils;
+import net.hasor.dataql.util.JsonUtils;
 import net.hasor.dataway.dal.*;
 
 /** Reads the old directory format without exposing it as a writable backend. */
@@ -75,7 +75,7 @@ final class LegacyNacosReader {
         }
 
         try {
-            Map<?, ?> source = JacksonUtils.toObj(content, Map.class);
+            Map<?, ?> source = JsonUtils.readValue(content, Map.class);
             Map<String, Object> legacy = new LinkedHashMap<>();
             source.forEach((key, value) -> legacy.put(((String) key).toUpperCase(Locale.ROOT), value));
             if (!id.equals(legacy.get("ID"))) {
@@ -107,7 +107,7 @@ final class LegacyNacosReader {
             if (legacy.containsKey("PREPARE_HINT")) {
                 Map<String, Object> options = object(fields.get(FieldDef.OPTION));
                 options.put("PREPARE_HINT", legacy.get("PREPARE_HINT"));
-                fields.put(FieldDef.OPTION, JacksonUtils.toJson(options));
+                fields.put(FieldDef.OPTION, JsonUtils.writeValueAsString(options));
             }
             NacosSnapshot.validateFields(type, fields.keySet());
             return fields;
@@ -123,19 +123,19 @@ final class LegacyNacosReader {
         for (int i = 0; i < old.length; i++) {
             Object value = legacy.get(old[i] + suffix);
             if (value != null && !value.toString().isBlank()) {
-                document.put(names[i], field == FieldDef.SAMPLE ? value.toString() : JacksonUtils.toObj(value.toString(), Object.class));
+                document.put(names[i], field == FieldDef.SAMPLE ? value.toString() : JsonUtils.readValue(value.toString(), Object.class));
             }
         }
 
         if (!document.isEmpty()) {
-            fields.put(field, JacksonUtils.toJson(document));
+            fields.put(field, JsonUtils.writeValueAsString(document));
         }
     }
 
     private Map<String, Object> object(String content) {
         Map<String, Object> result = new LinkedHashMap<>();
         if (content != null && !content.isBlank()) {
-            Map<?, ?> parsed = JacksonUtils.toObj(content, Map.class);
+            Map<?, ?> parsed = JsonUtils.readValue(content, Map.class);
             if (parsed != null) {
                 parsed.forEach((key, value) -> result.put((String) key, value));
             }

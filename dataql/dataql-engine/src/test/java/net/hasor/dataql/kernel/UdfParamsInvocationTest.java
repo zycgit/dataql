@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import com.alibaba.fastjson.JSON;
 import net.hasor.dataql.domain.*;
 import net.hasor.dataql.host.HostConfiguration;
 import net.hasor.dataql.host.Query;
 import net.hasor.dataql.host.QueryManager;
+import net.hasor.dataql.util.JsonUtils;
 import net.hasor.test.dataql.udfs.ParamsUdfSource;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -42,7 +42,7 @@ public class UdfParamsInvocationTest {
         assertEquals(1, ((Number) values[0]).intValue());
         assertNull(values[1]);
         assertEquals(Map.of("name", "DataQL"), values[2]);
-        assertEquals("[2,3]", JSON.toJSONString(values[3]));
+        assertEquals("[2,3]", JsonUtils.writeValueAsString(values[3]));
         assertEquals(4, result.size());
     }
 
@@ -58,7 +58,7 @@ public class UdfParamsInvocationTest {
                 return [echo(), echo(null)];
                 """);
 
-        assertEquals("[[],[null]]", JSON.toJSONString(query.execute().getData().unwrap()));
+        assertEquals("[[],[null]]", JsonUtils.writeValueAsString(query.execute().getData().unwrap()));
     }
 
     @Test
@@ -119,7 +119,7 @@ public class UdfParamsInvocationTest {
         assertSame(values, udf.call(hints, params));
 
         UdfModel model = (UdfModel) DomainHelper.convertTo(udf);
-        assertEquals("[1,\"DataQL\"]", JSON.toJSONString(model.call(hints, params).unwrap()));
+        assertEquals("[1,\"DataQL\"]", JsonUtils.writeValueAsString(model.call(hints, params).unwrap()));
     }
 
     @Test
@@ -143,7 +143,7 @@ public class UdfParamsInvocationTest {
                 """);
         query.setHint("binding", binding);
 
-        assertEquals("[[2,3],[2,3]]", JSON.toJSONString(query.execute().getData().unwrap()));
+        assertEquals("[[2,3],[2,3]]", JsonUtils.writeValueAsString(query.execute().getData().unwrap()));
         assertEquals(6, calls.get());
     }
 
@@ -161,7 +161,7 @@ public class UdfParamsInvocationTest {
                 return [callback(1), callbacks.nested(2)];
                 """);
 
-        assertEquals("[2,3]", JSON.toJSONString(query.execute().getData().unwrap()));
+        assertEquals("[2,3]", JsonUtils.writeValueAsString(query.execute().getData().unwrap()));
     }
 
     @Test
@@ -185,7 +185,7 @@ public class UdfParamsInvocationTest {
                 };
                 """);
 
-        Map<?, ?> result = JSON.parseObject(JSON.toJSONString(query.execute().getData().unwrap()));
+        Map<?, ?> result = JsonUtils.readValue(JsonUtils.writeValueAsString(query.execute().getData().unwrap()), Map.class);
 
         assertEquals(List.of(2, 3), result.get("filter"));
         assertEquals(Map.of("b", 2), result.get("filterMap"));

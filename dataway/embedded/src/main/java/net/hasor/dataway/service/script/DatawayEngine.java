@@ -27,10 +27,10 @@ import net.hasor.dataql.parser.ast.value.FragmentVariable;
 import net.hasor.dataql.parser.ast.value.FragmentVariable.FragmentParam;
 import net.hasor.dataql.parser.ast.value.FunCallRouteVariable;
 import net.hasor.dataql.parser.ast.value.NameRouteVariable;
+import net.hasor.dataql.util.JsonUtils;
 import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ApiScriptType;
 import net.hasor.dataway.service.DatawayException;
-import static net.hasor.dataway.model.ResultInfoUtils.JSON;
 
 /** Creates Dataway queries with the configured host, query customizers and defaults. */
 public class DatawayEngine {
@@ -128,7 +128,7 @@ public class DatawayEngine {
         }
 
         try {
-            Object template = JSON.readValue(s, Object.class);
+            Object template = JsonUtils.readValue(s, Object.class);
             if (!(template instanceof Map<?, ?> format)) {
                 throw new IllegalArgumentException("Expected a JSON object");
             }

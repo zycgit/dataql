@@ -10,13 +10,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import com.alibaba.fastjson.JSON;
 import net.hasor.dataql.AbstractTestResource;
 import net.hasor.dataql.domain.DataModel;
 import net.hasor.dataql.domain.HintValue;
 import net.hasor.dataql.domain.ListModel;
 import net.hasor.dataql.domain.ObjectModel;
 import net.hasor.dataql.host.Query;
+import net.hasor.dataql.util.JsonUtils;
 import net.hasor.test.dataql.udfs.DataBean;
 import org.junit.Test;
 
@@ -100,9 +100,9 @@ public class FmtObjRuntimeTest extends AbstractTestResource implements HintValue
         DataModel data2 = compiler2.execute(new Object[] { Arrays.asList(1, 2, 3, 4, 5, 6, 7) }).getData();
         DataModel data3 = compiler3.execute(new Object[] { Arrays.asList(1, 2, 3, 4, 5, 6, 7) }).getData();
         //
-        String str1 = JSON.toJSONString(data1.unwrap());
-        String str2 = JSON.toJSONString(data2.unwrap());
-        String str3 = JSON.toJSONString(data3.unwrap());
+        String str1 = JsonUtils.writeValueAsString(data1.unwrap());
+        String str2 = JsonUtils.writeValueAsString(data2.unwrap());
+        String str3 = JsonUtils.writeValueAsString(data3.unwrap());
         //
         assert str1.equalsIgnoreCase(str2);
         assert str2.equalsIgnoreCase(str3);

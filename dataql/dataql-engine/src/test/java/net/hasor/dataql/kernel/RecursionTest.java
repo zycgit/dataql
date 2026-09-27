@@ -7,7 +7,6 @@
  */
 package net.hasor.dataql.kernel;
 import java.io.IOException;
-import com.alibaba.fastjson.JSON;
 import net.hasor.dataql.AbstractTestResource;
 import net.hasor.dataql.domain.HintsSet;
 import net.hasor.dataql.domain.UdfModel;
@@ -15,7 +14,9 @@ import net.hasor.dataql.host.HostConfiguration;
 import net.hasor.dataql.host.Query;
 import net.hasor.dataql.host.QueryBuilder;
 import net.hasor.dataql.host.QueryManager;
+import net.hasor.dataql.util.JsonUtils;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 public class RecursionTest extends AbstractTestResource {
 
@@ -24,8 +25,8 @@ public class RecursionTest extends AbstractTestResource {
         String queryResult = getScript("/net_hasor_dataql_adv/" + testCase + ".result");
         //
         Object unwrap = query.execute().getData().unwrap();
-        String jsonData = JSON.toJSONString(unwrap, true);
-        assert jsonData.trim().equals(queryResult.trim());
+        String jsonData = JsonUtils.writeValueAsPrettyString(unwrap);
+        assertEquals(JsonUtils.readTree(queryResult), JsonUtils.readTree(jsonData));
     }
 
     private void queryTest(String testCase) throws IOException {

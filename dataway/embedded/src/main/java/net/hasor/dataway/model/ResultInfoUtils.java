@@ -11,14 +11,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
-import tools.jackson.core.StreamReadFeature;
-import tools.jackson.core.StreamWriteFeature;
-import tools.jackson.databind.json.JsonMapper;
 
 /** Constructs response data for JSON, binary and streaming results. */
 public final class ResultInfoUtils {
-    public static final JsonMapper JSON = JsonMapper.builder().disable(StreamWriteFeature.AUTO_CLOSE_TARGET).disable(StreamReadFeature.AUTO_CLOSE_SOURCE).build();
-
     private ResultInfoUtils() {
     }
 

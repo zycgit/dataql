@@ -7,7 +7,7 @@
  */
 package net.hasor.dataway.dal.nacos;
 import java.util.*;
-import com.alibaba.nacos.common.utils.JacksonUtils;
+import net.hasor.dataql.util.JsonUtils;
 import net.hasor.dataway.dal.*;
 
 /** One CAS unit, including all draft routes and release history. */
@@ -61,7 +61,7 @@ public class NacosSnapshot {
             throw new DataAccessException("Nacos snapshot is missing; provision a serialized NacosSnapshot.empty() before use", null);
         }
         try {
-            NacosSnapshot snapshot = JacksonUtils.toObj(content, NacosSnapshot.class);
+            NacosSnapshot snapshot = JsonUtils.readValue(content, NacosSnapshot.class);
             Objects.requireNonNull(snapshot, "snapshot").validate();
             return snapshot;
         } catch (RuntimeException e) {
@@ -125,7 +125,13 @@ public class NacosSnapshot {
             if (old != null) {
                 row.putAll(old);
             }
-            row.putAll(mutation.getFields());
+            mutation.getFields().forEach((field, value) -> {
+                if (value == null) {
+                    row.remove(field);
+                } else {
+                    row.put(field, value);
+                }
+            });
             row.put(FieldDef.ID, mutation.getId());
             row.put(FieldDef.REVISION, Long.toString(Math.addExact(mutation.getVersion(), 1)));
             rows.put(mutation.getId(), row);
@@ -150,6 +156,6 @@ public class NacosSnapshot {
 
     public String serialize() {
         validate();
-        return JacksonUtils.toJson(this);
+        return JsonUtils.writeValueAsString(this);
     }
 }

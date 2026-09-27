@@ -18,6 +18,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.hasor.dataql.domain.Udf;
+import net.hasor.dataql.util.JsonUtils;
 import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
@@ -34,7 +35,6 @@ import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.Test;
 import org.noear.solon.Solon;
 import org.noear.solon.core.handle.Action;
-import tools.jackson.databind.json.JsonMapper;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DatawayPluginTest {
@@ -121,11 +121,11 @@ class DatawayPluginTest {
             assertNull(app.context().getBean(DatawayService.class));
             assertSame(dataway, app.context().getBean(Dataway.class));
             String base = "http://127.0.0.1:" + port + "/host";
-            assertEquals("solon", new JsonMapper().readTree(get(client, base + "/api/hello", "host-user").body()).get("value").asText());
+            assertEquals("solon", JsonUtils.readTree(get(client, base + "/api/hello", "host-user").body()).get("value").asText());
             var failed = get(client, base + "/api/hello?fail=true", "host-user");
             assertEquals(200, failed.statusCode());
             assertTrue(failed.headers().firstValue("X-Host-Error").isEmpty());
-            var failureBody = new JsonMapper().readTree(failed.body());
+            var failureBody = JsonUtils.readTree(failed.body());
             assertFalse(failureBody.get("success").asBoolean());
             assertEquals(500, failureBody.get("code").asInt());
             assertEquals("script failed", failureBody.get("message").asText());
@@ -157,7 +157,7 @@ class DatawayPluginTest {
             assertEquals(200, cookies.statusCode());
             assertEquals(List.of("first", "second"), cookies.headers().allValues("X-Result"));
             assertEquals(List.of("one=1; Path=/", "two=2; Path=/; HttpOnly"), cookies.headers().allValues("Set-Cookie"));
-            var cookieBody = JsonMapper.builder().build().readTree(cookies.body()).get("value");
+            var cookieBody = JsonUtils.readTree(cookies.body()).get("value");
             assertEquals("one", cookieBody.get("headers").get(0).asText());
             assertEquals("two", cookieBody.get("headers").get(1).asText());
             assertEquals("first", cookieBody.get("cookies").get(0).asText());
@@ -253,7 +253,7 @@ class DatawayPluginTest {
                 assertEquals("host-nested", get(client, base + "/tools/console/host-route", null).body());
                 String apiBody = get(client, base + "/open/v2/hello", null).body();
                 if (api) {
-                    assertEquals("solon", new JsonMapper().readTree(apiBody).get("value").asText());
+                    assertEquals("solon", JsonUtils.readTree(apiBody).get("value").asText());
                 } else {
                     assertEquals("host-api", apiBody);
                 }
@@ -307,7 +307,7 @@ class DatawayPluginTest {
                 assertTrue(rows.next());
                 assertEquals(1, rows.getInt(1));
             }
-            assertEquals("from-config", new JsonMapper().readTree(get(client, base + "/open/v2/hello", null).body()).get("value").asText());
+            assertEquals("from-config", JsonUtils.readTree(get(client, base + "/open/v2/hello", null).body()).get("value").asText());
             assertEquals(200, get(client, base + "/ops/manage/api-list", null).statusCode());
             assertEquals(404, get(client, base + "/code-api/hello", null).statusCode());
         } finally {
@@ -376,7 +376,7 @@ class DatawayPluginTest {
                         configuredApi.setDescription("");
                         dataway.getAdminService().save(configuredApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
                         dataway.getAdminService().publish("configured", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
-                        assertEquals("configured", new JsonMapper().readTree(get(client, base + "/open/v2/configured", null).body()).get("value").asText());
+                        assertEquals("configured", JsonUtils.readTree(get(client, base + "/open/v2/configured", null).body()).get("value").asText());
                         assertNotNull(dataway.getApiHandler());
                         assertNotNull(dataway.getAdminHandler());
                         assertNotNull(dataway.getUiHandler());

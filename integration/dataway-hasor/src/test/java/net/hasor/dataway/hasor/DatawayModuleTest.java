@@ -24,6 +24,7 @@ import net.hasor.cobble.setting.Settings;
 import net.hasor.core.ApiBinder;
 import net.hasor.core.Hasor;
 import net.hasor.dataql.domain.Udf;
+import net.hasor.dataql.util.JsonUtils;
 import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
@@ -41,7 +42,6 @@ import net.hasor.web.binder.OneConfig;
 import net.hasor.web.invoker.InvokerContext;
 import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.Test;
-import tools.jackson.databind.json.JsonMapper;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DatawayModuleTest {
@@ -187,7 +187,7 @@ class DatawayModuleTest {
         });
         captured.get().execute(invoker);
         assertEquals(200, status.get());
-        assertEquals("Ada", new JsonMapper().readTree(output.toString(StandardCharsets.UTF_8)).get("value").asText());
+        assertEquals("Ada", JsonUtils.readTree(output.toString(StandardCharsets.UTF_8)).get("value").asText());
     }
 
     @Test
@@ -294,7 +294,7 @@ class DatawayModuleTest {
             assertFalse(html.contains("dataway-admin-api"));
             assertFalse(html.contains("dataway-api"));
             dataway.getAdminService().publish("stored", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
-            assertEquals(1, new JsonMapper().readTree(get(filters.get("/open/v2"), "/open/v2/stored")).get("value").asInt());
+            assertEquals(1, JsonUtils.readTree(get(filters.get("/open/v2"), "/open/v2/stored")).get("value").asInt());
             assertTrue(get(filters.get("/ops/manage"), "/ops/manage/api-list").contains("stored"));
             assertEquals(Set.of(Operation.INVOKE, Operation.LIST), authorized);
         }

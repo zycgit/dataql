@@ -16,7 +16,6 @@ dependencies {
     api 'javax.servlet:javax.servlet-api:4.0.1'
 
     // for test
-    testRuntimeOnly 'com.google.code.gson:gson:2.12.1'
     testImplementation project(':dataway-meta-jdbc')
     testImplementation 'com.h2database:h2:2.5.250'
     testImplementation project(':dataway-meta-nacos')

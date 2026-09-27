@@ -1,0 +1,30 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+ext.pomName = 'Dataway Embedded'
+description = 'Framework-independent embedded Dataway runtime, persistence and HTTP handlers.'
+
+dependencies {
+    api project(':dataql-engine')
+    api project(':dataway-embedded-web')
+
+    testImplementation project(':dataway-meta-jdbc')
+    testImplementation 'com.h2database:h2:2.5.250'
+}
+
+tasks.register('consoleTestServer', JavaExec) {
+    group = 'verification'
+    description = 'Runs the real embedded handlers for the console browser tests.'
+    dependsOn 'testClasses'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'net.hasor.dataway.service.ConsoleTestServer'
+}

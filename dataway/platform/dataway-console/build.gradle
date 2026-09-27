@@ -21,7 +21,6 @@ dependencies {
 
     api "net.hasor:hasor-boot-web-tomcat:${property('lib.hasor')}"
     api "net.hasor:hasor-web:${property('lib.hasor')}"
-    api "com.alibaba:fastjson:${property('lib.fastjson')}"
 
     runtimeOnly 'org.slf4j:slf4j-simple:1.7.36'
 }

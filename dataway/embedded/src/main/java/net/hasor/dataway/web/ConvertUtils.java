@@ -7,12 +7,12 @@
  */
 package net.hasor.dataway.web;
 import java.util.*;
+import net.hasor.dataql.util.JsonUtils;
 import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ApiScriptType;
 import net.hasor.dataway.model.ApiState;
 import net.hasor.dataway.service.DatawayException;
 import tools.jackson.core.JacksonException;
-import static net.hasor.dataway.model.ResultInfoUtils.JSON;
 import static net.hasor.dataway.service.HttpSupport.invalid;
 import static net.hasor.dataway.service.HttpSupport.objectMap;
 
@@ -33,10 +33,10 @@ public final class ConvertUtils {
                 }
             }
 
-            sample.put("requestHeader", JSON.writeValueAsString(headers));
+            sample.put("requestHeader", JsonUtils.writeValueAsString(headers));
             sample.remove("headerData");
-            String schema = input.containsKey("schema") ? JSON.writeValueAsString(ConvertUtils.document(input.get("schema"))) : null;
-            String options = JSON.writeValueAsString(ConvertUtils.document(input.get("optionInfo")));
+            String schema = input.containsKey("schema") ? JsonUtils.writeValueAsString(ConvertUtils.document(input.get("schema"))) : null;
+            String options = JsonUtils.writeValueAsString(ConvertUtils.document(input.get("optionInfo")));
             ApiDefinition definition = new ApiDefinition();
             definition.setId(id);
             definition.setMethod(ConvertUtils.text(input, "select"));
@@ -45,7 +45,7 @@ public final class ConvertUtils {
             definition.setScript(ConvertUtils.text(input, "codeValue"));
             definition.setDescription(Objects.toString(input.get("comment"), ""));
             definition.setSchema(schema);
-            definition.setSample(JSON.writeValueAsString(sample));
+            definition.setSample(JsonUtils.writeValueAsString(sample));
             definition.setOptions(options);
             return definition;
         } catch (IllegalArgumentException | JacksonException e) {
@@ -58,7 +58,7 @@ public final class ConvertUtils {
             return new LinkedHashMap<>();
         }
         if (value instanceof String text) {
-            value = JSON.readValue(text.isBlank() ? "{}" : text, Object.class);
+            value = JsonUtils.readValue(text.isBlank() ? "{}" : text, Object.class);
         }
         if (!(value instanceof Map<?, ?>)) {
             throw new IllegalArgumentException("Metadata must be a JSON object");
@@ -76,7 +76,7 @@ public final class ConvertUtils {
     public static Map<String, Object> parameters(Object value) {
         if (value instanceof String text) {
             try {
-                value = JSON.readValue(text, Object.class);
+                value = JsonUtils.readValue(text, Object.class);
             } catch (JacksonException e) {
                 throw invalid(e);
             }
@@ -117,12 +117,12 @@ public final class ConvertUtils {
         Object requestBody = sample.getOrDefault("requestBody", Map.of());
         Object headers = sample.getOrDefault("headerData", sample.getOrDefault("requestHeader", List.of()));
         if (headers instanceof String text) {
-            headers = JSON.readValue(text, Object.class);
+            headers = JsonUtils.readValue(text, Object.class);
         }
 
         Map<String, Object> code = new LinkedHashMap<>();
         code.put("codeValue", definition.getScript());
-        code.put("requestBody", requestBody instanceof String ? requestBody : JSON.writeValueAsString(requestBody));
+        code.put("requestBody", requestBody instanceof String ? requestBody : JsonUtils.writeValueAsString(requestBody));
         code.put("headerData", headers);
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("id", definition.getId());

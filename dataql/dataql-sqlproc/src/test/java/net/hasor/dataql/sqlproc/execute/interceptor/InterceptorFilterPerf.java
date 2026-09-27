@@ -27,6 +27,7 @@ import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
 import net.hasor.dataql.sqlproc.execute.fragment.SelectFragmentProcess;
 import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
 import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
+import net.hasor.dataql.util.JsonUtils;
 import org.junit.AfterClass;
 import org.junit.Test;
 
@@ -46,6 +47,7 @@ public class InterceptorFilterPerf extends AbstractSqlProcTest {
     private static final Map<String, Long> RESULTS = new ConcurrentHashMap<>();
 
     @AfterClass
+    @SuppressWarnings("unchecked")
     public static void saveBaseline() throws IOException {
         String file = System.getProperty("perf.file", "build/perf/interceptor-filter-baseline.json");
         Path path = Paths.get(file);
@@ -62,13 +64,13 @@ public class InterceptorFilterPerf extends AbstractSqlProcTest {
             String prev = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
             int idx = prev.indexOf('[');
             if (idx >= 0) {
-                history = parseHistory(prev.substring(idx));
+                history = JsonUtils.readValue(prev.substring(idx), List.class);
             }
         }
         history.add(run);
 
         Files.createDirectories(path.getParent());
-        Files.write(path, renderJson(history).getBytes(StandardCharsets.UTF_8));
+        Files.write(path, JsonUtils.writeValueAsPrettyString(history).getBytes(StandardCharsets.UTF_8));
         System.out.println("[baseline] saved to " + path.toAbsolutePath());
 
         // compare with previous run
@@ -339,155 +341,5 @@ public class InterceptorFilterPerf extends AbstractSqlProcTest {
     @Override
     protected ExecuteContext newQueryContext(ConnectionProvider provider) {
         return super.newQueryContext(provider);
-    }
-
-    // ----------------------------------------------------------------
-    // minimal JSON render/parse (no external dep)
-    // ----------------------------------------------------------------
-
-    @SuppressWarnings("unchecked")
-    private static List<Map<String, Object>> parseHistory(String jsonArray) {
-        List<Map<String, Object>> history = new ArrayList<>();
-        List<Object> parsed = (List<Object>) new JsonParser().parse(jsonArray);
-        for (Object o : parsed) {
-            history.add((Map<String, Object>) o);
-        }
-        return history;
-    }
-
-    private static String renderJson(List<Map<String, Object>> history) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("[\n");
-        for (int i = 0; i < history.size(); i++) {
-            Map<String, Object> run = history.get(i);
-            sb.append("  {\n");
-            sb.append("    \"timestamp\": ").append(run.get("timestamp")).append(",\n");
-            sb.append("    \"jvm\": \"").append(escape(run.get("jvm").toString())).append("\",\n");
-            sb.append("    \"os\": \"").append(escape(run.get("os").toString())).append("\",\n");
-            sb.append("    \"results\": {\n");
-            @SuppressWarnings("unchecked") Map<String, Long> results = (Map<String, Long>) run.get("results");
-            int j = 0;
-            for (Map.Entry<String, Long> e : results.entrySet()) {
-                sb.append("      \"").append(escape(e.getKey())).append("\": ").append(e.getValue());
-                if (++j < results.size()) {
-                    sb.append(",");
-                }
-                sb.append("\n");
-            }
-            sb.append("    }\n");
-            sb.append("  }");
-            if (i < history.size() - 1) {
-                sb.append(",");
-            }
-            sb.append("\n");
-        }
-        sb.append("]\n");
-        return sb.toString();
-    }
-
-    private static String escape(String s) {
-        return s.replace("\\", "\\\\").replace("\"", "\\\"");
-    }
-
-    /** 极简 JSON 解析，只支持本文件格式（数组内对象 + 字符串/数字）。 */
-    private static final class JsonParser {
-        private String text;
-        private int    pos;
-
-        Object parse(String t) {
-            this.text = t;
-            this.pos = 0;
-            skipWs();
-            Object v = parseValue();
-            return v;
-        }
-
-        private Object parseValue() {
-            skipWs();
-            char c = text.charAt(pos);
-            if (c == '{') {
-                return parseObject();
-            }
-            if (c == '[') {
-                return parseArray();
-            }
-            if (c == '"') {
-                return parseString();
-            }
-            return parseNumber();
-        }
-
-        private Map<String, Object> parseObject() {
-            Map<String, Object> map = new LinkedHashMap<>();
-            pos++; // {
-            skipWs();
-            if (text.charAt(pos) == '}') {
-                pos++;
-                return map;
-            }
-            while (true) {
-                skipWs();
-                String key = (String) parseValue();
-                skipWs();
-                pos++; // :
-                Object value = parseValue();
-                map.put(key, value);
-                skipWs();
-                char c = text.charAt(pos++);
-                if (c == '}') {
-                    break;
-                }
-            }
-            return map;
-        }
-
-        private List<Object> parseArray() {
-            List<Object> list = new ArrayList<>();
-            pos++; // [
-            skipWs();
-            if (text.charAt(pos) == ']') {
-                pos++;
-                return list;
-            }
-            while (true) {
-                list.add(parseValue());
-                skipWs();
-                char c = text.charAt(pos++);
-                if (c == ']') {
-                    break;
-                }
-            }
-            return list;
-        }
-
-        private String parseString() {
-            pos++; // "
-            StringBuilder sb = new StringBuilder();
-            while (text.charAt(pos) != '"') {
-                char c = text.charAt(pos);
-                if (c == '\\') {
-                    pos++;
-                    c = text.charAt(pos);
-                }
-                sb.append(c);
-                pos++;
-            }
-            pos++; // "
-            return sb.toString();
-        }
-
-        private Number parseNumber() {
-            int start = pos;
-            while (pos < text.length() && (Character.isDigit(text.charAt(pos)) || text.charAt(pos) == '-')) {
-                pos++;
-            }
-            return Long.parseLong(text.substring(start, pos));
-        }
-
-        private void skipWs() {
-            while (pos < text.length() && Character.isWhitespace(text.charAt(pos))) {
-                pos++;
-            }
-        }
     }
 }

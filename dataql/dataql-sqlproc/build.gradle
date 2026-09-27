@@ -23,17 +23,9 @@ dependencies {
     shaded 'ognl:ognl:3.4.3'
 
     compileOnly 'ognl:ognl:3.4.3'
-    compileOnly 'com.alibaba:fastjson:2.0.53'
-    compileOnly 'com.alibaba.fastjson2:fastjson2:2.0.53'
-    compileOnly 'com.google.code.gson:gson:2.11.0'
-    compileOnly 'com.fasterxml.jackson.core:jackson-databind:2.18.0'
 
     testImplementation "net.hasor:dbvisitor:${property('lib.dbvisitor')}"
     testImplementation 'ognl:ognl:3.4.3'
-    testImplementation 'com.alibaba:fastjson:2.0.53'
-    testImplementation 'com.alibaba.fastjson2:fastjson2:2.0.53'
-    testImplementation 'com.google.code.gson:gson:2.11.0'
-    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.18.0'
     testImplementation 'com.alibaba:druid:1.2.11'
     testImplementation "com.h2database:h2:${property('lib.h2')}"
     testImplementation 'mysql:mysql-connector-java:8.0.29'

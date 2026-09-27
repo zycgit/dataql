@@ -11,9 +11,9 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Objects;
 import net.hasor.cobble.StringUtils;
+import net.hasor.dataql.util.JsonUtils;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.model.ResultInfo;
-import net.hasor.dataway.model.ResultInfoUtils;
 import net.hasor.dataway.model.WebRequest;
 import net.hasor.dataway.model.WebResponse;
 
@@ -58,7 +58,7 @@ public abstract class WebHandler {
                 output.write(bytes);
                 return;
             }
-            ResultInfoUtils.JSON.writeValue(output, data);
+            JsonUtils.writeValue(output, data);
         }
     }
 

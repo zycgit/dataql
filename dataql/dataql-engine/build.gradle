@@ -17,10 +17,9 @@ description = 'The hasor DataQL project.'
 dependencies {
     api "org.antlr:antlr4-runtime:${property('lib.antlr')}"
     api "net.hasor:cobble-all:${property('lib.cobble')}"
-    compileOnly "com.alibaba:fastjson:${property('lib.fastjson')}"
+    api "tools.jackson.core:jackson-databind:${property('lib.jackson')}"
 
     antlr "org.antlr:antlr4:${property('lib.antlr')}"
-    testImplementation "com.alibaba:fastjson:${property('lib.fastjson')}"
 }
 
 tasks.named('generateGrammarSource') {

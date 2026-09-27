@@ -15,10 +15,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.time.Duration;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.sql.DataSource;
 import jakarta.servlet.Filter;
@@ -26,6 +23,7 @@ import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
+import net.hasor.dataql.util.JsonUtils;
 import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
@@ -61,7 +59,6 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
-import tools.jackson.databind.json.JsonMapper;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
@@ -271,7 +268,58 @@ class DatawayAutoConfigurationTest {
             var mvc = MockMvcBuilders.webAppContextSetup(c.getSourceApplicationContext()).addFilters(replay).build();
             var result = mvc.perform(post("/api/echo").contentType("application/json").content("{\"name\":\"host-body\"}")).andReturn().getResponse();
             assertEquals(200, result.getStatus());
-            assertEquals("host-body", new JsonMapper().readTree(result.getContentAsString()).get("value").asText());
+            assertEquals("host-body", JsonUtils.readTree(result.getContentAsString()).get("value").asText());
+        });
+    }
+
+    @Test
+    void responseTemplatesAreValidatedAndReusedAcrossExecutions() {
+        this.context.withBean(Dataway.class, () -> Dataway.builder().dataAccessLayer(TestDatabase.dataAccessLayer()).build()).run(c -> {
+            var engine = c.getBean(Dataway.class).getBeanContainer().getEngine();
+            ApiDefinition api = new ApiDefinition();
+            api.setType(ApiScriptType.DATAQL);
+            api.setScript("""
+                    if (${fail}) {
+                        throw 409, 'conflict';
+                    }
+                    return ${value};
+                    """);
+            for (Object invalid : Arrays.asList(null, false, 1, "", "{broken", "null", "[]", "1", "true", "\"text\"")) {
+                var error = assertThrows(DatawayException.class, () -> engine.newQuery(api, List.of("fail", "value"), Collections.singletonMap("responseFormat", invalid)));
+                assertEquals("responseFormat must be a JSON object string", error.getMessage());
+            }
+
+            String template = """
+                    {"ok":"@resultStatus","data":"@resultData","code":"@resultCode",
+                     "literal":{"items":[{"label":"unchanged"}]},"empty":null,"text":"@unknown"}
+                    """;
+            var query = engine.newQuery(api, List.of("fail", "value"), Map.of("responseFormat", template));
+            Map<?, ?> first = (Map<?, ?>) query.execute(Operation.INVOKE, UserIdentity.anonymous(), Map.of("fail", false, "value", "one"), null, null);
+            assertEquals(Boolean.TRUE, first.get("ok"));
+            assertEquals("one", first.get("data"));
+            assertTrue(first.containsKey("empty"));
+            assertNull(first.get("empty"));
+            assertEquals("@unknown", first.get("text"));
+            Map<?, ?> literal = (Map<?, ?>) first.get("literal");
+            List<?> items = (List<?>) literal.get("items");
+            ((Map<?, ?>) items.getFirst()).clear();
+            items.clear();
+            literal.clear();
+
+            Map<?, ?> failed = (Map<?, ?>) query.execute(Operation.INVOKE, UserIdentity.anonymous(), Map.of("fail", true), null, null);
+            assertEquals(Boolean.FALSE, failed.get("ok"));
+            assertEquals(409, ((Number) failed.get("code")).intValue());
+            assertEquals("conflict", failed.get("data"));
+            assertEquals(Map.of("items", List.of(Map.of("label", "unchanged"))), failed.get("literal"));
+
+            Map<?, ?> repeated = (Map<?, ?>) query.execute(Operation.INVOKE, UserIdentity.anonymous(), Map.of("fail", false, "value", "two"), null, null);
+            assertEquals(Boolean.TRUE, repeated.get("ok"));
+            assertEquals("two", repeated.get("data"));
+            assertEquals(failed.get("literal"), repeated.get("literal"));
+            var defaultQuery = engine.newQuery(api, List.of("fail", "value"), null);
+            Map<?, ?> defaults = (Map<?, ?>) defaultQuery.execute(Operation.INVOKE, UserIdentity.anonymous(), Map.of("fail", false, "value", "default"), null, null);
+            assertEquals(Boolean.TRUE, defaults.get("success"));
+            assertEquals("default", defaults.get("value"));
         });
     }
 
@@ -382,7 +430,7 @@ class DatawayAutoConfigurationTest {
             }
             String base = "http://127.0.0.1:" + application.getWebServer().getPort() + "/host";
             try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()) {
-                assertEquals("spring", new JsonMapper().readTree(get(client, base + "/open/v2/hello", "native-user").body()).get("value").asText());
+                assertEquals("spring", JsonUtils.readTree(get(client, base + "/open/v2/hello", "native-user").body()).get("value").asText());
                 var binary = client.send(HttpRequest.newBuilder(URI.create(base + "/open/v2/hello?download=true")).header("X-Test-User", "native-user").build(), HttpResponse.BodyHandlers.ofByteArray());
                 assertEquals(200, binary.statusCode());
                 assertEquals("application/pdf", binary.headers().firstValue("Content-Type").orElseThrow());
@@ -408,7 +456,7 @@ class DatawayAutoConfigurationTest {
                 assertEquals(200, cookies.statusCode());
                 assertEquals(List.of("first", "second"), cookies.headers().allValues("X-Result"));
                 assertEquals(List.of("one=1; Path=/", "two=2; Path=/; HttpOnly"), cookies.headers().allValues("Set-Cookie"));
-                var cookieBody = JsonMapper.builder().build().readTree(cookies.body()).get("value");
+                var cookieBody = JsonUtils.readTree(cookies.body()).get("value");
                 assertEquals("one", cookieBody.get("headers").get(0).asText());
                 assertEquals("two", cookieBody.get("headers").get(1).asText());
                 assertEquals("first", cookieBody.get("cookies").get(0).asText());

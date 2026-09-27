@@ -14,7 +14,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.exception.NacosException;
-import com.alibaba.nacos.common.utils.JacksonUtils;
+import net.hasor.dataql.util.JsonUtils;
 import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.*;
@@ -123,7 +123,7 @@ class NacosDataAccessLayerTest {
         assertEquals("2", row.get(REVISION));
         assertEquals("return 1;", row.get(SCRIPT));
         assertNull(row.get(COMMENT));
-        // Nacos omits null fields; replacing the full snapshot must remove the old value.
+        // An explicit null clears the stored field before the full snapshot is serialized.
         assertFalse(row.containsKey(COMMENT));
         assertFalse(server.configs.get("test/store").contains("\"COMMENT\":null"));
         var cleared = new EnumMap<FieldDef, String>(FieldDef.class);
@@ -246,15 +246,15 @@ class NacosDataAccessLayerTest {
         info.put("REQ_BODY_SAMPLE", "plain body");
         info.put("OPTION", "{\"custom\":true}");
         info.put("PREPARE_HINT", "legacy hint");
-        server.configs.put("old/i_one", JacksonUtils.toJson(info));
-        server.configs.put("old/r_one", JacksonUtils.toJson(Map.of("ID", "r_one", "API_ID", "i_one", "SCRIPT", "compiled", "SCRIPT_ORI", "original", "CREATE_TIME", "1000", "GMT_TIME", "1001")));
+        server.configs.put("old/i_one", JsonUtils.writeValueAsString(info));
+        server.configs.put("old/r_one", JsonUtils.writeValueAsString(Map.of("ID", "r_one", "API_ID", "i_one", "SCRIPT", "compiled", "SCRIPT_ORI", "original", "CREATE_TIME", "1000", "GMT_TIME", "1001")));
         var original = new HashMap<>(server.configs);
         server.access().importLegacy("old");
         var row = server.access().getObject(EntityType.INFO, "i_one").orElseThrow();
         assertEquals("1", row.get(REVISION));
         assertEquals("original draft", row.get(SCRIPT));
         assertFalse(row.containsKey(API_ID));
-        assertEquals("plain body", JacksonUtils.toObj(row.get(SAMPLE), Map.class).get("requestBody"));
+        assertEquals("plain body", JsonUtils.readValue(row.get(SAMPLE), Map.class).get("requestBody"));
         assertTrue(row.get(SCHEMA).contains("requestBody"));
         assertTrue(row.get(OPTION).contains("legacy hint"));
         assertEquals("original", server.access().getObject(EntityType.RELEASE, "r_one").orElseThrow().get(SCRIPT_ORI));
