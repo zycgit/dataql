@@ -7,6 +7,7 @@
  */
 package net.hasor.dataway.service.script;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import net.hasor.dataql.DataQueryException;
 import net.hasor.dataql.compiler.qil.QIL;
+import net.hasor.dataql.host.Query;
 import net.hasor.dataql.host.QueryBuilder;
 import net.hasor.dataql.kernel.CustomizeScope;
 import net.hasor.dataql.kernel.QueryResult;
@@ -22,24 +24,25 @@ import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ResultInfo;
-import tools.jackson.databind.json.JsonMapper;
+import net.hasor.dataway.model.WebResponse;
+import static net.hasor.dataway.function.WebUdfSource.HINT_REQUEST;
+import static net.hasor.dataway.function.WebUdfSource.HINT_RESPONSE;
 
 /** Prepares, intercepts and executes a script, then formats its result. */
 public class DatawayQuery {
-    private static final JsonMapper           JSON = JsonMapper.builder().build();
-    private final        List<ApiInterceptor> interceptors;
-    private final        String               responseFormat;
-    private final        boolean              resultStructure;
-    private final        boolean              wrapAllParameters;
-    private final        String               wrapParameterName;
+    private final List<ApiInterceptor> interceptors;
+    private final Map<?, ?>            responseFormat;
+    private final boolean              resultStructure;
+    private final boolean              wrapAllParameters;
+    private final String               wrapParameterName;
     //
-    private final        ApiDefinition        definition;
-    private final        QueryBuilder         queryBuilder;
-    private final        CustomizeScope       scope;
-    private final        QIL                  compiled;
+    private final ApiDefinition        definition;
+    private final QueryBuilder         queryBuilder;
+    private final CustomizeScope       scope;
+    private final QIL                  compiled;
 
     DatawayQuery(ApiDefinition definition, QIL compiled, List<ApiInterceptor> interceptors, QueryBuilder queryBuilder, CustomizeScope scope, //
-            String responseFormat, boolean resultStructure, boolean wrapAllParameters, String wrapParameterName) {
+            Map<?, ?> responseFormat, boolean resultStructure, boolean wrapAllParameters, String wrapParameterName) {
         this.definition = definition;
         this.compiled = compiled;
         this.interceptors = interceptors;
@@ -52,23 +55,29 @@ public class DatawayQuery {
         this.wrapParameterName = wrapParameterName;
     }
 
-    //
-
     /** Prepares parameters, invokes interceptors, and formats results or unhandled execution exceptions. */
-    public Object execute(Operation operation, UserIdentity identity, Map<String, ?> parameters) throws Exception {
+    public Object execute(Operation operation, UserIdentity identity, Map<String, ?> parameters, Map<String, ?> request, WebResponse response) throws Exception {
         long started = System.nanoTime();
 
         // real call
         ApiInterceptorChain chain = c -> {
-            return this.queryBuilder.createQuery(this.compiled).execute(symbol -> {
-                return switch (symbol) {
-                    case "$" -> c.getParameters();
-                    case "@", "#" -> this.scope.findCustomizeEnvironment(symbol);
-                    default -> {
-                        throw new IllegalArgumentException("Unsupported parameter access modifier: " + symbol);
-                    }
-                };
-            });
+            Query query = this.queryBuilder.createQuery(this.compiled);
+            try {
+                query.setHint(HINT_REQUEST, request);
+                query.setHint(HINT_RESPONSE, response);
+                return query.execute(symbol -> {
+                    return switch (symbol) {
+                        case "$" -> c.getParameters();
+                        case "@", "#" -> this.scope.findCustomizeEnvironment(symbol);
+                        default -> {
+                            throw new IllegalArgumentException("Unsupported parameter access modifier: " + symbol);
+                        }
+                    };
+                });
+            } finally {
+                query.removeHint(HINT_REQUEST);
+                query.removeHint(HINT_RESPONSE);
+            }
         };
 
         // chain call
@@ -163,13 +172,8 @@ public class DatawayQuery {
     }
 
     private Object formatResult(Map<String, Object> fields) {
-        Map<?, ?> template = this.responseFormat == null ? null : JSON.readValue(this.responseFormat, Map.class);
-        if (template == null) {
-            return fields;
-        }
-
         Map<String, Object> formatted = new LinkedHashMap<>();
-        template.forEach((key, placeholder) -> {
+        this.responseFormat.forEach((key, placeholder) -> {
             String field = switch (String.valueOf(placeholder)) {
                 case "@resultStatus" -> "success";
                 case "@resultMessage" -> "message";
@@ -180,8 +184,25 @@ public class DatawayQuery {
                 case "@resultData" -> "value";
                 default -> null;
             };
-            formatted.put(key.toString(), field == null ? placeholder : fields.get(field));
+            formatted.put(key.toString(), field == null ? this.copyTemplateValue(placeholder) : fields.get(field));
         });
         return formatted;
+    }
+
+    /** Keeps literal objects and arrays independent between executions. */
+    private Object copyTemplateValue(Object value) {
+        if (value instanceof Map<?, ?> map) {
+            Map<String, Object> copy = new LinkedHashMap<>();
+            map.forEach((key, item) -> copy.put(key.toString(), this.copyTemplateValue(item)));
+            return copy;
+        }
+        if (value instanceof List<?> list) {
+            List<Object> copy = new ArrayList<>(list.size());
+            for (Object item : list) {
+                copy.add(this.copyTemplateValue(item));
+            }
+            return copy;
+        }
+        return value;
     }
 }

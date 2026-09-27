@@ -13,6 +13,7 @@ import java.lang.reflect.Proxy;
 import java.sql.*;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import net.hasor.dataql.domain.Udf;
 import net.hasor.dataql.host.HostConfiguration;
 import net.hasor.dataql.host.Query;
 import net.hasor.dataql.host.QueryBuilder;
@@ -64,6 +65,24 @@ public class TransactionDataQLIntegrationTest {
         assertEquals(1, count("commit"));
         assertEquals("txDs", this.sourceName.get());
         assertEquals("north", this.tenantHint.get());
+    }
+
+    @Test
+    public void transactionCallbacksReceiveObjectHints() throws Exception {
+        Object binding = new Object();
+        QueryBuilder builder = this.dataQL();
+        builder.addShareVar("inspect", () -> (Udf) (hints, params) -> {
+            assertSame(binding, hints.getHint("tenant"));
+            return true;
+        });
+        Query query = builder.createQuery("""
+                import 'net.hasor.dataql.sqlproc.execute.transaction.TransactionUdfSource' as tran;
+                return tran.required(inspect);
+                """);
+        query.setHint("tenant", binding);
+
+        assertEquals(true, query.execute().getData().unwrap());
+        assertSame(binding, this.tenantHint.get());
     }
 
     @Test

@@ -53,17 +53,7 @@ class QueryCompiledScript extends CompiledScript implements Hints {
     }
 
     @Override
-    public void setHint(String hintName, String value) {
-        this.engineHints.setHint(hintName, value);
-    }
-
-    @Override
-    public void setHint(String hintName, Number value) {
-        this.engineHints.setHint(hintName, value);
-    }
-
-    @Override
-    public void setHint(String hintName, boolean value) {
+    public void setHint(String hintName, Object value) {
         this.engineHints.setHint(hintName, value);
     }
 

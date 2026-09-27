@@ -58,17 +58,7 @@ public class QueryWrap implements Query {
     }
 
     @Override
-    public void setHint(String hintName, String value) {
-        this.query.setHint(hintName, value);
-    }
-
-    @Override
-    public void setHint(String hintName, Number value) {
-        this.query.setHint(hintName, value);
-    }
-
-    @Override
-    public void setHint(String hintName, boolean value) {
+    public void setHint(String hintName, Object value) {
         this.query.setHint(hintName, value);
     }
 }

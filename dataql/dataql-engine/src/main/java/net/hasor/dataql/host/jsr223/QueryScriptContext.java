@@ -62,17 +62,7 @@ public class QueryScriptContext extends SimpleScriptContext implements HostConte
     }
 
     @Override
-    public void setHint(String hintName, String value) {
-        this.hints.setHint(hintName, value);
-    }
-
-    @Override
-    public void setHint(String hintName, Number value) {
-        this.hints.setHint(hintName, value);
-    }
-
-    @Override
-    public void setHint(String hintName, boolean value) {
+    public void setHint(String hintName, Object value) {
         this.hints.setHint(hintName, value);
     }
 

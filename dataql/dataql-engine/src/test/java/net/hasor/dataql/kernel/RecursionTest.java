@@ -9,6 +9,7 @@ package net.hasor.dataql.kernel;
 import java.io.IOException;
 import com.alibaba.fastjson.JSON;
 import net.hasor.dataql.AbstractTestResource;
+import net.hasor.dataql.domain.HintsSet;
 import net.hasor.dataql.domain.UdfModel;
 import net.hasor.dataql.host.HostConfiguration;
 import net.hasor.dataql.host.Query;
@@ -36,8 +37,9 @@ public class RecursionTest extends AbstractTestResource {
         Query query = new QueryManager(new HostConfiguration().getHostContext()).newBuilder().createQuery(getScript("/net_hasor_dataql_adv/return_lambda.ql"));
         UdfModel testUdf = (UdfModel) query.execute().getData();
         //
-        assert testUdf.call(new Object[] { 1 }).unwrap().equals("性别：男");
-        assert testUdf.call(new Object[] { 0 }).unwrap().equals("性别：女");
+        HintsSet hints = new HintsSet();
+        assert testUdf.call(hints, () -> new Object[] { 1 }).unwrap().equals("性别：男");
+        assert testUdf.call(hints, () -> new Object[] { 0 }).unwrap().equals("性别：女");
     }
 
     //    @Test

@@ -6,6 +6,7 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute.transaction;
+import net.hasor.cobble.ArrayUtils;
 import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.domain.Udf;
 import net.hasor.dataql.domain.UdfSource;
@@ -76,7 +77,7 @@ public class TransactionUdfSource extends AbstractUdfSource {
         TransactionManager txManager = this.findTransactionConnectionProvider().findTransactionManager(sourceName);
         TransactionStatus status = txManager.begin(hints, propagation, isolation);
         try {
-            return udf.call(hints);
+            return udf.call(hints, () -> ArrayUtils.EMPTY_BOOLEAN_OBJECT_ARRAY);
         } catch (Throwable e) {
             status.setRollback();
             throw e;

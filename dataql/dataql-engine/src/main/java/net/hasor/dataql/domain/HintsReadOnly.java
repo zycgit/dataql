@@ -36,17 +36,7 @@ public class HintsReadOnly implements Hints {
     }
 
     @Override
-    public void setHint(String hintName, String value) {
-        throw new UnsupportedOperationException("readOnly.");
-    }
-
-    @Override
-    public void setHint(String hintName, Number value) {
-        throw new UnsupportedOperationException("readOnly.");
-    }
-
-    @Override
-    public void setHint(String hintName, boolean value) {
+    public void setHint(String hintName, Object value) {
         throw new UnsupportedOperationException("readOnly.");
     }
 }

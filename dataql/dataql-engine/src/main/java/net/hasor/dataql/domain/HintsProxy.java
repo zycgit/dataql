@@ -36,17 +36,7 @@ public class HintsProxy implements Hints {
     }
 
     @Override
-    public void setHint(String hintName, String value) {
-        this.target.setHint(hintName, value);
-    }
-
-    @Override
-    public void setHint(String hintName, Number value) {
-        this.target.setHint(hintName, value);
-    }
-
-    @Override
-    public void setHint(String hintName, boolean value) {
+    public void setHint(String hintName, Object value) {
         this.target.setHint(hintName, value);
     }
 }

@@ -9,10 +9,7 @@ package net.hasor.dataql.kernel.inset;
 import net.hasor.dataql.kernel.InsetProcess;
 import net.hasor.dataql.kernel.InsetProcessContext;
 import net.hasor.dataql.kernel.InstSequence;
-import net.hasor.dataql.kernel.mem.DataHeap;
-import net.hasor.dataql.kernel.mem.DataStack;
-import net.hasor.dataql.kernel.mem.EnvStack;
-import net.hasor.dataql.kernel.mem.RefLambdaCall;
+import net.hasor.dataql.kernel.mem.*;
 
 /**
  * M_REF   // 引用另一处的指令序列地址，并将其作为 UDF 形态存放到栈顶

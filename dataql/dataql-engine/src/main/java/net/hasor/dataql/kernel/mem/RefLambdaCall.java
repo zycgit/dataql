@@ -6,10 +6,7 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.kernel.mem;
-import net.hasor.dataql.domain.DataModel;
-import net.hasor.dataql.domain.DomainHelper;
-import net.hasor.dataql.domain.Hints;
-import net.hasor.dataql.domain.Udf;
+import net.hasor.dataql.domain.*;
 import net.hasor.dataql.kernel.InsetProcessContext;
 import net.hasor.dataql.kernel.InstSequence;
 import net.hasor.dataql.kernel.inset.OpcodesPool;
@@ -33,12 +30,10 @@ public class RefLambdaCall implements Udf {
     }
 
     @Override
-    public Object call(Hints readOnly, Object... params) throws Throwable {
-        //
-        DataStack cloneStack = new DataStack() {{
-            push(new RefLambdaCallStruts(params));
-        }};
-        //
+    public Object call(Hints readOnly, UdfParams params) throws Throwable {
+        DataStack cloneStack = new DataStack();
+        cloneStack.push(new RefLambdaCallStruts(params.allParams()));
+
         InstSequence instSequence = this.instSequence.clone();
         OpcodesPool opcodesPool = OpcodesPool.defaultOpcodesPool();
         DataHeap dataHeap = new DataHeap(this.dataHeap);
@@ -52,6 +47,7 @@ public class RefLambdaCall implements Udf {
             );
             instSequence.doNext(1);
         }
+
         DataModel result = cloneStack.getResult();
         if (cloneStack.getExitType() != ExitType.Throw) {
             return (result != null) ? result.unwrap() : DomainHelper.nullDomain();

@@ -40,10 +40,11 @@ public class RefCall {
                 }
             }
 
-            Object result = this.refCall.call(optionSet, objects);
+            Object result = this.refCall.call(optionSet, () -> objects);
             if (result instanceof UdfSource) {
                 result = ((UdfSource) result).getUdfResource(finder).get();
             }
+
             return DomainHelper.convertTo(result);
         } catch (Throwable e) {
             if (e instanceof DataQueryException) {

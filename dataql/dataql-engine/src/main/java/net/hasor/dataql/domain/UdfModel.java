@@ -34,13 +34,8 @@ public class UdfModel implements DataModel, Udf {
         return true;
     }
 
-    /** UDF 的返回值必须是一个 对象或者数组 */
-    public DataModel call(Object[] params) throws Throwable {
-        return call(new HintsSet(), params);
-    }
-
     @Override
-    public DataModel call(Hints readOnly, Object... params) throws Throwable {
+    public DataModel call(Hints readOnly, UdfParams params) throws Throwable {
         return DomainHelper.convertTo(this.udf.call(readOnly, params));
     }
 }

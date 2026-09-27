@@ -41,7 +41,7 @@ public class FunRuntimeTest extends AbstractTestResource implements HintValue {
     @Test
     public void foo_2_Test() throws Exception {
         //
-        Udf udf = (readOnly, params) -> params;
+        Udf udf = (readOnly, params) -> params.allParams();
         Query compilerQL = compilerQL("return ${_0}(1,2,3,4)[2];");
         DataModel dataModel = compilerQL.execute(new Object[] { udf }).getData();
         //

@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 import net.hasor.cobble.ExceptionUtils;
 import net.hasor.dataql.domain.*;
 import net.hasor.dataql.host.function.AbstractUdfSource;
-import net.hasor.dataql.host.function.UdfParams;
 
 /**
  * 集合函数。函数库引入 <code>import 'net.hasor.dataql.fx.basic.CollectionUdfSource' as collect;</code>
@@ -47,9 +46,11 @@ public class CollectionUdfSource extends AbstractUdfSource {
         if (target == null) {
             return 0;
         }
+
         if (target instanceof Map) {
             return ((Map<?, ?>) target).size();
         }
+
         return foreach(target).size();
     }
     // -------------------------------------------------------------------------------------------------------------------------- List
@@ -59,6 +60,7 @@ public class CollectionUdfSource extends AbstractUdfSource {
         if (dataArrays == null) {
             return null;
         }
+
         List<Object> dataList = new ArrayList<>();
         for (Object object : dataArrays.allParams()) {
             if (object instanceof ListModel) {
@@ -75,6 +77,7 @@ public class CollectionUdfSource extends AbstractUdfSource {
         if (dataArrays == null) {
             return Collections.emptyMap();
         }
+
         Map<String, Object> finalMap = new LinkedHashMap<>();
         Object[] allParams = dataArrays.allParams();
         for (Object allParam : allParams) {
@@ -108,15 +111,16 @@ public class CollectionUdfSource extends AbstractUdfSource {
         if (filter == null) {
             return valueList;
         }
+
         // Udf to Predicate
         AtomicReference<Predicate<Object>> refPredicate = new AtomicReference<>(o -> {
             try {
-                return (boolean) filter.call(hints, o);
+                return (boolean) filter.call(hints, () -> new Object[] { o });
             } catch (Throwable e) {
                 throw ExceptionUtils.toRuntime(e);
             }
         });
-        //
+
         return valueList.stream().filter(refPredicate.get()).collect(Collectors.toList());
     }
 
@@ -130,9 +134,10 @@ public class CollectionUdfSource extends AbstractUdfSource {
         if (keyFilter == null || mapData.isEmpty()) {
             return mapData;
         }
+
         Map<String, Object> finalMap = new LinkedHashMap<>();
         for (String key : mapData.keySet()) {
-            if ((boolean) keyFilter.call(hints, key)) {
+            if ((boolean) keyFilter.call(hints, () -> new Object[] { key })) {
                 finalMap.put(key, mapData.get(key));
             }
         }
@@ -166,11 +171,11 @@ public class CollectionUdfSource extends AbstractUdfSource {
         if (objects.isEmpty()) {
             return null;
         }
-        //
+
         if (limitInt <= 0) {
             limitInt = Integer.MAX_VALUE;
         }
-        //
+
         int curIndex = 0;
         Iterator<Object> iterator = objects.iterator();
         ArrayList<Object> finalList = new ArrayList<>();
@@ -199,6 +204,7 @@ public class CollectionUdfSource extends AbstractUdfSource {
         if (listData == null) {
             return Collections.emptyList();
         }
+
         if (sortUdf == null) {
             listData.sort((o1, o2) -> {
                 int hc1 = (o1 == null) ? 0 : o1.hashCode();
@@ -209,7 +215,7 @@ public class CollectionUdfSource extends AbstractUdfSource {
         } else {
             listData.sort((o1, o2) -> {
                 try {
-                    return (Integer) sortUdf.call(hints, new Object[] { o1, o2 });
+                    return (Integer) sortUdf.call(hints, () -> new Object[] { o1, o2 });
                 } catch (Throwable e) {
                     throw ExceptionUtils.toRuntime(e);
                 }
@@ -223,9 +229,11 @@ public class CollectionUdfSource extends AbstractUdfSource {
         if (key == null) {
             throw new IllegalArgumentException("The key parameter cannot be null");
         }
+
         if (!(key instanceof String || key instanceof Udf)) {
             throw new IllegalArgumentException("key arg must be Udf or String");
         }
+
         if (key instanceof String) {
             return list2map_string(valueList, key.toString(), convert, hints);
         } else {
@@ -235,14 +243,17 @@ public class CollectionUdfSource extends AbstractUdfSource {
 
     private static Map<String, Object> list2map_string(List<Object> valueList, String key, Udf convert, Hints hints) throws Throwable {
         return list2map_udf(valueList, (readOnly, params) -> {
-            int rowNumber = (int) params[0];
-            if (params[1] == null) {
+            Object[] values = params.allParams();
+            int rowNumber = (int) values[0];
+            if (values[1] == null) {
                 throw new NullPointerException("element " + rowNumber + " data is null");
             }
-            DataModel rowData = DomainHelper.convertTo(params[1]);
+
+            DataModel rowData = DomainHelper.convertTo(values[1]);
             if (!rowData.isObject()) {
                 throw new NullPointerException("element " + rowNumber + " type is not Object");
             }
+
             DataModel keyValue = ((ObjectModel) rowData).get(key);
             if (keyValue == null) {
                 throw new NullPointerException("element " + rowNumber + " key '" + key + "' is not exist");
@@ -250,6 +261,7 @@ public class CollectionUdfSource extends AbstractUdfSource {
             if (!keyValue.isValue()) {
                 throw new NullPointerException("element " + rowNumber + " key '" + key + "' type must primary");
             }
+
             return String.valueOf(keyValue.unwrap());
         }, convert, hints);
     }
@@ -262,22 +274,24 @@ public class CollectionUdfSource extends AbstractUdfSource {
         if (extractKey == null) {
             throw new IllegalArgumentException("extractKey Udf is null"); // Key 提取函数丢失了
         }
-        //
+
         Map<String, Object> mapData = new LinkedHashMap<>();
         Map<String, Object> errorData = new LinkedHashMap<>();
         for (int i = 0; i < convertTo.size(); i++) {
             DataModel valueData = convertTo.get(i);
             try {
-                DataModel keyData = DomainHelper.convertTo(extractKey.call(hints, i, valueData));
+                Object[] arguments = { i, valueData };
+                DataModel keyData = DomainHelper.convertTo(extractKey.call(hints, () -> arguments));
                 if (!keyData.isValue()) {
                     throw new NullPointerException("element " + i + " key type must primary");
                 }
-                String unwrapKey = String.valueOf(keyData.unwrap());
+
                 if (convert != null) {
-                    Object mapValue = convert.call(hints, i, valueData);
+                    Object mapValue = convert.call(hints, () -> arguments);
                     valueData = DomainHelper.convertTo(mapValue);
                 }
-                mapData.put(unwrapKey, valueData);
+
+                mapData.put(String.valueOf(keyData.unwrap()), valueData);
             } catch (Exception e) {
                 LinkedHashMap<String, Object> hashMap = new LinkedHashMap<>();
                 hashMap.put("errorMsg", e.getMessage());
@@ -285,7 +299,7 @@ public class CollectionUdfSource extends AbstractUdfSource {
                 errorData.put("idx_" + i, hashMap);
             }
         }
-        //
+
         if (!errorData.isEmpty()) {
             int i = 0;
             String mapKey = "errorData";
@@ -306,16 +320,18 @@ public class CollectionUdfSource extends AbstractUdfSource {
     /** 对 List 进行分组 */
     public static Map<String, Object> groupBy(final List<Object> valueList, final Object key, final Hints hints) throws Throwable {
         return list2map(valueList, key, (readOnly1, params1) -> {
-            DataModel dataModel = DomainHelper.convertTo(params1[1]);
+            Object[] values = params1.allParams();
+            DataModel dataModel = DomainHelper.convertTo(values[1]);
             if (!dataModel.isObject()) {
-                throw new UnsupportedOperationException(params1[0] + " element require Object");
+                throw new UnsupportedOperationException(values[0] + " element require Object");
             }
+
             final Object parentKeyValue = ((ObjectModel) dataModel).getValue(key.toString()).unwrap();
             return filter(valueList, (readOnly2, params2) -> {
                 if (params2 == null) {
                     return false;
                 }
-                DataModel dataModel1 = DomainHelper.convertTo(params2[0]);
+                DataModel dataModel1 = DomainHelper.convertTo(params2.allParams()[0]);
                 Object targetKeyValue = ((ObjectModel) dataModel1).getValue(key.toString()).unwrap();
                 return Objects.deepEquals(parentKeyValue, targetKeyValue);
             }, hints);
@@ -325,16 +341,18 @@ public class CollectionUdfSource extends AbstractUdfSource {
     /** 对 List 进行去重 */
     public static Collection<Object> uniqueBy(final List<Object> valueList, final Object key, final Hints hints) throws Throwable {
         return list2map(valueList, key, (readOnly1, params1) -> {
-            DataModel dataModel = DomainHelper.convertTo(params1[1]);
+            Object[] values = params1.allParams();
+            DataModel dataModel = DomainHelper.convertTo(values[1]);
             if (!dataModel.isObject()) {
-                throw new UnsupportedOperationException(params1[0] + " element require Object");
+                throw new UnsupportedOperationException(values[0] + " element require Object");
             }
+
             final Object parentKeyValue = ((ObjectModel) dataModel).getValue(key.toString()).unwrap();
             return filter(valueList, (readOnly2, params2) -> {
                 if (params2 == null) {
                     return false;
                 }
-                DataModel dataModel1 = DomainHelper.convertTo(params2[0]);
+                DataModel dataModel1 = DomainHelper.convertTo(params2.allParams()[0]);
                 Object targetKeyValue = ((ObjectModel) dataModel1).getValue(key.toString()).unwrap();
                 return Objects.deepEquals(parentKeyValue, targetKeyValue);
             }, hints).get(0);
@@ -359,6 +377,7 @@ public class CollectionUdfSource extends AbstractUdfSource {
         if (collection != null) {
             initData.putAll(collection);
         }
+
         return new InnerMapStateUdfSource(initData).getUdfResource(null).get();
     }
 
@@ -367,17 +386,16 @@ public class CollectionUdfSource extends AbstractUdfSource {
         LinkedHashMap<String, String> linkedHashMap = new LinkedHashMap<>(join);
         String[] joinKey1 = linkedHashMap.keySet().toArray(new String[0]);
         String[] joinKey2 = linkedHashMap.values().toArray(new String[0]);
-        //
-        //
+
         Map<String, Object> joinMap = new HashMap<>();
         for (Object dat : data2) {
             joinMap.put(evalJoinKey(dat, joinKey2), dat);
         }
-        //
+
         List<Map<String, Object>> returnData = new ArrayList<>();
         for (Object dat1 : data1) {
             String joinKey = evalJoinKey(dat1, joinKey1);
-            returnData.add(new HashMap<String, Object>() {{
+            returnData.add(new HashMap<>() {{
                 put("data1", dat1);
                 put("data2", joinMap.get(joinKey));
             }});
@@ -390,7 +408,8 @@ public class CollectionUdfSource extends AbstractUdfSource {
         if (map == null) {
             return Collections.emptyMap();
         }
-        LinkedHashMap<String, Object> newMap = new LinkedHashMap<>();
+
+        Map<String, Object> newMap = new LinkedHashMap<>();
         map.forEach((s, o) -> newMap.put(s.toLowerCase(), o));
         return newMap;
     }
@@ -400,7 +419,8 @@ public class CollectionUdfSource extends AbstractUdfSource {
         if (map == null) {
             return Collections.emptyMap();
         }
-        LinkedHashMap<String, Object> newMap = new LinkedHashMap<>();
+
+        Map<String, Object> newMap = new LinkedHashMap<>();
         map.forEach((s, o) -> newMap.put(s.toUpperCase(), o));
         return newMap;
     }
@@ -410,7 +430,8 @@ public class CollectionUdfSource extends AbstractUdfSource {
         if (map == null) {
             return Collections.emptyMap();
         }
-        LinkedHashMap<String, Object> newMap = new LinkedHashMap<>();
+
+        Map<String, Object> newMap = new LinkedHashMap<>();
         map.forEach((s, o) -> newMap.put(StringUdfSource.lineToHump(s.toLowerCase()), o));
         return newMap;
     }
@@ -419,16 +440,18 @@ public class CollectionUdfSource extends AbstractUdfSource {
     public static List<String> mapKeys(Map<String, Object> map) {
         if (map == null) {
             return Collections.emptyList();
+        } else {
+            return new ArrayList<>(map.keySet());
         }
-        return new ArrayList<>(map.keySet());
     }
 
     /** 提取 Map 的 values */
     public static List<Object> mapValues(Map<String, Object> map) {
         if (map == null) {
             return Collections.emptyList();
+        } else {
+            return new ArrayList<>(map.values());
         }
-        return new ArrayList<>(map.values());
     }
 
     /** 对 Map 进行排序 */
@@ -436,6 +459,7 @@ public class CollectionUdfSource extends AbstractUdfSource {
         if (mapData == null) {
             return Collections.emptyMap();
         }
+
         List<Object> keySort = listSort(new ArrayList<>(mapData.keySet()), sortUdf, hints);
         Map<String, Object> newMap = new LinkedHashMap<>();
         for (Object key : keySort) {
@@ -450,11 +474,13 @@ public class CollectionUdfSource extends AbstractUdfSource {
         if (mapValue == null || mapValue.isEmpty()) {
             return Collections.emptyList();
         }
-        ArrayList<Object> listData = new ArrayList<>();
+
+        List<Object> listData = new ArrayList<>();
         Set<Map.Entry<String, Object>> entrySet = mapValue.entrySet();
         for (Map.Entry<String, Object> entry : entrySet) {
             if (convert != null) {
-                listData.add(convert.call(hints, entry.getKey(), entry.getValue()));
+                Object[] arguments = { entry.getKey(), entry.getValue() };
+                listData.add(convert.call(hints, () -> arguments));
             } else {
                 ObjectModel objectModel = DomainHelper.newObject();
                 objectModel.put("key", entry.getKey());
@@ -467,16 +493,19 @@ public class CollectionUdfSource extends AbstractUdfSource {
 
     /** Map 转为字符串 */
     public static String map2string(Map<String, Object> mapValue, String joinStr, Udf convert, Hints hints) throws Throwable {
-        if (mapValue == null || mapValue.size() == 0) {
+        if (mapValue == null || mapValue.isEmpty()) {
             return "";
         }
+
         StringBuilder stringBuilder = new StringBuilder();
         for (String key : mapValue.keySet()) {
             Object value = mapValue.get(key);
-            stringBuilder.append(convert.call(hints, key, value));
+            Object[] arguments = { key, value };
+            stringBuilder.append(convert.call(hints, () -> arguments));
             stringBuilder.append(joinStr);
         }
-        if (stringBuilder.length() > 0) {
+
+        if (!stringBuilder.isEmpty()) {
             int joinLength = joinStr.length();
             return stringBuilder.substring(0, stringBuilder.length() - joinLength);
         }
@@ -488,14 +517,15 @@ public class CollectionUdfSource extends AbstractUdfSource {
         if (replaceKey == null || mapValue == null || mapValue.isEmpty()) {
             return mapValue;
         }
-        //
+
         Map<String, Object> dataMap = new LinkedHashMap<>();
         Set<Map.Entry<String, Object>> entrySet = mapValue.entrySet();
         for (Map.Entry<String, Object> entry : entrySet) {
             String entryKey = entry.getKey();
             Object entryValue = entry.getValue();
-            //
-            entryKey = String.valueOf(replaceKey.call(hints, entryKey, entryValue));
+
+            Object[] arguments = { entryKey, entryValue };
+            entryKey = String.valueOf(replaceKey.call(hints, () -> arguments));
             dataMap.put(entryKey, entryValue);
         }
         return dataMap;
@@ -506,14 +536,15 @@ public class CollectionUdfSource extends AbstractUdfSource {
         if (replaceValue == null || mapValue == null || mapValue.size() == 0) {
             return mapValue;
         }
-        //
+
         Map<String, Object> dataMap = new LinkedHashMap<>();
         Set<Map.Entry<String, Object>> entrySet = mapValue.entrySet();
         for (Map.Entry<String, Object> entry : entrySet) {
             String entryKey = entry.getKey();
             Object entryValue = entry.getValue();
-            //
-            entryValue = replaceValue.call(hints, entryKey, entryValue);
+
+            Object[] arguments = { entryKey, entryValue };
+            entryValue = replaceValue.call(hints, () -> arguments);
             dataMap.put(entryKey, entryValue);
         }
         return dataMap;

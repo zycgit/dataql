@@ -5,7 +5,7 @@
  * See the LICENSE.txt file for the full license.
  * https://www.apache.org/licenses/LICENSE-2.0
  */
-package net.hasor.dataql.host.function;
+package net.hasor.dataql.domain;
 
 /** Access to all arguments of the current UDF call. */
 @FunctionalInterface

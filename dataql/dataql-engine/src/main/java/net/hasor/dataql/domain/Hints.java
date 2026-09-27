@@ -29,25 +29,15 @@ public interface Hints extends HintValue {
     default void setHints(Hints hints) {
         if (hints != null) {
             hints.forEach((optKey, value) -> {
-                /**  */if (value instanceof Number) {
-                    this.setHint(optKey, (Number) value);
-                } else if (value instanceof Boolean) {
-                    this.setHint(optKey, (Boolean) value);
-                } else if (value != null) {
-                    this.setHint(optKey, value.toString());
+                if (value != null) {
+                    this.setHint(optKey, value);
                 }
             });
         }
     }
 
-    /** 设置选项参数 */
-    void setHint(String hintName, String value);
-
-    /** 设置选项参数 */
-    void setHint(String hintName, Number value);
-
-    /** 设置选项参数 */
-    void setHint(String hintName, boolean value);
+    /** Stores an object by reference. Copying hints preserves this reference. */
+    void setHint(String hintName, Object value);
 
     /**
      * Performs the given action for each entry in this map until all entries
@@ -77,14 +67,8 @@ public interface Hints extends HintValue {
      * @since 1.8
      */
     default void putIfAbsent(String hintName, Object value) {
-        if (getHint(hintName) == null) {
-            /**  */if (value instanceof Number) {
-                this.setHint(hintName, (Number) value);
-            } else if (value instanceof Boolean) {
-                this.setHint(hintName, (Boolean) value);
-            } else if (value != null) {
-                this.setHint(hintName, value.toString());
-            }
+        if (this.getHint(hintName) == null && value != null) {
+            this.setHint(hintName, value);
         }
     }
 
@@ -137,16 +121,10 @@ public interface Hints extends HintValue {
      */
     default void computeIfAbsent(String hintName, Function<String, Object> mappingFunction) {
         Objects.requireNonNull(mappingFunction);
-        if (getHint(hintName) == null) {
+        if (this.getHint(hintName) == null) {
             Object newValue;
             if ((newValue = mappingFunction.apply(hintName)) != null) {
-                /**  */if (newValue instanceof Number) {
-                    this.setHint(hintName, (Number) newValue);
-                } else if (newValue instanceof Boolean) {
-                    this.setHint(hintName, (Boolean) newValue);
-                } else {
-                    this.setHint(hintName, newValue.toString());
-                }
+                this.setHint(hintName, newValue);
             }
         }
     }

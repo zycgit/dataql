@@ -35,19 +35,19 @@ class CALL implements InsetProcess {
     public void doWork(InstSequence sequence, DataHeap dataHeap, DataStack dataStack, EnvStack envStack, InsetProcessContext context) throws QueryRuntimeException {
         Instruction instruction = sequence.currentInst();
         int paramCount = instruction.getInt(0);
-        //
+
         Object[] paramArrays = new Object[paramCount];
         for (int i = 0; i < paramCount; i++) {
             int paramIndex = paramCount - 1 - i;
             Object paramObj = dataStack.pop();
             paramArrays[paramIndex] = paramObj;
         }
-        //
+
         Object refCallObj = dataStack.pop();
         if (!(refCallObj instanceof RefCall refCall)) {
             throw new QueryRuntimeException(sequence.programLocation(), "target is not RefCall.");
         }
-        //
+
         Object result = refCall.invokeMethod(paramArrays, new HintsReadOnly(context.currentHints()), context.getFinder());
         dataStack.push(result);
     }

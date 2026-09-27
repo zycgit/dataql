@@ -8,11 +8,12 @@
 package net.hasor.test.dataql.udfs;
 import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.domain.Udf;
+import net.hasor.dataql.domain.UdfParams;
 
 //@DimUdf("test")
 public class AnnoDemoUdf implements Udf {
     @Override
-    public Object call(Hints readOnly, Object[] params) {
+    public Object call(Hints readOnly, UdfParams params) {
         return "test";
     }
 }

@@ -85,7 +85,7 @@ public class LambdaRuntimeTest extends AbstractTestResource implements HintValue
         Query compilerQL = compilerQL("var a = 10 ; var foo = () -> { return a; } ; return foo");
         DataModel dataModel = compilerQL.execute().getData();
         assert dataModel.isUdf();
-        DataModel dat = ((UdfModel) dataModel).call(null, null);
+        DataModel dat = ((UdfModel) dataModel).call(null, () -> new Object[0]);
         assert dat.isValue();
         assert ((ValueModel) dat).asInt() == 10;
     }

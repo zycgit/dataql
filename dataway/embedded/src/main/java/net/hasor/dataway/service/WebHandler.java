@@ -18,10 +18,10 @@ import net.hasor.dataway.model.WebRequest;
 import net.hasor.dataway.model.WebResponse;
 
 /** Resolves request identity and writes entry results while preserving host exception handling. */
-public abstract class AbstractWebHandler {
+public abstract class WebHandler {
     private final Dataway dataway;
 
-    protected AbstractWebHandler(Dataway dataway) {
+    protected WebHandler(Dataway dataway) {
         this.dataway = dataway;
     }
 

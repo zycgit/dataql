@@ -6,11 +6,9 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.host.function;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
-import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import net.hasor.cobble.BeanUtils;
@@ -19,18 +17,19 @@ import net.hasor.cobble.convert.ConverterUtils;
 import net.hasor.dataql.domain.DataModel;
 import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.domain.Udf;
+import net.hasor.dataql.domain.UdfParams;
 
 class UdfTypeMap extends HashMap<String, Udf> {
     UdfTypeMap(Class<?> utilType, Supplier<?> provider, Predicate<Method> methodTypeMatcher) {
-        List<Method> methodList = BeanUtils.getMethods(utilType);
-        for (Method method : methodList) {
+        for (Method method : BeanUtils.getMethods(utilType)) {
             this.initMethod(provider, methodTypeMatcher, method);
         }
     }
 
     private void initMethod(Supplier<?> provider, Predicate<Method> methodTypeMatcher, Method method) {
         int modifiers = method.getModifiers();
-        if (!Modifier.isPublic(modifiers) || (!Modifier.isStatic(modifiers) && provider == null)) {
+        boolean staticMethod = Modifier.isStatic(modifiers);
+        if (!Modifier.isPublic(modifiers) || (!staticMethod && provider == null)) {
             return;
         }
         if (methodTypeMatcher != null && !methodTypeMatcher.test(method)) {
@@ -44,72 +43,50 @@ class UdfTypeMap extends HashMap<String, Udf> {
         if (udfName == null) {
             udfName = method.getDeclaringClass().getAnnotation(UdfName.class);
         }
-        if (udfName == null) {
-            udfName = new UdfName() {
-                public Class<? extends Annotation> annotationType() {
-                    return UdfName.class;
-                }
 
-                public String value() {
-                    return method.getName();
-                }
-            };
-        }
-        if (StringUtils.isBlank(udfName.value())) {
+        String name = udfName == null ? method.getName() : udfName.value();
+        if (StringUtils.isBlank(name)) {
             throw new NullPointerException("udfName is null -> " + method);
         }
 
-        if (Modifier.isStatic(modifiers)) {
-            this.put(udfName.value(), new StaticUdf(method));
+        method.setAccessible(true);
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        if (staticMethod) {
+            this.put(name, (hints, params) -> this.invoke(method, null, parameterTypes, hints, params));
         } else {
-            this.put(udfName.value(), new ObjectUdf(method, provider));
+            this.put(name, (hints, params) -> {
+                Object target = provider.get();
+                if (target == null) {
+                    throw new NullPointerException("target Object is null.");
+                }
+                return this.invoke(method, target, parameterTypes, hints, params);
+            });
         }
     }
 
-    private static Object doInvoke(Method targetMethod, Object target, Object[] values, Hints hints) throws Exception {
-        Class<?>[] parameterTypes = targetMethod.getParameterTypes();
-        Object[] inData = new Object[parameterTypes.length];
+    private Object invoke(Method method, Object target, Class<?>[] parameterTypes, Hints hints, UdfParams params) throws Exception {
+        Object[] values = params.allParams();
+        Object[] arguments = new Object[parameterTypes.length];
+        int paramIndex = 0;
         for (int i = 0; i < parameterTypes.length; i++) {
-            Object paramData;
-            if (Hints.class.isAssignableFrom(parameterTypes[i])) {
-                paramData = hints;
-            } else if (UdfParams.class.isAssignableFrom(parameterTypes[i])) {
-                paramData = (UdfParams) () -> values;
+            Class<?> parameterType = parameterTypes[i];
+            Object value;
+            if (Hints.class.isAssignableFrom(parameterType)) {
+                value = hints;
+            } else if (UdfParams.class.isAssignableFrom(parameterType)) {
+                value = params;
             } else {
-                paramData = i < values.length ? values[i] : null;
+                value = paramIndex < values.length ? values[paramIndex] : null;
+                paramIndex++;
             }
-            if (paramData instanceof DataModel) {
-                paramData = ((DataModel) paramData).asOri();
+
+            if (value instanceof DataModel dataModel) {
+                value = dataModel.asOri();
             }
-            inData[i] = ConverterUtils.convert(parameterTypes[i], paramData);
-        }
-        return targetMethod.invoke(target, inData);
-    }
 
-    private record StaticUdf(Method target) implements Udf {
-        private StaticUdf(Method target) {
-            this.target = target;
-            this.target.setAccessible(true);
+            arguments[i] = ConverterUtils.convert(parameterType, value);
         }
 
-        public Object call(Hints hints, Object... values) throws Throwable {
-            return doInvoke(this.target, null, values, hints);
-        }
-    }
-
-    private record ObjectUdf(Method target, Supplier<?> provider) implements Udf {
-        private ObjectUdf(Method target, Supplier<?> provider) {
-            this.target = target;
-            this.target.setAccessible(true);
-            this.provider = provider;
-        }
-
-        public Object call(Hints hints, Object... values) throws Throwable {
-            Object targetObject = this.provider.get();
-            if (targetObject == null) {
-                throw new NullPointerException("target Object is null.");
-            }
-            return doInvoke(this.target, targetObject, values, hints);
-        }
+        return method.invoke(target, arguments);
     }
 }

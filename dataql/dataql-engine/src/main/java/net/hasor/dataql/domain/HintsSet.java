@@ -41,18 +41,8 @@ public class HintsSet implements Hints {
         this.optionMap.remove(key);
     }
 
-    /** 设置选项参数 */
-    public void setHint(String hintName, String value) {
-        this.optionMap.put(hintName, value);
-    }
-
-    /** 设置选项参数 */
-    public void setHint(String hintName, Number value) {
-        this.optionMap.put(hintName, value);
-    }
-
-    /** 设置选项参数 */
-    public void setHint(String hintName, boolean value) {
+    @Override
+    public void setHint(String hintName, Object value) {
         this.optionMap.put(hintName, value);
     }
 }

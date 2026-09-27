@@ -13,12 +13,12 @@ import net.hasor.dataway.model.ResultInfo;
 import net.hasor.dataway.model.ResultInfoUtils;
 import net.hasor.dataway.model.WebRequest;
 import net.hasor.dataway.model.WebResponse;
-import net.hasor.dataway.service.AbstractWebHandler;
 import net.hasor.dataway.service.Dataway;
 import net.hasor.dataway.service.DatawayException;
+import net.hasor.dataway.service.WebHandler;
 
 /** Serves console files from the classpath under the host's configured UI prefix. */
-public final class DatawayUiHandler extends AbstractWebHandler {
+public final class DatawayUiHandler extends WebHandler {
     private static final String              DEFAULT_UI_RESOURCE = "/META-INF/dataway-ui/";
     private static final Map<String, String> RESOURCE_HEADERS    = Map.of(//
             "X-Content-Type-Options", "nosniff",//

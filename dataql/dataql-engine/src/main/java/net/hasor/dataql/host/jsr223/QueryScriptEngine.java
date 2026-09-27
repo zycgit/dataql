@@ -59,17 +59,7 @@ public class QueryScriptEngine extends AbstractScriptEngine implements ScriptEng
     }
 
     @Override
-    public void setHint(String hintName, String value) {
-        this.optionSet.setHint(hintName, value);
-    }
-
-    @Override
-    public void setHint(String hintName, Number value) {
-        this.optionSet.setHint(hintName, value);
-    }
-
-    @Override
-    public void setHint(String hintName, boolean value) {
+    public void setHint(String hintName, Object value) {
         this.optionSet.setHint(hintName, value);
     }
     // -------------------------------------------------------------------------------------------- ScriptEngine

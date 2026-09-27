@@ -6,15 +6,57 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.kernel;
+import java.util.ArrayList;
+import java.util.List;
 import net.hasor.dataql.AbstractTestResource;
-import net.hasor.dataql.domain.DataModel;
-import net.hasor.dataql.domain.HintValue;
-import net.hasor.dataql.domain.Udf;
-import net.hasor.dataql.domain.ValueModel;
-import net.hasor.dataql.host.Query;
+import net.hasor.dataql.domain.*;
+import net.hasor.dataql.host.*;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 public class OptRuntimeTest extends AbstractTestResource implements HintValue {
+    @Test
+    public void objectHintsSurviveCopiesAndNestedScopes() throws Exception {
+        Object binding = new Object();
+        Object defaultBinding = new Object();
+        List<Object> scopes = new ArrayList<>();
+        HostConfiguration host = new HostConfiguration();
+        host.addImport("inspect", () -> (Udf) (hints, params) -> {
+            assertSame(binding, hints.getHint("binding"));
+            assertSame(defaultBinding, hints.getHint("defaultBinding"));
+            assertSame(binding, hints.getHint("copied"));
+            assertSame(binding, hints.getHint("computed"));
+            assertThrows(UnsupportedOperationException.class, () -> hints.setHint("binding", new Object()));
+            Object scope = hints.getOrDefault("scope", "outer");
+            scopes.add(scope);
+            return scope;
+        });
+        QueryBuilder builder = new QueryManager(host).newBuilder();
+        builder.setHint("defaultBinding", defaultBinding);
+        Query query = new QueryWrap(builder.createQuery("""
+                import 'inspect' as inspect;
+                run inspect();
+                if (true) {
+                    hint scope = 'nested';
+                    run inspect();
+                }
+                return inspect();
+                """));
+        Hints proxy = new HintsProxy(query);
+        proxy.setHint("binding", binding);
+        HintsSet supplied = new HintsSet();
+        supplied.putIfAbsent("copied", binding);
+        supplied.putIfAbsent("copied", new Object());
+        supplied.computeIfAbsent("computed", key -> binding);
+        supplied.computeIfAbsent("computed", key -> new Object());
+        query.setHints(new HintsSet(supplied));
+
+        assertEquals("outer", query.execute().getData().unwrap());
+        assertEquals(List.of("outer", "nested", "outer"), scopes);
+        assertSame(binding, query.getHint("binding"));
+        assertNull(query.getHint("scope"));
+    }
+
     @Test
     public void opt_bool_1_Test() throws Exception {
         Object[] obj = new Object[] { (Udf) (readOnly, params) -> {

@@ -8,12 +8,13 @@
 package net.hasor.test.dataql.udfs;
 import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.domain.Udf;
+import net.hasor.dataql.domain.UdfParams;
 
 public class ErrorUdf implements Udf {
     public static RuntimeException ERR = new RuntimeException("abc");
 
     @Override
-    public Object call(Hints readOnly, Object[] params) {
+    public Object call(Hints readOnly, UdfParams params) {
         throw ERR;
     }
 }

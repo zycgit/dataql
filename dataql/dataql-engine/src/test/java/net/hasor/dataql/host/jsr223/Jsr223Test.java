@@ -9,6 +9,7 @@ package net.hasor.dataql.host.jsr223;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.script.*;
 import net.hasor.cobble.loader.ResourceLoader;
 import net.hasor.cobble.loader.providers.ClassPathResourceLoader;
@@ -166,6 +167,38 @@ public class Jsr223Test {
         Object eval = scriptEngine.eval("return foo()", context);
 
         assertEquals("west", ((QueryResult) eval).getData().unwrap());
+    }
+
+    @Test
+    public void objectHintsPreserveReferencesAndContextPrecedence() throws ScriptException {
+        Object engineBinding = new Object();
+        Object contextBinding = new Object();
+        Object attributeBinding = new Object();
+        Object compiledBinding = new Object();
+        AtomicReference<Object> expected = new AtomicReference<>(engineBinding);
+        QueryScriptEngine engine = (QueryScriptEngine) new ScriptEngineManager().getEngineByName("dataql");
+        engine.setHint("binding", engineBinding);
+        QueryScriptContext context = (QueryScriptContext) engine.getContext();
+        context.setBindings(engine.createBindings(), ScriptContext.GLOBAL_SCOPE);
+        context.setAttribute("inspect", (Udf) (hints, params) -> {
+            assertSame(expected.get(), hints.getHint("binding"));
+            assertSame(compiledBinding, hints.getHint("compiled"));
+            return true;
+        }, ScriptContext.GLOBAL_SCOPE);
+        CompiledScript script = engine.compile("return inspect();");
+        ((Hints) script).setHint("compiled", compiledBinding);
+        assertEquals(true, ((QueryResult) script.eval(context)).getData().unwrap());
+
+        context.setHint("binding", contextBinding);
+        expected.set(contextBinding);
+        assertEquals(true, ((QueryResult) script.eval(context)).getData().unwrap());
+
+        HintsSet attributes = new HintsSet();
+        attributes.setHint("binding", attributeBinding);
+        context.setAttribute(Hints.class.getName(), attributes, ScriptContext.ENGINE_SCOPE);
+        expected.set(attributeBinding);
+        assertEquals(true, ((QueryResult) script.eval(context)).getData().unwrap());
+        assertSame(engineBinding, engine.getHint("binding"));
     }
 
     @Test

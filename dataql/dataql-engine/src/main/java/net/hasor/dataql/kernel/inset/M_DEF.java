@@ -7,6 +7,7 @@
  */
 package net.hasor.dataql.kernel.inset;
 import net.hasor.dataql.domain.Udf;
+import net.hasor.dataql.domain.UdfModel;
 import net.hasor.dataql.kernel.InsetProcess;
 import net.hasor.dataql.kernel.InsetProcessContext;
 import net.hasor.dataql.kernel.InstSequence;
@@ -35,12 +36,14 @@ class M_DEF implements InsetProcess {
         if (refCall == null) {
             throw new QueryRuntimeException(location, "target is null.");
         }
-        if (!(refCall instanceof Udf)) {
+        if (refCall instanceof UdfModel model) {
+            refCall = model.unwrap();
+        }
+        if (!(refCall instanceof Udf udf)) {
             throw new QueryRuntimeException(location, "target or Property is not UDF.");
         }
 
-        boolean innerUDF = refCall instanceof RefFragmentCall || refCall instanceof RefLambdaCall;
-        refCall = new RefCall(location, !innerUDF, (Udf) refCall);
-        dataStack.push(refCall);
+        boolean innerUDF = udf instanceof RefFragmentCall || udf instanceof RefLambdaCall;
+        dataStack.push(new RefCall(location, !innerUDF, udf));
     }
 }

@@ -30,13 +30,12 @@ import net.hasor.dataql.parser.ast.value.NameRouteVariable;
 import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ApiScriptType;
 import net.hasor.dataway.service.DatawayException;
-import tools.jackson.databind.json.JsonMapper;
+import static net.hasor.dataway.model.ResultInfoUtils.JSON;
 
 /** Creates Dataway queries with the configured host, query customizers and defaults. */
 public class DatawayEngine {
-    private static final JsonMapper JSON = JsonMapper.builder().build();
-
     private final QueryManager                 queryManager;
+    private final CustomizeScope               customizeScope;
     private final List<Consumer<QueryBuilder>> customizers;
     private final List<ApiInterceptor>         interceptors;
     private       String                       responseFormat;
@@ -78,7 +77,7 @@ public class DatawayEngine {
             options = Map.of();
         }
 
-        String responseFormat = this.readResponseFormat(options);
+        Map<?, ?> responseFormat = this.readResponseFormat(options);
         boolean resultStructure = this.readResultStructure(options);
         boolean wrapAllParameters = this.readWrapAllParameters(options);
         String wrapParameterName = this.readWrapParameterName(options);
@@ -122,22 +121,21 @@ public class DatawayEngine {
         return model;
     }
 
-    //
-
-    private String readResponseFormat(Map<String, Object> options) {
+    private Map<?, ?> readResponseFormat(Map<String, Object> options) {
         Object responseOption = options.getOrDefault("responseFormat", this.responseFormat);
         if (!(responseOption instanceof String s)) {
             throw new DatawayException(400, "responseFormat must be a JSON object string");
         }
 
         try {
-            if (!JSON.readTree(s).isObject()) {
+            Object template = JSON.readValue(s, Object.class);
+            if (!(template instanceof Map<?, ?> format)) {
                 throw new IllegalArgumentException("Expected a JSON object");
             }
+            return format;
         } catch (RuntimeException e) {
             throw new DatawayException(400, "responseFormat must be a JSON object string", e);
         }
-        return s;
     }
 
     private boolean readResultStructure(Map<String, Object> options) {
