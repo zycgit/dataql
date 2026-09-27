@@ -39,6 +39,7 @@ public class RefCall {
                     }
                 }
             }
+
             Object result = this.refCall.call(optionSet, objects);
             if (result instanceof UdfSource) {
                 result = ((UdfSource) result).getUdfResource(finder).get();

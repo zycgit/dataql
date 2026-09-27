@@ -38,6 +38,7 @@ class M_DEF implements InsetProcess {
         if (!(refCall instanceof Udf)) {
             throw new QueryRuntimeException(location, "target or Property is not UDF.");
         }
+
         boolean innerUDF = refCall instanceof RefFragmentCall || refCall instanceof RefLambdaCall;
         refCall = new RefCall(location, !innerUDF, (Udf) refCall);
         dataStack.push(refCall);

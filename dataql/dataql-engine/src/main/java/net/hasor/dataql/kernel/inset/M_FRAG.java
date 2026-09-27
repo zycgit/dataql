@@ -33,7 +33,7 @@ class M_FRAG implements InsetProcess {
         if (loadObject == null) {
             throw new QueryRuntimeException(location, fragmentType + " fragment undefine.");
         }
-        //
+
         RefFragmentCall fragmentCall = new RefFragmentCall(location, isBach, fragmentType, loadObject);
         dataStack.push(new RefCall(location, true, fragmentCall));
     }
