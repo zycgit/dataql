@@ -1,0 +1,36 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
+plugins {
+    id 'java-library'
+    id 'application'
+    id 'net.hasor.boot'
+}
+
+ext.pomName = 'Dataway Console'
+description = 'Dataway web console based on Hasor Boot and Hasor Web.'
+
+dependencies {
+    api project(':dataql-engine')
+    api project(':dataql-sqlproc')
+    api project(':dataway-dao')
+
+    api "net.hasor:hasor-boot-web-tomcat:${property('lib.hasor')}"
+    api "net.hasor:hasor-web:${property('lib.hasor')}"
+    api "com.alibaba:fastjson:${property('lib.fastjson')}"
+
+    runtimeOnly 'org.slf4j:slf4j-simple:1.7.36'
+}
+
+application {
+    mainClass = 'net.hasor.dataway.DatawayConsoleApplication'
+}
+
+tasks.named('bootJar') {
+    mainClass = application.mainClass
+    loaderClasspath.from(configurations.detachedConfiguration(dependencies.create("net.hasor:hasor-boot-loader:${project.property('lib.hasor')}")))
+}

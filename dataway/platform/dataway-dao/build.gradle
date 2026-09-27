@@ -1,0 +1,40 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
+plugins {
+    id 'java-library'
+}
+
+ext.pomName = 'Dataway Dao'
+description = 'Dataway data access layer based on dbVisitor.'
+
+dependencies {
+    api "net.hasor:dbvisitor-hasor:${property('lib.dbvisitor')}"
+    api "net.hasor:hasor-config:${property('lib.hasor')}"
+    implementation 'com.zaxxer:HikariCP:4.0.3'
+    implementation 'org.flywaydb:flyway-core:9.22.3'
+    implementation 'org.flywaydb:flyway-mysql:9.22.3'
+    annotationProcessor 'org.projectlombok:lombok:1.18.38'
+
+    compileOnly 'org.projectlombok:lombok:1.18.38'
+    runtimeOnly 'mysql:mysql-connector-java:8.0.33'
+    testRuntimeOnly "com.h2database:h2:${property('lib.h2')}"
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 17
+}
+
+jar {
+    archiveBaseName = 'dataway-dao'
+    duplicatesStrategy = DuplicatesStrategy.WARN
+}
