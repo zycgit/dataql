@@ -32,6 +32,7 @@ public class SpringJdbcExecutor implements JdbcExecutor {
         if (manager instanceof DataSourceTransactionManager jdbc && jdbc.getDataSource() != source) {
             throw new IllegalArgumentException("Dataway datasource must match its Spring transaction manager");
         }
+
         this.source = source;
         this.transactions = new TransactionTemplate(Objects.requireNonNull(manager));
     }

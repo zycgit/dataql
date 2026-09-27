@@ -6,14 +6,14 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.spring;
-import javax.sql.DataSource;
-import net.hasor.dataway.Dataway;
+import java.util.Map;
 import net.hasor.dataway.authorization.Operation;
+import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ApiScriptType;
-import net.hasor.dataway.service.CallContext;
+import net.hasor.dataway.service.Dataway;
 import net.hasor.dataway.service.DatawayConfigurer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.BeanNotOfRequiredTypeException;
@@ -43,11 +43,11 @@ class MetadataSelectionTest {
         primaryApi.setType(ApiScriptType.DATAQL);
         primaryApi.setScript("return 1;");
         primaryApi.setDescription("");
-        primary.getService().save(primaryApi, 0, CallContext.local(Operation.SAVE));
+        primary.getAdminService().save(primaryApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
         environment.setProperty("dataway.metadata.bean", "first");
-        assertTrue(this.assemble(beans, environment).getService().list(CallContext.local(Operation.LIST)).isEmpty());
+        assertTrue(this.assemble(beans, environment).getAdminService().list(Operation.LIST, UserIdentity.anonymous(), Map.of(), null).isEmpty());
         environment.setProperty("dataway.metadata.bean", "second");
-        assertEquals(1, this.assemble(beans, environment).getService().list(CallContext.local(Operation.LIST)).size());
+        assertEquals(1, this.assemble(beans, environment).getAdminService().list(Operation.LIST, UserIdentity.anonymous(), Map.of(), null).size());
     }
 
     @Test
@@ -71,14 +71,14 @@ class MetadataSelectionTest {
         var access = new JdbcDataAccessLayer(TestDatabase.create(), "");
         beans.registerSingleton("custom", access);
         var environment = new MockEnvironment().withProperty("dataway.metadata.bean", "  ");
-        assertTrue(this.assemble(beans, environment).getService().list(CallContext.local(Operation.LIST)).isEmpty());
+        assertTrue(this.assemble(beans, environment).getAdminService().list(Operation.LIST, UserIdentity.anonymous(), Map.of(), null).isEmpty());
         beans.destroySingletons();
         environment.setProperty("dataway.metadata.bean", "missing");
         beans.registerSingleton("customizer", (DatawayConfigurer) builder -> builder.dataAccessLayer(access));
-        assertTrue(this.assemble(beans, environment).getService().list(CallContext.local(Operation.LIST)).isEmpty());
+        assertTrue(this.assemble(beans, environment).getAdminService().list(Operation.LIST, UserIdentity.anonymous(), Map.of(), null).isEmpty());
     }
 
     private Dataway assemble(DefaultListableBeanFactory beans, MockEnvironment environment) {
-        return new DatawayAutoConfiguration().dataway(beans.getBeanProvider(DataSource.class), beans, beans.getBeanProvider(DatawayConfigurer.class), environment);
+        return new DatawayAutoConfiguration().dataway(beans, beans.getBeanProvider(DatawayConfigurer.class), environment);
     }
 }

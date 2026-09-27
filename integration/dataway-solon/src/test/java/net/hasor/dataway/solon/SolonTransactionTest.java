@@ -7,13 +7,13 @@
  */
 package net.hasor.dataway.solon;
 import java.util.Map;
-import net.hasor.dataway.Dataway;
 import net.hasor.dataway.authorization.Operation;
+import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ApiScriptType;
-import net.hasor.dataway.service.CallContext;
+import net.hasor.dataway.service.Dataway;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import org.noear.solon.Solon;
@@ -33,11 +33,11 @@ class SolonTransactionTest {
                 });
                 Executable start = () -> {
                     new DatawayPlugin().start(Solon.context());
-                    Solon.context().getBean(Dataway.class).getService().list(CallContext.local(Operation.LIST));
+                    Solon.context().getBean(Dataway.class).getAdminService().list(Operation.LIST, UserIdentity.anonymous(), Map.of(), null);
                 };
                 if (name.equals("first")) {
                     start.execute();
-                    assertTrue(Solon.context().getBean(Dataway.class).getService().list(CallContext.local(Operation.LIST)).isEmpty());
+                    assertTrue(Solon.context().getBean(Dataway.class).getAdminService().list(Operation.LIST, UserIdentity.anonymous(), Map.of(), null).isEmpty());
                 } else {
                     Throwable failure = assertThrows(Throwable.class, start);
                     while (failure.getCause() != null) {
@@ -68,20 +68,21 @@ class SolonTransactionTest {
             api.setScript("return 1;");
             api.setDescription("");
             assertThrows(IllegalStateException.class, () -> TranUtils.execute(new TransactionAnno(), () -> {
-                dataway.getService().save(api, 0, CallContext.local(Operation.SAVE));
-                dataway.getService().publish("one", 1, CallContext.local(Operation.PUBLISH));
+                dataway.getAdminService().save(api, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
+                dataway.getAdminService().publish("one", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
                 throw new IllegalStateException("host failure");
             }));
-            assertTrue(dataway.getService().list(CallContext.local(Operation.LIST)).isEmpty());
+            assertTrue(dataway.getAdminService().list(Operation.LIST, UserIdentity.anonymous(), Map.of(), null).isEmpty());
             try (var connection = source.getConnection(); var statement = connection.createStatement(); var rows = statement.executeQuery("SELECT COUNT(*) FROM interface_release")) {
                 rows.next();
                 assertEquals(0, rows.getInt(1));
             }
             TranUtils.execute(new TransactionAnno(), () -> {
-                dataway.getService().save(api, 0, CallContext.local(Operation.SAVE));
-                dataway.getService().publish("one", 1, CallContext.local(Operation.PUBLISH));
+                dataway.getAdminService().save(api, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
+                dataway.getAdminService().publish("one", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
             });
-            assertEquals(1, ((Number) dataway.getService().invokeApi("/one", Map.of())).intValue());
+            Map<?, ?> apiResult = (Map<?, ?>) dataway.getService().invokeApi("/one", Map.of());
+            assertEquals(1, ((Number) apiResult.get("value")).intValue());
         } finally {
             Solon.stopBlock(false, 0);
         }

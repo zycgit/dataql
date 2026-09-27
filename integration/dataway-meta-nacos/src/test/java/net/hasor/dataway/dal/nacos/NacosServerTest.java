@@ -18,22 +18,23 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import com.alibaba.nacos.api.NacosFactory;
 import com.alibaba.nacos.api.config.ConfigService;
-import net.hasor.dataway.Dataway;
 import net.hasor.dataway.authorization.Operation;
+import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.DataConflictException;
 import net.hasor.dataway.dal.EntityType;
 import net.hasor.dataway.dal.OperationType;
 import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ApiScriptType;
-import net.hasor.dataway.service.CallContext;
+import net.hasor.dataway.service.Dataway;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import static net.hasor.dataway.dal.FieldDef.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+@EnabledIfEnvironmentVariable(named = "DATAWAY_NACOS_SERVER", matches = ".*\\S.*")
 class NacosServerTest {
     private ConfigService client() throws Exception {
         String address = System.getenv("DATAWAY_NACOS_SERVER");
-        assertNotNull(address, "Set DATAWAY_NACOS_SERVER to an isolated Nacos server");
         Properties properties = new Properties();
         properties.setProperty("serverAddr", address);
         return NacosFactory.createConfigService(properties);
@@ -55,12 +56,13 @@ class NacosServerTest {
             oneApi.setType(ApiScriptType.DATAQL);
             oneApi.setScript("return 42;");
             oneApi.setDescription("说明");
-            service.save(oneApi, 0, CallContext.local(Operation.SAVE));
-            service.publish("one", 1, CallContext.local(Operation.PUBLISH));
+            service.getBeanContainer().getAdminService().save(oneApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
+            service.getBeanContainer().getAdminService().publish("one", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
             ConfigService other = client();
             try {
                 var restarted = new NacosDataAccessLayer(other, dataId, group, 5000);
-                assertEquals(42, ((Number) Dataway.builder().dataAccessLayer(restarted).build().getService().invokeApi("/one", Map.of())).intValue());
+                Map<?, ?> apiResult = (Map<?, ?>) Dataway.builder().dataAccessLayer(restarted).build().getService().invokeApi("/one", Map.of());
+                assertEquals(42, ((Number) apiResult.get("value")).intValue());
                 String before = other.getConfig(dataId, group, 5000);
                 assertThrows(DataConflictException.class, () -> restarted.write(List.of(restarted.create(EntityType.RELEASE, OperationType.CREATE, "extra", 0, Map.of(SCRIPT, "return 9;")), restarted.create(EntityType.INFO, OperationType.UPDATE, "one", 999, Map.of(COMMENT, "stale")))));
                 assertEquals(before, other.getConfig(dataId, group, 5000));

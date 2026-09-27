@@ -8,12 +8,13 @@
 package net.hasor.dataway.solon;
 import java.util.List;
 import java.util.Map;
-import net.hasor.dataway.Dataway;
 import net.hasor.dataway.authorization.Operation;
+import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.EntityType;
 import net.hasor.dataway.dal.FieldDef;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
-import net.hasor.dataway.service.CallContext;
+import net.hasor.dataway.service.Dataway;
+import net.hasor.dataway.service.admin.DatawayAdminHandler;
 import org.junit.jupiter.api.Test;
 import org.noear.solon.Solon;
 import org.noear.solon.annotation.Init;
@@ -26,8 +27,8 @@ class InitializationTest {
     void containerInitializesStorageBeforeBuildingDatawayAndItsConsumers() throws Throwable {
         String previousBean = System.getProperty("dataway.metadata.bean");
         var builder = Dataway.builder().adminHandler(dataway -> {
-            assertTrue(dataway.getService().list(CallContext.local(Operation.LIST)).isEmpty());
-            return (request, response) -> response.write(200, Map.of());
+            assertTrue(dataway.getAdminService().list(Operation.LIST, UserIdentity.anonymous(), Map.of(), null).isEmpty());
+            return new DatawayAdminHandler(dataway);
         });
         try {
             Solon.start(InitializationTest.class, new String[] { "--server.port=0", "--dataway.admin-enabled=true", "--dataway.metadata.bean=storage" }, app -> {
@@ -76,7 +77,7 @@ class InitializationTest {
 
         @Init(index = DatawayPlugin.INITIALIZATION_INDEX + 1)
         public void init() {
-            assertTrue(this.dataway.getService().list(CallContext.local(Operation.LIST)).isEmpty());
+            assertTrue(this.dataway.getAdminService().list(Operation.LIST, UserIdentity.anonymous(), Map.of(), null).isEmpty());
             this.initialized = true;
         }
     }

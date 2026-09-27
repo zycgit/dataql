@@ -6,14 +6,15 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.spring;
+import java.util.Map;
 import javax.sql.DataSource;
-import net.hasor.dataway.Dataway;
 import net.hasor.dataway.authorization.Operation;
+import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ApiScriptType;
-import net.hasor.dataway.service.CallContext;
+import net.hasor.dataway.service.Dataway;
 import net.hasor.dataway.service.DatawayException;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -59,13 +60,13 @@ class SpringTransactionTest {
     void transactionAwareDatasourceProxyUsesTheSameSpringResource() {
         DataSource source = TestDatabase.create();
         var manager = new JdbcTransactionManager(source);
-        Dataway dataway = Dataway.builder().dataSource(new TransactionAwareDataSourceProxy(source)).dataAccessLayer(new JdbcDataAccessLayer(new SpringJdbcExecutor(new TransactionAwareDataSourceProxy(source), manager), "")).build();
+        Dataway dataway = Dataway.builder().dataAccessLayer(new JdbcDataAccessLayer(new SpringJdbcExecutor(new TransactionAwareDataSourceProxy(source), manager), "")).build();
         var transaction = new TransactionTemplate(manager);
         transaction.executeWithoutResult(status -> {
-            dataway.getService().save(api("one"), 0, CallContext.local(Operation.SAVE));
+            dataway.getAdminService().save(api("one"), 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
             status.setRollbackOnly();
         });
-        assertTrue(dataway.getService().list(CallContext.local(Operation.LIST)).isEmpty());
+        assertTrue(dataway.getAdminService().list(Operation.LIST, UserIdentity.anonymous(), Map.of(), null).isEmpty());
     }
 
     private static AnnotationConfigApplicationContext createContext() {
@@ -123,8 +124,8 @@ class SpringTransactionTest {
 
         private void saveAndPublish() {
             jdbc.update("INSERT INTO host_work VALUES (1)");
-            dataway.getService().save(api("one"), 0, CallContext.local(Operation.SAVE));
-            dataway.getService().publish("one", 1, CallContext.local(Operation.PUBLISH));
+            dataway.getAdminService().save(api("one"), 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
+            dataway.getAdminService().publish("one", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
         }
 
         @Transactional
@@ -141,9 +142,9 @@ class SpringTransactionTest {
         @Transactional
         public void catchConflict() {
             jdbc.update("INSERT INTO host_work VALUES (1)");
-            dataway.getService().save(api("one"), 0, CallContext.local(Operation.SAVE));
+            dataway.getAdminService().save(api("one"), 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
             try {
-                dataway.getService().save(api("duplicate"), 0, CallContext.local(Operation.SAVE));
+                dataway.getAdminService().save(api("duplicate"), 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
             } catch (DatawayException e) {
                 assertEquals(409, e.status());
             }

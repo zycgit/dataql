@@ -17,15 +17,3 @@ dependencies {
     api project(':dataway-embedded')
     api 'com.alibaba.nacos:nacos-client:3.1.2'
 }
-
-tasks.named('test') {
-    exclude '**/NacosServerTest.class'
-}
-tasks.register('nacosServerTest', Test) {
-    group = 'verification'
-    description = 'Verify Nacos persistence against DATAWAY_NACOS_SERVER using isolated temporary configurations.'
-    testClassesDirs = sourceSets.test.output.classesDirs
-    classpath = sourceSets.test.runtimeClasspath
-    include '**/NacosServerTest.class'
-    outputs.upToDateWhen { false }
-}

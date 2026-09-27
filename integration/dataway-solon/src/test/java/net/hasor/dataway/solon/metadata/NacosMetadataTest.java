@@ -7,11 +7,12 @@
  */
 package net.hasor.dataway.solon.metadata;
 import java.lang.reflect.Proxy;
+import java.util.Map;
 import com.alibaba.nacos.api.config.ConfigService;
-import net.hasor.dataway.Dataway;
 import net.hasor.dataway.authorization.Operation;
+import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.nacos.NacosDataAccessLayer;
-import net.hasor.dataway.service.CallContext;
+import net.hasor.dataway.service.Dataway;
 import net.hasor.dataway.solon.DatawayPlugin;
 import org.junit.jupiter.api.Test;
 import org.noear.solon.Solon;
@@ -49,7 +50,7 @@ class NacosMetadataTest {
                     context.wrapAndPut("metadataStore", new NacosDataAccessLayer(this.client(), "host-store", "HOST_GROUP", 1500));
                 });
             });
-            assertTrue(Solon.context().getBean(Dataway.class).getService().list(CallContext.local(Operation.LIST)).isEmpty());
+            assertTrue(Solon.context().getBean(Dataway.class).getAdminService().list(Operation.LIST, UserIdentity.anonymous(), Map.of(), null).isEmpty());
         } finally {
             Solon.stopBlock(false, 0);
         }

@@ -8,10 +8,10 @@
 package net.hasor.dataway.solon;
 import java.util.List;
 import java.util.Objects;
-import net.hasor.dataway.Dataway;
-import net.hasor.dataway.DatawayBuilder;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
-import net.hasor.dataway.model.WebHandler;
+import net.hasor.dataway.service.Dataway;
+import net.hasor.dataway.service.DatawayBuilder;
+import net.hasor.dataway.service.WebHandler;
 import org.noear.solon.core.*;
 
 /**

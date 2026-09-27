@@ -15,10 +15,10 @@ import net.hasor.cobble.provider.Provider;
 import net.hasor.cobble.setting.Settings;
 import net.hasor.core.ApiBinder;
 import net.hasor.core.Module;
-import net.hasor.dataway.Dataway;
-import net.hasor.dataway.DatawayBuilder;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
-import net.hasor.dataway.model.WebHandler;
+import net.hasor.dataway.service.Dataway;
+import net.hasor.dataway.service.DatawayBuilder;
+import net.hasor.dataway.service.WebHandler;
 import net.hasor.web.WebApiBinder;
 import net.hasor.web.binder.MappingDef;
 

@@ -15,7 +15,10 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.time.Duration;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.sql.DataSource;
 import jakarta.servlet.Filter;
@@ -23,12 +26,15 @@ import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
-import net.hasor.dataway.Dataway;
 import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
-import net.hasor.dataway.model.*;
+import net.hasor.dataway.model.ApiDefinition;
+import net.hasor.dataway.model.ApiScriptType;
+import net.hasor.dataway.model.ResultInfo;
+import net.hasor.dataway.model.ResultInfoUtils;
 import net.hasor.dataway.service.*;
+import net.hasor.dataway.service.admin.AdminInterceptor;
 import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.NoUniqueBeanDefinitionException;
@@ -100,8 +106,8 @@ class DatawayAutoConfigurationTest {
     @Test
     void disabledDefaultsDoNotAssembleCoreOrRegisterMappings() throws Exception {
         for (boolean fromFile : new boolean[] { false, true }) {
-            var runner = context.withBean(DatawayConfigurer.class, () -> builder -> builder.dataSource(() -> {
-                throw new AssertionError("Disabled entries must not acquire storage");
+            var runner = context.withBean(DatawayConfigurer.class, () -> builder -> builder.configureHost(host -> {
+                throw new AssertionError("Disabled entries must not initialize a runtime");
             }));
 
             if (fromFile) {
@@ -120,15 +126,15 @@ class DatawayAutoConfigurationTest {
 
     @Test
     void sameCoreSpiAndSuppliedInstanceRemainSupported() {
-        context.withBean(DatawayConfigurer.class, () -> builder -> builder.dataSource(TestDatabase.create()).dataAccessLayer(TestDatabase.dataAccessLayer())).run(c -> {
+        context.withBean(DatawayConfigurer.class, () -> builder -> builder.dataAccessLayer(TestDatabase.dataAccessLayer())).run(c -> {
             Dataway dataway = c.getBean(Dataway.class);
             publish(dataway.getService(), "return 'configured';");
-            assertEquals("configured", dataway.getService().invokeApi("/hello", Map.of()));
+            assertEquals("configured", ((Map<?, ?>) dataway.getService().invokeApi("/hello", Map.of())).get("value"));
             assertTrue(c.getBeansOfType(DatawayService.class).isEmpty());
             assertTrue(c.getBeansOfType(WebHandler.class).isEmpty());
             assertTrue(c.getBeansOfType(FilterRegistrationBean.class).isEmpty());
         });
-        Dataway supplied = Dataway.builder().dataSource(TestDatabase.create()).dataAccessLayer(TestDatabase.dataAccessLayer()).build();
+        Dataway supplied = Dataway.builder().dataAccessLayer(TestDatabase.dataAccessLayer()).build();
         context.withBean(Dataway.class, () -> supplied).withBean(DatawayConfigurer.class, () -> builder -> fail("Already assembled")).withPropertyValues("dataway.api-enabled=true").run(c -> {
             assertNull(c.getStartupFailure());
             assertSame(supplied, c.getBean(Dataway.class));
@@ -151,14 +157,14 @@ class DatawayAutoConfigurationTest {
                 }
                 if (admin) {
                     assertEquals(Set.of("/ops/manage", "/ops/manage/{*path}"), paths.get("datawayAdmin"));
-                    assertEquals(new HashSet<>(DatawayUiHandler.resourcePaths().stream().map(path -> "/tools/console" + path).toList()), paths.get("datawayUi"));
+                    assertEquals(Set.of("/tools/console", "/tools/console/{*path}"), paths.get("datawayUi"));
                 }
             });
         }
     }
 
     @Test
-    void hostMvcInterceptorSuppliesIdentityAndCanDenyEveryEntry() {
+    void hostMvcInterceptorSuppliesIdentityAndOwnsResourceAccess() {
         context.withBean("metadataStorage", DatawayConfigurer.class, () -> builder -> {
             builder.dataAccessLayer(TestDatabase.dataAccessLayer());
         }).withBean(DataSource.class, TestDatabase::create).withBean(WebMvcConfigurer.class, DatawayAutoConfigurationTest::hostMvc).withBean(HostExceptionHandler.class, HostExceptionHandler::new).withBean(DatawayConfigurer.class, () -> builder -> {
@@ -174,12 +180,16 @@ class DatawayAutoConfigurationTest {
                 var result = mvc.perform(MockMvcRequestBuilders.get(path).header("X-Test-User", "user")).andReturn();
                 assertInstanceOf(HandlerMethod.class, result.getHandler());
                 assertEquals(200, result.getResponse().getStatus());
+            }
+            for (String path : new String[] { "/api/hello", "/dataway/api/api-list" }) {
                 var denied = mvc.perform(MockMvcRequestBuilders.get(path).header("X-Test-User", "denied-user")).andReturn();
                 assertEquals(401, denied.getResponse().getStatus());
                 assertEquals("spring", denied.getResponse().getHeader("X-Host-Error"));
                 assertInstanceOf(DatawayException.class, denied.getResolvedException());
             }
-            assertEquals(404, mvc.perform(MockMvcRequestBuilders.get("/dataway/host-route")).andReturn().getResponse().getStatus());
+            assertEquals(200, mvc.perform(MockMvcRequestBuilders.get("/dataway/assets/app.js").header("X-Test-User", "denied-user")).andReturn().getResponse().getStatus());
+            assertEquals(401, mvc.perform(MockMvcRequestBuilders.get("/dataway/host-route")).andReturn().getResponse().getStatus());
+            assertEquals(404, mvc.perform(MockMvcRequestBuilders.get("/dataway/host-route").header("X-Test-User", "user")).andReturn().getResponse().getStatus());
         });
     }
 
@@ -195,9 +205,7 @@ class DatawayAutoConfigurationTest {
     @Test
     void checkedExceptionsReachHostControllerAdviceUnchanged() {
         IOException failure = new IOException("host decides the response");
-        context.withBean(HostExceptionHandler.class, HostExceptionHandler::new).withBean(Dataway.class, () -> Dataway.builder().dataAccessLayer(TestDatabase.dataAccessLayer()).apiHandler(core -> (request, response) -> {
-            throw failure;
-        }).build()).withPropertyValues("dataway.api-enabled=true").run(c -> {
+        context.withBean(HostExceptionHandler.class, HostExceptionHandler::new).withBean(Dataway.class, () -> Dataway.builder().dataAccessLayer(TestDatabase.dataAccessLayer()).apiHandler(core -> new FailingWebHandler(core, failure)).build()).withPropertyValues("dataway.api-enabled=true").run(c -> {
             var mvc = MockMvcBuilders.webAppContextSetup(c.getSourceApplicationContext()).build();
             var result = mvc.perform(MockMvcRequestBuilders.get("/api/failure")).andReturn();
             assertSame(failure, result.getResolvedException());
@@ -248,8 +256,8 @@ class DatawayAutoConfigurationTest {
             echoApi.setType(ApiScriptType.DATAQL);
             echoApi.setScript("return ${name};");
             echoApi.setDescription("");
-            service.save(echoApi, 0, CallContext.local(Operation.SAVE));
-            service.publish("echo", 1, CallContext.local(Operation.PUBLISH));
+            service.getBeanContainer().getAdminService().save(echoApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
+            service.getBeanContainer().getAdminService().publish("echo", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
             Filter replay = (input, output, chain) -> {
                 byte[] cached = input.getInputStream().readAllBytes();
                 var wrapped = new HttpServletRequestWrapper((HttpServletRequest) input) {
@@ -263,7 +271,7 @@ class DatawayAutoConfigurationTest {
             var mvc = MockMvcBuilders.webAppContextSetup(c.getSourceApplicationContext()).addFilters(replay).build();
             var result = mvc.perform(post("/api/echo").contentType("application/json").content("{\"name\":\"host-body\"}")).andReturn().getResponse();
             assertEquals(200, result.getStatus());
-            assertEquals("\"host-body\"", result.getContentAsString());
+            assertEquals("host-body", new JsonMapper().readTree(result.getContentAsString()).get("value").asText());
         });
     }
 
@@ -333,30 +341,32 @@ class DatawayAutoConfigurationTest {
             });
             application.registerBean(DatawayConfigurer.class, () -> builder -> {
                 builder.dataAccessLayer(new JdbcDataAccessLayer(source, ""));
-                DatawayInterceptor policy = (action, chain) -> {
-                    if (action.getCallContext().source().equals("HTTP") && !"native-user".equals(action.getIdentity().getId())) {
+                AdminInterceptor policy = (action, chain) -> {
+                    if (!"native-user".equals(action.getIdentity().getId())) {
                         throw new DatawayException(401, "Host filter must establish identity");
                     }
                     return chain.proceed();
                 };
-                builder.accessInterceptor(policy).actionInterceptor(policy);
+                builder.authorizationCheck((identity, operation) -> "native-user".equals(identity.getId()));
+                builder.actionInterceptor(policy);
                 builder.configureService(service -> service.interceptor((invocation, next) -> {
-                    if (invocation.parameters().containsKey("download")) {
+                    if (invocation.getParameters().containsKey("download")) {
                         ResultInfo result = ResultInfoUtils.ofStream("application/pdf", new ByteArrayInputStream(new byte[] { 0, 1, (byte) 255 }));
                         result.getHeaders().put("Content-Disposition", "attachment; filename=result.pdf");
                         return result;
                     }
                     return next.proceed(invocation);
                 }));
-                builder.uiHandler(dataway -> {
-                    var ui = new DatawayUiHandler(dataway);
-                    return (request, response) -> {
+                builder.identityProvider(request -> {
+                    if (request.getPath().equals("/tools/console" + request.getPathInfo())) {
+                        assertEquals("native-user", request.getIdentity().getId());
                         uiRequests.incrementAndGet();
-                        ui.handle(request, response);
-                    };
+                    }
+                    return request.getIdentity();
                 });
             });
             application.register(DatawayAutoConfiguration.class, WebMvcAutoConfiguration.class, DispatcherServletAutoConfiguration.class);
+            application.register(HostExceptionHandler.class);
             application.registerBean(WebMvcConfigurer.class, () -> hostMvc());
             application.refresh();
             Dataway dataway = application.getBean(Dataway.class);
@@ -372,7 +382,7 @@ class DatawayAutoConfigurationTest {
             }
             String base = "http://127.0.0.1:" + application.getWebServer().getPort() + "/host";
             try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()) {
-                assertEquals("\"spring\"", get(client, base + "/open/v2/hello", "native-user").body());
+                assertEquals("spring", new JsonMapper().readTree(get(client, base + "/open/v2/hello", "native-user").body()).get("value").asText());
                 var binary = client.send(HttpRequest.newBuilder(URI.create(base + "/open/v2/hello?download=true")).header("X-Test-User", "native-user").build(), HttpResponse.BodyHandlers.ofByteArray());
                 assertEquals(200, binary.statusCode());
                 assertEquals("application/pdf", binary.headers().firstValue("Content-Type").orElseThrow());
@@ -390,15 +400,15 @@ class DatawayAutoConfigurationTest {
                         return {'headers': w.headerArray('X-Repeat'), 'cookies': w.cookieArray('id')};
                         """);
                 cookiesApi.setDescription("");
-                dataway.getService().save(cookiesApi, 0, CallContext.local(Operation.SAVE));
-                dataway.getService().publish("cookies", 1, CallContext.local(Operation.PUBLISH));
+                dataway.getAdminService().save(cookiesApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
+                dataway.getAdminService().publish("cookies", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
                 var cookies = client.send(HttpRequest.newBuilder(URI.create(base + "/open/v2/cookies"))//
                         .header("X-Test-User", "native-user").header("X-Repeat", "one").header("X-Repeat", "two")//
                         .header("Cookie", "id=first; id=second").build(), HttpResponse.BodyHandlers.ofString());
                 assertEquals(200, cookies.statusCode());
                 assertEquals(List.of("first", "second"), cookies.headers().allValues("X-Result"));
                 assertEquals(List.of("one=1; Path=/", "two=2; Path=/; HttpOnly"), cookies.headers().allValues("Set-Cookie"));
-                var cookieBody = JsonMapper.builder().build().readTree(cookies.body());
+                var cookieBody = JsonMapper.builder().build().readTree(cookies.body()).get("value");
                 assertEquals("one", cookieBody.get("headers").get(0).asText());
                 assertEquals("two", cookieBody.get("headers").get(1).asText());
                 assertEquals("first", cookieBody.get("cookies").get(0).asText());
@@ -414,12 +424,15 @@ class DatawayAutoConfigurationTest {
                 assertEquals(308, redirect.statusCode());
                 assertEquals("console/", redirect.headers().firstValue("Location").orElseThrow());
                 assertEquals(3, uiRequests.get());
-                assertEquals(404, get(client, base + "/tools/console/host-route", null).statusCode());
+                assertEquals(401, get(client, base + "/tools/console/host-route", null).statusCode());
+                assertEquals(3, uiRequests.get(), "Host authentication runs before resource lookup");
+                assertEquals(404, get(client, base + "/tools/console/host-route", "native-user").statusCode());
+                assertEquals(4, uiRequests.get(), "The UI handler rejects a missing resource after authentication");
                 assertEquals(404, get(client, base + "/tools/console-other", null).statusCode());
                 assertEquals(404, get(client, base + "/host-route", null).statusCode());
-                assertEquals(3, uiRequests.get(), "The container must not send host paths to the UI handler");
+                assertEquals(4, uiRequests.get(), "Paths outside the UI prefix must not reach the handler");
                 assertEquals(401, get(client, base + "/tools/console/assets/app.css", null).statusCode());
-                assertEquals(3, uiRequests.get(), "Resource denial must happen before the custom handler");
+                assertEquals(4, uiRequests.get(), "Resource denial must happen before the custom handler");
 
             }
         }
@@ -441,8 +454,8 @@ class DatawayAutoConfigurationTest {
         oneApi.setType(ApiScriptType.DATAQL);
         oneApi.setScript(script);
         oneApi.setDescription("");
-        service.save(oneApi, 0, CallContext.local(Operation.SAVE));
-        service.publish("one", 1, CallContext.local(Operation.PUBLISH));
+        service.getBeanContainer().getAdminService().save(oneApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
+        service.getBeanContainer().getAdminService().publish("one", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
     }
 
     private static HttpResponse<String> get(HttpClient client, String uri, String user) throws Exception {

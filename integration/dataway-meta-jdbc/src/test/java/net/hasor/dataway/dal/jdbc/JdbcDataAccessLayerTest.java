@@ -11,13 +11,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import net.hasor.dataway.TestDatabase;
 import net.hasor.dataway.authorization.Operation;
+import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.EntityType;
 import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ApiScriptType;
-import net.hasor.dataway.service.CallContext;
 import net.hasor.dataway.service.DatawayException;
 import net.hasor.dataway.service.DatawayService;
-import net.hasor.dataway.service.FxRuntime;
+import net.hasor.dataway.service.script.DatawayConfig;
 import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -43,20 +43,20 @@ class JdbcDataAccessLayerTest {
         var source = source();
         var repository = new JdbcDataAccessLayer(source, "");
 
-        var runtime = FxRuntime.builder().build();
+        var runtime = new DatawayConfig().resultStructure(false);
         var service = DatawayService.builder(runtime, repository).build();
-        service.save(api("one", "/hello", "return 'published';"), 0, CallContext.local(Operation.SAVE));
-        service.publish("one", 1, CallContext.local(Operation.PUBLISH));
-        service.save(api("one", "/hello", "return 'draft';"), 2, CallContext.local(Operation.SAVE));
+        service.getBeanContainer().getAdminService().save(api("one", "/hello", "return 'published';"), 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
+        service.getBeanContainer().getAdminService().publish("one", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
+        service.getBeanContainer().getAdminService().save(api("one", "/hello", "return 'draft';"), 2, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
         var restarted = DatawayService.builder(runtime, new JdbcDataAccessLayer(source, "")).build();
         assertEquals("published", restarted.invokeApi("/hello", Map.of()));
-        assertEquals("draft", restarted.debug("one", Map.of(), CallContext.local(Operation.DEBUG)));
-        assertEquals(1, restarted.getApiById("one", CallContext.local(Operation.READ)).getHistory().size());
-        assertEquals("描述", restarted.getApiById("one", CallContext.local(Operation.READ)).getDraft().getDescription());
-        restarted.disableApi("one", 3, CallContext.local(Operation.DISABLE));
-        assertFalse(restarted.getApiById("one", CallContext.local(Operation.READ)).isEnabled());
-        restarted.deleteApi("one", 4, CallContext.local(Operation.DELETE));
-        assertTrue(service.list(CallContext.local(Operation.LIST)).isEmpty());
+        assertEquals("draft", restarted.debug("one", Map.of(), Operation.DEBUG, UserIdentity.anonymous(), Map.of(), null));
+        assertEquals(1, restarted.getBeanContainer().getAdminService().getApiById("one", Operation.READ, UserIdentity.anonymous(), Map.of(), null).getHistory().size());
+        assertEquals("描述", restarted.getBeanContainer().getAdminService().getApiById("one", Operation.READ, UserIdentity.anonymous(), Map.of(), null).getDraft().getDescription());
+        restarted.getBeanContainer().getAdminService().disableApi("one", 3, Operation.DISABLE, UserIdentity.anonymous(), Map.of(), null);
+        assertFalse(restarted.getBeanContainer().getAdminService().getApiById("one", Operation.READ, UserIdentity.anonymous(), Map.of(), null).isEnabled());
+        restarted.getBeanContainer().getAdminService().deleteApi("one", 4, Operation.DELETE, UserIdentity.anonymous(), Map.of(), null);
+        assertTrue(service.getBeanContainer().getAdminService().list(Operation.LIST, UserIdentity.anonymous(), Map.of(), null).isEmpty());
     }
 
     @Test
@@ -64,10 +64,10 @@ class JdbcDataAccessLayerTest {
         var source = source();
         var first = new JdbcDataAccessLayer(source, "");
 
-        var runtime = FxRuntime.builder().build();
+        var runtime = new DatawayConfig().resultStructure(false);
         var a = DatawayService.builder(runtime, first).build();
         var b = DatawayService.builder(runtime, new JdbcDataAccessLayer(source, "")).build();
-        a.save(api("one", "/hello", "return 1;"), 0, CallContext.local(Operation.SAVE));
+        a.getBeanContainer().getAdminService().save(api("one", "/hello", "return 1;"), 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
         try (var pool = Executors.newFixedThreadPool(2)) {
             CountDownLatch start = new CountDownLatch(1);
             var x = pool.submit(() -> publish(start, a));
@@ -75,14 +75,14 @@ class JdbcDataAccessLayerTest {
             start.countDown();
             assertNotEquals(x.get(), y.get());
         }
-        assertEquals(2, a.getApiById("one", CallContext.local(Operation.READ)).getRevision());
-        assertEquals(1, a.getApiById("one", CallContext.local(Operation.READ)).getHistory().size());
+        assertEquals(2, a.getBeanContainer().getAdminService().getApiById("one", Operation.READ, UserIdentity.anonymous(), Map.of(), null).getRevision());
+        assertEquals(1, a.getBeanContainer().getAdminService().getApiById("one", Operation.READ, UserIdentity.anonymous(), Map.of(), null).getHistory().size());
     }
 
     private boolean publish(CountDownLatch start, DatawayService service) throws Exception {
         start.await();
         try {
-            service.publish("one", 1, CallContext.local(Operation.PUBLISH));
+            service.getBeanContainer().getAdminService().publish("one", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
             return true;
         } catch (DatawayException e) {
             assertEquals(409, e.status());
@@ -95,13 +95,13 @@ class JdbcDataAccessLayerTest {
         var source = source();
         var repository = new JdbcDataAccessLayer(source, "");
 
-        var service = DatawayService.builder(FxRuntime.builder().build(), repository).build();
-        service.save(api("one", "/path", "return 1;"), 0, CallContext.local(Operation.SAVE));
-        service.save(api("two", "/Path", "return 2;"), 0, CallContext.local(Operation.SAVE));
-        assertEquals(409, assertThrows(DatawayException.class, () -> service.save(api("three", "/path", "return 3;"), 0, CallContext.local(Operation.SAVE))).status());
-        service.save(api("one", "/path", "return 4;"), 1, CallContext.local(Operation.SAVE));
-        assertEquals(409, assertThrows(DatawayException.class, () -> service.deleteApi("one", 1, CallContext.local(Operation.DELETE))).status());
-        assertEquals(2, service.list(CallContext.local(Operation.LIST)).size());
+        var service = DatawayService.builder(new DatawayConfig().resultStructure(false), repository).build();
+        service.getBeanContainer().getAdminService().save(api("one", "/path", "return 1;"), 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
+        service.getBeanContainer().getAdminService().save(api("two", "/Path", "return 2;"), 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
+        assertEquals(409, assertThrows(DatawayException.class, () -> service.getBeanContainer().getAdminService().save(api("three", "/path", "return 3;"), 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null)).status());
+        service.getBeanContainer().getAdminService().save(api("one", "/path", "return 4;"), 1, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
+        assertEquals(409, assertThrows(DatawayException.class, () -> service.getBeanContainer().getAdminService().deleteApi("one", 1, Operation.DELETE, UserIdentity.anonymous(), Map.of(), null)).status());
+        assertEquals(2, service.getBeanContainer().getAdminService().list(Operation.LIST, UserIdentity.anonymous(), Map.of(), null).size());
         assertTrue(repository.getObject(EntityType.INFO, "' OR 1=1 --").isEmpty());
     }
 }

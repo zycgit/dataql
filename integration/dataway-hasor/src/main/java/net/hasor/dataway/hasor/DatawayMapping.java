@@ -18,12 +18,16 @@ final class DatawayMapping extends MappingDef {
 
     DatawayMapping(BindInfo<DatawayController> controller, List<String> paths) {
         super(0, controller, paths.getFirst(), method -> true);
-        this.mappings = paths.stream().map(path -> new MappingDef(0, controller, path, method -> true)).toList();
+        this.mappings = paths.stream().map(path -> {
+            return new MappingDef(0, controller, path, method -> true);
+        }).toList();
     }
 
     @Override
     public boolean matchingMapping(HttpServletRequest request) {
-        return this.mappings.stream().anyMatch(m -> m.matchingMapping(request));
+        return this.mappings.stream().anyMatch(m -> {
+            return m.matchingMapping(request);
+        });
     }
 
     @Override
@@ -33,6 +37,8 @@ final class DatawayMapping extends MappingDef {
 
     @Override
     public String getMappingToMatches() {
-        return this.mappings.stream().map(mapping -> "(?:" + mapping.getMappingToMatches() + ")").collect(Collectors.joining("|"));
+        return this.mappings.stream().map(mapping -> {
+            return "(?:" + mapping.getMappingToMatches() + ")";
+        }).collect(Collectors.joining("|"));
     }
 }

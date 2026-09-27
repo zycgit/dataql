@@ -7,15 +7,16 @@
  */
 package net.hasor.dataway.hasor.metadata;
 import java.lang.reflect.Proxy;
+import java.util.Map;
 import java.util.Properties;
 import com.alibaba.nacos.api.config.ConfigService;
 import net.hasor.core.Hasor;
-import net.hasor.dataway.Dataway;
 import net.hasor.dataway.authorization.Operation;
+import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.dal.nacos.NacosDataAccessLayer;
 import net.hasor.dataway.hasor.DatawayModule;
-import net.hasor.dataway.service.CallContext;
+import net.hasor.dataway.service.Dataway;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -49,7 +50,7 @@ class NacosMetadataTest {
         try (var context = Hasor.create().loadSettings(settings).build(new DatawayModule(), binder -> {
             binder.bindType(ApiDataAccessLayer.class).toInstance(new NacosDataAccessLayer(this.client(), "host-store", "HOST_GROUP", 1500));
         })) {
-            assertTrue(context.getInstance(Dataway.class).getService().list(CallContext.local(Operation.LIST)).isEmpty());
+            assertTrue(context.getInstance(Dataway.class).getAdminService().list(Operation.LIST, UserIdentity.anonymous(), Map.of(), null).isEmpty());
         }
     }
 }

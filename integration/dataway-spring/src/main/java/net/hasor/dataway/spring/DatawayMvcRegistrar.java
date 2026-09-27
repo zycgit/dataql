@@ -10,8 +10,8 @@ import java.util.Arrays;
 import java.util.Objects;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import net.hasor.dataway.Dataway;
-import net.hasor.dataway.model.WebHandler;
+import net.hasor.dataway.service.Dataway;
+import net.hasor.dataway.service.WebHandler;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
@@ -28,7 +28,8 @@ public final class DatawayMvcRegistrar implements SmartInitializingSingleton {
 
     private final ObjectProvider<RequestMappingHandlerMapping> mappings;
 
-    public DatawayMvcRegistrar(Dataway dataway, boolean apiEnabled, boolean adminEnabled, String apiPrefix, String adminPrefix, String uiPrefix, ObjectProvider<RequestMappingHandlerMapping> mappings) {
+    public DatawayMvcRegistrar(Dataway dataway, boolean apiEnabled, boolean adminEnabled,//
+            String apiPrefix, String adminPrefix, String uiPrefix, ObjectProvider<RequestMappingHandlerMapping> mappings) {
         this.mappings = mappings;
         this.dataway = apiEnabled || adminEnabled ? Objects.requireNonNull(dataway) : dataway;
         this.apiEnabled = apiEnabled;

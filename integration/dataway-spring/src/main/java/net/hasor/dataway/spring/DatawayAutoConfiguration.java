@@ -6,10 +6,9 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.spring;
-import javax.sql.DataSource;
-import net.hasor.dataway.Dataway;
-import net.hasor.dataway.DatawayBuilder;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
+import net.hasor.dataway.service.Dataway;
+import net.hasor.dataway.service.DatawayBuilder;
 import net.hasor.dataway.service.DatawayConfigurer;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -26,19 +25,16 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
  * Assembles the shared core on demand and registers MVC controller entries.
  * Entry switches default to false; routing configuration stays in this integration.
  */
-@AutoConfiguration(afterName = "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration")
+@AutoConfiguration
 public class DatawayAutoConfiguration {
     private static final String CONFIG_PREFIX = "dataway";
 
     @Bean
     @Lazy
     @ConditionalOnMissingBean(Dataway.class)
-    public Dataway dataway(ObjectProvider<DataSource> sources, ConfigurableListableBeanFactory beans, //
+    public Dataway dataway(ConfigurableListableBeanFactory beans, //
             ObjectProvider<DatawayConfigurer> configurers, Environment environment) {
-        DatawayBuilder builder = Dataway.builder().dataSource(sources::getIfUnique).dataSources(() -> {
-            return beans.getBeansOfType(DataSource.class);
-        });
-
+        DatawayBuilder builder = Dataway.builder();
         builder.defaultDataAccessLayer(() -> this.getDataAccessLayer(beans, environment));
         configurers.orderedStream().forEach(builder::configure);
         return builder.build();
