@@ -94,7 +94,7 @@ public class NacosSnapshot {
         for (FieldDef field : fields) {
             Objects.requireNonNull(field, "field");
             boolean supported = switch (field) {
-                case API_ID, SCRIPT_ORI, RELEASE_TIME -> type == EntityType.RELEASE;
+                case API_ID, RELEASE_TIME -> type == EntityType.RELEASE;
                 case CREATE_TIME, GMT_TIME -> type == EntityType.INFO;
                 default -> true;
             };

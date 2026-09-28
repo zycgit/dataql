@@ -16,8 +16,8 @@ public enum FieldDef {
     STATUS,
     COMMENT,
     TYPE,
+    /** Original script; execution wrappers are assembled by the engine. */
     SCRIPT,
-    SCRIPT_ORI,
     SCHEMA,
     SAMPLE,
     OPTION,

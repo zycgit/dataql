@@ -98,7 +98,11 @@ class LegacyStorageTest {
         });
         var service = new Dataway(runtime.dataAccessLayer(access));
         assertEquals(7, ((Number) this.executePublished(service, "i_old", Map.of("value", 7))).intValue());
-        assertEquals("return 42;", access.getObject(EntityType.RELEASE, "r_old").orElseThrow().get(SCRIPT));
+        assertEquals("SELECT :value", access.getObject(EntityType.RELEASE, "r_old").orElseThrow().get(SCRIPT));
+        assertEquals("SELECT :value", service.getAdminService().getHistoryById("r_old").getDefinition().getScript());
+        try (var connection = source.getConnection(); var columns = connection.getMetaData().getColumns(null, null, "INTERFACE_RELEASE", "PUB_SCRIPT_ORI")) {
+            assertFalse(columns.next());
+        }
         var before = access.getObject(EntityType.INFO, "i_old").orElseThrow();
         assertEquals("1", before.get(REVISION));
         assertEquals("SELECT :value", service.getAdminService().getDraftByApi("i_old").getScript());
@@ -118,7 +122,6 @@ class LegacyStorageTest {
         service.getAdminService().publish("i_old", 2);
         assertEquals(10, ((Number) this.executePublished(service, "i_old", Map.of("value", 9))).intValue());
         var active = access.listObjects(EntityType.RELEASE, Map.of(API_ID, "i_old", STATUS, "1")).getFirst();
-        assertEquals("SELECT :value + 1", active.get(SCRIPT_ORI));
         assertEquals("SELECT :value + 1", active.get(SCRIPT));
         assertEquals(before.get(OPTION), active.get(OPTION));
         assertEquals(2, service.getAdminService().getHistoryByApi("i_old").size());
@@ -202,6 +205,10 @@ class LegacyStorageTest {
         sql.setOptions("{\"hostOption\":true}");
         service.getAdminService().save(sql, 0);
         service.getAdminService().publish("sql", 1);
+        assertEquals(sql.getScript(), access.getObject(EntityType.INFO, "sql").orElseThrow().get(SCRIPT));
+        var published = service.getAdminService().getReleaseByApi("sql");
+        assertEquals(sql.getScript(), published.getDefinition().getScript());
+        assertEquals(sql.getScript(), access.getObject(EntityType.RELEASE, published.getId()).orElseThrow().get(SCRIPT));
         assertEquals(9, ((Number) this.executePublished(service, "sql", Map.of("value", 8))).intValue());
         ApiDefinition getApi = new ApiDefinition();
         getApi.setId("get");

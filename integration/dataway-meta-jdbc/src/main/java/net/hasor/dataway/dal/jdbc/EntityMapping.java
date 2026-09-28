@@ -56,7 +56,6 @@ record EntityMapping(String table, Map<FieldDef, String> columns) {
             }
             case RELEASE -> {
                 mapping.put(FieldDef.API_ID, "pub_api_id");
-                mapping.put(FieldDef.SCRIPT_ORI, "pub_script_ori");
                 mapping.put(FieldDef.RELEASE_TIME, "pub_release_time");
             }
             default -> {

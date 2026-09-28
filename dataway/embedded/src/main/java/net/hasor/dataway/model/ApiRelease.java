@@ -14,7 +14,6 @@ public class ApiRelease {
     private long          number;
     private Instant       publishedAt;
     private ApiDefinition definition;
-    private String        executionScript;
 
     public String getId() {
         return this.id;
@@ -48,14 +47,6 @@ public class ApiRelease {
         this.definition = definition;
     }
 
-    public String getExecutionScript() {
-        return this.executionScript;
-    }
-
-    public void setExecutionScript(String executionScript) {
-        this.executionScript = executionScript;
-    }
-
     @Override
     public boolean equals(Object object) {
         if (this == object) {
@@ -65,16 +56,16 @@ public class ApiRelease {
             return false;
         }
         ApiRelease other = (ApiRelease) object;
-        return this.number == other.number && Objects.equals(this.id, other.id) && Objects.equals(this.publishedAt, other.publishedAt) && Objects.equals(this.definition, other.definition) && Objects.equals(this.executionScript, other.executionScript);
+        return this.number == other.number && Objects.equals(this.id, other.id) && Objects.equals(this.publishedAt, other.publishedAt) && Objects.equals(this.definition, other.definition);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.id, this.number, this.publishedAt, this.definition, this.executionScript);
+        return Objects.hash(this.id, this.number, this.publishedAt, this.definition);
     }
 
     @Override
     public String toString() {
-        return "ApiRelease[id=" + this.id + ", number=" + this.number + ", publishedAt=" + this.publishedAt + ", definition=" + this.definition + ", executionScript=" + this.executionScript + "]";
+        return "ApiRelease[id=" + this.id + ", number=" + this.number + ", publishedAt=" + this.publishedAt + ", definition=" + this.definition + "]";
     }
 }

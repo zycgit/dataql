@@ -16,15 +16,4 @@ description = 'Framework-independent embedded Dataway runtime, persistence and H
 dependencies {
     api project(':dataql-engine')
     api project(':dataway-embedded-web')
-
-    testImplementation project(':dataway-meta-jdbc')
-    testImplementation 'com.h2database:h2:2.5.250'
-}
-
-tasks.register('consoleTestServer', JavaExec) {
-    group = 'verification'
-    description = 'Runs the real embedded handlers for the console browser tests.'
-    dependsOn 'testClasses'
-    classpath = sourceSets.test.runtimeClasspath
-    mainClass = 'net.hasor.dataway.service.ConsoleTestServer'
 }

@@ -44,8 +44,8 @@ public class AdminServiceImpl implements AdminService {
         definition.setId(row.get(release ? API_ID : ID));
         definition.setMethod(row.get(METHOD));
         definition.setPath(row.get(PATH));
-        definition.setType(ApiScriptType.valueOf(row.get(TYPE).toUpperCase(Locale.ROOT)));
-        definition.setScript(row.get(release ? SCRIPT_ORI : SCRIPT));
+        definition.setType(ApiScriptType.fromName(row.get(TYPE)));
+        definition.setScript(row.get(SCRIPT));
         definition.setDescription(row.get(COMMENT));
         definition.setSchema(row.get(SCHEMA));
         definition.setSample(row.get(SAMPLE));
@@ -155,7 +155,6 @@ public class AdminServiceImpl implements AdminService {
         release.setNumber(number);
         release.setPublishedAt(Instant.ofEpochMilli(Long.parseLong(row.get(RELEASE_TIME))));
         release.setDefinition(this.definition(row, true));
-        release.setExecutionScript(row.get(SCRIPT));
         return release;
     }
 
@@ -292,7 +291,6 @@ public class AdminServiceImpl implements AdminService {
         Map<FieldDef, String> snapshot = this.definitionFields(draft);
         snapshot.put(API_ID, apiID);
         snapshot.put(STATUS, "1");
-        snapshot.put(SCRIPT_ORI, draft.getScript());
         snapshot.put(RELEASE_TIME, Long.toString(publishedAt));
         List<DataMutation> changes = new ArrayList<>();
         changes.add(this.access.create(EntityType.INFO, OperationType.UPDATE, apiID, version, Map.of(STATUS, "1", GMT_TIME, Long.toString(System.currentTimeMillis()))));

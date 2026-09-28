@@ -58,7 +58,7 @@ public final class HttpSupport {
         if (!(value instanceof Map<?, ?> map)) {
             throw new IllegalArgumentException("Metadata must be a JSON object");
         }
-        return new LinkedHashMap<>(HttpSupport.objectMap(map));
+        return new LinkedHashMap<>(objectMap(map));
     }
 
     public static String decode(String value) {

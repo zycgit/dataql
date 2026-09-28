@@ -6,16 +6,17 @@ cd "$(dirname "$0")"
 usage() {
     cat <<'EOF'
 Usage:
-  ./build.sh package [test] [gradle options...]
-  ./build.sh install [test] [gradle options...]
-  ./build.sh deploy  [test] [gradle options...]
-  ./build.sh release [deploy] [test] [gradle options...]
+  ./build.sh package [web] [test] [gradle options...]
+  ./build.sh install [web] [test] [gradle options...]
+  ./build.sh deploy  [web] [test] [gradle options...]
+  ./build.sh release [deploy] [web] [test] [gradle options...]
 
 Commands:
   package    Build packages. Equivalent to Maven package.
   install    Build packages and publish to Maven Local.
   deploy     Build packages, publish to Maven Local, then upload to Maven Central.
   release    Prepare a release commit and tag. With test, verify before deploy. With deploy, upload before next snapshot.
+  web        Limit cleaning, building and publishing to dataway-embedded-web.
   test       Run tests. Tests are skipped unless this argument is present.
 
 Deploy properties:
@@ -161,6 +162,7 @@ if [[ "$#" -eq 0 ]]; then
 fi
 
 mode="package"
+web_only="false"
 run_tests="false"
 dry_run="false"
 release_deploy="false"
@@ -177,6 +179,9 @@ for arg in "$@"; do
             ;;
         install)
             mode="install"
+            ;;
+        web)
+            web_only="true"
             ;;
         deploy)
             if [[ "$mode" == "release" ]]; then
@@ -209,13 +214,25 @@ if [[ "$mode" == "release" ]]; then
         echo "Release does not support --dry-run because it creates commits and tags." >&2
         exit 1
     fi
-    prepare_release "$release_deploy" "$run_tests" "${gradle_args[@]}"
+    release_args=("${gradle_args[@]}")
+    if [[ "$web_only" == "true" ]]; then
+        release_args+=(web)
+    fi
+    prepare_release "$release_deploy" "$run_tests" "${release_args[@]}"
     exit 0
 fi
 
-tasks=(build)
+task_prefix=""
+if [[ "$web_only" == "true" ]]; then
+    task_prefix=":dataway-embedded-web:"
+fi
+clean_task="${task_prefix}clean"
+tasks=("${task_prefix}build")
+if [[ "$web_only" == "true" && "$run_tests" != "true" ]]; then
+    tasks=("${task_prefix}assemble")
+fi
 if [[ "$mode" == "install" || "$mode" == "deploy" ]]; then
-    tasks+=(publishToMavenLocal)
+    tasks+=("${task_prefix}publishToMavenLocal")
 fi
 if [[ "$run_tests" != "true" ]]; then
     gradle_args+=("-x" "test")
@@ -246,7 +263,7 @@ if [[ "$mode" == "deploy" ]]; then
 
     central_dir="$PWD/build/central-bundle/repository"
     central_zip="$PWD/build/central-bundle/central-bundle.zip"
-    tasks+=(publishAllPublicationsToCentralBundleRepository)
+    tasks+=("${task_prefix}publishAllPublicationsToCentralBundleRepository")
     gradle_args+=("-PcentralRelease=true")
     gradle_args+=("-PcentralBundleDir=${central_dir}")
 fi
@@ -277,7 +294,7 @@ if [[ "$mode" == "deploy" && "$dry_run" != "true" ]]; then
     rm -f -- "$central_zip"
 fi
 
-./gradlew clean "${gradle_defaults[@]}" "${gradle_args[@]}"
+./gradlew "$clean_task" "${gradle_defaults[@]}" "${gradle_args[@]}"
 ./gradlew "${tasks[@]}" "${gradle_defaults[@]}" "${gradle_args[@]}"
 
 if [[ "$mode" == "deploy" && "$dry_run" != "true" ]]; then

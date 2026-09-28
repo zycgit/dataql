@@ -11,9 +11,9 @@ plugins {
 }
 
 dependencies {
-    api platform('org.springframework.boot:spring-boot-dependencies:4.1.1')
     api project(':dataway-embedded')
     api 'org.springframework.boot:spring-boot-starter-webmvc'
+    api platform('org.springframework.boot:spring-boot-dependencies:4.1.1')
 
     // optional
     compileOnly project(':dataway-meta-jdbc')

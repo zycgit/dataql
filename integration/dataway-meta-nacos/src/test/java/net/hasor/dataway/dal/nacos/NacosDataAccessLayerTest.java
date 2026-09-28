@@ -55,6 +55,19 @@ class NacosDataAccessLayerTest {
         }
     }
 
+    @Test
+    void legacyScriptFieldsRequireExplicitMigration() {
+        Server server = new Server();
+        Map<String, Object> releases = Map.of("sql", Map.of("ID", "sql", "REVISION", "1", "SCRIPT", "return 'compiled';", "SCRIPT_ORI", "SELECT :value"));
+        String original = JsonUtils.writeValueAsString(Map.of("format", 1, "generation", "old", "records", Map.of("INFO", Map.of(), "RELEASE", releases)));
+        server.configs.put("test/store", original);
+        var access = server.access();
+        assertThrows(DataAccessException.class, () -> access.getObject(EntityType.RELEASE, "sql"));
+        assertThrows(DataAccessException.class, () -> access.updateObject(EntityType.RELEASE, "sql", 1, Map.of(COMMENT, "updated")));
+        assertEquals(original, server.configs.get("test/store"));
+        assertEquals(0, server.publications.get());
+    }
+
     private static class Server {
         final    Map<String, String> configs      = new ConcurrentHashMap<>();
         final    AtomicInteger       publications = new AtomicInteger();
@@ -231,7 +244,8 @@ class NacosDataAccessLayerTest {
         restarted.getApiHandler().handle(new TestWebRequest("GET", "/one", Map.of()), response);
         Map<?, ?> apiResult = (Map<?, ?>) response.getResult();
         assertEquals(42, ((Number) apiResult.get("value")).intValue());
-        assertEquals("return 42;", server.access().listObjects(EntityType.RELEASE, Map.of()).getFirst().get(SCRIPT_ORI));
+        assertEquals("return 42;", server.access().listObjects(EntityType.RELEASE, Map.of()).getFirst().get(SCRIPT));
+        assertFalse(server.configs.get("test/store").contains("SCRIPT_ORI"));
         var disabled = restarted.getAdminService().disableApi("one", 2);
         assertFalse(disabled.isEnabled());
         assertTrue(disabled.isPublished());
@@ -268,7 +282,8 @@ class NacosDataAccessLayerTest {
         assertEquals("plain body", JsonUtils.readValue(row.get(SAMPLE), Map.class).get("requestBody"));
         assertTrue(row.get(SCHEMA).contains("requestBody"));
         assertTrue(row.get(OPTION).contains("legacy hint"));
-        assertEquals("original", server.access().getObject(EntityType.RELEASE, "r_one").orElseThrow().get(SCRIPT_ORI));
+        assertEquals("original", server.access().getObject(EntityType.RELEASE, "r_one").orElseThrow().get(SCRIPT));
+        assertFalse(server.configs.get("test/store").contains("SCRIPT_ORI"));
         original.forEach((key, value) -> {
             if (key.startsWith("old/")) {
                 assertEquals(value, server.configs.get(key));
@@ -285,5 +300,38 @@ class NacosDataAccessLayerTest {
         assertThrows(DataAccessException.class, () -> server.access().importLegacy("old"));
         assertEquals(EMPTY, server.configs.get("test/store"));
         assertEquals(0, server.publications.get());
+    }
+
+    @Test
+    void sqlPublicationStoresOriginalScriptAndCompilesItOnInvocation() throws Exception {
+        Server server = new Server();
+        var access = server.access();
+        var config = new DatawayConfig().dataAccessLayer(access).resultStructure(false).fragment("sql", () -> (hints, parameters, script) -> {
+            assertEquals("SELECT :value + 1", script);
+            return ((Number) parameters.get("value")).intValue() + 1;
+        });
+        var dataway = config.createDataway();
+        var definition = new ApiDefinition();
+        definition.setId("sql");
+        definition.setMethod("GET");
+        definition.setPath("/sql");
+        definition.setType(ApiScriptType.SQL);
+        definition.setScript("SELECT :value + 1");
+        definition.setDescription("");
+        definition.setSample("{\"requestBody\":{\"value\":0}}");
+        dataway.getAdminService().save(definition, 0);
+        dataway.getAdminService().publish("sql", 1);
+        var release = dataway.getAdminService().getReleaseByApi("sql");
+        assertEquals(definition.getScript(), access.getObject(EntityType.INFO, "sql").orElseThrow().get(SCRIPT));
+        assertEquals(definition.getScript(), access.getObject(EntityType.RELEASE, release.getId()).orElseThrow().get(SCRIPT));
+        assertFalse(server.configs.get("test/store").contains("SCRIPT_ORI"));
+        definition.setScript("SELECT :value + 2");
+        dataway.getAdminService().save(definition, 2);
+        var restarted = config.createDataway();
+        assertEquals("SELECT :value + 1", restarted.getAdminService().getHistoryById(release.getId()).getDefinition().getScript());
+        assertEquals("SELECT :value + 2", restarted.getAdminService().getDraftByApi("sql").getScript());
+        var response = new TestWebResponse();
+        restarted.getApiHandler().handle(new TestWebRequest("GET", "/sql", Map.of("value", 7)), response);
+        assertEquals(8, ((Number) response.getResult()).intValue());
     }
 }

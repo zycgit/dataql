@@ -13,11 +13,6 @@ export default defineConfig({
     use: {baseURL: 'http://127.0.0.1:49181', viewport: {width: 1440, height: 900}, trace: 'retain-on-failure'},
     webServer: [
         {
-            command: '../../gradlew -p ../.. :dataway-embedded:consoleTestServer --console=plain',
-            wait: {stdout: /Console browser fixture:/},
-            timeout: 180_000,
-        },
-        {
             command: 'npm run dev:mock -- --port 49182 --strictPort',
             wait: {stdout: /http:\/\/127\.0\.0\.1:49182\/dataway\//},
             timeout: 60_000,

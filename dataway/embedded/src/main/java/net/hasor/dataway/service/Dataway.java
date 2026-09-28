@@ -8,11 +8,9 @@
 package net.hasor.dataway.service;
 import java.util.List;
 import java.util.Map;
-import net.hasor.cobble.loader.ResourceLoader;
 import net.hasor.dataql.host.HostConfiguration;
 import net.hasor.dataql.host.HostContext;
 import net.hasor.dataql.kernel.CustomizeScope;
-import net.hasor.dataql.kernel.Finder;
 import net.hasor.dataway.authorization.AuthorizationCheck;
 import net.hasor.dataway.authorization.DefaultAuthorizationCheck;
 import net.hasor.dataway.authorization.IdentityProvider;
@@ -74,19 +72,7 @@ public final class Dataway {
     }
 
     private DatawayEngine createEngine(DatawayConfig config, BeanContainer beans) {
-        Finder finder = config.getFinder();
-        ResourceLoader resourceLoader = config.getResourceLoader();
-        ClassLoader classLoader = config.getClassLoader();
-        if (finder != null && (resourceLoader != null || classLoader != null)) {
-            finder = new DatawayFinder(finder, resourceLoader, classLoader);
-        }
-
-        HostConfiguration host;
-        if (finder == null) {
-            host = new HostConfiguration(resourceLoader, classLoader);
-        } else {
-            host = new HostConfiguration(finder);
-        }
+        HostConfiguration host = new HostConfiguration(config.getFinder());
         config.getHostCustomizers().forEach(c -> c.accept(host));
         CustomizeScope scope = config.getCustomizeScope();
         if (scope == null) {

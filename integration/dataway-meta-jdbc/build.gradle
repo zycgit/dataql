@@ -12,6 +12,8 @@ plugins {
 
 dependencies {
     api project(':dataway-embedded')
-    implementation 'net.hasor:dbvisitor:6.8.1'
+    api 'net.hasor:dbvisitor:6.8.1'
+
+    // for test
     testImplementation 'com.h2database:h2:2.5.250'
 }

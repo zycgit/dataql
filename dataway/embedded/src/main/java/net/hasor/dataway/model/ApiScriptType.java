@@ -26,4 +26,13 @@ public enum ApiScriptType {
     public String getTypeName() {
         return this.typeName;
     }
+
+    public static ApiScriptType fromName(String name) {
+        for (ApiScriptType type : values()) {
+            if (type.typeName.equalsIgnoreCase(name) || type.name().equalsIgnoreCase(name)) {
+                return type;
+            }
+        }
+        throw new IllegalArgumentException("Unsupported script type: " + name);
+    }
 }

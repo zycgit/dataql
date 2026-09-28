@@ -116,15 +116,6 @@ esac
 
 CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
 
-# Prefer a local JDK 17 on macOS so Gradle is not launched with a different JAVA_HOME.
-if [ "$darwin" = "true" ] && [ -x /usr/libexec/java_home ] ; then
-    if JAVA_HOME_CANDIDATE=$( /usr/libexec/java_home -v 17 2>/dev/null ) ; then
-        JAVA_HOME=$JAVA_HOME_CANDIDATE
-        export JAVA_HOME
-    fi
-fi
-
-
 # Determine the Java command to use to start the JVM.
 if [ -n "$JAVA_HOME" ] ; then
     if [ -x "$JAVA_HOME/jre/sh/java" ] ; then

@@ -81,6 +81,10 @@ final class LegacyNacosReader {
             if (!id.equals(legacy.get("ID"))) {
                 throw new IllegalArgumentException("Legacy ID does not match its directory entry");
             }
+            Object originalScript = legacy.remove("SCRIPT_ORI");
+            if (originalScript != null) {
+                legacy.put("SCRIPT", originalScript);
+            }
 
             Map<FieldDef, String> fields = new EnumMap<>(FieldDef.class);
             for (FieldDef field : FieldDef.values()) {
@@ -92,10 +96,6 @@ final class LegacyNacosReader {
 
             // Legacy Nacos saved the controller's whole map, including fields omitted by the SQL provider.
             if (type == EntityType.INFO) {
-                String originalScript = fields.remove(FieldDef.SCRIPT_ORI);
-                if (originalScript != null) {
-                    fields.put(FieldDef.SCRIPT, originalScript);
-                }
                 fields.remove(FieldDef.API_ID);
                 fields.remove(FieldDef.RELEASE_TIME);
             } else {

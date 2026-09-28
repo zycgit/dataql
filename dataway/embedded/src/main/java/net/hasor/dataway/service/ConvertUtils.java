@@ -9,7 +9,6 @@ package net.hasor.dataway.service;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import net.hasor.dataql.util.JsonUtils;
@@ -58,7 +57,7 @@ public final class ConvertUtils {
             definition.setId(id);
             definition.setMethod(HttpSupport.requiredText(input, "select"));
             definition.setPath(HttpSupport.requiredText(input, "apiPath"));
-            definition.setType(ApiScriptType.valueOf(HttpSupport.requiredText(input, "codeType").toUpperCase(Locale.ROOT)));
+            definition.setType(ApiScriptType.fromName(HttpSupport.requiredText(input, "codeType")));
             definition.setScript(HttpSupport.requiredText(input, "codeValue"));
             definition.setDescription(Objects.toString(input.get("comment"), ""));
             definition.setSchema(schema);
@@ -93,7 +92,7 @@ public final class ConvertUtils {
         result.setPath(definition.getPath());
         result.setStatus(HttpSupport.apiStatus(state));
         result.setApiComment(definition.getDescription());
-        result.setCodeType(definition.getType().getTypeName());
+        result.setCodeType(definition.getType().getDisplayName());
         result.setCodeInfo(code);
         result.setRequestBody(code.getRequestBody());
         result.setHeaderData(code.getHeaderData());

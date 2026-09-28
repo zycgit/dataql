@@ -36,9 +36,7 @@ public class DatawayConfig {
     private       Path                              uploadTempDirectory;
     private       int                               uploadMemoryThreshold = UploadStorage.DEFAULT_MEMORY_THRESHOLD;
     //
-    private       Finder                            finder;
-    private       ResourceLoader                    resourceLoader;
-    private       ClassLoader                       classLoader;
+    private       Finder                            finder                = new DatawayFinder();
     //
     private       CustomizeScope                    customizeScope;
     private       boolean                           resultStructure       = true;
@@ -92,18 +90,26 @@ public class DatawayConfig {
     }
 
     public DatawayConfig finder(Finder finder) {
-        this.finder = finder;
+        this.finder = finder != null ? finder : new DatawayFinder();
         return this;
     }
 
     public DatawayConfig resourceLoader(ResourceLoader loader) {
-        this.resourceLoader = loader;
+        this.defaultFinder().setResourceLoader(loader);
         return this;
     }
 
     public DatawayConfig classLoader(ClassLoader loader) {
-        this.classLoader = loader;
+        this.defaultFinder().setClassLoader(loader);
         return this;
+    }
+
+    private DatawayFinder defaultFinder() {
+        if (this.finder instanceof DatawayFinder datawayFinder) {
+            return datawayFinder;
+        }
+
+        throw new IllegalStateException("Configure loaders on the custom Finder, or use DatawayFinder");
     }
 
     public DatawayConfig customizeScope(CustomizeScope scope) {
@@ -203,11 +209,11 @@ public class DatawayConfig {
     }
 
     public ResourceLoader getResourceLoader() {
-        return this.resourceLoader;
+        return this.finder.getResourceLoader();
     }
 
     public ClassLoader getClassLoader() {
-        return this.classLoader;
+        return this.finder.getClassLoader();
     }
 
     public CustomizeScope getCustomizeScope() {
