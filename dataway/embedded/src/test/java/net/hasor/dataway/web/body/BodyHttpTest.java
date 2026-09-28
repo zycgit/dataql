@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import net.hasor.dataql.util.JsonUtils;
+import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.EntityType;
 import net.hasor.dataway.dal.FieldDef;
 import net.hasor.dataway.service.config.ServiceTestSupport;
@@ -40,7 +41,7 @@ class BodyHttpTest extends ServiceTestSupport {
                 return [${name}, ${tag}, ${flag}, web.jsonBody()];
                 """);
         this.publishRoute(release);
-        this.config.resultStructure(false);
+        this.config.resultStructure(false).identityProvider(r -> UserIdentity.authenticated("caller", Map.of()));
         this.server = new HttpTestServer("/api", this.config.createDataway().getApiHandler());
     }
 

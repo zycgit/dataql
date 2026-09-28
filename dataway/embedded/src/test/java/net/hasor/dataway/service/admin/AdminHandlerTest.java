@@ -20,6 +20,7 @@ import net.hasor.dataway.service.ResultInfoUtils;
 import net.hasor.dataway.service.config.MemoryRequest;
 import net.hasor.dataway.service.config.MemoryResponse;
 import net.hasor.dataway.service.config.ServiceTestSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -27,6 +28,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class AdminHandlerTest extends ServiceTestSupport {
+    @BeforeEach
+    void useDeveloperIdentity() {
+        this.config.identityProvider(r -> UserIdentity.consoleAdmin("developer", Map.of()));
+    }
+
     @Test
     void authorizationPrecedesBodyParsingInterceptionAndStorageAccess() {
         List<String> events = new ArrayList<>();
@@ -52,13 +58,13 @@ class AdminHandlerTest extends ServiceTestSupport {
     @Test
     void interceptorsRunInRegistrationOrderAroundTheControllerWithResolvedIdentity() throws Exception {
         List<String> events = new ArrayList<>();
-        UserIdentity identity = UserIdentity.authenticated("admin");
+        UserIdentity identity = UserIdentity.consoleReadOnly("admin", Map.of());
         this.config.identityProvider(request -> identity);
         this.config.adminInterceptor((context, chain) -> {
-            assertSame(identity, context.getIdentity());
-            assertEquals(Operation.LIST, context.getOperation());
-            assertNull(context.getDefinition());
-            assertTrue(context.getParameters().isEmpty());
+            assertSame(identity, context.identity());
+            assertEquals(Operation.LIST, context.operation());
+            assertNull(context.definition());
+            assertTrue(context.parameters().isEmpty());
             events.add("first-before");
             Object result = chain.proceed();
             events.add("first-after");

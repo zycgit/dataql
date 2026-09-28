@@ -20,6 +20,7 @@ import net.hasor.dataway.dal.FieldDef;
 import net.hasor.dataway.model.ApiScriptType;
 import net.hasor.dataway.service.config.ServiceTestSupport;
 import net.hasor.dataway.web.support.HttpTestServer;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -28,6 +29,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class DebugHttpTest extends ServiceTestSupport {
+    @BeforeEach
+    void useDeveloperIdentity() {
+        this.config.identityProvider(r -> UserIdentity.consoleAdmin("developer", Map.of()));
+    }
+
     @ParameterizedTest
     @ValueSource(strings = { "/perform", "/smoke" })
     void debugExecutesWithBusinessParametersIdentityAndHttpFunctions(String path) throws Exception {
@@ -41,12 +47,12 @@ class DebugHttpTest extends ServiceTestSupport {
         draft.put(SCRIPT, script);
         draft.put(SAMPLE, "{\"requestBody\":{\"name\":\"saved-example\"}}");
         this.storeInfo(draft);
-        UserIdentity identity = UserIdentity.authenticated("editor");
+        UserIdentity identity = UserIdentity.consoleAdmin("editor", Map.of());
         AtomicInteger intercepted = new AtomicInteger();
         this.config.resultStructure(false).identityProvider(request -> identity).apiInterceptor((context, chain) -> {
-            assertSame(identity, context.getIdentity());
-            assertEquals(Operation.DEBUG, context.getOperation());
-            assertEquals(Map.of("name", "actual"), context.getParameters());
+            assertSame(identity, context.identity());
+            assertEquals(Operation.DEBUG, context.operation());
+            assertEquals(Map.of("name", "actual"), context.parameters());
             intercepted.incrementAndGet();
             return chain.proceed(context);
         });

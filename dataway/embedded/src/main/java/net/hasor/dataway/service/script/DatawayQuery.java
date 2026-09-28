@@ -67,7 +67,7 @@ public class DatawayQuery {
                 query.setHint(HINT_RESPONSE, response);
                 return query.execute(symbol -> {
                     return switch (symbol) {
-                        case "$" -> c.getParameters();
+                        case "$" -> c.parameters();
                         case "@", "#" -> this.scope.findCustomizeEnvironment(symbol);
                         default -> {
                             throw new IllegalArgumentException("Unsupported parameter access modifier: " + symbol);
@@ -109,12 +109,12 @@ public class DatawayQuery {
             values.putAll(defaults);
         }
 
-        values.putAll(context.getParameters());
+        values.putAll(context.parameters());
         Map<String, ?> parameters = values;
         if (this.wrapAllParameters) {
             parameters = Map.of(this.wrapParameterName, values);
         }
-        return new ApiInterceptorContext(context.getDefinition(), context.getOperation(), context.getIdentity(), parameters);
+        return new ApiInterceptorContext(context.definition(), context.operation(), context.identity(), parameters);
     }
 
     private Object processResult(Object result, long elapsed) {

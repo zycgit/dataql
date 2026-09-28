@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.hasor.dataway.authorization.Operation;
+import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.EntityType;
 import net.hasor.dataway.dal.FieldDef;
 import net.hasor.dataway.model.WebFile;
@@ -22,6 +23,7 @@ import net.hasor.dataway.service.DatawayException;
 import net.hasor.dataway.service.config.MemoryRequest;
 import net.hasor.dataway.service.config.MemoryResponse;
 import net.hasor.dataway.service.config.ServiceTestSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -35,6 +37,11 @@ import static org.mockito.Mockito.*;
 class UploadLifecycleTest extends ServiceTestSupport {
     @TempDir
     Path directory;
+
+    @BeforeEach
+    void provideApiIdentity() {
+        this.config.identityProvider(r -> UserIdentity.authenticated("caller", Map.of()));
+    }
 
     @ParameterizedTest
     @ValueSource(strings = { "success", "query-failure", "response-failure", "missing-api" })
@@ -50,10 +57,10 @@ class UploadLifecycleTest extends ServiceTestSupport {
             response.failWith(failure);
         }
         this.config.uploadTempDirectory(this.directory).uploadMemoryThreshold(1).resultStructure(false).apiInterceptor((context, chain) -> {
-            assertEquals(Operation.INVOKE, context.getOperation());
-            assertEquals("form title", context.getParameters().get("title"));
-            assertEquals(List.of("one", "two"), context.getParameters().get("tag"));
-            assertEquals(uploads, context.getParameters().get("file"));
+            assertEquals(Operation.INVOKE, context.operation());
+            assertEquals("form title", context.parameters().get("title"));
+            assertEquals(List.of("one", "two"), context.parameters().get("tag"));
+            assertEquals(uploads, context.parameters().get("file"));
             assertArrayEquals("file content".getBytes(StandardCharsets.UTF_8), uploads.get(0).openStream().readAllBytes());
             assertEquals(0, uploads.get(1).getSize());
             this.assertFileCount(1);

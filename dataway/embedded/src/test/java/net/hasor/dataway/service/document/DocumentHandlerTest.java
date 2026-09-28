@@ -8,6 +8,7 @@
 package net.hasor.dataway.service.document;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.service.Dataway;
@@ -23,7 +24,7 @@ class DocumentHandlerTest extends ServiceTestSupport {
     @ParameterizedTest
     @ValueSource(strings = { "/swagger2.json", "/openapi.json" })
     void documentRoutesAuthorizeTheResolvedIdentityAndSupportHead(String path) throws Exception {
-        UserIdentity identity = UserIdentity.authenticated("reader");
+        UserIdentity identity = UserIdentity.authenticated("reader", Map.of());
         List<Operation> operations = new ArrayList<>();
         this.config.identityProvider(request -> identity).authorizationCheck((user, operation) -> {
             assertSame(identity, user);

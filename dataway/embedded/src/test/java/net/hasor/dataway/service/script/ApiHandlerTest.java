@@ -21,6 +21,7 @@ import net.hasor.dataway.service.DatawayException;
 import net.hasor.dataway.service.config.MemoryRequest;
 import net.hasor.dataway.service.config.MemoryResponse;
 import net.hasor.dataway.service.config.ServiceTestSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
@@ -30,6 +31,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class ApiHandlerTest extends ServiceTestSupport {
+    @BeforeEach
+    void provideApiIdentity() {
+        this.config.identityProvider(r -> UserIdentity.authenticated("caller", Map.of()));
+    }
+
     @Test
     void onlyTheNewestActiveReleaseForTheRequestedMethodAndPathIsExecuted() throws Exception {
         Map<FieldDef, String> old = this.release(this.info("api", "1", 1), "old", "1", 1);
@@ -82,14 +88,14 @@ class ApiHandlerTest extends ServiceTestSupport {
 
     @Test
     void anEmptyMountedPathResolvesToTheRootApiAndKeepsTheResolvedIdentity() throws Exception {
-        UserIdentity identity = UserIdentity.authenticated("caller");
+        UserIdentity identity = UserIdentity.authenticated("caller", Map.of());
         Map<FieldDef, String> release = this.release(this.info("root", "1", 1), "release", "1", 1);
         release.put(PATH, "/");
         this.publishRoute(release);
         this.config.resultStructure(false).identityProvider(request -> identity).apiInterceptor((context, chain) -> {
-            assertEquals(Operation.INVOKE, context.getOperation());
-            assertSame(identity, context.getIdentity());
-            assertEquals("root", context.getDefinition().getId());
+            assertEquals(Operation.INVOKE, context.operation());
+            assertSame(identity, context.identity());
+            assertEquals("root", context.definition().getId());
             return chain.proceed(context);
         });
         assertEquals("value", this.handle(this.config.createDataway().getApiHandler(), "GET", "").json());

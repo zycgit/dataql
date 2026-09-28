@@ -55,20 +55,22 @@ class ConvertUtilsTest extends ServiceTestSupport {
 
     @ParameterizedTest
     @ValueSource(strings = { "responseFormat", "resultStructure", "wrapAllParameters", "wrapParameterName" })
-    void editorOptionsPreserveExplicitNullForExecutionValidation(String option) {
+    void explicitNullOptionsAreRejectedBeforeSerialization(String option) {
         Map<String, Object> options = new LinkedHashMap<>();
         options.put(option, null);
         Map<String, Object> input = this.editor();
         input.put("optionInfo", options);
-        ApiDefinition definition = ConvertUtils.convertToApiDefinition("api", input);
-        assertEquals(options, JsonUtils.readValue(definition.getOptions(), Map.class));
+        DatawayException fromMap = assertThrows(DatawayException.class, () -> ConvertUtils.convertToApiDefinition("api", input));
+        assertEquals(400, fromMap.status());
+        assertEquals("Invalid request: " + option + " must not be null", fromMap.getMessage());
         assertSame(options, input.get("optionInfo"));
         assertTrue(options.containsKey(option));
         assertNull(options.get(option));
 
         input.put("optionInfo", "{\"" + option + "\":null}");
-        ApiDefinition fromText = ConvertUtils.convertToApiDefinition("api", input);
-        assertEquals(options, JsonUtils.readValue(fromText.getOptions(), Map.class));
+        DatawayException fromText = assertThrows(DatawayException.class, () -> ConvertUtils.convertToApiDefinition("api", input));
+        assertEquals(400, fromText.status());
+        assertEquals(fromMap.getMessage(), fromText.getMessage());
     }
 
     @Test

@@ -72,20 +72,17 @@ class AdminWriteHttpTest extends AdminHttpSupport {
         assertEquals("return ${name};", saved.getValue().getScript());
     }
 
-    @Test
-    void savingADraftPreservesExplicitNullOptionsForLaterValidation() throws Exception {
-        when(this.service.save(any(ApiDefinition.class), eq(4L))).thenReturn(this.state(5));
+    @ParameterizedTest
+    @ValueSource(strings = { "responseFormat", "resultStructure", "wrapAllParameters", "wrapParameterName" })
+    void savingADraftRejectsExplicitNullOptionsBeforeCallingTheService(String option) throws Exception {
         String body = """
                 {"id":"api","version":4,"select":"POST","apiPath":"/saved","codeType":"DataQL",
-                 "codeValue":"return 1;","optionInfo":{"responseFormat":null}}
-                """;
-        assertEquals(5, this.success(this.postJson("/save-api", body)).get("version"));
-        ArgumentCaptor<ApiDefinition> saved = ArgumentCaptor.forClass(ApiDefinition.class);
-        verify(this.service).save(saved.capture(), eq(4L));
-        Map<?, ?> options = JsonUtils.readValue(saved.getValue().getOptions(), Map.class);
-        assertEquals(1, options.size());
-        assertTrue(options.containsKey("responseFormat"));
-        assertNull(options.get("responseFormat"));
+                 "codeValue":"return 1;","optionInfo":{"%s":null}}
+                """.formatted(option);
+        HttpResponse<String> response = this.postJson("/save-api", body);
+        assertEquals(400, response.statusCode(), response.body());
+        assertTrue(response.body().contains(option + " must not be null"), response.body());
+        verifyNoInteractions(this.service);
     }
 
     @Test

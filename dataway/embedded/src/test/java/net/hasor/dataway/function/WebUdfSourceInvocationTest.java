@@ -93,7 +93,7 @@ class WebUdfSourceInvocationTest {
         RecordingWebResponse response = new RecordingWebResponse();
         Map<String, Object> request = Map.of("headers", Map.of("X-Request", "request-id"), "cookies", Map.of("session", "cookie-id"), "body", Map.of("bodyOnly", "value"));
 
-        Object result = query.execute(Operation.INVOKE, UserIdentity.anonymous(), Map.of("name", "parameter"), request, response);
+        Object result = query.execute(Operation.INVOKE, UserIdentity.anonymous(Map.of()), Map.of("name", "parameter"), request, response);
         assertEquals(List.of(Map.of("bodyOnly", "value"), "parameter"), result);
         assertFalse(response.isCommitted());
         response.write(200, Map.of());
@@ -125,9 +125,9 @@ class WebUdfSourceInvocationTest {
         Map<String, Object> first = Map.of("headers", Map.of("X-Request", "first"), "cookies", Map.of("session", "one"), "body", Map.of("request", "first"));
         Map<String, Object> second = Map.of("headers", Map.of("X-Request", "second"), "cookies", Map.of("session", "two"), "body", Map.of("request", "second"));
 
-        assertEquals(List.of("first", "one", Map.of("request", "first")), query.execute(Operation.INVOKE, UserIdentity.anonymous(), Map.of(), first, new RecordingWebResponse()));
-        assertEquals(List.of("second", "two", Map.of("request", "second")), query.execute(Operation.INVOKE, UserIdentity.anonymous(), Map.of(), second, new RecordingWebResponse()));
-        Object absent = query.execute(Operation.INVOKE, UserIdentity.anonymous(), Map.of(), Map.of(), new RecordingWebResponse());
+        assertEquals(List.of("first", "one", Map.of("request", "first")), query.execute(Operation.INVOKE, UserIdentity.anonymous(Map.of()), Map.of(), first, new RecordingWebResponse()));
+        assertEquals(List.of("second", "two", Map.of("request", "second")), query.execute(Operation.INVOKE, UserIdentity.anonymous(Map.of()), Map.of(), second, new RecordingWebResponse()));
+        Object absent = query.execute(Operation.INVOKE, UserIdentity.anonymous(Map.of()), Map.of(), Map.of(), new RecordingWebResponse());
         assertEquals("[null,null,null]", JsonUtils.writeValueAsString(absent));
     }
 
@@ -136,12 +136,12 @@ class WebUdfSourceInvocationTest {
         DatawayQuery query = this.query(new HostConfiguration(), "run web.setHeader('X-Request', 'value'); return 'done';");
         RecordingWebResponse first = new RecordingWebResponse();
         first.commit();
-        Object failed = query.execute(Operation.INVOKE, UserIdentity.anonymous(), Map.of(), Map.of(), first);
+        Object failed = query.execute(Operation.INVOKE, UserIdentity.anonymous(Map.of()), Map.of(), Map.of(), first);
         String message = assertInstanceOf(String.class, failed);
         assertTrue(message.contains("Response already started"), message);
 
         RecordingWebResponse next = new RecordingWebResponse();
-        assertEquals("done", query.execute(Operation.INVOKE, UserIdentity.anonymous(), Map.of(), Map.of(), next));
+        assertEquals("done", query.execute(Operation.INVOKE, UserIdentity.anonymous(Map.of()), Map.of(), Map.of(), next));
         next.write(200, Map.of());
         assertEquals(List.of("value"), next.getHeaders().get("X-Request"));
         assertTrue(first.getHeaders().isEmpty());
@@ -173,7 +173,7 @@ class WebUdfSourceInvocationTest {
                 calls.add(executor.submit(() -> {
                     RecordingWebResponse response = new RecordingWebResponse();
                     Map<String, Object> request = Map.of("headers", Map.of("X-Request", token), "cookies", Map.of("session", token), "body", Map.of("request", token));
-                    Object result = query.execute(Operation.INVOKE, UserIdentity.anonymous(), Map.of(), request, response);
+                    Object result = query.execute(Operation.INVOKE, UserIdentity.anonymous(Map.of()), Map.of(), request, response);
                     assertEquals(List.of(token, token, Map.of("request", token)), result);
                     response.write(200, Map.of());
                     assertEquals(List.of(token), response.getHeaders().get("X-Request"));

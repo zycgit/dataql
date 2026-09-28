@@ -48,12 +48,12 @@ class DatawayQueryTest extends ScriptTestSupport {
         this.config.resultStructure(false);
         this.scope = symbol -> null;
         List<String> events = new ArrayList<>();
-        UserIdentity identity = UserIdentity.authenticated("caller");
+        UserIdentity identity = UserIdentity.authenticated("caller", Map.of());
         this.interceptors.add((context, chain) -> {
-            assertEquals("api", context.getDefinition().getId());
-            assertEquals(Operation.INVOKE, context.getOperation());
-            assertSame(identity, context.getIdentity());
-            assertEquals(Map.of("name", "input"), context.getParameters());
+            assertEquals("api", context.definition().getId());
+            assertEquals(Operation.INVOKE, context.operation());
+            assertSame(identity, context.identity());
+            assertEquals(Map.of("name", "input"), context.parameters());
             events.add("first-before");
             Object result = chain.proceed(context);
             events.add("first-after");
@@ -74,7 +74,10 @@ class DatawayQueryTest extends ScriptTestSupport {
     void shortCircuitResultsRemainUnwrappedAndMissingIdentityBecomesAnonymous() throws Exception {
         ResultInfo response = ResultInfoUtils.json(202, Map.of("queued", true));
         this.interceptors.add((context, chain) -> {
-            assertSame(UserIdentity.anonymous(), context.getIdentity());
+            assertNull(context.identity().identityId());
+            assertFalse(context.identity().authenticated());
+            assertTrue(context.identity().attributes().isEmpty());
+            assertTrue(context.identity().operations().isEmpty());
             return response;
         });
         DatawayQuery query = this.engine().newQuery(this.definition("api", "throw 500, 'must not execute';"), List.of(), null);

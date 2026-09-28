@@ -33,7 +33,7 @@ class WebHandlerTest extends ServiceTestSupport {
 
     @Test
     void identityIsResolvedBeforeCallingTheServiceAndResourcesCloseAfterOutput() throws Exception {
-        UserIdentity identity = UserIdentity.authenticated("user");
+        UserIdentity identity = UserIdentity.authenticated("user", Map.of());
         MemoryRequest request = this.request("GET", "/");
         MemoryResponse response = new MemoryResponse();
         Closeable resource = mock(Closeable.class);
@@ -56,7 +56,7 @@ class WebHandlerTest extends ServiceTestSupport {
     void streamingResultsCloseTheirSourceEvenForHead(String method) throws Exception {
         ByteArrayInputStream source = spy(new ByteArrayInputStream(new byte[] { 1, 2, 3 }));
         ResultInfo result = ResultInfoUtils.convertToResultInfo("application/custom", source);
-        ResultWebHandler handler = new ResultWebHandler(this.beans(r -> UserIdentity.anonymous()), (r, output) -> result);
+        ResultWebHandler handler = new ResultWebHandler(this.beans(r -> UserIdentity.anonymous(Map.of())), (r, output) -> result);
         MemoryResponse response = this.handle(handler, method, "/");
 
         assertArrayEquals(method.equals("HEAD") ? new byte[0] : new byte[] { 1, 2, 3 }, response.bytes());
@@ -67,7 +67,7 @@ class WebHandlerTest extends ServiceTestSupport {
     @Test
     void failedOutputStillClosesTheSourceAndRequestWithoutReplacingTheException() throws Exception {
         ByteArrayInputStream source = spy(new ByteArrayInputStream(new byte[] { 1 }));
-        ResultWebHandler handler = new ResultWebHandler(this.beans(r -> UserIdentity.anonymous()), (r, output) -> ResultInfoUtils.convertToResultInfo(source));
+        ResultWebHandler handler = new ResultWebHandler(this.beans(r -> UserIdentity.anonymous(Map.of())), (r, output) -> ResultInfoUtils.convertToResultInfo(source));
         MemoryRequest request = this.request("GET", "/");
         MemoryResponse response = new MemoryResponse();
         IOException failure = new IOException("Disconnected");
@@ -82,7 +82,7 @@ class WebHandlerTest extends ServiceTestSupport {
         DatawayException failure = new DatawayException(409, "Conflict");
         MemoryRequest request = this.request("GET", "/");
         MemoryResponse response = new MemoryResponse();
-        ResultWebHandler handler = new ResultWebHandler(this.beans(r -> UserIdentity.anonymous()), (r, output) -> {
+        ResultWebHandler handler = new ResultWebHandler(this.beans(r -> UserIdentity.anonymous(Map.of())), (r, output) -> {
             throw failure;
         });
         assertSame(failure, assertThrows(DatawayException.class, () -> handler.handle(request, response)));
@@ -106,7 +106,7 @@ class WebHandlerTest extends ServiceTestSupport {
         request.resource(() -> {
             throw cleanup;
         });
-        ResultWebHandler handler = new ResultWebHandler(this.beans(r -> UserIdentity.anonymous()), (r, response) -> {
+        ResultWebHandler handler = new ResultWebHandler(this.beans(r -> UserIdentity.anonymous(Map.of())), (r, response) -> {
             throw failure;
         });
         assertSame(failure, assertThrows(IllegalStateException.class, () -> handler.handle(request, new MemoryResponse())));
@@ -127,7 +127,7 @@ class WebHandlerTest extends ServiceTestSupport {
         request.resource(second);
         request.resource(last);
         MemoryResponse response = new MemoryResponse();
-        ResultWebHandler handler = new ResultWebHandler(this.beans(r -> UserIdentity.anonymous()), (r, output) -> ResultInfoUtils.buildSuccess("done"));
+        ResultWebHandler handler = new ResultWebHandler(this.beans(r -> UserIdentity.anonymous(Map.of())), (r, output) -> ResultInfoUtils.buildSuccess("done"));
 
         assertSame(firstFailure, assertThrows(IOException.class, () -> handler.handle(request, response)));
         assertArrayEquals(new Throwable[] { secondFailure }, firstFailure.getSuppressed());
@@ -146,7 +146,7 @@ class WebHandlerTest extends ServiceTestSupport {
         ResultInfo binary = ResultInfoUtils.convertToResultInfo(bytes);
         assertSame(binary, ResultInfoUtils.convertToResultInfo(binary));
         assertFalse(binary.isJson());
-        ResultWebHandler handler = new ResultWebHandler(this.beans(r -> UserIdentity.anonymous()), (r, output) -> binary);
+        ResultWebHandler handler = new ResultWebHandler(this.beans(r -> UserIdentity.anonymous(Map.of())), (r, output) -> binary);
         MemoryResponse response = this.handle(handler, "GET", "/");
         assertArrayEquals(bytes, response.bytes());
         assertEquals("4", response.getHeaders().get("Content-Length").get(0));

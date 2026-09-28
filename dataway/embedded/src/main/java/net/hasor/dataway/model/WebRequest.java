@@ -30,7 +30,7 @@ public abstract class WebRequest implements Closeable {
     private       String                    query;
     private       Map<String, String>       headers       = Map.of();
     private       Map<String, List<String>> headerValues  = Map.of();
-    private       UserIdentity              identity      = UserIdentity.anonymous();
+    private       UserIdentity              identity      = UserIdentity.anonymous(Map.of());
 
     public void setMethod(String method) {
         this.method = method.toUpperCase(Locale.ROOT);

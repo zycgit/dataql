@@ -59,7 +59,7 @@ class DatawayConfigTest extends ServiceTestSupport {
         assertNotSame(dataway.getApiHandler(), dataway.getAdminHandler());
         assertEquals(List.of("", "/*"), dataway.getApiHandler().paths());
         assertTrue(dataway.getAdminService().list().isEmpty());
-        assertEquals(200, this.handle(dataway.getDocumentHandler(), "GET", "/openapi.json").getStatus());
+        assertEquals(401, assertThrows(DatawayException.class, () -> this.handle(dataway.getDocumentHandler(), "GET", "/openapi.json")).status());
         verify(this.access).configureMapping(Map.of(), Map.of());
     }
 
@@ -84,7 +84,7 @@ class DatawayConfigTest extends ServiceTestSupport {
 
     @Test
     void configuredIdentityAndAuthorizationReachAllServiceEntries() throws Exception {
-        UserIdentity identity = UserIdentity.authenticated("operator");
+        UserIdentity identity = UserIdentity.authenticated("operator", Map.of());
         List<Operation> checked = new ArrayList<>();
         this.config.identityProvider(request -> identity).authorizationCheck((user, operation) -> {
             assertSame(identity, user);
@@ -100,6 +100,7 @@ class DatawayConfigTest extends ServiceTestSupport {
 
     @Test
     void runtimeConfigurationRegistersFunctionsImportsLibrariesAndCustomizers() throws Exception {
+        this.config.identityProvider(request -> UserIdentity.authenticated("caller", Map.of()));
         Map<String, Udf> library = new HashMap<>();
         library.put("value", (hints, params) -> "library");
         AtomicInteger customized = new AtomicInteger();
@@ -117,6 +118,7 @@ class DatawayConfigTest extends ServiceTestSupport {
 
     @Test
     void defaultsAndCustomScopeArePassedToTheExecutionEngine() throws Exception {
+        this.config.identityProvider(request -> UserIdentity.authenticated("caller", Map.of()));
         this.config.wrapAllParameters(true).wrapParameterName("args").customizeScope(symbol -> Map.of("name", "configured")).responseFormat("""
                 {"payload":"@resultData","ok":"@resultStatus"}
                 """);
@@ -125,6 +127,7 @@ class DatawayConfigTest extends ServiceTestSupport {
 
     @Test
     void documentSettingsAppearInTheExport() throws Exception {
+        this.config.identityProvider(request -> UserIdentity.consoleReadOnly("reader", Map.of()));
         this.config.documentTitle("Orders").documentVersion("2.0").documentServer("https://api.example.test/proxy");
         Map<?, ?> result = (Map<?, ?>) this.handle(this.config.createDataway().getDocumentHandler(), "GET", "/openapi.json").json();
         assertEquals(Map.of("title", "Orders", "version", "2.0"), result.get("info"));
@@ -187,7 +190,7 @@ class DatawayConfigTest extends ServiceTestSupport {
             try (var files = Files.list(directory)) {
                 assertEquals(1, files.count());
             }
-            return UserIdentity.anonymous();
+            return UserIdentity.anonymous(Map.of());
         }));
         Dataway dataway = this.config.createDataway();
         if (authorized) {
@@ -203,6 +206,7 @@ class DatawayConfigTest extends ServiceTestSupport {
 
     @Test
     void changingConfigurationDoesNotReconfigureAnExistingDataway() throws Exception {
+        this.config.identityProvider(request -> UserIdentity.authenticated("caller", Map.of()));
         Map<FieldDef, String> info = this.info("api", "1", 1);
         info.put(FieldDef.SCRIPT, "return version();");
         this.publishRoute(this.release(info, "release", "1", 1));

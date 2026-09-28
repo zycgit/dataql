@@ -12,32 +12,8 @@ import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.model.ApiDefinition;
 
 /** Script execution data created by DatawayQuery and supplied to API interceptors. */
-public class ApiInterceptorContext {
-    private final ApiDefinition  definition;
-    private final Map<String, ?> parameters;
-    private final Operation      operation;
-    private final UserIdentity   identity;
-
+public record ApiInterceptorContext(ApiDefinition definition, Map<String, ?> parameters, Operation operation, UserIdentity identity) {
     ApiInterceptorContext(ApiDefinition definition, Operation operation, UserIdentity identity, Map<String, ?> parameters) {
-        this.definition = definition;
-        this.parameters = parameters;
-        this.operation = operation;
-        this.identity = identity == null ? UserIdentity.anonymous() : identity;
-    }
-
-    public ApiDefinition getDefinition() {
-        return this.definition;
-    }
-
-    public Map<String, ?> getParameters() {
-        return this.parameters;
-    }
-
-    public Operation getOperation() {
-        return this.operation;
-    }
-
-    public UserIdentity getIdentity() {
-        return this.identity;
+        this(definition, parameters, operation, identity == null ? UserIdentity.anonymous(Map.of()) : identity);
     }
 }
