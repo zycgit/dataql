@@ -6,12 +6,14 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.web;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ResultInfo;
+import net.hasor.dataway.model.WebRequest;
 import net.hasor.dataway.model.WebResponse;
 import net.hasor.dataway.service.HttpSupport;
 import net.hasor.dataway.service.ResultInfoUtils;
@@ -29,9 +31,9 @@ public final class SmokeController extends AbstractApiController {
     }
 
     @Override
-    protected ResultInfo execute(Map<String, String> query, Map<String, Object> body, UserIdentity identity, Map<String, ?> request, WebResponse response) throws Exception {
+    protected ResultInfo execute(WebRequest request, WebResponse response, UserIdentity identity, Map<String, Object> body) throws Exception {
         return this.executeService(() -> {
-            String id = this.id(query, body);
+            String id = this.id(this.query(request), body);
             Map<String, Object> parameters = HttpSupport.parameters(body.getOrDefault("requestBody", Map.of()));
             long version = this.version(body);
 
@@ -42,10 +44,11 @@ public final class SmokeController extends AbstractApiController {
             Map<String, Object> declared = HttpSupport.parameters(sample.getOrDefault("requestBody", Map.of()));
             List<String> parameterNames = List.copyOf(declared.keySet());
             Map<String, Object> options = HttpSupport.document(definition.getOptions());
-            DatawayQuery datawayQuery = this.engine.newQuery(definition, parameterNames, options);
+            DatawayQuery query = this.engine.newQuery(definition, parameterNames, options);
 
-            Map<String, ?> execution = this.executionRequest(request, parameters);
-            Object result = datawayQuery.execute(this.getOperation(), identity, parameters, execution, response);
+            Map<String, Object> input = new LinkedHashMap<>(parameters);
+            Map<String, ?> execution = HttpSupport.metadata(request, input, input);
+            Object result = query.execute(this.getOperation(), identity, parameters, execution, response);
             return ResultInfoUtils.convertToResultInfo(result);
         });
     }

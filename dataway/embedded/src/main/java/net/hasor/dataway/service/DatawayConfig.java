@@ -37,10 +37,10 @@ public class DatawayConfig {
     private       ClassLoader                       classLoader;
     //
     private       CustomizeScope                    customizeScope;
-    private       boolean                           resultStructure   = true;
-    private       boolean                           wrapAllParameters = false;
-    private       String                            wrapParameterName = "root";
-    private       String                            responseFormat    = """
+    private       boolean                           resultStructure       = true;
+    private       boolean                           wrapAllParameters     = false;
+    private       String                            wrapParameterName     = "root";
+    private       String                            responseFormat        = """
             {
                 "success"      : "@resultStatus",
                 "message"      : "@resultMessage",
@@ -51,9 +51,9 @@ public class DatawayConfig {
                 "value"        : "@resultData"
             }
             """;
-    private final List<Consumer<HostConfiguration>> hostCustomizers   = new ArrayList<>();
-    private final List<Consumer<QueryBuilder>>      queryCustomizers  = new ArrayList<>();
-    private final List<ApiInterceptor>              apiInterceptors   = new ArrayList<>();
+    private final List<Consumer<HostConfiguration>> hostCustomizers       = new ArrayList<>();
+    private final List<Consumer<QueryBuilder>>      queryCustomizers      = new ArrayList<>();
+    private final List<ApiInterceptor>              apiInterceptors       = new ArrayList<>();
 
     public DatawayConfig dataAccessLayer(ApiDataAccessLayer dataAccessLayer) {
         this.dataAccessLayer = dataAccessLayer;

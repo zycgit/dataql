@@ -6,14 +6,11 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.service;
-import java.io.IOException;
-import java.io.PushbackInputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.util.JsonUtils;
 import net.hasor.dataway.model.ApiState;
 import net.hasor.dataway.model.WebRequest;
@@ -22,33 +19,6 @@ import tools.jackson.core.JacksonException;
 /** Request handling and execution metadata shared by the HTTP entries. */
 public final class HttpSupport {
     private HttpSupport() {
-    }
-
-    public static Map<String, Object> body(WebRequest request) throws IOException {
-        PushbackInputStream input = new PushbackInputStream(request.getBody());
-        int first = input.read();
-        if (first == -1) {
-            return new LinkedHashMap<>();
-        }
-
-        input.unread(first);
-        String contentType = request.getHeaders().getOrDefault("content-type", "").split(";", 2)[0].trim();
-        if (!StringUtils.equalsIgnoreCase(contentType, "application/json")) {
-            throw new DatawayException(415, "Expected application/json");
-        }
-
-        Object value;
-        try {
-            value = JsonUtils.readValue(input, Object.class);
-        } catch (JacksonException e) {
-            throw new DatawayException(400, "Invalid request: " + e.getMessage(), e);
-        }
-
-        if (!(value instanceof Map<?, ?> map)) {
-            throw new DatawayException(400, "JSON body must be an object");
-        }
-
-        return HttpSupport.objectMap(map);
     }
 
     @SuppressWarnings("unchecked")

@@ -10,10 +10,7 @@ import java.util.Map;
 import java.util.UUID;
 import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
-import net.hasor.dataway.model.ApiDefinition;
-import net.hasor.dataway.model.ApiState;
-import net.hasor.dataway.model.ResultInfo;
-import net.hasor.dataway.model.WebResponse;
+import net.hasor.dataway.model.*;
 import net.hasor.dataway.service.ConvertUtils;
 import net.hasor.dataway.service.ResultInfoUtils;
 import net.hasor.dataway.service.admin.AdminService;
@@ -25,9 +22,9 @@ public final class SaveApiController extends AbstractApiController {
     }
 
     @Override
-    protected ResultInfo execute(Map<String, String> query, Map<String, Object> body, UserIdentity identity, Map<String, ?> request, WebResponse response) throws Exception {
+    protected ResultInfo execute(WebRequest request, WebResponse response, UserIdentity identity, Map<String, Object> body) throws Exception {
         return this.executeService(() -> {
-            String id = this.id(query, body);
+            String id = this.id(this.query(request), body);
             String target = id.equals("-1") ? UUID.randomUUID().toString() : id;
 
             ApiDefinition definition = ConvertUtils.convertToApiDefinition(target, body);

@@ -18,7 +18,7 @@ import net.hasor.dataway.model.WebResponse;
 import net.hasor.dataway.service.DatawayException;
 import net.hasor.dataway.service.HttpSupport;
 import net.hasor.dataway.service.admin.AdminService;
-s
+
 /** Shared parameter handling and service invocation for the console APIs. */
 public abstract class AbstractApiController {
     protected final AdminService adminService;
@@ -36,13 +36,13 @@ public abstract class AbstractApiController {
     /** Reads request parameters and invokes the selected console operation. */
     public final ResultInfo handle(WebRequest request, WebResponse response) throws Exception {
         UserIdentity identity = request.getIdentity();
-        Map<String, Object> body = HttpSupport.body(request);
-        Map<String, String> query = this.query(request);
-        Map<String, ?> metadata = HttpSupport.metadata(request, body, body);
-        return this.execute(query, body, identity, metadata, response);
+        Map<String, Object> body = request.readBody();
+        return this.execute(request, response, identity, body);
     }
 
-    private Map<String, String> query(WebRequest request) {
+    protected abstract ResultInfo execute(WebRequest request, WebResponse response, UserIdentity identity, Map<String, Object> body) throws Exception;
+
+    protected Map<String, String> query(WebRequest request) {
         Map<String, String> result = new LinkedHashMap<>();
         if (request.getQuery() != null && !request.getQuery().isBlank()) {
             for (String pair : request.getQuery().split("&")) {
@@ -54,10 +54,9 @@ public abstract class AbstractApiController {
                 }
             }
         }
+
         return result;
     }
-
-    protected abstract ResultInfo execute(Map<String, String> query, Map<String, Object> body, UserIdentity identity, Map<String, ?> request, WebResponse response) throws Exception;
 
     /** Executes the selected service callback; failures belong to the host exception handlers. */
     protected final ResultInfo executeService(Callable<ResultInfo> action) throws Exception {
@@ -90,15 +89,5 @@ public abstract class AbstractApiController {
         }
 
         return number.longValue();
-    }
-
-    /** Scripts see the simulated business body, never the management command or editor contents. */
-    protected Map<String, ?> executionRequest(Map<String, ?> request, Map<String, Object> parameters) {
-        Map<String, Object> metadata = new LinkedHashMap<>(request);
-        Map<String, Object> input = new LinkedHashMap<>(parameters);
-
-        metadata.put("parameters", input);
-        metadata.put("body", input);
-        return metadata;
     }
 }

@@ -9,10 +9,7 @@ package net.hasor.dataway.web;
 import java.util.Map;
 import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
-import net.hasor.dataway.model.ApiRelease;
-import net.hasor.dataway.model.ApiState;
-import net.hasor.dataway.model.ResultInfo;
-import net.hasor.dataway.model.WebResponse;
+import net.hasor.dataway.model.*;
 import net.hasor.dataway.service.ConvertUtils;
 import net.hasor.dataway.service.DatawayException;
 import net.hasor.dataway.service.ResultInfoUtils;
@@ -25,8 +22,9 @@ public final class ApiHistoryGetController extends AbstractApiController {
     }
 
     @Override
-    protected ResultInfo execute(Map<String, String> query, Map<String, Object> body, UserIdentity identity, Map<String, ?> request, WebResponse response) throws Exception {
+    protected ResultInfo execute(WebRequest request, WebResponse response, UserIdentity identity, Map<String, Object> body) throws Exception {
         return this.executeService(() -> {
+            Map<String, String> query = this.query(request);
             String id = this.id(query, body);
             ApiState state = this.adminService.getApiById(id);
             String historyID = query.get("historyId");

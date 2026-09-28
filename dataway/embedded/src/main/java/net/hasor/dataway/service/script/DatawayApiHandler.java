@@ -18,7 +18,6 @@ import net.hasor.dataway.model.*;
 import net.hasor.dataway.service.*;
 import tools.jackson.databind.JsonNode;
 import static net.hasor.dataway.dal.FieldDef.*;
-import static net.hasor.dataway.service.HttpSupport.body;
 import static net.hasor.dataway.service.HttpSupport.decode;
 
 /** Invokes published APIs; it exposes neither management operations nor UI assets. */
@@ -41,7 +40,7 @@ public final class DatawayApiHandler extends WebHandler {
             throw new DatawayException(401, "Unauthorized");
         }
 
-        Map<String, Object> body = body(request);
+        Map<String, Object> body = request.readBody();
         Map<String, Object> parameters = this.parameters(request, body);
         Map<String, ?> metadata = HttpSupport.metadata(request, parameters, body);
         String path = request.getPathInfo();
