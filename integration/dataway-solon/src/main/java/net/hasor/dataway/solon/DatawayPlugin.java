@@ -43,8 +43,9 @@ public final class DatawayPlugin implements Plugin {
         Props properties = context.app().cfg().getProp("dataway");
         boolean apiEnabled = properties.getBool("api-enabled", false);
         boolean adminEnabled = properties.getBool("admin-enabled", false);
+        boolean docsEnabled = properties.getBool("docs-enabled", false);
         Dataway dataway = this.dataway;
-        if (!apiEnabled && !adminEnabled && dataway == null) {
+        if (!apiEnabled && !adminEnabled && !docsEnabled && dataway == null) {
             return;
         }
 
@@ -54,15 +55,15 @@ public final class DatawayPlugin implements Plugin {
                 if (this.config.getDataAccessLayer() == null) {
                     this.config.dataAccessLayer(this.getDataAccessLayer(context));
                 }
-                this.register(context, properties, this.config.createDataway(), apiEnabled, adminEnabled);
+                this.register(context, properties, this.config.createDataway(), apiEnabled, adminEnabled, docsEnabled);
             });
             return;
         }
 
-        this.register(context, properties, dataway, apiEnabled, adminEnabled);
+        this.register(context, properties, dataway, apiEnabled, adminEnabled, docsEnabled);
     }
 
-    private void register(AppContext context, Props properties, Dataway dataway, boolean apiEnabled, boolean adminEnabled) {
+    private void register(AppContext context, Props properties, Dataway dataway, boolean apiEnabled, boolean adminEnabled, boolean docsEnabled) {
         context.wrapAndPut(Dataway.class, dataway);
 
         // API
@@ -85,6 +86,14 @@ public final class DatawayPlugin implements Plugin {
             WebHandler uiHandler = dataway.getAdminUiHandler();
             List<String> uiPaths = uiHandler.paths().stream().map(path -> uiPrefix + path).toList();
             this.register(context, uiPrefix, uiHandler, uiPaths);
+        }
+
+        // API specifications
+        if (docsEnabled) {
+            String docsPrefix = properties.get("docs-prefix", "/dataway/docs");
+            WebHandler docsHandler = dataway.getDocumentHandler();
+            List<String> docsPaths = docsHandler.paths().stream().map(path -> docsPrefix + path).toList();
+            this.register(context, docsPrefix, docsHandler, docsPaths);
         }
     }
 

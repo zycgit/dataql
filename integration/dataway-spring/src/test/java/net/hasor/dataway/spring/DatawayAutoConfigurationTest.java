@@ -143,13 +143,14 @@ class DatawayAutoConfigurationTest {
     @Test
     void allSwitchCombinationsUseConfiguredMvcMappings() throws Exception {
         var configured = configuration("configured/application.yml");
-        for (int mask = 0; mask < 4; mask++) {
+        for (int mask = 0; mask < 8; mask++) {
             boolean api = (mask & 1) != 0;
             boolean admin = (mask & 2) != 0;
-            context.withBean("metadataStorage", DatawayConfig.class, () -> new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer())).withBean(DataSource.class, TestDatabase::create).withInitializer(c -> c.getEnvironment().getPropertySources().addLast(configured)).withPropertyValues("dataway.api-enabled=" + api, "dataway.admin-enabled=" + admin).run(c -> {
+            boolean docs = (mask & 4) != 0;
+            context.withBean("metadataStorage", DatawayConfig.class, () -> new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer())).withBean(DataSource.class, TestDatabase::create).withInitializer(c -> c.getEnvironment().getPropertySources().addLast(configured)).withPropertyValues("dataway.api-enabled=" + api, "dataway.admin-enabled=" + admin, "dataway.docs-enabled=" + docs).run(c -> {
                 assertNull(c.getStartupFailure());
                 var paths = mappings(c.getBean(RequestMappingHandlerMapping.class));
-                assertEquals((api ? 1 : 0) + (admin ? 2 : 0), paths.size());
+                assertEquals((api ? 1 : 0) + (admin ? 2 : 0) + (docs ? 1 : 0), paths.size());
                 if (api) {
                     assertEquals(Set.of("/open/v2", "/open/v2/{*path}"), paths.get("datawayApi"));
                 }
@@ -157,8 +158,41 @@ class DatawayAutoConfigurationTest {
                     assertEquals(Set.of("/ops/manage", "/ops/manage/{*path}"), paths.get("datawayAdmin"));
                     assertEquals(Set.of("/tools/console", "/tools/console/{*path}"), paths.get("datawayUi"));
                 }
+                if (docs) {
+                    assertEquals(Set.of("/specifications/swagger2.json", "/specifications/openapi.json"), paths.get("datawayDocs"));
+                }
             });
         }
+    }
+
+    @Test
+    void documentsStartIndependentlyAndUseHostIdentityAndExceptionHandling() {
+        this.context.withBean(DatawayConfig.class, () -> new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer()).documentServer("/public/api").identityProvider(request -> {
+            assertEquals("visited", request.getAttribute("host.mvc"));
+            return (UserIdentity) request.getAttribute("host.user");
+        }).authorizationCheck((identity, operation) -> {
+            assertEquals(Operation.DOCUMENT, operation);
+            return !"denied-user".equals(identity.id());
+        })).withBean(WebMvcConfigurer.class, DatawayAutoConfigurationTest::hostMvc).withBean(HostExceptionHandler.class, HostExceptionHandler::new).withPropertyValues("dataway.docs-enabled=true").run(c -> {
+            assertNull(c.getStartupFailure());
+            var mvc = MockMvcBuilders.webAppContextSetup(c.getSourceApplicationContext()).build();
+            publish(c.getBean(Dataway.class), "script does not need to compile");
+            for (String format : List.of("swagger2.json", "openapi.json")) {
+                String path = "/dataway/docs/" + format;
+                var response = mvc.perform(MockMvcRequestBuilders.get(path).header("X-Test-User", "reader")).andReturn().getResponse();
+                assertEquals(200, response.getStatus());
+                assertTrue(response.getContentType().startsWith("application/json"));
+                assertTrue(JsonUtils.readTree(response.getContentAsString()).path("paths").has("/hello"));
+                assertEquals(401, mvc.perform(MockMvcRequestBuilders.get(path).header("X-Test-User", "denied-user")).andReturn().getResponse().getStatus());
+                var head = mvc.perform(MockMvcRequestBuilders.head(path).header("X-Test-User", "reader")).andReturn().getResponse();
+                assertEquals(200, head.getStatus());
+                assertEquals(0, head.getContentAsByteArray().length);
+                assertEquals(405, mvc.perform(MockMvcRequestBuilders.post(path).header("X-Test-User", "reader")).andReturn().getResponse().getStatus());
+            }
+            assertEquals(Set.of("datawayDocs"), mappings(c.getBean(RequestMappingHandlerMapping.class)).keySet());
+            assertEquals(404, mvc.perform(MockMvcRequestBuilders.get("/api/hello").header("X-Test-User", "reader")).andReturn().getResponse().getStatus());
+            assertEquals(404, mvc.perform(MockMvcRequestBuilders.get("/dataway/docs/missing.json").header("X-Test-User", "reader")).andReturn().getResponse().getStatus());
+        });
     }
 
     @Test
@@ -577,7 +611,7 @@ class DatawayAutoConfigurationTest {
     private static PropertySource<?> configuration(String resource) throws IOException {
         var source = new YamlPropertySourceLoader().load("dataway-test", new ClassPathResource(resource)).getFirst();
         var properties = assertInstanceOf(EnumerablePropertySource.class, source);
-        Set<String> expectedKeys = Set.of("dataway.api-enabled", "dataway.api-prefix", "dataway.admin-enabled", "dataway.admin-prefix", "dataway.admin-ui", "dataway.metadata.bean");
+        Set<String> expectedKeys = Set.of("dataway.api-enabled", "dataway.api-prefix", "dataway.admin-enabled", "dataway.admin-prefix", "dataway.admin-ui", "dataway.docs-enabled", "dataway.docs-prefix", "dataway.metadata.bean");
         assertEquals(expectedKeys, Set.of(properties.getPropertyNames()));
         return source;
     }

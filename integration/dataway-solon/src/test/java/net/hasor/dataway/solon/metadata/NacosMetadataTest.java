@@ -15,7 +15,7 @@ import net.hasor.dataway.service.Dataway;
 import net.hasor.dataway.service.DatawayConfig;
 import net.hasor.dataway.solon.DatawayPlugin;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.noear.solon.Solon;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -51,14 +51,14 @@ class NacosMetadataTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = { false, true })
-    void containerSuppliesNacosAccessLayer(boolean mapped) throws Throwable {
+    @CsvSource({ "false, false", "true, false", "false, true", "true, true" })
+    void containerSuppliesNacosAccessLayer(boolean mapped, boolean documentsOnly) throws Throwable {
         DatawayConfig config = new DatawayConfig();
         if (mapped) {
             config.tableMapping(EntityType.INFO, "definitions").tableMapping(EntityType.RELEASE, "publications").fieldMapping(EntityType.INFO, FieldDef.ID, "api_id");
         }
         try {
-            Solon.start(NacosMetadataTest.class, new String[] { "--server.port=0", "--dataway.admin-enabled=true", "--dataway.metadata.bean=metadataStore" }, app -> {
+            Solon.start(NacosMetadataTest.class, new String[] { "--server.port=0", "--dataway.admin-enabled=" + !documentsOnly, "--dataway.docs-enabled=" + documentsOnly, "--dataway.metadata.bean=metadataStore" }, app -> {
                 app.pluginAdd(0, new DatawayPlugin(config));
                 app.pluginAdd(100, context -> {
                     context.wrapAndPut("metadataStore", new NacosDataAccessLayer(this.client(mapped), "host-store", "HOST_GROUP", 1500));

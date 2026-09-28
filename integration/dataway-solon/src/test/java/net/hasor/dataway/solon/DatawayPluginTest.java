@@ -190,13 +190,14 @@ class DatawayPluginTest {
 
     @Test
     void managementAndResourcesShareTheirSwitchButUseSeparateRoutes() throws Exception {
-        for (int mask = 0; mask < 4; mask++) {
+        for (int mask = 0; mask < 8; mask++) {
             int port;
             try (ServerSocket socket = new ServerSocket(0)) {
                 port = socket.getLocalPort();
             }
             boolean api = (mask & 1) != 0;
             boolean admin = (mask & 2) != 0;
+            boolean docs = (mask & 4) != 0;
             var service = new Dataway(new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer()));
             ApiDefinition helloApi = new ApiDefinition();
             helloApi.setId("hello");
@@ -210,10 +211,12 @@ class DatawayPluginTest {
             var app = Solon.start(DatawayPluginTest.class, new String[] { "--server.port=" + port, "--server.contextPath=/host", "--solon.app.name=dataway-entry-test" }, a -> {
                 a.cfg().setProperty("dataway.api-enabled", Boolean.toString(api));
                 a.cfg().setProperty("dataway.admin-enabled", Boolean.toString(admin));
+                a.cfg().setProperty("dataway.docs-enabled", Boolean.toString(docs));
+                a.cfg().setProperty("dataway.docs-prefix", "/specifications");
                 a.cfg().setProperty("dataway.api-prefix", "/open/v2");
                 a.cfg().setProperty("dataway.admin-prefix", "/ops/manage");
                 a.cfg().setProperty("dataway.admin-ui", "/tools/console");
-                DatawayPlugin plugin = api || admin ? new DatawayPlugin(service) : new DatawayPlugin();
+                DatawayPlugin plugin = api || admin || docs ? new DatawayPlugin(service) : new DatawayPlugin();
                 a.pluginAdd(0, plugin);
                 if (!api) {
                     a.router().get("/open/v2/hello", ctx -> ctx.output("host-api"));
@@ -230,7 +233,7 @@ class DatawayPluginTest {
             try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()) {
                 String base = "http://127.0.0.1:" + port + "/host";
                 Dataway core = app.context().getBean(Dataway.class);
-                if (api || admin) {
+                if (api || admin || docs) {
                     assertSame(service, core);
                     assertNotNull(core.getApiHandler());
                     assertNotNull(core.getAdminHandler());
@@ -244,6 +247,13 @@ class DatawayPluginTest {
                 assertEquals(api, paths.contains("/open/v2/**"));
                 assertEquals(admin, paths.contains("/ops/manage/**"));
                 assertEquals(admin, paths.contains("/tools/console/**"));
+                assertEquals(docs, paths.contains("/specifications/openapi.json"));
+                assertEquals(docs, paths.contains("/specifications/swagger2.json"));
+                var document = get(client, base + "/specifications/openapi.json", null);
+                assertEquals(docs ? 200 : 404, document.statusCode());
+                if (docs) {
+                    assertTrue(JsonUtils.readTree(document.body()).path("paths").has("/hello"));
+                }
                 assertFalse(paths.contains("/tools/console/assets/app.js"));
                 assertEquals("host-boundary", get(client, base + "/open/v2-other", null).body());
                 assertEquals("host-nested", get(client, base + "/tools/console/host-route", null).body());
@@ -305,6 +315,9 @@ class DatawayPluginTest {
             }
             assertEquals("from-config", JsonUtils.readTree(get(client, base + "/open/v2/hello", null).body()).get("value").asText());
             assertEquals(200, get(client, base + "/ops/manage/api-list", null).statusCode());
+            var document = get(client, base + "/specifications/swagger2.json", null);
+            assertEquals(200, document.statusCode());
+            assertTrue(JsonUtils.readTree(document.body()).path("paths").has("/hello"));
             assertEquals(404, get(client, base + "/code-api/hello", null).statusCode());
         } finally {
             Solon.stopBlock(false, 0);
@@ -358,7 +371,7 @@ class DatawayPluginTest {
             for (boolean enabled : new boolean[] { true, false }) {
                 int port = availablePort();
                 try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()) {
-                    var app = Solon.start(DatawayPluginTest.class, new String[] { "--cfg=configured/app.properties", "--server.port=" + port, "--server.contextPath=/host", "--dataway.api-enabled=" + enabled, "--dataway.admin-enabled=" + enabled }, a -> a.pluginAdd(0, new DatawayPlugin(new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer()))));
+                    var app = Solon.start(DatawayPluginTest.class, new String[] { "--cfg=configured/app.properties", "--server.port=" + port, "--server.contextPath=/host", "--dataway.api-enabled=" + enabled, "--dataway.admin-enabled=" + enabled, "--dataway.docs-enabled=" + enabled }, a -> a.pluginAdd(0, new DatawayPlugin(new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer()))));
                     Dataway dataway = app.context().getBean(Dataway.class);
 
                     String base = "http://127.0.0.1:" + port + "/host";
@@ -425,6 +438,8 @@ class DatawayPluginTest {
                 "dataway.admin-enabled",  //
                 "dataway.admin-prefix",   //
                 "dataway.admin-ui",       //
+                "dataway.docs-enabled",   //
+                "dataway.docs-prefix",    //
                 "dataway.metadata.bean");
         assertEquals(expectedKeys, properties.stringPropertyNames());
         return properties;

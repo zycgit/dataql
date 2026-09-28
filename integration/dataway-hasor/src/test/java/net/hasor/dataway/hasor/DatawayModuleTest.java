@@ -193,12 +193,15 @@ class DatawayModuleTest {
     @Test
     void enabledCoreEntriesHaveSeparateMappings() throws Throwable {
         var service = new Dataway(new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer()));
-        for (int mask = 0; mask < 4; mask++) {
+        for (int mask = 0; mask < 8; mask++) {
             boolean api = (mask & 1) != 0;
             boolean admin = (mask & 2) != 0;
+            boolean docs = (mask & 4) != 0;
             DefaultSettings settings = new DefaultSettings();
             settings.setSetting("dataway.api-enabled", api);
             settings.setSetting("dataway.admin-enabled", admin);
+            settings.setSetting("dataway.docs-enabled", docs);
+            settings.setSetting("dataway.docs-prefix", "/specifications");
             settings.setSetting("dataway.api-prefix", "/open/v2");
             settings.setSetting("dataway.admin-prefix", "/ops/manage");
             settings.setSetting("dataway.admin-ui", "/tools/console");
@@ -216,7 +219,11 @@ class DatawayModuleTest {
                 });
                 case "mappingTo" -> {
                     String[] paths = (String[]) args[0];
-                    assertArrayEquals(new String[] { paths[0], paths[0] + "/*" }, paths);
+                    if (paths[0].endsWith("swagger2.json")) {
+                        assertArrayEquals(new String[] { "/specifications/swagger2.json", "/specifications/openapi.json" }, paths);
+                    } else {
+                        assertArrayEquals(new String[] { paths[0], paths[0] + "/*" }, paths);
+                    }
                     yield proxy(WebApiBinder.MappingToBindingBuilder.class, (x, m, a) -> {
                         for (Object value : a) {
                             if (value instanceof DatawayController filter) {
@@ -240,7 +247,8 @@ class DatawayModuleTest {
             assertEquals(api, filters.containsKey("/open/v2"));
             assertEquals(admin, filters.containsKey("/ops/manage"));
             assertEquals(admin, filters.containsKey("/tools/console"));
-            assertEquals((api ? 1 : 0) + (admin ? 2 : 0), filters.size());
+            assertEquals(docs, filters.containsKey("/specifications/swagger2.json"));
+            assertEquals((api ? 1 : 0) + (admin ? 2 : 0) + (docs ? 1 : 0), filters.size());
         }
     }
 
@@ -289,14 +297,16 @@ class DatawayModuleTest {
                 assertEquals(1, rows.getInt(1));
             }
             var filters = mountedControllers(dataway, context.getSettings());
-            assertEquals(Set.of("/open/v2", "/ops/manage", "/tools/console"), filters.keySet());
+            assertEquals(Set.of("/open/v2", "/ops/manage", "/tools/console", "/specifications/swagger2.json"), filters.keySet());
             String html = get(filters.get("/tools/console"), "/tools/console/");
             assertFalse(html.contains("dataway-admin-api"));
             assertFalse(html.contains("dataway-api"));
             dataway.getAdminService().publish("stored", 1);
             assertEquals(1, JsonUtils.readTree(get(filters.get("/open/v2"), "/open/v2/stored")).get("value").asInt());
             assertTrue(get(filters.get("/ops/manage"), "/ops/manage/api-list").contains("stored"));
-            assertEquals(Set.of(Operation.INVOKE, Operation.LIST), authorized);
+            String document = get(filters.get("/specifications/swagger2.json"), "/specifications/openapi.json");
+            assertTrue(JsonUtils.readTree(document).path("paths").has("/stored"));
+            assertEquals(Set.of(Operation.INVOKE, Operation.LIST, Operation.DOCUMENT), authorized);
         }
     }
 
@@ -322,6 +332,7 @@ class DatawayModuleTest {
             Properties properties = new Properties();
             properties.setProperty("dataway.api-enabled", Boolean.toString(enabled));
             properties.setProperty("dataway.admin-enabled", Boolean.toString(enabled));
+            properties.setProperty("dataway.docs-enabled", Boolean.toString(enabled));
             try (var context = Hasor.create().mainSettingWith("configured/hconfig.xml").loadSettings(properties).build(new DatawayModule(new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer())))) {
                 Dataway dataway = context.findBindingBean(null, Dataway.class);
 

@@ -12,6 +12,9 @@ public enum Operation {
     // Published APIs
     INVOKE,
 
+    // API specifications
+    DOCUMENT,
+
     // Administration
     LIST,
     READ,

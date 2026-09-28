@@ -32,6 +32,33 @@ import static org.junit.jupiter.api.Assertions.*;
 class NacosDataAccessLayerTest {
     static final String EMPTY = "{\"format\":1,\"generation\":\"initial\",\"records\":{\"INFO\":{},\"RELEASE\":{}}}";
 
+    @ParameterizedTest
+    @ValueSource(strings = { "/swagger2.json", "/openapi.json" })
+    void documentsUseMappedNacosPublicationsWithoutWritingOrExecuting(String path) throws Exception {
+        Server server = new Server();
+        server.configs.put("test/store", "{\"format\":1,\"generation\":\"initial\",\"records\":{\"drafts.v1\":{},\"release history\":{}}}");
+        Dataway dataway = this.mappedConfig(server.access()).createDataway();
+        ApiDefinition definition = new ApiDefinition();
+        definition.setId("docs");
+        definition.setMethod("GET");
+        definition.setPath("/docs-test");
+        definition.setType(ApiScriptType.DATA_QL);
+        definition.setScript("invalid script that must never execute");
+        definition.setDescription("Published document");
+        dataway.getAdminService().save(definition, 0);
+        dataway.getAdminService().publish("docs", 1);
+        String original = server.configs.get("test/store");
+        TestWebResponse response = new TestWebResponse();
+        dataway.getDocumentHandler().handle(new TestWebRequest("GET", path, Map.of()), response);
+        var document = JsonUtils.readTree(JsonUtils.writeValueAsString(response.getResult()));
+        assertEquals("Published document", document.path("paths").path("/docs-test").path("get").path("summary").asText());
+        assertEquals(original, server.configs.get("test/store"));
+        dataway.getAdminService().disableApi("docs", 2);
+        response = new TestWebResponse();
+        dataway.getDocumentHandler().handle(new TestWebRequest("GET", path, Map.of()), response);
+        assertTrue(JsonUtils.readTree(JsonUtils.writeValueAsString(response.getResult())).path("paths").isEmpty());
+    }
+
     @Test
     void allEntityAndFieldMappingsSupportPublicationExecutionAndReconnect() throws Exception {
         Server server = new Server();

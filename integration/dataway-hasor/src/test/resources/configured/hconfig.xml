@@ -14,6 +14,8 @@
         <admin-enabled>true</admin-enabled>
         <admin-prefix>/ops/manage</admin-prefix>
         <admin-ui>/tools/console</admin-ui>
+        <docs-enabled>true</docs-enabled>
+        <docs-prefix>/specifications</docs-prefix>
         <metadata>
             <bean></bean>
         </metadata>

@@ -17,17 +17,21 @@ import net.hasor.dataway.authorization.IdentityProvider;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.model.WebRequest;
 import net.hasor.dataway.service.admin.*;
+import net.hasor.dataway.service.document.DatawayDocumentHandler;
+import net.hasor.dataway.service.document.DocumentService;
 import net.hasor.dataway.service.script.ApiInterceptor;
 import net.hasor.dataway.service.script.DatawayApiHandler;
 import net.hasor.dataway.service.script.DatawayEngine;
 import net.hasor.dataway.web.body.UploadStorage;
 
-/** Shared execution context with three independent HTTP handlers. The host owns their routing. */
+/** Shared execution context with independent HTTP handlers. The host owns their routing. */
 public final class Dataway {
     private final AdminService adminService;
+    //
     private final WebHandler   apiHandler;
     private final WebHandler   adminHandler;
     private final WebHandler   adminUiHandler;
+    private final WebHandler   documentHandler;
 
     public Dataway(DatawayConfig config) {
         ApiDataAccessLayer access = config.getDataAccessLayer();
@@ -66,11 +70,14 @@ public final class Dataway {
         // service
         this.adminService = new AdminServiceImpl(beans);
         beans.setBean(AdminService.class, this.adminService);
+        DocumentService documents = new DocumentService(beans, config.getDocumentTitle(), config.getDocumentVersion(), config.getDocumentServer());
+        beans.setBean(DocumentService.class, documents);
 
         // handler
         this.apiHandler = new DatawayApiHandler(beans);
         this.adminHandler = new DatawayAdminHandler(beans);
         this.adminUiHandler = new DatawayUiHandler(beans);
+        this.documentHandler = new DatawayDocumentHandler(beans);
     }
 
     private DatawayEngine createEngine(DatawayConfig config, BeanContainer beans) {
@@ -114,5 +121,10 @@ public final class Dataway {
     /** Returns the management UI handler. */
     public WebHandler getAdminUiHandler() {
         return this.adminUiHandler;
+    }
+
+    /** Returns the API specification handler. */
+    public WebHandler getDocumentHandler() {
+        return this.documentHandler;
     }
 }

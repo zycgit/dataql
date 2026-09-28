@@ -18,7 +18,7 @@ import net.hasor.dataway.hasor.DatawayModule;
 import net.hasor.dataway.service.Dataway;
 import net.hasor.dataway.service.DatawayConfig;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvSource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -53,14 +53,15 @@ class NacosMetadataTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = { false, true })
-    void containerSuppliesNacosAccessLayer(boolean mapped) throws Throwable {
+    @CsvSource({ "false, false", "true, false", "false, true", "true, true" })
+    void containerSuppliesNacosAccessLayer(boolean mapped, boolean documentsOnly) throws Throwable {
         DatawayConfig config = new DatawayConfig();
         if (mapped) {
             config.tableMapping(EntityType.INFO, "definitions").tableMapping(EntityType.RELEASE, "publications").fieldMapping(EntityType.INFO, FieldDef.ID, "api_id");
         }
         var settings = new Properties();
-        settings.setProperty("dataway.admin-enabled", "true");
+        settings.setProperty("dataway.admin-enabled", Boolean.toString(!documentsOnly));
+        settings.setProperty("dataway.docs-enabled", Boolean.toString(documentsOnly));
         try (var context = Hasor.create().loadSettings(settings).build(new DatawayModule(config), binder -> {
             binder.bindType(ApiDataAccessLayer.class).toInstance(new NacosDataAccessLayer(this.client(mapped), "host-store", "HOST_GROUP", 1500));
         })) {

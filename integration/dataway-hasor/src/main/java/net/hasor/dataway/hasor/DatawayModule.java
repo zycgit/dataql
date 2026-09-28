@@ -23,7 +23,7 @@ import net.hasor.web.WebApiBinder;
 import net.hasor.web.binder.MappingDef;
 
 /**
- * Registers the API, management API and UI independently in an existing Hasor application.
+ * Registers business APIs, management, UI and API specifications in an existing Hasor application.
  * Reads routing prefixes from Hasor Settings, including hconfig.xml. Entry switches are owned by this integration.
  */
 public final class DatawayModule implements Module {
@@ -50,8 +50,9 @@ public final class DatawayModule implements Module {
         Settings settings = binder.getSettings();
         boolean apiEnabled = settings.getBoolean(CONFIG_PREFIX + "api-enabled", false);
         boolean adminEnabled = settings.getBoolean(CONFIG_PREFIX + "admin-enabled", false);
+        boolean docsEnabled = settings.getBoolean(CONFIG_PREFIX + "docs-enabled", false);
         Dataway dataway = this.dataway;
-        if (!apiEnabled && !adminEnabled && dataway == null) {
+        if (!apiEnabled && !adminEnabled && !docsEnabled && dataway == null) {
             return;
         }
 
@@ -103,6 +104,12 @@ public final class DatawayModule implements Module {
             // Admin UI
             String uiPrefix = settings.getString(CONFIG_PREFIX + "admin-ui", "/dataway");
             this.register(web, uiPrefix, provider, Dataway::getAdminUiHandler);
+        }
+
+        // API specifications
+        if (docsEnabled) {
+            String prefix = settings.getString(CONFIG_PREFIX + "docs-prefix", "/dataway/docs");
+            this.register(web, prefix, provider, Dataway::getDocumentHandler);
         }
     }
 

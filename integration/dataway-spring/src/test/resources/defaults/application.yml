@@ -11,5 +11,7 @@ dataway:
   admin-enabled: false
   admin-prefix: "/dataway/api"
   admin-ui: "/dataway"
+  docs-enabled: false
+  docs-prefix: "/dataway/docs"
   metadata:
     bean: ""

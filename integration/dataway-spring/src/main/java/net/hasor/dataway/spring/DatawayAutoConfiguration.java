@@ -50,10 +50,13 @@ public class DatawayAutoConfiguration {
         Binder binder = Binder.get(environment);
         boolean apiEnabled = binder.bind(CONFIG_PREFIX + ".api-enabled", Boolean.class).orElse(false);
         boolean adminEnabled = binder.bind(CONFIG_PREFIX + ".admin-enabled", Boolean.class).orElse(false);
-        Dataway dataway = apiEnabled || adminEnabled ? cores.getObject() : null;
+        boolean docsEnabled = binder.bind(CONFIG_PREFIX + ".docs-enabled", Boolean.class).orElse(false);
+
+        Dataway dataway = apiEnabled || adminEnabled || docsEnabled ? cores.getObject() : null;
         String apiPrefix = binder.bind(CONFIG_PREFIX + ".api-prefix", String.class).orElse("/api");
         String adminPrefix = binder.bind(CONFIG_PREFIX + ".admin-prefix", String.class).orElse("/dataway/api");
         String uiPrefix = binder.bind(CONFIG_PREFIX + ".admin-ui", String.class).orElse("/dataway");
-        return new DatawayMvcRegistrar(dataway, apiEnabled, adminEnabled, apiPrefix, adminPrefix, uiPrefix, mappings);
+        String docsPrefix = binder.bind(CONFIG_PREFIX + ".docs-prefix", String.class).orElse("/dataway/docs");
+        return new DatawayMvcRegistrar(dataway, apiEnabled, adminEnabled, docsEnabled, apiPrefix, adminPrefix, uiPrefix, docsPrefix, mappings);
     }
 }

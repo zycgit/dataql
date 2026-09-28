@@ -11,5 +11,7 @@ dataway:
   admin-enabled: true
   admin-prefix: "/ops/manage"
   admin-ui: "/tools/console"
+  docs-enabled: true
+  docs-prefix: "/specifications"
   metadata:
     bean: ""

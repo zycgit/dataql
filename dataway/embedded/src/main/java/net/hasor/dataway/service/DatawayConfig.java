@@ -41,9 +41,11 @@ public class DatawayConfig {
     private final List<AdminInterceptor>                 adminInterceptors     = new ArrayList<>();
     private       Path                                   uploadTempDirectory;
     private       int                                    uploadMemoryThreshold = UploadStorage.DEFAULT_MEMORY_THRESHOLD;
+    private       String                                 documentTitle         = "Dataway API";
+    private       String                                 documentVersion       = "1.0";
+    private       String                                 documentServer        = "/api";
     //
     private       Finder                                 finder                = new DatawayFinder();
-    //
     private       CustomizeScope                         customizeScope;
     private       boolean                                resultStructure       = true;
     private       boolean                                wrapAllParameters     = false;
@@ -104,6 +106,22 @@ public class DatawayConfig {
     /** Sets the per-file memory threshold in bytes; zero spills every non-empty file to disk. */
     public DatawayConfig uploadMemoryThreshold(int bytes) {
         this.uploadMemoryThreshold = bytes;
+        return this;
+    }
+
+    public DatawayConfig documentTitle(String title) {
+        this.documentTitle = title;
+        return this;
+    }
+
+    public DatawayConfig documentVersion(String version) {
+        this.documentVersion = version;
+        return this;
+    }
+
+    /** Sets the public API base URL, either an absolute HTTP(S) URL or a root-relative path. */
+    public DatawayConfig documentServer(String server) {
+        this.documentServer = server;
         return this;
     }
 
@@ -228,6 +246,18 @@ public class DatawayConfig {
 
     public int getUploadMemoryThreshold() {
         return this.uploadMemoryThreshold;
+    }
+
+    String getDocumentTitle() {
+        return this.documentTitle;
+    }
+
+    String getDocumentVersion() {
+        return this.documentVersion;
+    }
+
+    String getDocumentServer() {
+        return this.documentServer;
     }
 
     public Finder getFinder() {

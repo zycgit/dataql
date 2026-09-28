@@ -14,6 +14,8 @@
         <admin-enabled>false</admin-enabled>
         <admin-prefix>/dataway/api</admin-prefix>
         <admin-ui>/dataway</admin-ui>
+        <docs-enabled>false</docs-enabled>
+        <docs-prefix>/dataway/docs</docs-prefix>
         <metadata>
             <bean></bean>
         </metadata>

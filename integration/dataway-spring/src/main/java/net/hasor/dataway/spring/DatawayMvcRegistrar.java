@@ -17,26 +17,30 @@ import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-/** Registers three controller methods in the host MVC mapping. */
+/** Registers enabled Dataway entries in the host MVC mapping. */
 public final class DatawayMvcRegistrar implements SmartInitializingSingleton {
     private final Dataway dataway;
     private final boolean apiEnabled;
-    private final boolean adminEnabled;
     private final String  apiPrefix;
+    private final boolean adminEnabled;
     private final String  adminPrefix;
-    private final String  uiPrefix;
+    private final String  adminUiPrefix;
+    private final boolean docsEnabled;
+    private final String  docsPrefix;
 
     private final ObjectProvider<RequestMappingHandlerMapping> mappings;
 
-    public DatawayMvcRegistrar(Dataway dataway, boolean apiEnabled, boolean adminEnabled,//
-            String apiPrefix, String adminPrefix, String uiPrefix, ObjectProvider<RequestMappingHandlerMapping> mappings) {
+    public DatawayMvcRegistrar(Dataway dataway, boolean apiEnabled, boolean adminEnabled, boolean docsEnabled,//
+            String apiPrefix, String adminPrefix, String adminUiPrefix, String docsPrefix, ObjectProvider<RequestMappingHandlerMapping> mappings) {
         this.mappings = mappings;
-        this.dataway = apiEnabled || adminEnabled ? Objects.requireNonNull(dataway) : dataway;
+        this.dataway = apiEnabled || adminEnabled || docsEnabled ? Objects.requireNonNull(dataway) : dataway;
         this.apiEnabled = apiEnabled;
         this.adminEnabled = adminEnabled;
+        this.docsEnabled = docsEnabled;
         this.apiPrefix = apiPrefix;
         this.adminPrefix = adminPrefix;
-        this.uiPrefix = uiPrefix;
+        this.adminUiPrefix = adminUiPrefix;
+        this.docsPrefix = docsPrefix;
     }
 
     @Override
@@ -57,10 +61,18 @@ public final class DatawayMvcRegistrar implements SmartInitializingSingleton {
             this.register("datawayAdmin", adminHandler, adminPrefix, adminPaths);
 
             // Admin UI
-            String uiPrefix = this.uiPrefix;
+            String uiPrefix = this.adminUiPrefix;
             WebHandler uiHandler = this.dataway.getAdminUiHandler();
             String[] uiPaths = uiHandler.paths().stream().map(path -> uiPrefix + path).toArray(String[]::new);
             this.register("datawayUi", uiHandler, uiPrefix, uiPaths);
+        }
+
+        // API specifications
+        if (this.docsEnabled) {
+            WebHandler docsHandler = this.dataway.getDocumentHandler();
+            String docsPrefix = this.docsPrefix;
+            String[] docsPaths = docsHandler.paths().stream().map(path -> docsPrefix + path).toArray(String[]::new);
+            this.register("datawayDocs", docsHandler, docsPrefix, docsPaths);
         }
     }
 
