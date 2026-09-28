@@ -7,10 +7,10 @@
  */
 package net.hasor.dataway.authorization;
 
-/** Allows every operation until the host supplies its own authorization policy. */
+/** Uses the operations granted by the host's identity provider. */
 public class DefaultAuthorizationCheck implements AuthorizationCheck {
     @Override
     public boolean check(UserIdentity identity, Operation operation) {
-        return true;
+        return identity != null && identity.checkOperation(operation);
     }
 }

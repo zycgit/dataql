@@ -45,10 +45,12 @@ public final class DatawayDocumentHandler extends WebHandler {
         if (!this.authorizationCheck.check(request.getIdentity(), Operation.DOCUMENT)) {
             throw new DatawayException(401, "Unauthorized");
         }
+
         Object document = switch (request.getPathInfo()) {
             case "/swagger2.json" -> this.documents.swagger2();
             default -> this.documents.openapi();
         };
+
         return ResultInfoUtils.json(200, document);
     }
 }

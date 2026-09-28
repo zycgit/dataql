@@ -15,11 +15,7 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import org.junit.Test;
 import tools.jackson.core.JacksonException;
 import static org.junit.Assert.*;
@@ -59,58 +55,39 @@ public class JsonUtilsTest {
     }
 
     @Test
-    public void configurationWritingPreservesNullEntriesWithoutChangingResponseWriting() {
-        String document = """
-                {"responseFormat":null,"extension":{"value":null},"items":[{"value":null},null],"enabled":false}
-                """;
-        Map<?, ?> data = JsonUtils.readValue(document, Map.class);
-        var expected = JsonUtils.readTree(document);
-        assertEquals(expected, JsonUtils.readTree(JsonUtils.writeValueAsStringWithNulls(data)));
-        assertEquals(JsonUtils.readTree("""
-                {"extension":{},"items":[{},null],"enabled":false}
-                """), JsonUtils.readTree(JsonUtils.writeValueAsString(data)));
-        assertEquals(expected, JsonUtils.readTree(JsonUtils.writeValueAsStringWithNulls(data)));
-        assertEquals("null", JsonUtils.writeValueAsStringWithNulls(null));
-        assertTrue(data.containsKey("responseFormat"));
-        assertNull(data.get("responseFormat"));
-    }
-
-    @Test
-    public void nullFilteringRetainsNumericKeysAndExplicitJsonNullNodes() {
+    public void nullOmissionRetainsNumericKeysAndExplicitJsonNullNodes() {
         Map<Object, Object> data = new LinkedHashMap<>();
         data.put(1, null);
         data.put(2, JsonUtils.readTree("null"));
         data.put(3, "value");
         assertEquals(JsonUtils.readTree("{\"2\":null,\"3\":\"value\"}"), JsonUtils.readTree(JsonUtils.writeValueAsString(data)));
-        assertEquals(JsonUtils.readTree("{\"1\":null,\"2\":null,\"3\":\"value\"}"), JsonUtils.readTree(JsonUtils.writeValueAsStringWithNulls(data)));
         assertEquals(3, data.size());
     }
 
     @Test
-    public void concurrentWritersKeepTheirNullPoliciesIndependent() throws Exception {
+    public void concurrentCompactAndPrettyOutputUseTheSameNullPolicy() throws Exception {
         Map<?, ?> data = JsonUtils.readValue("{\"value\":null,\"items\":[{\"value\":null},null]}", Map.class);
         var withoutNulls = JsonUtils.readTree("{\"items\":[{},null]}");
-        var withNulls = JsonUtils.readTree("{\"value\":null,\"items\":[{\"value\":null},null]}");
         ExecutorService pool = Executors.newFixedThreadPool(2);
         CountDownLatch start = new CountDownLatch(1);
         try {
-            Future<?> response = pool.submit(() -> {
+            Future<?> compact = pool.submit(() -> {
                 start.await();
                 for (int i = 0; i < 100; i++) {
                     assertEquals(withoutNulls, JsonUtils.readTree(JsonUtils.writeValueAsString(data)));
                 }
                 return null;
             });
-            Future<?> configuration = pool.submit(() -> {
+            Future<?> pretty = pool.submit(() -> {
                 start.await();
                 for (int i = 0; i < 100; i++) {
-                    assertEquals(withNulls, JsonUtils.readTree(JsonUtils.writeValueAsStringWithNulls(data)));
+                    assertEquals(withoutNulls, JsonUtils.readTree(JsonUtils.writeValueAsPrettyString(data)));
                 }
                 return null;
             });
             start.countDown();
-            response.get(10, TimeUnit.SECONDS);
-            configuration.get(10, TimeUnit.SECONDS);
+            compact.get(10, TimeUnit.SECONDS);
+            pretty.get(10, TimeUnit.SECONDS);
         } finally {
             pool.shutdownNow();
             assertTrue(pool.awaitTermination(5, TimeUnit.SECONDS));
