@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.dal.jdbc;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -64,7 +63,7 @@ record EntityMapping(String table, Map<FieldDef, String> columns) {
                 throw new IllegalArgumentException("Unsupported entity type: " + entityType);
             }
         }
-        return Collections.unmodifiableMap(mapping);
+        return mapping;
     }
 
     public String column(FieldDef field) {

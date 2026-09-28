@@ -12,8 +12,6 @@ import java.util.List;
 import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import net.hasor.dataway.authorization.UserIdentity;
-import net.hasor.dataway.service.RequestAttribute;
 import net.hasor.dataway.service.WebHandler;
 
 /** MVC endpoint; the host's authentication and interceptors run before this method. */
@@ -28,6 +26,8 @@ public class DatawayController {
 
     public void handle(HttpServletRequest request, HttpServletResponse response) throws Exception {
         SpringWebRequest webRequest = new SpringWebRequest(request);
+        SpringWebResponse webResponse = new SpringWebResponse(response);
+
         String path = request.getRequestURI().substring(request.getContextPath().length());
         webRequest.setMethod(request.getMethod());
         webRequest.setPath(path);
@@ -38,17 +38,6 @@ public class DatawayController {
         Collections.list(request.getHeaderNames()).forEach(name -> headers.put(name, Collections.list(request.getHeaders(name))));
         webRequest.setHeaderValues(headers);
 
-        Object identity = request.getAttribute(RequestAttribute.IDENTITY.getKey());
-        if (identity instanceof UserIdentity user) {
-            webRequest.setIdentity(user);
-        } else {
-            var principal = request.getUserPrincipal();
-            if (principal != null) {
-                webRequest.setIdentity(UserIdentity.authenticated(principal.getName()));
-            }
-        }
-
-        SpringWebResponse webResponse = new SpringWebResponse(response);
         this.handler.handle(webRequest, webResponse);
     }
 }

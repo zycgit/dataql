@@ -10,8 +10,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import net.hasor.dataway.authorization.UserIdentity;
-import net.hasor.dataway.service.RequestAttribute;
 import net.hasor.dataway.service.WebHandler;
 import net.hasor.web.Invoker;
 import net.hasor.web.annotation.Any;
@@ -30,6 +28,8 @@ public class DatawayController {
     public void execute(Invoker invoker) throws Exception {
         var request = invoker.getHttpRequest();
         HasorWebRequest webRequest = new HasorWebRequest(request);
+        HasorWebResponse webResponse = new HasorWebResponse(invoker.getHttpResponse());
+
         String path = request.getRequestURI().substring(request.getContextPath().length());
         webRequest.setMethod(request.getMethod());
         webRequest.setPath(path);
@@ -42,17 +42,6 @@ public class DatawayController {
         });
         webRequest.setHeaderValues(headers);
 
-        Object identity = request.getAttribute(RequestAttribute.IDENTITY.getKey());
-        if (identity instanceof UserIdentity user) {
-            webRequest.setIdentity(user);
-        } else {
-            var principal = request.getUserPrincipal();
-            if (principal != null) {
-                webRequest.setIdentity(UserIdentity.authenticated(principal.getName()));
-            }
-        }
-
-        HasorWebResponse webResponse = new HasorWebResponse(invoker.getHttpResponse());
         this.handler.handle(webRequest, webResponse);
     }
 }

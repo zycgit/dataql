@@ -51,26 +51,25 @@ public class NacosDataAccessLayer implements ApiDataAccessLayer {
                 return Objects.equals(row.get(entry.getKey()), entry.getValue());
             });
         }).forEach(row -> {
-            result.add(Collections.unmodifiableMap(new EnumMap<>(row)));
+            result.add(new EnumMap<>(row));
         });
-        return List.copyOf(result);
+        return result;
     }
 
     @Override
     public void write(List<DataMutation> mutations) {
-        List<DataMutation> batch = List.copyOf(mutations);
-        if (batch.isEmpty()) {
+        if (mutations.isEmpty()) {
             return;
         }
 
-        for (DataMutation mutation : batch) {
+        for (DataMutation mutation : mutations) {
             mutation.validate();
             NacosSnapshot.validateFields(mutation.getEntityType(), mutation.getFields().keySet());
         }
 
         String original = this.load(this.dataId, this.group);
         NacosSnapshot snapshot = NacosSnapshot.parse(original);
-        for (DataMutation mutation : batch) {
+        for (DataMutation mutation : mutations) {
             snapshot.apply(mutation);
         }
         this.publish(original, snapshot);

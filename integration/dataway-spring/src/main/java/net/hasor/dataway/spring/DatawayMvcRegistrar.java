@@ -46,7 +46,7 @@ public final class DatawayMvcRegistrar implements SmartInitializingSingleton {
             WebHandler apiHandler = this.dataway.getApiHandler();
             String apiPrefix = this.apiPrefix;
             String[] apiPaths = apiHandler.paths().stream().map(path -> apiPrefix + path).toArray(String[]::new);
-            register("datawayApi", apiHandler, apiPrefix, apiPaths);
+            this.register("datawayApi", apiHandler, apiPrefix, apiPaths);
         }
 
         // Admin API
@@ -54,13 +54,13 @@ public final class DatawayMvcRegistrar implements SmartInitializingSingleton {
             WebHandler adminHandler = this.dataway.getAdminHandler();
             String adminPrefix = this.adminPrefix;
             String[] adminPaths = adminHandler.paths().stream().map(path -> adminPrefix + path).toArray(String[]::new);
-            register("datawayAdmin", adminHandler, adminPrefix, adminPaths);
+            this.register("datawayAdmin", adminHandler, adminPrefix, adminPaths);
 
             // Admin UI
             String uiPrefix = this.uiPrefix;
-            WebHandler uiHandler = this.dataway.getUiHandler();
+            WebHandler uiHandler = this.dataway.getAdminUiHandler();
             String[] uiPaths = uiHandler.paths().stream().map(path -> uiPrefix + path).toArray(String[]::new);
-            register("datawayUi", uiHandler, uiPrefix, uiPaths);
+            this.register("datawayUi", uiHandler, uiPrefix, uiPaths);
         }
     }
 

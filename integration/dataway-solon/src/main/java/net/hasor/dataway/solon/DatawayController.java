@@ -10,8 +10,6 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import net.hasor.dataway.authorization.UserIdentity;
-import net.hasor.dataway.service.RequestAttribute;
 import net.hasor.dataway.service.WebHandler;
 import org.noear.solon.annotation.Mapping;
 import org.noear.solon.core.handle.Context;
@@ -28,6 +26,8 @@ public class DatawayController {
     @Mapping("")
     public void handle(Context context) throws Exception {
         SolonWebRequest webRequest = new SolonWebRequest(context);
+        SolonWebResponse webResponse = new SolonWebResponse(context);
+
         String path = context.pathNew();
         webRequest.setMethod(context.method());
         webRequest.setPath(path);
@@ -38,12 +38,6 @@ public class DatawayController {
         context.headerNames().forEach(name -> headers.put(name, Arrays.asList(context.headerValues(name))));
         webRequest.setHeaderValues(headers);
 
-        UserIdentity identity = context.attr(RequestAttribute.IDENTITY.getKey());
-        if (identity != null) {
-            webRequest.setIdentity(identity);
-        }
-
-        SolonWebResponse webResponse = new SolonWebResponse(context);
         this.handler.handle(webRequest, webResponse);
     }
 }

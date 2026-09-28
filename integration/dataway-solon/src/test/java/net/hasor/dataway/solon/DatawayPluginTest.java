@@ -24,13 +24,8 @@ import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ApiScriptType;
-import net.hasor.dataway.model.ResultInfoUtils;
-import net.hasor.dataway.service.Dataway;
-import net.hasor.dataway.service.DatawayException;
-import net.hasor.dataway.service.DatawayService;
-import net.hasor.dataway.service.RequestAttribute;
+import net.hasor.dataway.service.*;
 import net.hasor.dataway.service.admin.AdminInterceptor;
-import net.hasor.dataway.service.script.DatawayConfig;
 import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.Test;
 import org.noear.solon.Solon;
@@ -46,54 +41,57 @@ class DatawayPluginTest {
         }
         AtomicInteger uiRequests = new AtomicInteger();
         var observed = new ConcurrentHashMap<Operation, String>();
+        var apiObserved = new ConcurrentHashMap<Operation, String>();
         var authorized = new ConcurrentHashMap<Operation, String>();
         AdminInterceptor policy = (action, chain) -> {
-            if (!action.getIdentity().isAuthenticated()) {
+            if (!action.getIdentity().authenticated()) {
                 throw new DatawayException(401, "Host login required");
             }
-            observed.put(action.getOperation(), action.getIdentity().getId());
+            observed.put(action.getOperation(), action.getIdentity().id());
             return chain.proceed();
         };
 
         IOException executionFailure = new IOException("script failed");
-        Dataway dataway = Dataway.builder().dataAccessLayer(TestDatabase.dataAccessLayer()).configure(builder -> builder.configureRuntime(runtime -> {
+        Dataway dataway = new Dataway(new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer()).configureQuery(runtime -> {
             runtime.addShareVar("frameworkName", () -> (Udf) (hints, args) -> "solon");
-        })).configureService(serviceBuilder -> serviceBuilder.interceptor((invocation, next) -> {
+        }).apiInterceptor((invocation, next) -> {
+            apiObserved.put(invocation.getOperation(), invocation.getIdentity().id());
             if (invocation.getParameters().containsKey("fail")) {
                 throw executionFailure;
             }
             if (invocation.getParameters().containsKey("download")) {
-                return ResultInfoUtils.ofStream("application/pdf", new ByteArrayInputStream(new byte[] { 0, 1, (byte) 255 }));
+                return ResultInfoUtils.convertToResultInfo("application/pdf", new ByteArrayInputStream(new byte[] { 0, 1, (byte) 255 }));
             }
             return next.proceed(invocation);
-        })).authorizationCheck((identity, operation) -> {
-            if (!identity.isAuthenticated() || "denied-user".equals(identity.getId())) {
+        }).authorizationCheck((identity, operation) -> {
+            if (!identity.authenticated() || "denied-user".equals(identity.id())) {
                 return false;
             }
-            authorized.put(operation, identity.getId());
+            authorized.put(operation, identity.id());
             return true;
-        }).actionInterceptor(policy).identityProvider(request -> {
+        }).adminInterceptor(policy).identityProvider(request -> {
             if (request.getPath().equals("/dataway" + request.getPathInfo())) {
                 uiRequests.incrementAndGet();
             }
-            return request.getIdentity();
-        }).build();
+            Object identity = request.getAttribute("host.user");
+            return identity instanceof UserIdentity user ? user : UserIdentity.anonymous();
+        }));
 
-        var service = dataway.getService();
+        var service = dataway;
         ApiDefinition helloApi = new ApiDefinition();
         helloApi.setId("hello");
         helloApi.setMethod("GET");
         helloApi.setPath("/hello");
-        helloApi.setType(ApiScriptType.DATAQL);
+        helloApi.setType(ApiScriptType.DATA_QL);
         helloApi.setScript("return frameworkName();");
         helloApi.setDescription("");
-        service.getBeanContainer().getAdminService().save(helloApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
-        service.getBeanContainer().getAdminService().publish("hello", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
+        service.getAdminService().save(helloApi, 0);
+        service.getAdminService().publish("hello", 1);
         var app = Solon.start(DatawayPluginTest.class, new String[] { "--server.port=" + port, "--server.contextPath=/host", "--solon.app.name=dataway-adapter-test", "--dataway.api-enabled=true", "--dataway.admin-enabled=true" }, a -> {
             a.chains().addFilter((request, chain) -> {
                 String user = request.header("X-Test-User");
                 if (user != null) {
-                    request.attrSet(RequestAttribute.IDENTITY.getKey(), UserIdentity.authenticated(user));
+                    request.attrSet("host.user", UserIdentity.authenticated(user));
                 }
                 try {
                     chain.doFilter(request);
@@ -117,8 +115,8 @@ class DatawayPluginTest {
         });
 
         try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()) {
-            assertSame(service, app.context().getBean(Dataway.class).getService());
-            assertNull(app.context().getBean(DatawayService.class));
+            assertSame(service, app.context().getBean(Dataway.class));
+            assertNull(app.context().getBean(BeanContainer.class));
             assertSame(dataway, app.context().getBean(Dataway.class));
             String base = "http://127.0.0.1:" + port + "/host";
             assertEquals("solon", JsonUtils.readTree(get(client, base + "/api/hello", "host-user").body()).get("value").asText());
@@ -139,7 +137,7 @@ class DatawayPluginTest {
             cookiesApi.setId("cookies");
             cookiesApi.setMethod("GET");
             cookiesApi.setPath("/cookies");
-            cookiesApi.setType(ApiScriptType.DATAQL);
+            cookiesApi.setType(ApiScriptType.DATA_QL);
             cookiesApi.setScript("""
                     import 'net.hasor.dataway.function.WebUdfSource' as w;
                     var a = w.setHeader('X-Result', 'first');
@@ -149,8 +147,8 @@ class DatawayPluginTest {
                     return {'headers': w.headerArray('X-Repeat'), 'cookies': w.cookieArray('id')};
                     """);
             cookiesApi.setDescription("");
-            service.getBeanContainer().getAdminService().save(cookiesApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
-            service.getBeanContainer().getAdminService().publish("cookies", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
+            service.getAdminService().save(cookiesApi, 0);
+            service.getAdminService().publish("cookies", 1);
             var cookies = client.send(HttpRequest.newBuilder(URI.create(base + "/api/cookies"))//
                     .header("X-Test-User", "host-user").header("X-Repeat", "one").header("X-Repeat", "two")//
                     .header("Cookie", "id=first; id=second").build(), HttpResponse.BodyHandlers.ofString());
@@ -181,7 +179,8 @@ class DatawayPluginTest {
                 assertEquals(401, denied.statusCode());
                 assertEquals("solon", denied.headers().firstValue("X-Host-Error").orElseThrow());
             }
-            assertEquals(Map.of(Operation.INVOKE, "host-user", Operation.LIST, "host-user"), observed);
+            assertEquals(Map.of(Operation.LIST, "host-user"), observed);
+            assertEquals(Map.of(Operation.INVOKE, "host-user"), apiObserved);
             assertEquals(Map.of(Operation.INVOKE, "host-user", Operation.LIST, "host-user"), authorized);
             assertEquals(5, uiRequests.get(), "Native routing must keep host and management requests out of the UI handler");
         } finally {
@@ -198,27 +197,24 @@ class DatawayPluginTest {
             }
             boolean api = (mask & 1) != 0;
             boolean admin = (mask & 2) != 0;
-            var service = DatawayService.builder(new DatawayConfig(), TestDatabase.dataAccessLayer()).build();
+            var service = new Dataway(new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer()));
             ApiDefinition helloApi = new ApiDefinition();
             helloApi.setId("hello");
             helloApi.setMethod("GET");
             helloApi.setPath("/hello");
-            helloApi.setType(ApiScriptType.DATAQL);
+            helloApi.setType(ApiScriptType.DATA_QL);
             helloApi.setScript("return 'solon';");
             helloApi.setDescription("");
-            service.getBeanContainer().getAdminService().save(helloApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
-            service.getBeanContainer().getAdminService().publish("hello", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
+            service.getAdminService().save(helloApi, 0);
+            service.getAdminService().publish("hello", 1);
             var app = Solon.start(DatawayPluginTest.class, new String[] { "--server.port=" + port, "--server.contextPath=/host", "--solon.app.name=dataway-entry-test" }, a -> {
                 a.cfg().setProperty("dataway.api-enabled", Boolean.toString(api));
                 a.cfg().setProperty("dataway.admin-enabled", Boolean.toString(admin));
                 a.cfg().setProperty("dataway.api-prefix", "/open/v2");
                 a.cfg().setProperty("dataway.admin-prefix", "/ops/manage");
                 a.cfg().setProperty("dataway.admin-ui", "/tools/console");
-                var builder = Dataway.builder();
-                if (api || admin) {
-                    builder.service(service);
-                }
-                a.pluginAdd(0, new DatawayPlugin(builder));
+                DatawayPlugin plugin = api || admin ? new DatawayPlugin(service) : new DatawayPlugin();
+                a.pluginAdd(0, plugin);
                 if (!api) {
                     a.router().get("/open/v2/hello", ctx -> ctx.output("host-api"));
                 }
@@ -235,14 +231,14 @@ class DatawayPluginTest {
                 String base = "http://127.0.0.1:" + port + "/host";
                 Dataway core = app.context().getBean(Dataway.class);
                 if (api || admin) {
-                    assertSame(service, core.getService());
+                    assertSame(service, core);
                     assertNotNull(core.getApiHandler());
                     assertNotNull(core.getAdminHandler());
-                    assertNotNull(core.getUiHandler());
+                    assertNotNull(core.getAdminUiHandler());
                 } else {
                     assertNull(core);
                 }
-                assertNull(app.context().getBean(DatawayService.class));
+                assertNull(app.context().getBean(BeanContainer.class));
                 var paths = app.router().findAll().stream().map(route -> route.path()).toList();
                 assertFalse(paths.contains("/**"));
                 assertEquals(api, paths.contains("/open/v2/**"));
@@ -281,28 +277,28 @@ class DatawayPluginTest {
         Map<String, String> previous = configurationSnapshot();
         int port = availablePort();
         JdbcDataSource source = dataSource();
-        var builder = Dataway.builder().dataAccessLayer(new JdbcDataAccessLayer(source, ""));
+        var builder = new DatawayConfig().dataAccessLayer(new JdbcDataAccessLayer(source, ""));
         try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()) {
             var app = Solon.start(DatawayPluginTest.class, new String[] { "--cfg=configured/app.properties", "--server.port=" + port, "--server.contextPath=/host" }, a -> a.pluginAdd(0, new DatawayPlugin(builder)));
             Dataway dataway = app.context().getBean(Dataway.class);
             assertNotNull(dataway.getApiHandler());
             assertNotNull(dataway.getAdminHandler());
-            assertNotNull(dataway.getUiHandler());
+            assertNotNull(dataway.getAdminUiHandler());
             String base = "http://127.0.0.1:" + port + "/host";
             var page = get(client, base + "/tools/console/", null);
             assertEquals(200, page.statusCode());
             assertFalse(page.body().contains("dataway-admin-api"));
             assertFalse(page.body().contains("dataway-api"));
-            var service = dataway.getService();
+            var service = dataway;
             ApiDefinition helloApi = new ApiDefinition();
             helloApi.setId("hello");
             helloApi.setMethod("GET");
             helloApi.setPath("/hello");
-            helloApi.setType(ApiScriptType.DATAQL);
+            helloApi.setType(ApiScriptType.DATA_QL);
             helloApi.setScript("return 'from-config';");
             helloApi.setDescription("");
-            service.getBeanContainer().getAdminService().save(helloApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
-            service.getBeanContainer().getAdminService().publish("hello", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
+            service.getAdminService().save(helloApi, 0);
+            service.getAdminService().publish("hello", 1);
             try (var connection = source.getConnection(); var statement = connection.createStatement(); var rows = statement.executeQuery("SELECT COUNT(*) FROM interface_info")) {
                 assertTrue(rows.next());
                 assertEquals(1, rows.getInt(1));
@@ -329,7 +325,7 @@ class DatawayPluginTest {
                 if (fromFile) {
                     args.add("--cfg=defaults/app.properties");
                 }
-                var builder = Dataway.builder().configureHost(host -> {
+                var builder = new DatawayConfig().configureHost(host -> {
                     throw new AssertionError("Disabled entries must not initialize a runtime");
                 });
                 try (HttpClient client = HttpClient.newHttpClient()) {
@@ -362,7 +358,7 @@ class DatawayPluginTest {
             for (boolean enabled : new boolean[] { true, false }) {
                 int port = availablePort();
                 try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()) {
-                    var app = Solon.start(DatawayPluginTest.class, new String[] { "--cfg=configured/app.properties", "--server.port=" + port, "--server.contextPath=/host", "--dataway.api-enabled=" + enabled, "--dataway.admin-enabled=" + enabled }, a -> a.pluginAdd(0, new DatawayPlugin(Dataway.builder().dataAccessLayer(TestDatabase.dataAccessLayer()))));
+                    var app = Solon.start(DatawayPluginTest.class, new String[] { "--cfg=configured/app.properties", "--server.port=" + port, "--server.contextPath=/host", "--dataway.api-enabled=" + enabled, "--dataway.admin-enabled=" + enabled }, a -> a.pluginAdd(0, new DatawayPlugin(new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer()))));
                     Dataway dataway = app.context().getBean(Dataway.class);
 
                     String base = "http://127.0.0.1:" + port + "/host";
@@ -371,15 +367,15 @@ class DatawayPluginTest {
                         configuredApi.setId("configured");
                         configuredApi.setMethod("GET");
                         configuredApi.setPath("/configured");
-                        configuredApi.setType(ApiScriptType.DATAQL);
+                        configuredApi.setType(ApiScriptType.DATA_QL);
                         configuredApi.setScript("return 'configured';");
                         configuredApi.setDescription("");
-                        dataway.getAdminService().save(configuredApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
-                        dataway.getAdminService().publish("configured", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
+                        dataway.getAdminService().save(configuredApi, 0);
+                        dataway.getAdminService().publish("configured", 1);
                         assertEquals("configured", JsonUtils.readTree(get(client, base + "/open/v2/configured", null).body()).get("value").asText());
                         assertNotNull(dataway.getApiHandler());
                         assertNotNull(dataway.getAdminHandler());
-                        assertNotNull(dataway.getUiHandler());
+                        assertNotNull(dataway.getAdminUiHandler());
                     } else {
                         assertNull(dataway);
                         assertEquals(404, get(client, base + "/open/v2/configured", null).statusCode());
@@ -399,7 +395,7 @@ class DatawayPluginTest {
         try {
             for (String contextPath : new String[] { "", "/tenant/host" }) {
                 int port = availablePort();
-                var builder = Dataway.builder().dataAccessLayer(TestDatabase.dataAccessLayer());
+                var builder = new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer());
                 try (HttpClient client = HttpClient.newHttpClient()) {
                     Solon.start(DatawayPluginTest.class, new String[] { "--server.port=" + port, "--server.contextPath=" + contextPath, "--dataway.api-enabled=true", "--dataway.admin-enabled=true", "--dataway.api-prefix=/v1.0", "--dataway.admin-prefix=/ops/manage.v2", "--dataway.admin-ui=/console.v2" }, app -> app.pluginAdd(0, new DatawayPlugin(builder)));
                     String origin = "http://127.0.0.1:" + port;

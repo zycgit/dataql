@@ -15,13 +15,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.exception.NacosException;
 import net.hasor.dataql.util.JsonUtils;
-import net.hasor.dataway.authorization.Operation;
-import net.hasor.dataway.authorization.UserIdentity;
+import net.hasor.dataway.TestWebRequest;
+import net.hasor.dataway.TestWebResponse;
 import net.hasor.dataway.dal.*;
 import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ApiScriptType;
 import net.hasor.dataway.service.Dataway;
-import net.hasor.dataway.service.DatawayException;
+import net.hasor.dataway.service.DatawayConfig;
 import org.junit.jupiter.api.Test;
 import static net.hasor.dataway.dal.FieldDef.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -129,7 +129,8 @@ class NacosDataAccessLayerTest {
         var cleared = new EnumMap<FieldDef, String>(FieldDef.class);
         cleared.put(COMMENT, null);
         assertEquals(1, access.listObjects(EntityType.INFO, cleared).size());
-        assertThrows(UnsupportedOperationException.class, () -> row.put(PATH, "/changed"));
+        row.put(PATH, "/changed");
+        assertEquals("/接口", access.getObject(EntityType.INFO, "one").orElseThrow().get(PATH));
         assertThrows(DataConflictException.class, () -> access.deleteObject(EntityType.INFO, "one", 1));
         access.deleteObject(EntityType.INFO, "one", 2);
         assertTrue(access.getObject(EntityType.INFO, "one").isEmpty());
@@ -207,26 +208,36 @@ class NacosDataAccessLayerTest {
     }
 
     @Test
-    void fullServiceLifecycleWorksWithoutJdbcOrFrameworks() throws Exception {
+    void fullCoreLifecycleWorksWithoutJdbcOrFrameworks() throws Exception {
         Server server = new Server();
-        var service = Dataway.builder().dataAccessLayer(server.access()).build().getService();
+        var service = new Dataway(new DatawayConfig().dataAccessLayer(server.access()));
         ApiDefinition oneApi = new ApiDefinition();
         oneApi.setId("one");
         oneApi.setMethod("GET");
         oneApi.setPath("/one");
-        oneApi.setType(ApiScriptType.DATAQL);
+        oneApi.setType(ApiScriptType.DATA_QL);
         oneApi.setScript("return 42;");
         oneApi.setDescription("说明");
-        service.getBeanContainer().getAdminService().save(oneApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
-        service.getBeanContainer().getAdminService().publish("one", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
-        var restarted = Dataway.builder().dataAccessLayer(server.access()).build().getService();
-        Map<?, ?> apiResult = (Map<?, ?>) restarted.invokeApi("/one", Map.of());
+        service.getAdminService().save(oneApi, 0);
+        assertNull(service.getAdminService().list().getFirst().getScript());
+        assertTrue(service.getAdminService().getApiById("one").isHasDraft());
+        service.getAdminService().publish("one", 1);
+        var publication = service.getAdminService().getReleaseByApi("one");
+        assertEquals(publication, service.getAdminService().getHistoryById(publication.getId()));
+        assertEquals(publication, service.getAdminService().getReleaseById(publication.getId()));
+        assertFalse(service.getAdminService().getApiById("one").isHasDraft());
+        var restarted = new DatawayConfig().dataAccessLayer(server.access()).createDataway();
+        var response = new TestWebResponse();
+        restarted.getApiHandler().handle(new TestWebRequest("GET", "/one", Map.of()), response);
+        Map<?, ?> apiResult = (Map<?, ?>) response.getResult();
         assertEquals(42, ((Number) apiResult.get("value")).intValue());
         assertEquals("return 42;", server.access().listObjects(EntityType.RELEASE, Map.of()).getFirst().get(SCRIPT_ORI));
-        var disabled = restarted.getBeanContainer().getAdminService().disableApi("one", 2, Operation.DISABLE, UserIdentity.anonymous(), Map.of(), null);
+        var disabled = restarted.getAdminService().disableApi("one", 2);
         assertFalse(disabled.isEnabled());
-        assertThrows(DatawayException.class, () -> restarted.invokeApi("/one", Map.of()));
-        restarted.getBeanContainer().getAdminService().deleteApi("one", disabled.getRevision(), Operation.DELETE, UserIdentity.anonymous(), Map.of(), null);
+        assertTrue(disabled.isPublished());
+        assertEquals(publication, restarted.getAdminService().getReleaseByApi("one"));
+        assertTrue(server.access().listObjects(EntityType.RELEASE, Map.of(STATUS, "1")).isEmpty());
+        restarted.getAdminService().deleteApi("one", disabled.getRevision());
         assertTrue(server.access().listObjects(EntityType.INFO, Map.of()).isEmpty());
         assertTrue(server.access().listObjects(EntityType.RELEASE, Map.of()).isEmpty());
     }

@@ -20,13 +20,13 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.sql.DataSource;
 import net.hasor.dataway.TestDatabase;
-import net.hasor.dataway.authorization.Operation;
-import net.hasor.dataway.authorization.UserIdentity;
+import net.hasor.dataway.TestWebRequest;
+import net.hasor.dataway.TestWebResponse;
 import net.hasor.dataway.dal.*;
 import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ApiScriptType;
-import net.hasor.dataway.service.DatawayService;
-import net.hasor.dataway.service.script.DatawayConfig;
+import net.hasor.dataway.service.Dataway;
+import net.hasor.dataway.service.DatawayConfig;
 import org.h2.jdbcx.JdbcDataSource;
 import org.h2.tools.RunScript;
 import org.junit.jupiter.api.Test;
@@ -56,6 +56,13 @@ class LegacyStorageTest {
         data.put(CREATE_TIME, "1600000000000");
         data.put(GMT_TIME, "1600000000000");
         return data;
+    }
+
+    private Object executePublished(Dataway dataway, String id, Map<String, ?> parameters) throws Exception {
+        var definition = dataway.getAdminService().getReleaseByApi(id).getDefinition();
+        var response = new TestWebResponse();
+        dataway.getApiHandler().handle(new TestWebRequest(definition.getMethod(), definition.getPath(), parameters), response);
+        return response.getResult();
     }
 
     @Test
@@ -89,12 +96,12 @@ class LegacyStorageTest {
             assertEquals("SELECT :value + 1", script);
             return ((Number) parameters.get("value")).intValue() + 1;
         });
-        var service = DatawayService.builder(runtime, access).build();
-        assertEquals(7, ((Number) service.invokeApi("/legacy", Map.of("value", 7))).intValue());
+        var service = new Dataway(runtime.dataAccessLayer(access));
+        assertEquals(7, ((Number) this.executePublished(service, "i_old", Map.of("value", 7))).intValue());
         assertEquals("return 42;", access.getObject(EntityType.RELEASE, "r_old").orElseThrow().get(SCRIPT));
         var before = access.getObject(EntityType.INFO, "i_old").orElseThrow();
         assertEquals("1", before.get(REVISION));
-        assertEquals("SELECT :value", service.getBeanContainer().getAdminService().getApiById("i_old", Operation.READ, UserIdentity.anonymous(), Map.of(), null).getDraft().getScript());
+        assertEquals("SELECT :value", service.getAdminService().getDraftByApi("i_old").getScript());
         ApiDefinition i_oldApi = new ApiDefinition();
         i_oldApi.setId("i_old");
         i_oldApi.setMethod("GET");
@@ -102,19 +109,19 @@ class LegacyStorageTest {
         i_oldApi.setType(ApiScriptType.SQL);
         i_oldApi.setScript("SELECT :value + 1");
         i_oldApi.setDescription("edited");
-        service.getBeanContainer().getAdminService().save(i_oldApi, 1, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
+        service.getAdminService().save(i_oldApi, 1);
         var after = access.getObject(EntityType.INFO, "i_old").orElseThrow();
         for (FieldDef field : List.of(SCHEMA, SAMPLE, OPTION, CREATE_TIME)) {
             assertEquals(before.get(field), after.get(field));
         }
-        assertEquals(8, ((Number) service.invokeApi("/legacy", Map.of("value", 8))).intValue());
-        service.getBeanContainer().getAdminService().publish("i_old", 2, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
-        assertEquals(10, ((Number) service.invokeApi("/legacy", Map.of("value", 9))).intValue());
+        assertEquals(8, ((Number) this.executePublished(service, "i_old", Map.of("value", 8))).intValue());
+        service.getAdminService().publish("i_old", 2);
+        assertEquals(10, ((Number) this.executePublished(service, "i_old", Map.of("value", 9))).intValue());
         var active = access.listObjects(EntityType.RELEASE, Map.of(API_ID, "i_old", STATUS, "1")).getFirst();
         assertEquals("SELECT :value + 1", active.get(SCRIPT_ORI));
         assertEquals("SELECT :value + 1", active.get(SCRIPT));
         assertEquals(before.get(OPTION), active.get(OPTION));
-        assertEquals(2, service.getBeanContainer().getAdminService().history("i_old", Operation.HISTORY, UserIdentity.anonymous(), Map.of(), null).size());
+        assertEquals(2, service.getAdminService().getHistoryByApi("i_old").size());
         assertEquals("3", access.getObject(EntityType.RELEASE, "r_old").orElseThrow().get(STATUS));
         // The upgraded unique index permits a second method at the same path.
         access.createObject(EntityType.INFO, "i_post", fields("POST", "/legacy"));
@@ -158,17 +165,18 @@ class LegacyStorageTest {
             statement.execute("ALTER TABLE interface_release RENAME TO tenant_interface_release");
         }
         var access = new JdbcDataAccessLayer(source, "tenant_");
-        var service = DatawayService.builder(new DatawayConfig().resultStructure(false), access).build();
+        var runtime = new DatawayConfig().resultStructure(false);
+        var service = new Dataway(runtime.dataAccessLayer(access));
         ApiDefinition oneApi = new ApiDefinition();
         oneApi.setId("one");
         oneApi.setMethod("GET");
         oneApi.setPath("/one");
-        oneApi.setType(ApiScriptType.DATAQL);
+        oneApi.setType(ApiScriptType.DATA_QL);
         oneApi.setScript("return true;");
         oneApi.setDescription("");
-        service.getBeanContainer().getAdminService().save(oneApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
-        service.getBeanContainer().getAdminService().publish("one", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
-        assertEquals(true, service.invokeApi("/one", Map.of()));
+        service.getAdminService().save(oneApi, 0);
+        service.getAdminService().publish("one", 1);
+        assertEquals(true, this.executePublished(service, "one", Map.of()));
         assertThrows(IllegalArgumentException.class, () -> new JdbcDataAccessLayer(source, "x;DROP TABLE "));
     }
 
@@ -180,7 +188,7 @@ class LegacyStorageTest {
             assertEquals("SELECT :value + 1", script);
             return ((Number) parameters.get("value")).intValue() + 1;
         });
-        var service = DatawayService.builder(runtime, access).build();
+        var service = new Dataway(runtime.dataAccessLayer(access));
         String sample = "{\"requestBody\":{\"value\":0},\"responseBody\":{},\"unknown\":true}";
         var sql = new ApiDefinition();
         sql.setId("sql");
@@ -192,19 +200,19 @@ class LegacyStorageTest {
         sql.setSchema("{}");
         sql.setSample(sample);
         sql.setOptions("{\"hostOption\":true}");
-        service.getBeanContainer().getAdminService().save(sql, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
-        service.getBeanContainer().getAdminService().publish("sql", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
-        assertEquals(9, ((Number) service.invokeApi("POST", "/same", Map.of("value", 8))).intValue());
+        service.getAdminService().save(sql, 0);
+        service.getAdminService().publish("sql", 1);
+        assertEquals(9, ((Number) this.executePublished(service, "sql", Map.of("value", 8))).intValue());
         ApiDefinition getApi = new ApiDefinition();
         getApi.setId("get");
         getApi.setMethod("GET");
         getApi.setPath("/same");
-        getApi.setType(ApiScriptType.DATAQL);
+        getApi.setType(ApiScriptType.DATA_QL);
         getApi.setScript("return 'GET';");
         getApi.setDescription("");
-        service.getBeanContainer().getAdminService().save(getApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
-        service.getBeanContainer().getAdminService().publish("get", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
-        assertEquals("GET", service.invokeApi("GET", "/same", Map.of()));
+        service.getAdminService().save(getApi, 0);
+        service.getAdminService().publish("get", 1);
+        assertEquals("GET", this.executePublished(service, "get", Map.of()));
         ApiDefinition sqlApi = new ApiDefinition();
         sqlApi.setId("sql");
         sqlApi.setMethod("POST");
@@ -212,25 +220,27 @@ class LegacyStorageTest {
         sqlApi.setType(ApiScriptType.SQL);
         sqlApi.setScript("SELECT :value + 2");
         sqlApi.setDescription("edit");
-        service.getBeanContainer().getAdminService().save(sqlApi, 2, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
-        assertEquals(sample, service.getBeanContainer().getAdminService().getApiById("sql", Operation.READ, UserIdentity.anonymous(), Map.of(), null).getDraft().getSample());
-        assertEquals("{\"hostOption\":true}", service.getBeanContainer().getAdminService().getApiById("sql", Operation.READ, UserIdentity.anonymous(), Map.of(), null).getDraft().getOptions());
+        service.getAdminService().save(sqlApi, 2);
+        assertEquals(sample, service.getAdminService().getDraftByApi("sql").getSample());
+        assertEquals("{\"hostOption\":true}", service.getAdminService().getDraftByApi("sql").getOptions());
     }
 
     @Test
     void failedReleaseInsertionRollsBackInfoAndPreviousReleaseTogether() {
         var access = new JdbcDataAccessLayer(TestDatabase.create(), "");
-        var service = DatawayService.builder(new DatawayConfig().resultStructure(false), access).build();
+        var runtime = new DatawayConfig().resultStructure(false);
+        var service = new Dataway(runtime.dataAccessLayer(access));
         ApiDefinition oneApi = new ApiDefinition();
         oneApi.setId("one");
         oneApi.setMethod("GET");
         oneApi.setPath("/one");
-        oneApi.setType(ApiScriptType.DATAQL);
+        oneApi.setType(ApiScriptType.DATA_QL);
         oneApi.setScript("return 1;");
         oneApi.setDescription("");
-        service.getBeanContainer().getAdminService().save(oneApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
-        var state = service.getBeanContainer().getAdminService().publish("one", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
-        var old = access.getObject(EntityType.RELEASE, state.getPublished().getId()).orElseThrow();
+        service.getAdminService().save(oneApi, 0);
+        service.getAdminService().publish("one", 1);
+        var published = service.getAdminService().getReleaseByApi("one");
+        var old = access.getObject(EntityType.RELEASE, published.getId()).orElseThrow();
         Map<FieldDef, String> duplicate = new EnumMap<>(old);
         duplicate.remove(ID);
         duplicate.remove(REVISION);
@@ -243,26 +253,28 @@ class LegacyStorageTest {
     @Test
     void publicationsRemainOrderedWhenStoredTimeIsAhead() {
         var access = new JdbcDataAccessLayer(TestDatabase.create(), "");
-        var service = DatawayService.builder(new DatawayConfig().resultStructure(false), access).build();
-        var admin = service.getBeanContainer().getAdminService();
+        var runtime = new DatawayConfig().resultStructure(false);
+        var service = new Dataway(runtime.dataAccessLayer(access));
+        var admin = service.getAdminService();
         ApiDefinition oneApi = new ApiDefinition();
         oneApi.setId("one");
         oneApi.setMethod("GET");
         oneApi.setPath("/one");
-        oneApi.setType(ApiScriptType.DATAQL);
+        oneApi.setType(ApiScriptType.DATA_QL);
         oneApi.setScript("return 1;");
         oneApi.setDescription("");
-        admin.save(oneApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
-        var first = admin.publish("one", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
+        admin.save(oneApi, 0);
+        admin.publish("one", 1);
+        var first = admin.getReleaseByApi("one");
         long storedTime = Instant.now().plusSeconds(3600).toEpochMilli();
-        access.write(List.of(access.create(EntityType.RELEASE, OperationType.UPDATE, first.getPublished().getId(), 1, Map.of(RELEASE_TIME, Long.toString(storedTime)))));
-        admin.publish("one", 2, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
-        admin.disableApi("one", 3, Operation.DISABLE, UserIdentity.anonymous(), Map.of(), null);
-        var history = admin.history("one", Operation.HISTORY, UserIdentity.anonymous(), Map.of(), null);
+        access.write(List.of(access.create(EntityType.RELEASE, OperationType.UPDATE, first.getId(), 1, Map.of(RELEASE_TIME, Long.toString(storedTime)))));
+        admin.publish("one", 2);
+        admin.disableApi("one", 3);
+        var history = admin.getHistoryByApi("one");
         assertEquals(2, history.size());
         assertEquals(Instant.ofEpochMilli(storedTime), history.get(0).getPublishedAt());
         assertEquals(Instant.ofEpochMilli(storedTime + 1), history.get(1).getPublishedAt());
-        assertEquals(history.get(1), admin.getApiById("one", Operation.READ, UserIdentity.anonymous(), Map.of(), null).getPublished());
+        assertEquals(history.get(1), admin.getReleaseByApi("one"));
     }
 
     @Test
@@ -300,18 +312,19 @@ class LegacyStorageTest {
         };
         assertInstanceOf(HostMutation.class, access.create(EntityType.INFO, OperationType.UPDATE, "one", 1, Map.of()));
         created.set(0);
-        var service = DatawayService.builder(new DatawayConfig().resultStructure(false), access).build();
+        var runtime = new DatawayConfig().resultStructure(false);
+        var service = new Dataway(runtime.dataAccessLayer(access));
         ApiDefinition oneApi = new ApiDefinition();
         oneApi.setId("one");
         oneApi.setMethod("GET");
         oneApi.setPath("/one");
-        oneApi.setType(ApiScriptType.DATAQL);
+        oneApi.setType(ApiScriptType.DATA_QL);
         oneApi.setScript("return true;");
         oneApi.setDescription("");
-        service.getBeanContainer().getAdminService().save(oneApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
-        service.getBeanContainer().getAdminService().publish("one", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
+        service.getAdminService().save(oneApi, 0);
+        service.getAdminService().publish("one", 1);
         assertEquals(3, created.get());
-        assertEquals(true, service.invokeApi("/one", Map.of()));
+        assertEquals(true, this.executePublished(service, "one", Map.of()));
     }
 
     private static final class HostMutation extends DataMutation {

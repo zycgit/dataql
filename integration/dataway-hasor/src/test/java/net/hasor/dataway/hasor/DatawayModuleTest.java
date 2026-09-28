@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
-import java.security.Principal;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -30,10 +29,7 @@ import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ApiScriptType;
-import net.hasor.dataway.model.ResultInfoUtils;
-import net.hasor.dataway.model.WebCookie;
 import net.hasor.dataway.service.*;
-import net.hasor.dataway.service.script.DatawayConfig;
 import net.hasor.web.HandlerInterceptor;
 import net.hasor.web.Invoker;
 import net.hasor.web.WebApiBinder;
@@ -47,64 +43,68 @@ import static org.junit.jupiter.api.Assertions.*;
 class DatawayModuleTest {
     @Test
     void commonCoreSetupCanBePassedAsBuilderOrAssembledInstance() throws Throwable {
-        DatawayConfigurer setup = builder -> builder.dataAccessLayer(TestDatabase.dataAccessLayer()).configureRuntime(runtime -> runtime.addShareVar("frameworkName", () -> (Udf) (hints, args) -> "hasor-spi"));
         for (boolean assembled : new boolean[] { false, true }) {
-            var builder = Dataway.builder().configure(setup);
-            Dataway prepared = assembled ? builder.build() : null;
+            var builder = new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer()).configureQuery(runtime -> runtime.addShareVar("frameworkName", () -> (Udf) (hints, args) -> "hasor-spi"));
+            Dataway prepared = assembled ? new Dataway(builder) : null;
             var module = assembled ? new DatawayModule(prepared) : new DatawayModule(builder);
             try (var context = Hasor.create().loadSettings(enabledProperties()).build(module)) {
                 Dataway dataway = context.getInstance(Dataway.class);
                 if (assembled) {
                     assertSame(prepared, dataway);
                 }
-                var service = dataway.getService();
+                var service = dataway;
                 ApiDefinition spiApi = new ApiDefinition();
                 spiApi.setId("spi");
                 spiApi.setMethod("GET");
                 spiApi.setPath("/spi");
-                spiApi.setType(ApiScriptType.DATAQL);
+                spiApi.setType(ApiScriptType.DATA_QL);
                 spiApi.setScript("return frameworkName();");
                 spiApi.setDescription("");
-                service.getBeanContainer().getAdminService().save(spiApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
-                service.getBeanContainer().getAdminService().publish("spi", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
-                assertEquals("hasor-spi", ((Map<?, ?>) service.invokeApi("/spi", Map.of())).get("value"));
+                service.getAdminService().save(spiApi, 0);
+                service.getAdminService().publish("spi", 1);
+                assertEquals("hasor-spi", ((Map<?, ?>) this.execute(service, spiApi)).get("value"));
             }
         }
     }
 
+    private Object execute(Dataway dataway, ApiDefinition definition) throws Throwable {
+        var controller = new DatawayController("/api", dataway.getApiHandler());
+        return JsonUtils.readValue(get(controller, "/api" + definition.getPath()), Object.class);
+    }
+
     @Test
-    void actualHasorContainerInstallsIndependentService() throws Throwable {
+    void actualHasorContainerInstallsSuppliedCore() throws Throwable {
         var runtime = new DatawayConfig();
-        var service = DatawayService.builder(runtime, TestDatabase.dataAccessLayer()).build();
+        var service = new Dataway(runtime.dataAccessLayer(TestDatabase.dataAccessLayer()));
         ApiDefinition helloApi = new ApiDefinition();
         helloApi.setId("hello");
         helloApi.setMethod("GET");
         helloApi.setPath("/hello");
-        helloApi.setType(ApiScriptType.DATAQL);
+        helloApi.setType(ApiScriptType.DATA_QL);
         helloApi.setScript("return 'hasor';");
         helloApi.setDescription("");
-        service.getBeanContainer().getAdminService().save(helloApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
-        service.getBeanContainer().getAdminService().publish("hello", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
-        try (var context = Hasor.create().loadSettings(enabledProperties()).build(new DatawayModule(Dataway.builder().service(service)))) {
-            assertSame(service, context.getInstance(Dataway.class).getService());
-            assertEquals("hasor", ((Map<?, ?>) context.getInstance(Dataway.class).getService().invokeApi("/hello", Map.of())).get("value"));
+        service.getAdminService().save(helloApi, 0);
+        service.getAdminService().publish("hello", 1);
+        try (var context = Hasor.create().loadSettings(enabledProperties()).build(new DatawayModule(service))) {
+            assertSame(service, context.getInstance(Dataway.class));
+            assertEquals("hasor", ((Map<?, ?>) this.execute(context.getInstance(Dataway.class), helloApi)).get("value"));
         }
         // Closing the adapter does not own or close the supplied runtime.
-        assertEquals("hasor", ((Map<?, ?>) service.invokeApi("/hello", Map.of())).get("value"));
+        assertEquals("hasor", ((Map<?, ?>) this.execute(service, helloApi)).get("value"));
     }
 
     @Test
     void registeredMvcControllerUsesConfiguredMappingAndTranslatesContextPath() throws Throwable {
-        var service = DatawayService.builder(new DatawayConfig(), TestDatabase.dataAccessLayer()).build();
+        var service = new Dataway(new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer()));
         ApiDefinition helloApi = new ApiDefinition();
         helloApi.setId("hello");
         helloApi.setMethod("GET");
         helloApi.setPath("/hello");
-        helloApi.setType(ApiScriptType.DATAQL);
+        helloApi.setType(ApiScriptType.DATA_QL);
         helloApi.setScript("return ${name};");
         helloApi.setDescription("");
-        service.getBeanContainer().getAdminService().save(helloApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
-        service.getBeanContainer().getAdminService().publish("hello", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
+        service.getAdminService().save(helloApi, 0);
+        service.getAdminService().publish("hello", 1);
         var settings = new DefaultSettings();
         settings.setSetting("dataway.api-prefix", "/open/v2");
         settings.setSetting("dataway.api-enabled", true);
@@ -129,7 +129,7 @@ class DatawayModuleTest {
             default -> null;
         });
 
-        new DatawayModule(Dataway.builder().service(service).build()).loadModule(binder);
+        new DatawayModule(service).loadModule(binder);
         assertNotNull(captured.get());
         AtomicReference<String> path = new AtomicReference<>("/host/open/v2/hello");
         var request = proxy(HttpServletRequest.class, (p, method, args) -> switch (method.getName()) {
@@ -192,7 +192,7 @@ class DatawayModuleTest {
 
     @Test
     void enabledCoreEntriesHaveSeparateMappings() throws Throwable {
-        var service = DatawayService.builder(new DatawayConfig(), TestDatabase.dataAccessLayer()).build();
+        var service = new Dataway(new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer()));
         for (int mask = 0; mask < 4; mask++) {
             boolean api = (mask & 1) != 0;
             boolean admin = (mask & 2) != 0;
@@ -228,15 +228,15 @@ class DatawayModuleTest {
                 }
                 default -> null;
             });
-            new DatawayModule(Dataway.builder().service(service).build()).loadModule(binder);
+            new DatawayModule(service).loadModule(binder);
             {
                 Dataway assembled = (Dataway) bindings.get(Dataway.class);
-                assertSame(service, assembled.getService());
+                assertSame(service, assembled);
                 assertNotNull(assembled.getApiHandler());
                 assertNotNull(assembled.getAdminHandler());
-                assertNotNull(assembled.getUiHandler());
+                assertNotNull(assembled.getAdminUiHandler());
             }
-            assertFalse(bindings.containsKey(DatawayService.class));
+            assertFalse(bindings.containsKey(BeanContainer.class));
             assertEquals(api, filters.containsKey("/open/v2"));
             assertEquals(admin, filters.containsKey("/ops/manage"));
             assertEquals(admin, filters.containsKey("/tools/console"));
@@ -249,13 +249,13 @@ class DatawayModuleTest {
         var settings = new Properties();
         settings.setProperty("dataway.admin-enabled", "true");
         settings.setProperty("dataway.admin-ui", "/console");
-        var builder = Dataway.builder().dataAccessLayer(TestDatabase.dataAccessLayer());
+        var builder = new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer());
         try (var context = Hasor.create().loadSettings(settings).build(new DatawayModule(builder))) {
             Dataway dataway = context.getInstance(Dataway.class);
             assertNotNull(dataway.getApiHandler());
-            assertNotNull(dataway.getService());
+            assertNotNull(dataway);
             assertNotNull(dataway.getAdminHandler());
-            assertNotNull(dataway.getUiHandler());
+            assertNotNull(dataway.getAdminUiHandler());
         }
     }
 
@@ -264,7 +264,7 @@ class DatawayModuleTest {
         JdbcDataSource source = dataSource();
         Set<Operation> authorized = EnumSet.noneOf(Operation.class);
         var identity = UserIdentity.authenticated("hasor-user");
-        var builder = Dataway.builder().dataAccessLayer(new JdbcDataAccessLayer(source, "")).identityProvider(request -> identity).authorizationCheck((user, operation) -> {
+        var builder = new DatawayConfig().dataAccessLayer(new JdbcDataAccessLayer(source, "")).identityProvider(request -> identity).authorizationCheck((user, operation) -> {
             assertSame(identity, user);
             authorized.add(operation);
             return true;
@@ -274,16 +274,16 @@ class DatawayModuleTest {
 
             assertNotNull(dataway.getApiHandler());
             assertNotNull(dataway.getAdminHandler());
-            assertNotNull(dataway.getUiHandler());
+            assertNotNull(dataway.getAdminUiHandler());
 
             ApiDefinition storedApi = new ApiDefinition();
             storedApi.setId("stored");
             storedApi.setMethod("GET");
             storedApi.setPath("/stored");
-            storedApi.setType(ApiScriptType.DATAQL);
+            storedApi.setType(ApiScriptType.DATA_QL);
             storedApi.setScript("return 1;");
             storedApi.setDescription("");
-            dataway.getAdminService().save(storedApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
+            dataway.getAdminService().save(storedApi, 0);
             try (var connection = source.getConnection(); var statement = connection.createStatement(); var rows = statement.executeQuery("SELECT COUNT(*) FROM interface_info")) {
                 assertTrue(rows.next());
                 assertEquals(1, rows.getInt(1));
@@ -293,7 +293,7 @@ class DatawayModuleTest {
             String html = get(filters.get("/tools/console"), "/tools/console/");
             assertFalse(html.contains("dataway-admin-api"));
             assertFalse(html.contains("dataway-api"));
-            dataway.getAdminService().publish("stored", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
+            dataway.getAdminService().publish("stored", 1);
             assertEquals(1, JsonUtils.readTree(get(filters.get("/open/v2"), "/open/v2/stored")).get("value").asInt());
             assertTrue(get(filters.get("/ops/manage"), "/ops/manage/api-list").contains("stored"));
             assertEquals(Set.of(Operation.INVOKE, Operation.LIST), authorized);
@@ -307,7 +307,7 @@ class DatawayModuleTest {
             if (fromFile) {
                 host.mainSettingWith("defaults/hconfig.xml");
             }
-            var builder = Dataway.builder().configureHost(hostConfiguration -> {
+            var builder = new DatawayConfig().configureHost(hostConfiguration -> {
                 throw new AssertionError("Disabled entries must not initialize a runtime");
             });
             try (var context = host.build(new DatawayModule(builder))) {
@@ -322,7 +322,7 @@ class DatawayModuleTest {
             Properties properties = new Properties();
             properties.setProperty("dataway.api-enabled", Boolean.toString(enabled));
             properties.setProperty("dataway.admin-enabled", Boolean.toString(enabled));
-            try (var context = Hasor.create().mainSettingWith("configured/hconfig.xml").loadSettings(properties).build(new DatawayModule(Dataway.builder().dataAccessLayer(TestDatabase.dataAccessLayer())))) {
+            try (var context = Hasor.create().mainSettingWith("configured/hconfig.xml").loadSettings(properties).build(new DatawayModule(new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer())))) {
                 Dataway dataway = context.findBindingBean(null, Dataway.class);
 
                 if (enabled) {
@@ -330,14 +330,14 @@ class DatawayModuleTest {
                     configuredApi.setId("configured");
                     configuredApi.setMethod("GET");
                     configuredApi.setPath("/configured");
-                    configuredApi.setType(ApiScriptType.DATAQL);
+                    configuredApi.setType(ApiScriptType.DATA_QL);
                     configuredApi.setScript("return 1;");
                     configuredApi.setDescription("");
-                    dataway.getAdminService().save(configuredApi, 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
-                    assertEquals(1, dataway.getAdminService().list(Operation.LIST, UserIdentity.anonymous(), Map.of(), null).size());
+                    dataway.getAdminService().save(configuredApi, 0);
+                    assertEquals(1, dataway.getAdminService().list().size());
                     assertNotNull(dataway.getApiHandler());
                     assertNotNull(dataway.getAdminHandler());
-                    assertNotNull(dataway.getUiHandler());
+                    assertNotNull(dataway.getAdminUiHandler());
                 } else {
                     assertNull(dataway);
                 }
@@ -346,7 +346,7 @@ class DatawayModuleTest {
     }
 
     @Test
-    void allHasorEntriesAcceptHostIdentityAttributesAndPrincipalFallback() throws Throwable {
+    void allHasorEntriesResolveHostIdentityThroughProvider() throws Throwable {
         var filters = new LinkedHashMap<String, DatawayController>();
         var identities = new LinkedHashMap<String, UserIdentity>();
         WebApiBinder binder = proxy(WebApiBinder.class, (p, method, args) -> switch (method.getName()) {
@@ -364,24 +364,29 @@ class DatawayModuleTest {
             });
             default -> null;
         });
-        var builder = Dataway.builder().dataAccessLayer(TestDatabase.dataAccessLayer()).identityProvider(request -> {
-            identities.put(request.getPath(), request.getIdentity());
-            return request.getIdentity();
+        var builder = new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer()).identityProvider(request -> {
+            assertFalse(request.getIdentity().authenticated());
+            Object attribute = request.getAttribute("host.user");
+            UserIdentity identity = attribute instanceof UserIdentity user ? user : UserIdentity.anonymous();
+            identities.put(request.getPath(), identity);
+            return identity;
         });
-        builder.apiHandler(core -> new TestWebHandler(core, List.of("", "/*"), (request, response) -> ResultInfoUtils.ofObject(Map.of())));
-        builder.adminHandler(core -> new TestWebHandler(core, List.of("", "/*"), (request, response) -> ResultInfoUtils.ofObject(Map.of())));
-        builder.uiHandler(core -> new TestWebHandler(core, List.of("", "/*"), (request, response) -> ResultInfoUtils.ofObject(Map.of())));
-        new DatawayModule(builder.build()).loadModule(binder);
+        Dataway dataway = builder.createDataway();
+        this.publish(dataway, "identity", "/", "return 1;");
+        new DatawayModule(dataway).loadModule(binder);
         UserIdentity explicit = new UserIdentity("attribute-user", true, Map.of("tenant", "one"));
         for (String prefix : List.of("/api", "/dataway/api", "/dataway")) {
+            String path = prefix.equals("/dataway/api") ? prefix + "/api-list" : prefix + "/";
             for (boolean attribute : new boolean[] { false, true }) {
                 var request = proxy(HttpServletRequest.class, (p, method, args) -> switch (method.getName()) {
-                    case "getRequestURI" -> "/host" + prefix + "/";
+                    case "getRequestURI" -> "/host" + path;
                     case "getContextPath" -> "/host";
                     case "getMethod" -> "GET";
                     case "getHeaderNames" -> Collections.emptyEnumeration();
-                    case "getUserPrincipal" -> (Principal) () -> "principal-user";
-                    case "getAttribute" -> attribute && RequestAttribute.IDENTITY.getKey().equals(args[0]) ? explicit : null;
+                    case "getUserPrincipal" -> {
+                        throw new AssertionError("The adapter must delegate identity resolution to IdentityProvider");
+                    }
+                    case "getAttribute" -> attribute && "host.user".equals(args[0]) ? explicit : null;
                     case "getInputStream" -> new ServletInputStream() {
                         public int read() {
                             return -1;
@@ -422,9 +427,8 @@ class DatawayModuleTest {
                     default -> null;
                 });
                 filters.get(prefix).execute(invoker);
-                UserIdentity actual = identities.get(prefix + "/");
-                assertTrue(actual.isAuthenticated());
-                assertEquals(attribute ? "attribute-user" : "principal-user", actual.getId());
+                UserIdentity actual = identities.get(path);
+                assertEquals(attribute, actual.authenticated());
                 if (attribute) {
                     assertSame(explicit, actual);
                 }
@@ -432,9 +436,21 @@ class DatawayModuleTest {
         }
     }
 
+    private void publish(Dataway dataway, String id, String path, String script) {
+        ApiDefinition definition = new ApiDefinition();
+        definition.setId(id);
+        definition.setMethod("GET");
+        definition.setPath(path);
+        definition.setType(ApiScriptType.DATA_QL);
+        definition.setScript(script);
+        definition.setDescription("");
+        dataway.getAdminService().save(definition, 0);
+        dataway.getAdminService().publish(id, 1);
+    }
+
     @Test
     void uiRemainsStaticAcrossServletContextsAndPrefixes() throws Throwable {
-        Dataway dataway = Dataway.builder().dataAccessLayer(TestDatabase.dataAccessLayer()).build();
+        Dataway dataway = new Dataway(new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer()));
         var settings = enabledSettings();
         settings.setSetting("dataway.api-prefix", "/v1.0");
         settings.setSetting("dataway.admin-prefix", "/ops/manage.v2");
@@ -468,32 +484,13 @@ class DatawayModuleTest {
         AtomicInteger handled = new AtomicInteger();
         AtomicBoolean failRequests = new AtomicBoolean();
         DatawayException failure = new DatawayException(401, "Denied by host policy");
-        var builder = Dataway.builder().dataAccessLayer(TestDatabase.dataAccessLayer()).identityProvider(request -> {
+        var builder = new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer()).identityProvider(request -> {
             assertEquals("host-user", request.getAttribute("host.user"));
+            if (failRequests.get()) {
+                throw failure;
+            }
             return UserIdentity.authenticated("host-user");
-        });
-        AtomicReference<Dataway> sharedCore = new AtomicReference<>();
-        builder.apiHandler(core -> {
-            sharedCore.set(core);
-            return new TestWebHandler(core, List.of("/custom", "/custom/*"), (request, response) -> {
-                if (failRequests.get()) {
-                    throw failure;
-                }
-                return ResultInfoUtils.ofBytes("application/octet-stream", new byte[] { 1 });
-            });
-        });
-        builder.adminHandler(core -> new TestWebHandler(core, List.of("", "/*"), (request, response) -> {
-            if (failRequests.get()) {
-                throw failure;
-            }
-            return ResultInfoUtils.ofBytes("application/octet-stream", new byte[] { 2 });
-        }));
-        builder.uiHandler(core -> new TestWebHandler(core, List.of("", "/*"), (request, response) -> {
-            if (failRequests.get()) {
-                throw failure;
-            }
-            return ResultInfoUtils.ofBytes("application/octet-stream", new byte[] { 3 });
-        }));
+        }).apiInterceptor((invocation, next) -> new byte[] { 1 }).adminInterceptor((invocation, next) -> ResultInfoUtils.convertToResultInfo("application/octet-stream", new byte[] { 2 }));
         try (var application = Hasor.create(servlet).loadSettings(enabledProperties()).build(binder -> {
             WebApiBinder web = binder.tryCast(WebApiBinder.class);
             assertNotNull(web);
@@ -513,9 +510,9 @@ class DatawayModuleTest {
                 }
             });
         }, new DatawayModule(builder))) {
-            assertSame(application.getInstance(Dataway.class), sharedCore.get());
+            this.publish(application.getInstance(Dataway.class), "custom", "/custom/example", "return 1;");
             var mappings = application.findBindingBean(MappingDef.class);
-            for (String unmapped : List.of("/api/other", "/dataway-other", "/outside")) {
+            for (String unmapped : List.of("/api-other", "/dataway-other", "/outside")) {
                 var unmatched = proxy(HttpServletRequest.class, (p, method, args) -> switch (method.getName()) {
                     case "getRequestURI" -> "/host" + unmapped;
                     case "getContextPath" -> "/host";
@@ -528,7 +525,7 @@ class DatawayModuleTest {
             mvc.initContext(application, new OneConfig("test", () -> application));
             try {
                 int expected = 0;
-                for (String path : List.of("/api/custom/example", "/dataway/api/api-list", "/dataway/assets/app.js", "/api/custom/example", "/dataway/api/api-list", "/dataway/assets/app.js")) {
+                for (String path : List.of("/api/custom/example", "/dataway/api/api-list", "/dataway/", "/api/custom/example", "/dataway/api/api-list", "/dataway/")) {
                     var requestAttributes = new HashMap<String, Object>();
                     var request = proxy(HttpServletRequest.class, (p, method, args) -> switch (method.getName()) {
                         case "getRequestURI" -> "/host" + path;
@@ -540,9 +537,7 @@ class DatawayModuleTest {
                         case "getAttribute" -> requestAttributes.get(args[0]);
                         case "setAttribute" -> requestAttributes.put((String) args[0], args[1]);
                         case "isAsyncSupported", "isAsyncStarted" -> false;
-                        case "getInputStream" -> {
-                            throw new AssertionError("Custom entry must not acquire body");
-                        }
+                        case "getInputStream" -> emptyBody();
                         default -> null;
                     });
                     var output = new ByteArrayOutputStream();
@@ -578,7 +573,12 @@ class DatawayModuleTest {
                         assertEquals(401, status.get());
                         assertEquals("{\"message\":\"Handled by the host\"}", output.toString(StandardCharsets.UTF_8));
                     } else {
-                        assertArrayEquals(new byte[] { (byte) ++expected }, output.toByteArray());
+                        expected++;
+                        if (expected < 3) {
+                            assertArrayEquals(new byte[] { (byte) expected }, output.toByteArray());
+                        } else {
+                            assertTrue(output.toString(StandardCharsets.UTF_8).contains("<div id=\"app\""));
+                        }
                     }
                     if (expected == 3) {
                         failRequests.set(true);
@@ -593,7 +593,7 @@ class DatawayModuleTest {
     }
 
     @Test
-    void controllerPreservesRepeatedHeadersAndCookiesWithoutReadingBody() throws Exception {
+    void controllerPreservesRepeatedHeadersAndCookies() throws Exception {
         Map<String, List<String>> input = Map.of("X-Repeat", List.of("one", "two"), "Cookie", List.of("id=first; id=second"));
         var request = proxy(HttpServletRequest.class, (p, method, args) -> switch (method.getName()) {
             case "getRequestURI" -> "/host/api/cookies";
@@ -601,9 +601,7 @@ class DatawayModuleTest {
             case "getMethod" -> "GET";
             case "getHeaderNames" -> Collections.enumeration(input.keySet());
             case "getHeaders" -> Collections.enumeration(input.get(args[0]));
-            case "getInputStream" -> {
-                throw new AssertionError("Header and cookie access must not read the body");
-            }
+            case "getInputStream" -> emptyBody();
             default -> null;
         });
         Map<String, List<String>> outputHeaders = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
@@ -630,18 +628,25 @@ class DatawayModuleTest {
             }
             return method.getReturnType() == boolean.class ? false : null;
         });
-        var dataway = Dataway.builder().dataAccessLayer(TestDatabase.dataAccessLayer()).build();
-        var handler = new TestWebHandler(dataway, List.of("", "/*"), (webRequest, webResponse) -> {
+        var config = new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer()).resultStructure(false).apiInterceptor((invocation, next) -> {
+            next.proceed(invocation);
+            return new byte[] { 42 };
+        }).identityProvider(webRequest -> {
             assertEquals("/cookies", webRequest.getPathInfo());
             assertEquals(List.of("one", "two"), webRequest.getHeaderValues().get("x-repeat"));
             assertEquals(List.of("first", "second"), webRequest.getCookies().get("id"));
-            webResponse.setHeader("X-Result", "first");
-            webResponse.addHeader("x-result", "second");
-            webResponse.setCookie(new WebCookie("one", "1"));
-            webResponse.setCookie(new WebCookie("two", "2"));
-            return ResultInfoUtils.ofBytes("application/octet-stream", new byte[] { 42 });
+            return UserIdentity.anonymous();
         });
-        var controller = new DatawayController("/api", handler);
+        var dataway = config.createDataway();
+        this.publish(dataway, "cookies", "/cookies", """
+                import 'net.hasor.dataway.function.WebUdfSource' as web;
+                run web.setHeader('X-Result', 'first');
+                run web.addHeader('x-result', 'second');
+                run web.setCookie('one', '1');
+                run web.setCookie('two', '2');
+                return 1;
+                """);
+        var controller = new DatawayController("/api", dataway.getApiHandler());
         var invoker = proxy(Invoker.class, (p, method, args) -> switch (method.getName()) {
             case "getHttpRequest" -> request;
             case "getHttpResponse" -> response;
@@ -651,6 +656,25 @@ class DatawayModuleTest {
         assertEquals(List.of("first", "second"), outputHeaders.get("X-Result"));
         assertEquals(List.of("host=existing", "one=1; Path=/", "two=2; Path=/"), outputHeaders.get("Set-Cookie"));
         assertArrayEquals(new byte[] { 42 }, output.toByteArray());
+    }
+
+    private static ServletInputStream emptyBody() {
+        return new ServletInputStream() {
+            public int read() {
+                return -1;
+            }
+
+            public boolean isFinished() {
+                return true;
+            }
+
+            public boolean isReady() {
+                return true;
+            }
+
+            public void setReadListener(ReadListener listener) {
+            }
+        };
     }
 
     private static Properties enabledProperties() {
@@ -705,7 +729,7 @@ class DatawayModuleTest {
         return filters;
     }
 
-    private static String get(DatawayController filter, String path) throws Throwable {
+    static String get(DatawayController filter, String path) throws Throwable {
         return get(filter, path, "/host");
     }
 

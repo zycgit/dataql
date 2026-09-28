@@ -6,15 +6,13 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.spring;
-import java.util.Map;
 import javax.sql.DataSource;
-import net.hasor.dataway.authorization.Operation;
-import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ApiScriptType;
 import net.hasor.dataway.service.Dataway;
+import net.hasor.dataway.service.DatawayConfig;
 import net.hasor.dataway.service.DatawayException;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -60,13 +58,13 @@ class SpringTransactionTest {
     void transactionAwareDatasourceProxyUsesTheSameSpringResource() {
         DataSource source = TestDatabase.create();
         var manager = new JdbcTransactionManager(source);
-        Dataway dataway = Dataway.builder().dataAccessLayer(new JdbcDataAccessLayer(new SpringJdbcExecutor(new TransactionAwareDataSourceProxy(source), manager), "")).build();
+        Dataway dataway = new Dataway(new DatawayConfig().dataAccessLayer(new JdbcDataAccessLayer(new SpringJdbcExecutor(new TransactionAwareDataSourceProxy(source), manager), "")));
         var transaction = new TransactionTemplate(manager);
         transaction.executeWithoutResult(status -> {
-            dataway.getAdminService().save(api("one"), 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
+            dataway.getAdminService().save(api("one"), 0);
             status.setRollbackOnly();
         });
-        assertTrue(dataway.getAdminService().list(Operation.LIST, UserIdentity.anonymous(), Map.of(), null).isEmpty());
+        assertTrue(dataway.getAdminService().list().isEmpty());
     }
 
     private static AnnotationConfigApplicationContext createContext() {
@@ -81,7 +79,7 @@ class SpringTransactionTest {
         definition.setId(id);
         definition.setMethod("GET");
         definition.setPath("/one");
-        definition.setType(ApiScriptType.DATAQL);
+        definition.setType(ApiScriptType.DATA_QL);
         definition.setScript("return 1;");
         definition.setDescription("");
         return definition;
@@ -124,8 +122,8 @@ class SpringTransactionTest {
 
         private void saveAndPublish() {
             jdbc.update("INSERT INTO host_work VALUES (1)");
-            dataway.getAdminService().save(api("one"), 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
-            dataway.getAdminService().publish("one", 1, Operation.PUBLISH, UserIdentity.anonymous(), Map.of(), null);
+            dataway.getAdminService().save(api("one"), 0);
+            dataway.getAdminService().publish("one", 1);
         }
 
         @Transactional
@@ -142,9 +140,9 @@ class SpringTransactionTest {
         @Transactional
         public void catchConflict() {
             jdbc.update("INSERT INTO host_work VALUES (1)");
-            dataway.getAdminService().save(api("one"), 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
+            dataway.getAdminService().save(api("one"), 0);
             try {
-                dataway.getAdminService().save(api("duplicate"), 0, Operation.SAVE, UserIdentity.anonymous(), Map.of(), null);
+                dataway.getAdminService().save(api("duplicate"), 0);
             } catch (DatawayException e) {
                 assertEquals(409, e.status());
             }

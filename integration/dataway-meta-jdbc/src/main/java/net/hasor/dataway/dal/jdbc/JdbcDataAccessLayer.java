@@ -80,7 +80,7 @@ public class JdbcDataAccessLayer implements ApiDataAccessLayer {
                     for (var entry : mapping.columns().entrySet()) {
                         values.put(entry.getKey(), rs.getString(entry.getValue()));
                     }
-                    return Collections.unmodifiableMap(values);
+                    return values;
                 });
             });
         } catch (SQLException e) {
@@ -90,12 +90,11 @@ public class JdbcDataAccessLayer implements ApiDataAccessLayer {
 
     @Override
     public void write(List<DataMutation> mutations) {
-        List<DataMutation> batch = List.copyOf(mutations);
-        if (batch.isEmpty()) {
+        if (mutations.isEmpty()) {
             return;
         }
 
-        for (DataMutation mutation : batch) {
+        for (DataMutation mutation : mutations) {
             mutation.validate();
             EntityMapping mapping = findEntityMapping(mutation.getEntityType());
             for (FieldDef field : mutation.getFields().keySet()) {
@@ -105,7 +104,7 @@ public class JdbcDataAccessLayer implements ApiDataAccessLayer {
 
         try {
             execute(connection -> {
-                for (DataMutation mutation : batch) {
+                for (DataMutation mutation : mutations) {
                     EntityMapping mapping = findEntityMapping(mutation.getEntityType());
                     int count = switch (mutation.getOperationType()) {
                         case CREATE -> insert(mapping, mutation);

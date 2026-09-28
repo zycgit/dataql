@@ -10,32 +10,32 @@ import java.util.List;
 import java.util.Objects;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.service.Dataway;
-import net.hasor.dataway.service.DatawayBuilder;
+import net.hasor.dataway.service.DatawayConfig;
 import net.hasor.dataway.service.WebHandler;
 import org.noear.solon.core.*;
 
 /**
- * Install with app.pluginAdd(0, new DatawayPlugin(builder)); reads the host Solon configuration.
+ * Install with app.pluginAdd(0, new DatawayPlugin(config)); reads the host Solon configuration.
  * Reads routing prefixes from Solon Props. Entry switches are owned by this integration.
  */
 public final class DatawayPlugin implements Plugin {
     /** Order corresponding to Solon's @Init index; dependent initializers must use a larger index. */
-    public static final int            INITIALIZATION_INDEX = 1;
-    private final       DatawayBuilder builder;
-    private final       Dataway        dataway;
+    public static final int           INITIALIZATION_INDEX = 1;
+    private final       DatawayConfig config;
+    private final       Dataway       dataway;
 
     public DatawayPlugin() {
-        this(Dataway.builder());
+        this(new DatawayConfig());
     }
 
-    public DatawayPlugin(DatawayBuilder builder) {
-        this.builder = Objects.requireNonNull(builder);
+    public DatawayPlugin(DatawayConfig config) {
+        this.config = Objects.requireNonNull(config);
         this.dataway = null;
     }
 
     public DatawayPlugin(Dataway dataway) {
         this.dataway = Objects.requireNonNull(dataway);
-        this.builder = null;
+        this.config = null;
     }
 
     @Override
@@ -51,8 +51,10 @@ public final class DatawayPlugin implements Plugin {
         if (dataway == null) {
             // Solon schedules @Init(index = n) at lifecycle rank n + 1.
             context.lifecycle(INITIALIZATION_INDEX + 1, () -> {
-                this.builder.defaultDataAccessLayer(() -> this.getDataAccessLayer(context));
-                this.register(context, properties, this.builder.build(), apiEnabled, adminEnabled);
+                if (this.config.getDataAccessLayer() == null) {
+                    this.config.dataAccessLayer(this.getDataAccessLayer(context));
+                }
+                this.register(context, properties, this.config.createDataway(), apiEnabled, adminEnabled);
             });
             return;
         }
@@ -80,7 +82,7 @@ public final class DatawayPlugin implements Plugin {
 
             // Admin UI
             String uiPrefix = properties.get("admin-ui", "/dataway");
-            WebHandler uiHandler = dataway.getUiHandler();
+            WebHandler uiHandler = dataway.getAdminUiHandler();
             List<String> uiPaths = uiHandler.paths().stream().map(path -> uiPrefix + path).toList();
             this.register(context, uiPrefix, uiHandler, uiPaths);
         }

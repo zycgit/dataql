@@ -8,8 +8,7 @@
 package net.hasor.dataway.spring;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.service.Dataway;
-import net.hasor.dataway.service.DatawayBuilder;
-import net.hasor.dataway.service.DatawayConfigurer;
+import net.hasor.dataway.service.DatawayConfig;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -32,12 +31,12 @@ public class DatawayAutoConfiguration {
     @Bean
     @Lazy
     @ConditionalOnMissingBean(Dataway.class)
-    public Dataway dataway(ConfigurableListableBeanFactory beans, //
-            ObjectProvider<DatawayConfigurer> configurers, Environment environment) {
-        DatawayBuilder builder = Dataway.builder();
-        builder.defaultDataAccessLayer(() -> this.getDataAccessLayer(beans, environment));
-        configurers.orderedStream().forEach(builder::configure);
-        return builder.build();
+    public Dataway dataway(ConfigurableListableBeanFactory beans, ObjectProvider<DatawayConfig> configurations, Environment environment) {
+        DatawayConfig config = configurations.getIfAvailable(DatawayConfig::new);
+        if (config.getDataAccessLayer() == null) {
+            config.dataAccessLayer(this.getDataAccessLayer(beans, environment));
+        }
+        return config.createDataway();
     }
 
     private ApiDataAccessLayer getDataAccessLayer(ConfigurableListableBeanFactory beans, Environment environment) {

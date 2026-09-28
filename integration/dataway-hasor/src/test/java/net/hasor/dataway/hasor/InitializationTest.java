@@ -12,14 +12,12 @@ import java.util.Properties;
 import net.hasor.core.Hasor;
 import net.hasor.core.Init;
 import net.hasor.core.Inject;
-import net.hasor.dataway.authorization.Operation;
-import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.dal.EntityType;
 import net.hasor.dataway.dal.FieldDef;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 import net.hasor.dataway.service.Dataway;
-import net.hasor.dataway.service.admin.DatawayAdminHandler;
+import net.hasor.dataway.service.DatawayConfig;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -29,10 +27,7 @@ class InitializationTest {
     void containerInitializesStorageBeforeBuildingDatawayAndItsConsumers() throws Throwable {
         var settings = new Properties();
         settings.setProperty("dataway.admin-enabled", "true");
-        var builder = Dataway.builder().adminHandler(dataway -> {
-            assertTrue(dataway.getAdminService().list(Operation.LIST, UserIdentity.anonymous(), Map.of(), null).isEmpty());
-            return new DatawayAdminHandler(dataway);
-        });
+        var builder = new DatawayConfig();
         try (var context = Hasor.create().loadSettings(settings).build(binder -> binder.bindType(Consumer.class).asEagerSingleton(), new DatawayModule(builder), binder -> binder.bindType(ApiDataAccessLayer.class).to(InitializedAccess.class).asEagerSingleton())) {
             assertTrue(context.getInstance(Consumer.class).initialized);
             assertSame(context.getInstance(Dataway.class), context.getInstance(Consumer.class).dataway);
@@ -65,7 +60,7 @@ class InitializationTest {
 
         @Init
         public void init() {
-            assertTrue(this.dataway.getAdminService().list(Operation.LIST, UserIdentity.anonymous(), Map.of(), null).isEmpty());
+            assertTrue(this.dataway.getAdminService().list().isEmpty());
             this.initialized = true;
         }
     }
