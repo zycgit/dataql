@@ -49,7 +49,7 @@ public final class ConvertUtils {
             sample.put("requestHeader", JsonUtils.writeValueAsString(headers));
             sample.remove("headerData");
             String schema = input.containsKey("schema") ? JsonUtils.writeValueAsString(ConvertUtils.convertToApiParameters(input.get("schema"))) : null;
-            String options = JsonUtils.writeValueAsString(ConvertUtils.convertToApiParameters(input.get("optionInfo")));
+            String options = JsonUtils.writeValueAsStringWithNulls(ConvertUtils.convertToApiParameters(input.get("optionInfo")));
 
             ApiDefinition definition = new ApiDefinition();
             definition.setId(id);
