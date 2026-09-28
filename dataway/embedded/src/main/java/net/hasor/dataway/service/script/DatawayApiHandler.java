@@ -93,8 +93,8 @@ public final class DatawayApiHandler extends WebHandler {
         definition.setId(release.get(API_ID));
         definition.setMethod(release.get(METHOD));
         definition.setPath(release.get(PATH));
-        definition.setType(ApiScriptType.valueOf(release.get(TYPE).toUpperCase(Locale.ROOT)));
-        definition.setScript(release.get(SCRIPT_ORI));
+        definition.setType(ApiScriptType.fromName(release.get(TYPE)));
+        definition.setScript(release.get(SCRIPT));
         definition.setDescription(release.get(COMMENT));
         definition.setSchema(release.get(SCHEMA));
         definition.setSample(release.get(SAMPLE));

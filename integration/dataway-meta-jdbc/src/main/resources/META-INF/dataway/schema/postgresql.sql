@@ -30,7 +30,6 @@ CREATE TABLE interface_release (
     pub_comment VARCHAR(255) COLLATE "C" NOT NULL,
     pub_type VARCHAR(24) COLLATE "C" NOT NULL,
     pub_script TEXT NOT NULL,
-    pub_script_ori TEXT NOT NULL,
     pub_schema TEXT NOT NULL,
     pub_sample TEXT NOT NULL,
     pub_option TEXT NOT NULL,

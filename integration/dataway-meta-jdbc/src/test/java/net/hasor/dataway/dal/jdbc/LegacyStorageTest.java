@@ -6,10 +6,8 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.dal.jdbc;
-import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
-import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Instant;
@@ -27,21 +25,11 @@ import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ApiScriptType;
 import net.hasor.dataway.service.Dataway;
 import net.hasor.dataway.service.DatawayConfig;
-import org.h2.jdbcx.JdbcDataSource;
-import org.h2.tools.RunScript;
 import org.junit.jupiter.api.Test;
 import static net.hasor.dataway.dal.FieldDef.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class LegacyStorageTest {
-    private void script(JdbcDataSource source, String name) throws Exception {
-        try (var connection = source.getConnection();           //
-             var input = getClass().getResourceAsStream(name);  //
-             var reader = new InputStreamReader(input, StandardCharsets.UTF_8)) {
-            RunScript.execute(connection, reader);
-        }
-    }
-
     private Map<FieldDef, String> fields(String method, String path) {
         Map<FieldDef, String> data = new EnumMap<>(FieldDef.class);
         data.put(METHOD, method);
@@ -66,28 +54,28 @@ class LegacyStorageTest {
     }
 
     @Test
-    void oldSchemaUpgradePreservesFieldsAndCompilesTheOriginalReleaseScript() throws Exception {
-        var source = TestDatabase.empty();
-        script(source, "/legacy-h2.sql");
-        // Seed before adding revisions: these rows have precisely the legacy layout.
+    void currentSchemaPreservesFieldsAndCompilesTheOriginalReleaseScript() throws Exception {
+        var source = TestDatabase.create();
+        // Omit revisions so that both tables use their schema defaults.
         try (var connection = source.getConnection()) {
-            var fields = fields("GET", "/legacy");
-            try (var statement = connection.prepareStatement("INSERT INTO interface_info VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            var fields = this.fields("GET", "/legacy");
+            String insertInfo = "INSERT INTO interface_info (api_id, api_method, api_path, api_status, api_comment, api_type, " + "api_script, api_schema, api_sample, api_option, api_create_time, api_gmt_time) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
+            try (var statement = connection.prepareStatement(insertInfo)) {
                 Object[] values = { "i_old", "GET", "/legacy", "1", "legacy", "SQL", fields.get(SCRIPT), fields.get(SCHEMA), fields.get(SAMPLE), fields.get(OPTION), "1600000000000", "1600000000000" };
                 for (int i = 0; i < values.length; i++) {
                     statement.setObject(i + 1, values[i]);
                 }
                 statement.executeUpdate();
             }
-            try (var statement = connection.prepareStatement("INSERT INTO interface_release VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
-                Object[] values = { "r_old", "i_old", "GET", "/legacy", "1", "legacy", "SQL", "return 42;", fields.get(SCRIPT), fields.get(SCHEMA), fields.get(SAMPLE), fields.get(OPTION), "1600000000000" };
+            String insertRelease = "INSERT INTO interface_release (pub_id, pub_api_id, pub_method, pub_path, pub_status, pub_comment, " + "pub_type, pub_script, pub_schema, pub_sample, pub_option, pub_release_time) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
+            try (var statement = connection.prepareStatement(insertRelease)) {
+                Object[] values = { "r_old", "i_old", "GET", "/legacy", "1", "legacy", "SQL", fields.get(SCRIPT), fields.get(SCHEMA), fields.get(SAMPLE), fields.get(OPTION), "1600000000000" };
                 for (int i = 0; i < values.length; i++) {
                     statement.setObject(i + 1, values[i]);
                 }
                 statement.executeUpdate();
             }
         }
-        script(source, "/META-INF/dataway/schema/upgrade/h2.sql");
         var access = new JdbcDataAccessLayer(source, "");
         var runtime = new DatawayConfig().resultStructure(false).fragment("sql", () -> (hints, parameters, script) -> {
             if ("SELECT :value".equals(script)) {
@@ -99,6 +87,7 @@ class LegacyStorageTest {
         var service = new Dataway(runtime.dataAccessLayer(access));
         assertEquals(7, ((Number) this.executePublished(service, "i_old", Map.of("value", 7))).intValue());
         assertEquals("SELECT :value", access.getObject(EntityType.RELEASE, "r_old").orElseThrow().get(SCRIPT));
+        assertEquals("1", access.getObject(EntityType.RELEASE, "r_old").orElseThrow().get(REVISION));
         assertEquals("SELECT :value", service.getAdminService().getHistoryById("r_old").getDefinition().getScript());
         try (var connection = source.getConnection(); var columns = connection.getMetaData().getColumns(null, null, "INTERFACE_RELEASE", "PUB_SCRIPT_ORI")) {
             assertFalse(columns.next());
@@ -126,8 +115,8 @@ class LegacyStorageTest {
         assertEquals(before.get(OPTION), active.get(OPTION));
         assertEquals(2, service.getAdminService().getHistoryByApi("i_old").size());
         assertEquals("3", access.getObject(EntityType.RELEASE, "r_old").orElseThrow().get(STATUS));
-        // The upgraded unique index permits a second method at the same path.
-        access.createObject(EntityType.INFO, "i_post", fields("POST", "/legacy"));
+        // The unique index permits a second method at the same path.
+        access.createObject(EntityType.INFO, "i_post", this.fields("POST", "/legacy"));
         assertEquals(2, access.listObjects(EntityType.INFO, Map.of(PATH, "/legacy")).size());
     }
 

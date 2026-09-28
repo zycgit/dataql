@@ -30,7 +30,6 @@ CREATE TABLE interface_release (
     pub_comment VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
     pub_type VARCHAR(24) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
     pub_script MEDIUMTEXT NOT NULL,
-    pub_script_ori MEDIUMTEXT NOT NULL,
     pub_schema MEDIUMTEXT NOT NULL,
     pub_sample MEDIUMTEXT NOT NULL,
     pub_option MEDIUMTEXT NOT NULL,

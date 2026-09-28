@@ -30,7 +30,6 @@ CREATE TABLE interface_release (
     pub_comment VARCHAR(255) NOT NULL,
     pub_type VARCHAR(24) NOT NULL,
     pub_script CLOB NOT NULL,
-    pub_script_ori CLOB NOT NULL,
     pub_schema CLOB NOT NULL,
     pub_sample CLOB NOT NULL,
     pub_option CLOB NOT NULL,
