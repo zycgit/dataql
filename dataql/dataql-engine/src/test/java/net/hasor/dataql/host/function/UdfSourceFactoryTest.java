@@ -50,8 +50,7 @@ public class UdfSourceFactoryTest {
         Map<?, ?> result = (Map<?, ?>) query.execute().getData().unwrap();
         Map<?, ?> restored = (Map<?, ?>) result.get("restored");
         assertEquals("雪", restored.get("text"));
-        assertTrue(restored.containsKey("empty"));
-        assertNull(restored.get("empty"));
+        assertFalse(restored.containsKey("empty"));
         List<?> values = (List<?>) restored.get("values");
         assertEquals(1, ((Number) values.get(0)).intValue());
         assertEquals(Boolean.TRUE, values.get(1));

@@ -6,8 +6,10 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.util;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -17,6 +19,39 @@ import tools.jackson.core.JacksonException;
 import static org.junit.Assert.*;
 
 public class JsonUtilsTest {
+    @Test
+    public void writingOmitsNullMapEntriesAndPreservesNullArrayElements() {
+        Map<?, ?> data = JsonUtils.readValue("""
+                {"id":1,"parent_id":null,"children":[{"id":2,"parent_id":1,"comment":null},null],"empty":[]}
+                """, Map.class);
+        var expected = JsonUtils.readTree("""
+                {"id":1,"children":[{"id":2,"parent_id":1},null],"empty":[]}
+                """);
+
+        assertEquals(expected, JsonUtils.readTree(JsonUtils.writeValueAsString(data)));
+        assertEquals(expected, JsonUtils.readTree(JsonUtils.writeValueAsPrettyString(data)));
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        JsonUtils.writeValue(output, data);
+        assertEquals(expected, JsonUtils.readTree(output.toString(StandardCharsets.UTF_8)));
+
+        assertTrue(data.containsKey("parent_id"));
+        assertNull(data.get("parent_id"));
+        List<?> children = (List<?>) data.get("children");
+        Map<?, ?> child = (Map<?, ?>) children.get(0);
+        assertTrue(child.containsKey("comment"));
+        assertNull(child.get("comment"));
+        assertNull(children.get(1));
+    }
+
+    @Test
+    public void writingPreservesRootNull() {
+        assertEquals("null", JsonUtils.writeValueAsString(null));
+        assertEquals("null", JsonUtils.writeValueAsPrettyString(null));
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        JsonUtils.writeValue(output, null);
+        assertEquals("null", output.toString(StandardCharsets.UTF_8));
+    }
+
     @Test
     public void parsingDoesNotCloseTheCallerStreamOnSuccessOrFailure() throws Exception {
         Path file = Files.createTempFile("dataql-json-read", ".json");

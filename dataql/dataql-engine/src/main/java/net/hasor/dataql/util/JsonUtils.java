@@ -8,6 +8,8 @@
 package net.hasor.dataql.util;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import tools.jackson.core.StreamReadFeature;
 import tools.jackson.core.StreamWriteFeature;
 import tools.jackson.databind.DeserializationFeature;
@@ -16,8 +18,12 @@ import tools.jackson.databind.json.JsonMapper;
 
 /** Shared JSON operations. Callers retain ownership of their input and output streams. */
 public final class JsonUtils {
-    private static final JsonMapper JSON = JsonMapper.builder().enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
-            .disable(StreamReadFeature.AUTO_CLOSE_SOURCE).disable(StreamWriteFeature.AUTO_CLOSE_TARGET).build();
+    private static final JsonMapper JSON = JsonMapper.builder() //
+            .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)//
+            .changeDefaultPropertyInclusion(i -> i.withContentInclusion(JsonInclude.Include.NON_NULL))//
+            .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)       //
+            .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)      //
+            .build();
 
     private JsonUtils() {
     }
@@ -27,6 +33,10 @@ public final class JsonUtils {
     }
 
     public static <T> T readValue(InputStream input, Class<T> type) {
+        return JSON.readValue(input, type);
+    }
+
+    public static <T> T readValue(Reader input, Class<T> type) {
         return JSON.readValue(input, type);
     }
 
