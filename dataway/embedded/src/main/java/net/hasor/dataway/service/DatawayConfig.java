@@ -6,6 +6,7 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.service;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,13 +25,16 @@ import net.hasor.dataway.authorization.IdentityProvider;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.service.admin.AdminInterceptor;
 import net.hasor.dataway.service.script.ApiInterceptor;
+import net.hasor.dataway.web.body.UploadStorage;
 
 /** Configures shared storage, authorization, HTTP entries and the DataQL runtime. */
 public class DatawayConfig {
     private       ApiDataAccessLayer                dataAccessLayer;
     private       IdentityProvider                  identityProvider;
     private       AuthorizationCheck                authorizationCheck;
-    private final List<AdminInterceptor>            adminInterceptors = new ArrayList<>();
+    private final List<AdminInterceptor>            adminInterceptors     = new ArrayList<>();
+    private       Path                              uploadTempDirectory;
+    private       int                               uploadMemoryThreshold = UploadStorage.DEFAULT_MEMORY_THRESHOLD;
     //
     private       Finder                            finder;
     private       ResourceLoader                    resourceLoader;
@@ -72,6 +76,18 @@ public class DatawayConfig {
 
     public DatawayConfig adminInterceptor(AdminInterceptor interceptor) {
         this.adminInterceptors.add(interceptor);
+        return this;
+    }
+
+    /** Sets the upload cache directory; null uses the system temporary directory. */
+    public DatawayConfig uploadTempDirectory(Path directory) {
+        this.uploadTempDirectory = directory;
+        return this;
+    }
+
+    /** Sets the per-file memory threshold in bytes; zero spills every non-empty file to disk. */
+    public DatawayConfig uploadMemoryThreshold(int bytes) {
+        this.uploadMemoryThreshold = bytes;
         return this;
     }
 
@@ -172,6 +188,14 @@ public class DatawayConfig {
 
     public List<AdminInterceptor> getAdminInterceptors() {
         return this.adminInterceptors;
+    }
+
+    public Path getUploadTempDirectory() {
+        return this.uploadTempDirectory;
+    }
+
+    public int getUploadMemoryThreshold() {
+        return this.uploadMemoryThreshold;
     }
 
     public Finder getFinder() {

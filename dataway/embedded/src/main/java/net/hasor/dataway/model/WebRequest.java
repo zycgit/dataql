@@ -13,8 +13,8 @@ import java.nio.charset.Charset;
 import java.util.*;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.service.DatawayException;
-import net.hasor.dataway.web.request.BodyReaders;
-import net.hasor.dataway.web.request.UploadStorage;
+import net.hasor.dataway.web.body.BodyReaders;
+import net.hasor.dataway.web.body.UploadStorage;
 
 /**
  * Paths retain percent escapes. path excludes the host context path; pathInfo also excludes

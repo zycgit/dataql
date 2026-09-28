@@ -17,13 +17,16 @@ import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.model.ResultInfo;
 import net.hasor.dataway.model.WebRequest;
 import net.hasor.dataway.model.WebResponse;
+import net.hasor.dataway.web.body.UploadStorage;
 
 /** Resolves request identity and writes entry results while preserving host exception handling. */
 public abstract class WebHandler {
     private final IdentityProvider identityProvider;
+    private final UploadStorage    uploadStorage;
 
     protected WebHandler(BeanContainer beans) {
         this.identityProvider = beans.getBean(IdentityProvider.class);
+        this.uploadStorage = beans.getBean(UploadStorage.class);
     }
 
     /** Relative paths; a trailing /* denotes a subtree. The host adds its configured prefix. */
@@ -33,29 +36,33 @@ public abstract class WebHandler {
 
     /** Invoked after host routing. Failures propagate to the host without an error response. */
     public final void handle(WebRequest request, WebResponse response) throws Exception {
-        response.prepare(request);
+        try (request) {
+            request.setUploadStorage(this.uploadStorage);
+            response.prepare(request);
 
-        UserIdentity identity = this.identityProvider.resolve(request);
-        request.setIdentity(Objects.requireNonNull(identity, "IdentityProvider returned null"));
-        ResultInfo result = this.handleRequest(request, response);
-        Object data = result.getData();
-        InputStream source = !result.isJson() && data instanceof InputStream stream ? stream : null;
-        try (source) {
-            OutputStream output = response.write(result.getStatus(), result.getHeaders());
-            if (StringUtils.equalsIgnoreCase(request.getMethod(), "HEAD")) {
-                return;
-            }
+            UserIdentity identity = this.identityProvider.resolve(request);
+            request.setIdentity(Objects.requireNonNull(identity, "IdentityProvider returned null"));
 
-            if (source != null) {
-                source.transferTo(output);
-                return;
-            }
+            ResultInfo result = this.handleRequest(request, response);
+            Object data = result.getData();
+            InputStream source = !result.isJson() && data instanceof InputStream stream ? stream : null;
+            try (source) {
+                OutputStream output = response.write(result.getStatus(), result.getHeaders());
+                if (StringUtils.equalsIgnoreCase(request.getMethod(), "HEAD")) {
+                    return;
+                }
 
-            if (!result.isJson() && data instanceof byte[] bytes) {
-                output.write(bytes);
-                return;
+                if (source != null) {
+                    source.transferTo(output);
+                    return;
+                }
+
+                if (!result.isJson() && data instanceof byte[] bytes) {
+                    output.write(bytes);
+                    return;
+                }
+                JsonUtils.writeValue(output, data);
             }
-            JsonUtils.writeValue(output, data);
         }
     }
 

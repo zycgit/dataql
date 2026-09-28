@@ -296,7 +296,8 @@ class DatawayAutoConfigurationTest {
                 }
                 return ${value};
                 """);
-        for (Object invalid : Arrays.asList(null, false, 1, "", "{broken", "null", "[]", "1", "true", "\"text\"")) {
+        // Keep an explicit JSON null in the HTTP payload instead of omitting the option.
+        for (Object invalid : Arrays.asList(JsonUtils.readTree("null"), false, 1, "", "{broken", "null", "[]", "1", "true", "\"text\"")) {
             var error = assertThrows(DatawayException.class, () -> this.preview(dataway, api.getScript(), Map.of(), Collections.singletonMap("responseFormat", invalid)));
             assertEquals("responseFormat must be a JSON object string", error.getMessage());
         }
@@ -308,8 +309,7 @@ class DatawayAutoConfigurationTest {
         Map<?, ?> first = (Map<?, ?>) this.preview(dataway, api.getScript(), Map.of("fail", false, "value", "one"), Map.of("responseFormat", template));
         assertEquals(Boolean.TRUE, first.get("ok"));
         assertEquals("one", first.get("data"));
-        assertTrue(first.containsKey("empty"));
-        assertNull(first.get("empty"));
+        assertFalse(first.containsKey("empty"));
         assertEquals("@unknown", first.get("text"));
         Map<?, ?> literal = (Map<?, ?>) first.get("literal");
         List<?> items = (List<?>) literal.get("items");

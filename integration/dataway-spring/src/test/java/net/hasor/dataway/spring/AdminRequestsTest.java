@@ -40,6 +40,37 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 class AdminRequestsTest {
     private final WebApplicationContextRunner context = new WebApplicationContextRunner().withConfiguration(AutoConfigurations.of(DatawayAutoConfiguration.class, WebMvcAutoConfiguration.class)).withPropertyValues("dataway.admin-enabled=true", "dataway.api-enabled=true");
 
+    @ParameterizedTest
+    @CsvSource({ "api-list,GET", "api-info,GET", "api-detail,GET", "api-history,GET", "get-history,GET", "save-api,POST", "perform,POST", "smoke,POST", "publish,POST", "disable,POST", "delete,POST" })
+    void duplicateQueryParametersAreRejectedByEveryController(String action, String method) {
+        Dataway dataway = new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer()).createDataway();
+        this.context.withBean(Dataway.class, () -> dataway).run(c -> {
+            var mvc = MockMvcBuilders.webAppContextSetup(c.getSourceApplicationContext()).build();
+            String path = "/dataway/api/" + action;
+            MockHttpServletRequestBuilder request = "GET".equals(method) ? get(path) : post(path);
+            request.queryParam("id", "one", "two").contentType("application/json").content("{}");
+
+            ServletException failure = assertThrows(ServletException.class, () -> mvc.perform(request));
+            DatawayException error = assertInstanceOf(DatawayException.class, failure.getCause());
+            assertEquals(400, error.status());
+            assertEquals("Duplicate query parameter: id", error.getMessage());
+        });
+    }
+
+    @Test
+    void conflictingQueryAndBodyIdsAreRejectedBeforeDeletion() {
+        Dataway dataway = new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer()).createDataway();
+        this.context.withBean(Dataway.class, () -> dataway).run(c -> {
+            var mvc = MockMvcBuilders.webAppContextSetup(c.getSourceApplicationContext()).build();
+            var request = this.json("delete", Map.of("id", "body-id", "version", 1)).queryParam("id", "query-id");
+
+            ServletException failure = assertThrows(ServletException.class, () -> mvc.perform(request));
+            DatawayException error = assertInstanceOf(DatawayException.class, failure.getCause());
+            assertEquals(400, error.status());
+            assertEquals("Conflicting API ids", error.getMessage());
+        });
+    }
+
     @Test
     void managementRequestsPreserveConsoleDocumentsAndPublicationLifecycle() {
         Dataway dataway = new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer()).resultStructure(false).createDataway();

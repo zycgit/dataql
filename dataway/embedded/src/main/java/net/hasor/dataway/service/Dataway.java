@@ -22,6 +22,7 @@ import net.hasor.dataway.service.admin.*;
 import net.hasor.dataway.service.script.ApiInterceptor;
 import net.hasor.dataway.service.script.DatawayApiHandler;
 import net.hasor.dataway.service.script.DatawayEngine;
+import net.hasor.dataway.web.body.UploadStorage;
 
 /** Shared execution context with three independent HTTP handlers. The host owns their routing. */
 public final class Dataway {
@@ -36,6 +37,10 @@ public final class Dataway {
         }
 
         BeanContainer beans = new BeanContainer();
+
+        // upload
+        UploadStorage uploadStorage = new UploadStorage(config.getUploadTempDirectory(), config.getUploadMemoryThreshold());
+        beans.setBean(UploadStorage.class, uploadStorage);
         beans.setBean(ApiDataAccessLayer.class, config.getDataAccessLayer()); // dal
         beans.setBean(DatawayEngine.class, this.createEngine(config, beans));// engine
 

@@ -10,9 +10,11 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import net.hasor.cobble.StringUtils;
 import net.hasor.dataway.service.WebHandler;
 import net.hasor.web.Invoker;
 import net.hasor.web.annotation.Any;
+import net.hasor.web.upload.FileUpload;
 
 /** MVC endpoint; the host's authentication and interceptors run before this method. */
 public class DatawayController {
@@ -41,6 +43,13 @@ public class DatawayController {
             headers.put(name, Collections.list(request.getHeaders(name)));
         });
         webRequest.setHeaderValues(headers);
+
+        String contentType = request.getContentType();
+        String mediaType = contentType == null ? "" : contentType.split(";", 2)[0].trim();
+        if (StringUtils.equalsIgnoreCase(mediaType, "multipart/form-data")) {
+            var settings = invoker.getAppContext().getSettings();
+            webRequest.setFileUpload(new FileUpload(settings, request.getCharacterEncoding()));
+        }
 
         this.handler.handle(webRequest, webResponse);
     }
