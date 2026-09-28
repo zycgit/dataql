@@ -17,6 +17,17 @@ import java.util.Optional;
  * INFO routes are unique by (METHOD, PATH); RELEASE permits historical copies of a route.
  */
 public interface ApiDataAccessLayer {
+    /**
+     * Applies name overrides before this access layer is used by Dataway. Unspecified names retain provider defaults.
+     * Providers must not retain mutable configuration maps. Use a separate access layer for each mapping configuration.
+     * Providers without mapping support reject non-empty overrides.
+     */
+    default void configureMapping(Map<EntityType, String> tables, Map<EntityType, Map<FieldDef, String>> fields) {
+        if (!tables.isEmpty() || !fields.isEmpty()) {
+            throw new UnsupportedOperationException("This metadata storage does not support table or field mappings");
+        }
+    }
+
     List<Map<FieldDef, String>> listObjects(EntityType entityType, Map<FieldDef, String> conditions);
 
     default Optional<Map<FieldDef, String>> getObject(EntityType entityType, String id) {

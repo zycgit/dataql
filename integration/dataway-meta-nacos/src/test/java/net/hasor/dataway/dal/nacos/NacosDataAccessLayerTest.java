@@ -23,11 +23,150 @@ import net.hasor.dataway.model.ApiScriptType;
 import net.hasor.dataway.service.Dataway;
 import net.hasor.dataway.service.DatawayConfig;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import static net.hasor.dataway.dal.FieldDef.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class NacosDataAccessLayerTest {
     static final String EMPTY = "{\"format\":1,\"generation\":\"initial\",\"records\":{\"INFO\":{},\"RELEASE\":{}}}";
+
+    @Test
+    void allEntityAndFieldMappingsSupportPublicationExecutionAndReconnect() throws Exception {
+        Server server = new Server();
+        server.configs.put("test/store", "{\"format\":1,\"generation\":\"initial\",\"records\":{\"drafts.v1\":{},\"release history\":{}}}");
+        var access = server.access();
+        var config = this.mappedConfig(access);
+        var dataway = config.createDataway();
+        var admin = dataway.getAdminService();
+        var definition = new ApiDefinition();
+        definition.setId("one");
+        definition.setMethod("GET");
+        definition.setPath("/mapped");
+        definition.setType(ApiScriptType.DATA_QL);
+        definition.setScript("return ${value};");
+        definition.setDescription("Mapped API");
+        definition.setSchema("{\"type\":\"object\"}");
+        definition.setSample("{\"requestBody\":{\"value\":0}}");
+        definition.setOptions("{\"resultStructure\":false}");
+        admin.save(definition, 0);
+        admin.publish("one", 1);
+        String firstRelease = admin.getReleaseByApi("one").getId();
+        definition.setScript("return ${value} + 1;");
+        admin.save(definition, 2);
+        admin.publish("one", 3);
+        assertEquals(2, admin.getHistoryByApi("one").size());
+        assertEquals("return ${value};", admin.getHistoryById(firstRelease).getDefinition().getScript());
+        assertEquals(definition, admin.getDraftByApi("one"));
+
+        var document = JsonUtils.readTree(server.configs.get("test/store"));
+        assertFalse(document.get("records").has("INFO"));
+        assertFalse(document.get("records").has("RELEASE"));
+        var stored = document.get("records").get("drafts.v1").get("one");
+        assertEquals("4", stored.get("stored_REVISION").asText());
+        assertEquals(definition.getScript(), stored.get("source.code").asText());
+        assertFalse(stored.has("SCRIPT"));
+        assertFalse(stored.has("ID"));
+
+        // Configuration edits do not alter the storage mapping already in use.
+        config.tableMapping(EntityType.INFO, "other").fieldMapping(EntityType.INFO, SCRIPT, "other_script");
+        assertEquals(1, access.listObjects(EntityType.INFO, Map.of(METHOD, "GET", PATH, "/mapped")).size());
+        var restarted = this.mappedConfig(server.access()).createDataway();
+        var response = new TestWebResponse();
+        restarted.getApiHandler().handle(new TestWebRequest("GET", "/mapped", Map.of("value", 7)), response);
+        assertEquals(8, ((Number) response.getResult()).intValue());
+        restarted.getAdminService().disableApi("one", 4);
+        assertFalse(admin.getApiById("one").isEnabled());
+        assertThrows(DataConflictException.class, () -> access.deleteObject(EntityType.INFO, "one", 4));
+        restarted.getAdminService().deleteApi("one", 5);
+        assertTrue(admin.list().isEmpty());
+        assertTrue(access.listObjects(EntityType.RELEASE, Map.of()).isEmpty());
+    }
+
+    private DatawayConfig mappedConfig(NacosDataAccessLayer access) {
+        var config = new DatawayConfig().dataAccessLayer(access).tableMapping(EntityType.INFO, "drafts.v1").tableMapping(EntityType.RELEASE, "release history");
+        for (FieldDef field : EnumSet.complementOf(EnumSet.of(API_ID, RELEASE_TIME))) {
+            config.fieldMapping(EntityType.INFO, field, "stored_" + field.name());
+        }
+        for (FieldDef field : EnumSet.complementOf(EnumSet.of(CREATE_TIME, GMT_TIME))) {
+            config.fieldMapping(EntityType.RELEASE, field, "release_" + field.name());
+        }
+        return config.fieldMapping(EntityType.INFO, SCRIPT, "source.code").fieldMapping(EntityType.RELEASE, SCRIPT, "SCRIPT_ORI");
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { "return 'compiled';" })
+    void mappedOriginalScriptsPreserveTheUnusedOldField(String oldScript) {
+        Server server = new Server();
+        Object oldValue = oldScript == null ? JsonUtils.readTree("null") : oldScript;
+        Map<String, Object> row = Map.of("ID", "sql", "REVISION", "1", "SCRIPT", oldValue, "SCRIPT_ORI", "SELECT :value");
+        server.configs.put("test/store", JsonUtils.writeValueAsString(Map.of("format", 1, "generation", "old", "records", Map.of("INFO", Map.of(), "RELEASE", Map.of("sql", row)))));
+        var access = server.access();
+        new DatawayConfig().dataAccessLayer(access).fieldMapping(EntityType.RELEASE, SCRIPT, "SCRIPT_ORI").createDataway();
+        assertEquals("SELECT :value", access.getObject(EntityType.RELEASE, "sql").orElseThrow().get(SCRIPT));
+        access.updateObject(EntityType.RELEASE, "sql", 1, Map.of(COMMENT, "updated"));
+        access.updateObject(EntityType.RELEASE, "sql", 2, Map.of(SCRIPT, "SELECT :value + 1"));
+        var stored = JsonUtils.readTree(server.configs.get("test/store")).get("records").get("RELEASE").get("sql");
+        assertEquals(JsonUtils.readTree(JsonUtils.writeValueAsString(oldValue)), stored.get("SCRIPT"));
+        assertEquals("SELECT :value + 1", stored.get("SCRIPT_ORI").asText());
+        Map<FieldDef, String> clear = new EnumMap<>(FieldDef.class);
+        clear.put(SCRIPT, null);
+        access.updateObject(EntityType.RELEASE, "sql", 3, clear);
+        assertNull(access.getObject(EntityType.RELEASE, "sql").orElseThrow().get(SCRIPT));
+        stored = JsonUtils.readTree(server.configs.get("test/store")).get("records").get("RELEASE").get("sql");
+        assertFalse(stored.has("SCRIPT_ORI"));
+        assertTrue(stored.has("SCRIPT"));
+
+        access.write(List.of(access.create(EntityType.RELEASE, OperationType.DELETE, "sql", 4, Map.of()), access.create(EntityType.RELEASE, OperationType.CREATE, "sql", 0, Map.of(SCRIPT, "SELECT 1"))));
+        stored = JsonUtils.readTree(server.configs.get("test/store")).get("records").get("RELEASE").get("sql");
+        assertFalse(stored.has("SCRIPT"));
+        assertEquals("SELECT 1", stored.get("SCRIPT_ORI").asText());
+        access.deleteObject(EntityType.RELEASE, "sql", 1);
+        assertTrue(access.getObject(EntityType.RELEASE, "sql").isEmpty());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { " " })
+    void blankStorageNamesFailBeforeReadingNacos(String name) {
+        Server server = new Server();
+        server.failRead = true;
+        var table = new DatawayConfig().dataAccessLayer(server.access()).tableMapping(EntityType.INFO, name);
+        var field = new DatawayConfig().dataAccessLayer(server.access()).fieldMapping(EntityType.RELEASE, SCRIPT, name);
+        assertThrows(IllegalArgumentException.class, table::createDataway);
+        assertThrows(IllegalArgumentException.class, field::createDataway);
+        assertEquals(0, server.publications.get());
+    }
+
+    @Test
+    void ambiguousMappingsAndUnsupportedFieldsLeaveThePreviousMappingIntact() {
+        Server server = new Server();
+        var access = server.access();
+        new DatawayConfig().dataAccessLayer(access).createDataway();
+        var duplicateEntity = new DatawayConfig().dataAccessLayer(access).tableMapping(EntityType.INFO, "RELEASE");
+        var duplicateField = new DatawayConfig().dataAccessLayer(access).fieldMapping(EntityType.INFO, SCRIPT, "ID");
+        var unsupportedField = new DatawayConfig().dataAccessLayer(access).fieldMapping(EntityType.INFO, API_ID, "source_id");
+        assertThrows(IllegalArgumentException.class, duplicateEntity::createDataway);
+        assertThrows(IllegalArgumentException.class, duplicateField::createDataway);
+        assertThrows(IllegalArgumentException.class, unsupportedField::createDataway);
+        access.createObject(EntityType.INFO, "one", this.route("GET", "/one"));
+        assertEquals("return 1;", access.getObject(EntityType.INFO, "one").orElseThrow().get(SCRIPT));
+    }
+
+    @Test
+    void renamedEntitiesMustExistAndUnknownFieldsStillPreventWrites() {
+        Server server = new Server();
+        var access = server.access();
+        this.mappedConfig(access).createDataway();
+        assertThrows(DataAccessException.class, () -> access.createObject(EntityType.INFO, "one", this.route("GET", "/one")));
+        server.configs.put("test/store", "{\"format\":1,\"generation\":\"old\",\"records\":{\"drafts.v1\":{},\"release history\":{\"one\":{\"release_ID\":\"one\",\"release_REVISION\":\"1\",\"unknown\":\"value\"}}}}");
+        String before = server.configs.get("test/store");
+        assertThrows(DataAccessException.class, () -> access.updateObject(EntityType.RELEASE, "one", 1, Map.of(COMMENT, "updated")));
+        assertEquals(before, server.configs.get("test/store"));
+        assertEquals(0, server.publications.get());
+    }
 
     @Test
     void snapshotObjectsRoundTripAndReadTheExistingWireFormat() {
@@ -56,7 +195,7 @@ class NacosDataAccessLayerTest {
     }
 
     @Test
-    void legacyScriptFieldsRequireExplicitMigration() {
+    void legacyScriptFieldsRequireExplicitMappingOrMigration() {
         Server server = new Server();
         Map<String, Object> releases = Map.of("sql", Map.of("ID", "sql", "REVISION", "1", "SCRIPT", "return 'compiled';", "SCRIPT_ORI", "SELECT :value"));
         String original = JsonUtils.writeValueAsString(Map.of("format", 1, "generation", "old", "records", Map.of("INFO", Map.of(), "RELEASE", releases)));
@@ -149,10 +288,11 @@ class NacosDataAccessLayerTest {
         assertTrue(access.getObject(EntityType.INFO, "one").isEmpty());
     }
 
-    @Test
-    void batchAndRouteConflictsLeaveNoPartialChanges() {
+    @ParameterizedTest
+    @ValueSource(booleans = { false, true })
+    void batchAndRouteConflictsLeaveNoPartialChanges(boolean mapped) {
         Server server = new Server();
-        var access = server.access();
+        var access = this.access(server, mapped);
         access.createObject(EntityType.INFO, "one", route("GET", "/one"));
         String before = server.configs.get("test/store");
         assertThrows(DataConflictException.class, () -> access.write(List.of(access.create(EntityType.RELEASE, OperationType.CREATE, "release", 0, route("GET", "/one")), access.create(EntityType.INFO, OperationType.UPDATE, "one", 99, Map.of(COMMENT, "stale")))));
@@ -163,11 +303,12 @@ class NacosDataAccessLayerTest {
         assertEquals(2, access.listObjects(EntityType.RELEASE, Map.of()).size());
     }
 
-    @Test
-    void separateInstancesCannotOverwriteEachOther() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = { false, true })
+    void separateInstancesCannotOverwriteEachOther(boolean mapped) throws Exception {
         Server server = new Server();
-        var first = server.access();
-        var second = server.access();
+        var first = this.access(server, mapped);
+        var second = this.access(server, mapped);
         server.reads = new CyclicBarrier(2);
         try (var workers = Executors.newFixedThreadPool(2)) {
             Callable<Boolean> one = () -> create(first, "one");
@@ -178,6 +319,18 @@ class NacosDataAccessLayerTest {
             server.reads = null;
         }
         assertEquals(1, first.listObjects(EntityType.INFO, Map.of()).size());
+    }
+
+    private NacosDataAccessLayer access(Server server, boolean mapped) {
+        var access = server.access();
+        var config = new DatawayConfig().dataAccessLayer(access);
+        if (mapped) {
+            for (EntityType type : EntityType.values()) {
+                config.fieldMapping(type, ID, "record_id").fieldMapping(type, REVISION, "version").fieldMapping(type, SCRIPT, "SCRIPT_ORI");
+            }
+        }
+        config.createDataway();
+        return access;
     }
 
     private boolean create(NacosDataAccessLayer access, String id) {
@@ -206,10 +359,11 @@ class NacosDataAccessLayerTest {
         assertEquals(0, server.publications.get());
     }
 
-    @Test
-    void rejectsCasFailureAndDoesNotRetryAnAmbiguousPublish() {
+    @ParameterizedTest
+    @ValueSource(booleans = { false, true })
+    void rejectsCasFailureAndDoesNotRetryAnAmbiguousPublish(boolean mapped) {
         Server server = new Server();
-        var access = server.access();
+        var access = this.access(server, mapped);
         server.rejectWrite = true;
         assertThrows(DataConflictException.class, () -> access.createObject(EntityType.INFO, "one", route("GET", "/one")));
         assertTrue(access.getObject(EntityType.INFO, "one").isEmpty());
@@ -256,9 +410,15 @@ class NacosDataAccessLayerTest {
         assertTrue(server.access().listObjects(EntityType.RELEASE, Map.of()).isEmpty());
     }
 
-    @Test
-    void importsLegacyDirectoryAndSplitDocumentsWithoutTouchingSource() {
+    @ParameterizedTest
+    @ValueSource(booleans = { false, true })
+    void importsLegacyDirectoryAndSplitDocumentsWithoutTouchingSource(boolean mapped) {
         Server server = new Server();
+        var access = server.access();
+        if (mapped) {
+            server.configs.put("test/store", "{\"format\":1,\"generation\":\"initial\",\"records\":{\"drafts.v1\":{},\"release history\":{}}}");
+            this.mappedConfig(access).createDataway();
+        }
         server.configs.put("old/INDEX_MONITOR", "1234");
         server.configs.put("old/INDEX_DIRECTORY_0", "i_one,1234,/one\nr_one,1234,/one\nEND");
         Map<String, Object> info = new LinkedHashMap<>();
@@ -274,23 +434,23 @@ class NacosDataAccessLayerTest {
         server.configs.put("old/i_one", JsonUtils.writeValueAsString(info));
         server.configs.put("old/r_one", JsonUtils.writeValueAsString(Map.of("ID", "r_one", "API_ID", "i_one", "SCRIPT", "compiled", "SCRIPT_ORI", "original", "CREATE_TIME", "1000", "GMT_TIME", "1001")));
         var original = new HashMap<>(server.configs);
-        server.access().importLegacy("old");
-        var row = server.access().getObject(EntityType.INFO, "i_one").orElseThrow();
+        access.importLegacy("old");
+        var row = access.getObject(EntityType.INFO, "i_one").orElseThrow();
         assertEquals("1", row.get(REVISION));
         assertEquals("original draft", row.get(SCRIPT));
         assertFalse(row.containsKey(API_ID));
         assertEquals("plain body", JsonUtils.readValue(row.get(SAMPLE), Map.class).get("requestBody"));
         assertTrue(row.get(SCHEMA).contains("requestBody"));
         assertTrue(row.get(OPTION).contains("legacy hint"));
-        assertEquals("original", server.access().getObject(EntityType.RELEASE, "r_one").orElseThrow().get(SCRIPT));
-        assertFalse(server.configs.get("test/store").contains("SCRIPT_ORI"));
+        assertEquals("original", access.getObject(EntityType.RELEASE, "r_one").orElseThrow().get(SCRIPT));
+        assertEquals(mapped, server.configs.get("test/store").contains("SCRIPT_ORI"));
         original.forEach((key, value) -> {
             if (key.startsWith("old/")) {
                 assertEquals(value, server.configs.get(key));
             }
         });
         assertEquals(1, server.publications.get());
-        assertThrows(DataConflictException.class, () -> server.access().importLegacy("old"));
+        assertThrows(DataConflictException.class, () -> access.importLegacy("old"));
     }
 
     @Test
@@ -302,14 +462,18 @@ class NacosDataAccessLayerTest {
         assertEquals(0, server.publications.get());
     }
 
-    @Test
-    void sqlPublicationStoresOriginalScriptAndCompilesItOnInvocation() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = { false, true })
+    void sqlPublicationStoresOriginalScriptAndCompilesItOnInvocation(boolean mapped) throws Exception {
         Server server = new Server();
         var access = server.access();
         var config = new DatawayConfig().dataAccessLayer(access).resultStructure(false).fragment("sql", () -> (hints, parameters, script) -> {
             assertEquals("SELECT :value + 1", script);
             return ((Number) parameters.get("value")).intValue() + 1;
         });
+        if (mapped) {
+            config.fieldMapping(EntityType.INFO, SCRIPT, "source_code").fieldMapping(EntityType.RELEASE, SCRIPT, "SCRIPT_ORI");
+        }
         var dataway = config.createDataway();
         var definition = new ApiDefinition();
         definition.setId("sql");
@@ -324,7 +488,7 @@ class NacosDataAccessLayerTest {
         var release = dataway.getAdminService().getReleaseByApi("sql");
         assertEquals(definition.getScript(), access.getObject(EntityType.INFO, "sql").orElseThrow().get(SCRIPT));
         assertEquals(definition.getScript(), access.getObject(EntityType.RELEASE, release.getId()).orElseThrow().get(SCRIPT));
-        assertFalse(server.configs.get("test/store").contains("SCRIPT_ORI"));
+        assertEquals(mapped, server.configs.get("test/store").contains("SCRIPT_ORI"));
         definition.setScript("SELECT :value + 2");
         dataway.getAdminService().save(definition, 2);
         var restarted = config.createDataway();

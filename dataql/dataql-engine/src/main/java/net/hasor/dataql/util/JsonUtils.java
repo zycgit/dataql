@@ -44,6 +44,11 @@ public final class JsonUtils {
         return JSON.readTree(content);
     }
 
+    /** Converts JSON-compatible values without serializing them to text. */
+    public static <T> T convertValue(Object value, Class<T> type) {
+        return JSON.convertValue(value, type);
+    }
+
     public static String writeValueAsString(Object value) {
         return JSON.writeValueAsString(value);
     }

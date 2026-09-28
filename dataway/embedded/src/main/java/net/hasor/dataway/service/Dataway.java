@@ -30,16 +30,18 @@ public final class Dataway {
     private final WebHandler   adminUiHandler;
 
     public Dataway(DatawayConfig config) {
-        if (config.getDataAccessLayer() == null) {
+        ApiDataAccessLayer access = config.getDataAccessLayer();
+        if (access == null) {
             throw new IllegalStateException("Supply an ApiDataAccessLayer before creating Dataway");
         }
+        access.configureMapping(config.getTableMappings(), config.getFieldMappings());
 
         BeanContainer beans = new BeanContainer();
 
         // upload
         UploadStorage uploadStorage = new UploadStorage(config.getUploadTempDirectory(), config.getUploadMemoryThreshold());
         beans.setBean(UploadStorage.class, uploadStorage);
-        beans.setBean(ApiDataAccessLayer.class, config.getDataAccessLayer()); // dal
+        beans.setBean(ApiDataAccessLayer.class, access); // dal
         beans.setBean(DatawayEngine.class, this.createEngine(config, beans));// engine
 
         // identity

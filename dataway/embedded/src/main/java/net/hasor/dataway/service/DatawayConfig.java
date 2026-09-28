@@ -8,6 +8,7 @@
 package net.hasor.dataway.service;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -23,26 +24,31 @@ import net.hasor.dataql.kernel.FragmentProcess;
 import net.hasor.dataway.authorization.AuthorizationCheck;
 import net.hasor.dataway.authorization.IdentityProvider;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
+import net.hasor.dataway.dal.EntityType;
+import net.hasor.dataway.dal.FieldDef;
 import net.hasor.dataway.service.admin.AdminInterceptor;
 import net.hasor.dataway.service.script.ApiInterceptor;
 import net.hasor.dataway.web.body.UploadStorage;
 
 /** Configures shared storage, authorization, HTTP entries and the DataQL runtime. */
 public class DatawayConfig {
-    private       ApiDataAccessLayer                dataAccessLayer;
-    private       IdentityProvider                  identityProvider;
-    private       AuthorizationCheck                authorizationCheck;
-    private final List<AdminInterceptor>            adminInterceptors     = new ArrayList<>();
-    private       Path                              uploadTempDirectory;
-    private       int                               uploadMemoryThreshold = UploadStorage.DEFAULT_MEMORY_THRESHOLD;
+    private       ApiDataAccessLayer                     dataAccessLayer;
+    private final Map<EntityType, String>                tableMappings         = new EnumMap<>(EntityType.class);
+    private final Map<EntityType, Map<FieldDef, String>> fieldMappings         = new EnumMap<>(EntityType.class);
     //
-    private       Finder                            finder                = new DatawayFinder();
+    private       IdentityProvider                       identityProvider;
+    private       AuthorizationCheck                     authorizationCheck;
+    private final List<AdminInterceptor>                 adminInterceptors     = new ArrayList<>();
+    private       Path                                   uploadTempDirectory;
+    private       int                                    uploadMemoryThreshold = UploadStorage.DEFAULT_MEMORY_THRESHOLD;
     //
-    private       CustomizeScope                    customizeScope;
-    private       boolean                           resultStructure       = true;
-    private       boolean                           wrapAllParameters     = false;
-    private       String                            wrapParameterName     = "root";
-    private       String                            responseFormat        = """
+    private       Finder                                 finder                = new DatawayFinder();
+    //
+    private       CustomizeScope                         customizeScope;
+    private       boolean                                resultStructure       = true;
+    private       boolean                                wrapAllParameters     = false;
+    private       String                                 wrapParameterName     = "root";
+    private       String                                 responseFormat        = """
             {
                 "success"      : "@resultStatus",
                 "message"      : "@resultMessage",
@@ -53,12 +59,24 @@ public class DatawayConfig {
                 "value"        : "@resultData"
             }
             """;
-    private final List<Consumer<HostConfiguration>> hostCustomizers       = new ArrayList<>();
-    private final List<Consumer<QueryBuilder>>      queryCustomizers      = new ArrayList<>();
-    private final List<ApiInterceptor>              apiInterceptors       = new ArrayList<>();
+    private final List<Consumer<HostConfiguration>>      hostCustomizers       = new ArrayList<>();
+    private final List<Consumer<QueryBuilder>>           queryCustomizers      = new ArrayList<>();
+    private final List<ApiInterceptor>                   apiInterceptors       = new ArrayList<>();
 
     public DatawayConfig dataAccessLayer(ApiDataAccessLayer dataAccessLayer) {
         this.dataAccessLayer = dataAccessLayer;
+        return this;
+    }
+
+    /** Overrides the table or snapshot entity name. Unspecified entities keep their defaults. */
+    public DatawayConfig tableMapping(EntityType entityType, String tableName) {
+        this.tableMappings.put(entityType, tableName);
+        return this;
+    }
+
+    /** Overrides the storage field name within one entity without changing its logical meaning. */
+    public DatawayConfig fieldMapping(EntityType entityType, FieldDef field, String fieldName) {
+        this.fieldMappings.computeIfAbsent(entityType, type -> new EnumMap<>(FieldDef.class)).put(field, fieldName);
         return this;
     }
 
@@ -182,6 +200,14 @@ public class DatawayConfig {
     /** Lets adapters resolve host storage only when none was explicitly supplied. */
     public ApiDataAccessLayer getDataAccessLayer() {
         return this.dataAccessLayer;
+    }
+
+    Map<EntityType, String> getTableMappings() {
+        return this.tableMappings;
+    }
+
+    Map<EntityType, Map<FieldDef, String>> getFieldMappings() {
+        return this.fieldMappings;
     }
 
     public IdentityProvider getIdentityProvider() {

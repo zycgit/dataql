@@ -13,13 +13,15 @@ import java.util.*;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.exception.NacosException;
 import net.hasor.dataway.dal.*;
+import tools.jackson.databind.node.ObjectNode;
 
 /** Stores a complete metadata snapshot in one Nacos configuration using server-side CAS. */
 public class NacosDataAccessLayer implements ApiDataAccessLayer {
-    private final ConfigService configService;
-    private final String        dataId;
-    private final String        group;
-    private final long          timeoutMillis;
+    private final ConfigService   configService;
+    private final String          dataId;
+    private final String          group;
+    private final long            timeoutMillis;
+    private       SnapshotMapping mapping = new SnapshotMapping(Map.of(), Map.of());
 
     /** The caller owns the client; namespace, credentials and transport belong to that client. */
     public NacosDataAccessLayer(ConfigService configService, String dataId, String group, long timeoutMillis) {
@@ -40,9 +42,15 @@ public class NacosDataAccessLayer implements ApiDataAccessLayer {
     }
 
     @Override
+    public void configureMapping(Map<EntityType, String> tables, Map<EntityType, Map<FieldDef, String>> fields) {
+        this.mapping = new SnapshotMapping(tables, fields);
+    }
+
+    @Override
     public List<Map<FieldDef, String>> listObjects(EntityType entityType, Map<FieldDef, String> conditions) {
         NacosSnapshot.validateFields(entityType, conditions.keySet());
-        NacosSnapshot snapshot = NacosSnapshot.parse(this.load(this.dataId, this.group));
+        ObjectNode document = this.mapping.parse(this.load(this.dataId, this.group));
+        NacosSnapshot snapshot = this.mapping.read(document);
         List<Map<FieldDef, String>> result = new ArrayList<>();
         snapshot.getRecords().get(entityType).values().stream().sorted(Comparator.comparing(row -> {
             return row.get(FieldDef.ID);
@@ -68,11 +76,15 @@ public class NacosDataAccessLayer implements ApiDataAccessLayer {
         }
 
         String original = this.load(this.dataId, this.group);
-        NacosSnapshot snapshot = NacosSnapshot.parse(original);
+        ObjectNode document = this.mapping.parse(original);
+        NacosSnapshot snapshot = this.mapping.read(document);
         for (DataMutation mutation : mutations) {
             snapshot.apply(mutation);
+            if (mutation.getOperationType() == OperationType.DELETE) {
+                this.mapping.removeRecord(document, mutation.getEntityType(), mutation.getId());
+            }
         }
-        this.publish(original, snapshot);
+        this.publish(original, document, snapshot);
     }
 
     /**
@@ -82,7 +94,8 @@ public class NacosDataAccessLayer implements ApiDataAccessLayer {
     public void importLegacy(String legacyGroup) {
         requireName(legacyGroup, "legacyGroup");
         String original = this.load(this.dataId, this.group);
-        NacosSnapshot snapshot = NacosSnapshot.parse(original);
+        ObjectNode document = this.mapping.parse(original);
+        NacosSnapshot snapshot = this.mapping.read(document);
         if (snapshot.getRecords().values().stream().anyMatch(records -> !records.isEmpty())) {
             throw new DataConflictException("Legacy import requires an empty target snapshot");
         }
@@ -90,7 +103,7 @@ public class NacosDataAccessLayer implements ApiDataAccessLayer {
             snapshot.apply(mutation);
         }
 
-        this.publish(original, snapshot);
+        this.publish(original, document, snapshot);
     }
 
     public String load(String configId, String configGroup) {
@@ -101,9 +114,9 @@ public class NacosDataAccessLayer implements ApiDataAccessLayer {
         }
     }
 
-    private void publish(String original, NacosSnapshot snapshot) {
+    private void publish(String original, ObjectNode document, NacosSnapshot snapshot) {
         snapshot.setGeneration(UUID.randomUUID().toString());
-        String content = snapshot.serialize();
+        String content = this.mapping.serialize(snapshot, document);
         try {
             // Never publish without a previous digest: an unconditional write can lose concurrent changes.
             if (!configService.publishConfigCas(dataId, group, content, md5(original))) {

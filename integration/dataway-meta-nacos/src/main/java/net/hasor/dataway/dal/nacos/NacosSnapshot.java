@@ -69,7 +69,7 @@ public class NacosSnapshot {
         }
     }
 
-    private void validate() {
+    void validate() {
         if (!Integer.valueOf(1).equals(format) || generation == null || generation.isBlank()) {
             throw new IllegalArgumentException("Unsupported Nacos snapshot format");
         }

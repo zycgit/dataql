@@ -12,16 +12,15 @@ import java.util.*;
 import javax.sql.DataSource;
 import net.hasor.dataway.dal.*;
 import net.hasor.dbvisitor.jdbc.DynamicConnection;
-import net.hasor.dbvisitor.lambda.LambdaTemplate;
-import net.hasor.dbvisitor.lambda.MapQuery;
-import net.hasor.dbvisitor.lambda.MapUpdate;
+import net.hasor.dbvisitor.lambda.*;
 
 /** Legacy table storage through dbVisitor. Connection ownership and transaction boundaries are supplied by JdbcExecutor. */
 public class JdbcDataAccessLayer implements ApiDataAccessLayer {
     private final JdbcExecutor                   dbExecutor;
     private final LambdaTemplate                 lambda;
-    private final ThreadLocal<Connection>        current  = new ThreadLocal<>();
-    private final Map<EntityType, EntityMapping> mappings = new EnumMap<>(EntityType.class);
+    private final ThreadLocal<Connection>        current = new ThreadLocal<>();
+    private final String                         tablePrefix;
+    private       Map<EntityType, EntityMapping> mappings;
 
     public JdbcDataAccessLayer(DataSource source, String tablePrefix) {
         this(new LocalJdbcExecutor(source), tablePrefix);
@@ -33,9 +32,8 @@ public class JdbcDataAccessLayer implements ApiDataAccessLayer {
             throw new IllegalArgumentException("Invalid table prefix");
         }
 
-        for (EntityType entityType : EntityType.values()) {
-            mappings.put(entityType, new EntityMapping(entityType, tablePrefix));
-        }
+        this.tablePrefix = tablePrefix;
+        this.mappings = this.createMappings(Map.of(), Map.of());
 
         try {
             this.lambda = new LambdaTemplate(new DynamicConnection() {
@@ -59,13 +57,31 @@ public class JdbcDataAccessLayer implements ApiDataAccessLayer {
     }
 
     @Override
+    public void configureMapping(Map<EntityType, String> tables, Map<EntityType, Map<FieldDef, String>> fields) {
+        this.mappings = this.createMappings(tables, fields);
+    }
+
+    private Map<EntityType, EntityMapping> createMappings(Map<EntityType, String> tables, Map<EntityType, Map<FieldDef, String>> fields) {
+        Map<EntityType, EntityMapping> mappings = new EnumMap<>(EntityType.class);
+        for (EntityType type : EntityType.values()) {
+            EntityMapping mapping = new EntityMapping(type, this.tablePrefix);
+            if (tables.containsKey(type)) {
+                mapping.setTable(tables.get(type));
+            }
+            mapping.mapFields(fields.getOrDefault(type, Map.of()));
+            mappings.put(type, mapping);
+        }
+        return mappings;
+    }
+
+    @Override
     public List<Map<FieldDef, String>> listObjects(EntityType entityType, Map<FieldDef, String> conditions) {
         EntityMapping mapping = findEntityMapping(entityType);
         conditions.keySet().forEach(mapping::column);
         try {
             return execute(connection -> {
-                MapQuery query = this.lambda.queryFreedom(mapping.table());
-                query.select(mapping.columns().values().toArray(String[]::new));
+                MapQuery query = this.lambda.queryFreedom(mapping.getCatalog(), mapping.getSchema(), mapping.getTable());
+                query.select(mapping.getColumns().values().toArray(String[]::new));
                 conditions.forEach((field, value) -> {
                     if (value == null) {
                         query.isNull(mapping.column(field));
@@ -77,7 +93,7 @@ public class JdbcDataAccessLayer implements ApiDataAccessLayer {
                 query.orderBy(mapping.column(FieldDef.ID));
                 return query.queryForList((rs, row) -> {
                     Map<FieldDef, String> values = new EnumMap<>(FieldDef.class);
-                    for (var entry : mapping.columns().entrySet()) {
+                    for (var entry : mapping.getColumns().entrySet()) {
                         values.put(entry.getKey(), rs.getString(entry.getValue()));
                     }
                     return values;
@@ -187,12 +203,13 @@ public class JdbcDataAccessLayer implements ApiDataAccessLayer {
             values.put(mapping.column(field), value);
         });
 
-        return this.lambda.insertFreedom(mapping.table()).applyMap(values).executeSumResult();
+        MapInsert insert = this.lambda.insertFreedom(mapping.getCatalog(), mapping.getSchema(), mapping.getTable());
+        return insert.applyMap(values).executeSumResult();
     }
 
     private int update(EntityMapping mapping, DataMutation mutation) throws SQLException {
         String revisionColumn = mapping.column(FieldDef.REVISION);
-        MapUpdate update = this.lambda.updateFreedom(mapping.table()) //
+        MapUpdate update = this.lambda.updateFreedom(mapping.getCatalog(), mapping.getSchema(), mapping.getTable()) //
                 .eq(mapping.column(FieldDef.ID), mutation.getId())  //
                 .eq(revisionColumn, mutation.getVersion())          //
                 .updateTo(revisionColumn, Math.addExact(mutation.getVersion(), 1));
@@ -205,7 +222,8 @@ public class JdbcDataAccessLayer implements ApiDataAccessLayer {
     }
 
     private int delete(EntityMapping mapping, DataMutation mutation) throws SQLException {
-        return this.lambda.deleteFreedom(mapping.table())                      //
+        MapDelete delete = this.lambda.deleteFreedom(mapping.getCatalog(), mapping.getSchema(), mapping.getTable());
+        return delete                                                        //
                 .eq(mapping.column(FieldDef.ID), mutation.getId())           //
                 .eq(mapping.column(FieldDef.REVISION), mutation.getVersion())//
                 .doDelete();
