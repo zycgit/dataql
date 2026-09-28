@@ -68,7 +68,7 @@ class NacosMetadataTest {
             context.refresh();
             var apis = context.getBean(Dataway.class).getAdminService().list();
             if (mapped) {
-                assertEquals("sample", apis.getFirst().getId());
+                assertEquals("sample", apis.get(0).getId());
             } else {
                 assertTrue(apis.isEmpty());
             }

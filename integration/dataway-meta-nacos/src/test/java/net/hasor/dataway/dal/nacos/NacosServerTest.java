@@ -93,9 +93,13 @@ class NacosServerTest {
             CyclicBarrier barrier = new CyclicBarrier(2);
             var a = new NacosDataAccessLayer(synchronizeRead(first, barrier), dataId, group, 5000);
             var b = new NacosDataAccessLayer(synchronizeRead(second, barrier), dataId, group, 5000);
-            try (var workers = Executors.newFixedThreadPool(2)) {
+            var workers = Executors.newFixedThreadPool(2);
+            try {
                 var results = workers.invokeAll(List.of(write(a, "one"), write(b, "two")));
                 assertNotEquals(results.get(0).get(), results.get(1).get());
+            } finally {
+                workers.shutdownNow();
+                assertTrue(workers.awaitTermination(5, TimeUnit.SECONDS));
             }
             assertEquals(1, new NacosDataAccessLayer(first, dataId, group, 5000).listObjects(EntityType.INFO, Map.of()).size());
         } finally {

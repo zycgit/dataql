@@ -64,7 +64,7 @@ public abstract class WebRequest implements Closeable {
         values.replaceAll((name, entries) -> Collections.unmodifiableList(entries));
         values.forEach((name, entries) -> {
             if (!entries.isEmpty()) {
-                first.put(name, entries.getFirst());
+                first.put(name, entries.get(0));
             }
         });
         this.headerValues = Collections.unmodifiableMap(values);

@@ -205,7 +205,7 @@ public class WebUdfSource extends AbstractUdfSource {
 
     private Object first(Map<?, ?> source, Object name) {
         List<?> values = this.values(source, name);
-        return values.isEmpty() ? null : values.getFirst();
+        return values.isEmpty() ? null : values.get(0);
     }
 
     private Map<String, Object> firstValues(Map<?, ?> source) {
@@ -213,7 +213,7 @@ public class WebUdfSource extends AbstractUdfSource {
         source.forEach((name, value) -> {
             List<?> values = value instanceof List<?> list ? list : List.of(value);
             if (!values.isEmpty()) {
-                first.put(name.toString(), values.getFirst());
+                first.put(name.toString(), values.get(0));
             }
         });
 

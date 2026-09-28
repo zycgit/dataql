@@ -49,6 +49,7 @@ public abstract class WebResponse {
     private void changeHeader(String name, String value, boolean append) {
         this.requireOpen();
         validateHeader(name, value);
+
         this.changes.add(new HeaderChange(name, value, append));
     }
 
@@ -62,6 +63,7 @@ public abstract class WebResponse {
         if (name == null || !name.matches("[!#$%&'*+.^_`|~0-9A-Za-z-]+")) {
             throw new IllegalArgumentException("Invalid header name");
         }
+
         for (int i = 0; i < value.length(); i++) {
             char ch = value.charAt(i);
             if (ch == 127 || ch < 32 && ch != '\t') {
@@ -74,10 +76,12 @@ public abstract class WebResponse {
         this.requireOpen();
         headers.forEach(WebResponse::validateHeader);
         this.started = true;
+
         headers.forEach((name, value) -> this.writeHeader(name, value, StringUtils.equalsIgnoreCase(name, "Set-Cookie")));
         for (HeaderChange change : this.changes) {
             this.writeHeader(change.name(), change.value(), change.append());
         }
+
         OutputStream output = this.openBody(status);
         return this.head ? OutputStream.nullOutputStream() : output;
     }

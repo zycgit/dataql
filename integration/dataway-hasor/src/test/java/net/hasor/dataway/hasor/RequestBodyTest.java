@@ -36,7 +36,7 @@ class RequestBodyTest {
             assertSame(body, request.readBody());
             assertEquals("测试", body.get("title"));
             List<?> files = assertInstanceOf(List.class, body.get("file"));
-            file = assertInstanceOf(WebFile.class, files.getFirst());
+            file = assertInstanceOf(WebFile.class, files.get(0));
             assertEquals("../one.bin", file.getName());
             assertEquals("application/octet-stream", file.getContentType());
             assertArrayEquals("\u0000binary".getBytes(StandardCharsets.UTF_8), file.openStream().readAllBytes());

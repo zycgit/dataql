@@ -114,7 +114,8 @@ class DatawayPluginTest {
             a.router().get("/dataway/host-route", ctx -> ctx.output("host-nested"));
         });
 
-        try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()) {
+        try {
+            HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
             assertSame(service, app.context().getBean(Dataway.class));
             assertNull(app.context().getBean(BeanContainer.class));
             assertSame(dataway, app.context().getBean(Dataway.class));
@@ -230,7 +231,8 @@ class DatawayPluginTest {
                 a.router().get("/open/v2-other", ctx -> ctx.output("host-boundary"));
                 a.router().get("/tools/console/host-route", ctx -> ctx.output("host-nested"));
             });
-            try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()) {
+            try {
+                HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
                 String base = "http://127.0.0.1:" + port + "/host";
                 Dataway core = app.context().getBean(Dataway.class);
                 if (api || admin || docs) {
@@ -288,7 +290,8 @@ class DatawayPluginTest {
         int port = availablePort();
         JdbcDataSource source = dataSource();
         var builder = new DatawayConfig().dataAccessLayer(new JdbcDataAccessLayer(source, ""));
-        try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()) {
+        try {
+            HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
             var app = Solon.start(DatawayPluginTest.class, new String[] { "--cfg=configured/app.properties", "--server.port=" + port, "--server.contextPath=/host" }, a -> a.pluginAdd(0, new DatawayPlugin(builder)));
             Dataway dataway = app.context().getBean(Dataway.class);
             assertNotNull(dataway.getApiHandler());
@@ -341,7 +344,8 @@ class DatawayPluginTest {
                 var builder = new DatawayConfig().configureHost(host -> {
                     throw new AssertionError("Disabled entries must not initialize a runtime");
                 });
-                try (HttpClient client = HttpClient.newHttpClient()) {
+                try {
+                    HttpClient client = HttpClient.newHttpClient();
                     var app = Solon.start(DatawayPluginTest.class, args.toArray(String[]::new), a -> {
                         a.pluginAdd(0, new DatawayPlugin(builder));
                         a.router().get("/api/hello", request -> request.output("host-api"));
@@ -370,7 +374,8 @@ class DatawayPluginTest {
         try {
             for (boolean enabled : new boolean[] { true, false }) {
                 int port = availablePort();
-                try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()) {
+                try {
+                    HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
                     var app = Solon.start(DatawayPluginTest.class, new String[] { "--cfg=configured/app.properties", "--server.port=" + port, "--server.contextPath=/host", "--dataway.api-enabled=" + enabled, "--dataway.admin-enabled=" + enabled, "--dataway.docs-enabled=" + enabled }, a -> a.pluginAdd(0, new DatawayPlugin(new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer()))));
                     Dataway dataway = app.context().getBean(Dataway.class);
 
@@ -409,7 +414,8 @@ class DatawayPluginTest {
             for (String contextPath : new String[] { "", "/tenant/host" }) {
                 int port = availablePort();
                 var builder = new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer());
-                try (HttpClient client = HttpClient.newHttpClient()) {
+                try {
+                    HttpClient client = HttpClient.newHttpClient();
                     Solon.start(DatawayPluginTest.class, new String[] { "--server.port=" + port, "--server.contextPath=" + contextPath, "--dataway.api-enabled=true", "--dataway.admin-enabled=true", "--dataway.api-prefix=/v1.0", "--dataway.admin-prefix=/ops/manage.v2", "--dataway.admin-ui=/console.v2" }, app -> app.pluginAdd(0, new DatawayPlugin(builder)));
                     String origin = "http://127.0.0.1:" + port;
                     var page = get(client, origin + contextPath + "/console.v2/", null);

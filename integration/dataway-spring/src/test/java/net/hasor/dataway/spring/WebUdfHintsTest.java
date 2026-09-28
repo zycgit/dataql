@@ -99,10 +99,14 @@ class WebUdfHintsTest {
                     return null;
                 });
             }
-            try (var executor = Executors.newFixedThreadPool(4)) {
+            var executor = Executors.newFixedThreadPool(4);
+            try {
                 for (var result : executor.invokeAll(requests, 30, TimeUnit.SECONDS)) {
                     result.get();
                 }
+            } finally {
+                executor.shutdownNow();
+                assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
             }
         });
     }

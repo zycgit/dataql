@@ -110,7 +110,7 @@ class LegacyStorageTest {
         assertEquals(8, ((Number) this.executePublished(service, "i_old", Map.of("value", 8))).intValue());
         service.getAdminService().publish("i_old", 2);
         assertEquals(10, ((Number) this.executePublished(service, "i_old", Map.of("value", 9))).intValue());
-        var active = access.listObjects(EntityType.RELEASE, Map.of(API_ID, "i_old", STATUS, "1")).getFirst();
+        var active = access.listObjects(EntityType.RELEASE, Map.of(API_ID, "i_old", STATUS, "1")).get(0);
         assertEquals("SELECT :value + 1", active.get(SCRIPT));
         assertEquals(before.get(OPTION), active.get(OPTION));
         assertEquals(2, service.getAdminService().getHistoryByApi("i_old").size());

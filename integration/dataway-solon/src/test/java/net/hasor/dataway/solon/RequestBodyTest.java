@@ -60,7 +60,8 @@ class RequestBodyTest {
                 }
             });
         });
-        try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()) {
+        try {
+            HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
             String multipart = "--upload\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\nbody\r\n" + "--upload\r\nContent-Disposition: form-data; name=\"tag\"\r\n\r\na\r\n" + "--upload\r\nContent-Disposition: form-data; name=\"tag\"\r\n\r\nb\r\n" + "--upload\r\nContent-Disposition: form-data; name=\"file\"; filename=\"test.txt\"\r\nContent-Type: text/plain\r\n\r\nhello\r\n--upload--\r\n";
             HttpRequest request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/upload?trace=query")).timeout(Duration.ofSeconds(10)).header("Content-Type", "multipart/form-data; boundary=upload").POST(HttpRequest.BodyPublishers.ofString(multipart)).build();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
@@ -109,7 +110,7 @@ class RequestBodyTest {
             assertSame(body, request.readBody());
             assertEquals("form", body.get("name"));
             List<?> files = assertInstanceOf(List.class, body.get("files"));
-            file = assertInstanceOf(WebFile.class, files.getFirst());
+            file = assertInstanceOf(WebFile.class, files.get(0));
             assertEquals("first.bin", file.getName());
             assertEquals(bytes.length, file.getSize());
             assertArrayEquals(bytes, file.openStream().readAllBytes());

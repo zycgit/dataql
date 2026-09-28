@@ -112,7 +112,7 @@ public final class DatawayPlugin implements Plugin {
             throw new IllegalStateException("Expected one ApiDataAccessLayer bean; found " + beans.size() + "; configure dataway.metadata.bean");
         }
 
-        return beans.getFirst();
+        return beans.get(0);
     }
 
     private void register(AppContext context, String prefix, WebHandler handler, List<String> paths) {

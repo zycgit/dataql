@@ -17,7 +17,7 @@ final class DatawayMapping extends MappingDef {
     private final List<MappingDef> mappings;
 
     DatawayMapping(BindInfo<DatawayController> controller, List<String> paths) {
-        super(0, controller, paths.getFirst(), method -> true);
+        super(0, controller, paths.get(0), method -> true);
         this.mappings = paths.stream().map(path -> {
             return new MappingDef(0, controller, path, method -> true);
         }).toList();

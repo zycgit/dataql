@@ -9,6 +9,7 @@ package net.hasor.dataway.dal.jdbc;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import net.hasor.dataway.TestDatabase;
 import net.hasor.dataway.TestWebRequest;
 import net.hasor.dataway.TestWebResponse;
@@ -78,8 +79,8 @@ class JdbcDataAccessLayerTest {
         assertFalse(created.isPublished());
         assertFalse(created.isEnabled());
         assertTrue(created.isHasDraft());
-        assertNull(service.list().getFirst().getScript());
-        assertEquals("/one", service.list().getFirst().getPath());
+        assertNull(service.list().get(0).getScript());
+        assertEquals("/one", service.list().get(0).getPath());
         assertEquals("return 'original';", service.getDraftByApi("one").getScript());
         assertNull(service.getReleaseByApi("one"));
         assertTrue(service.getHistoryByApi("one").isEmpty());
@@ -92,7 +93,7 @@ class JdbcDataAccessLayerTest {
         var first = service.getReleaseByApi("one");
         assertEquals(first, service.getHistoryById(first.getId()));
         assertEquals(first, service.getReleaseById(first.getId()));
-        assertEquals(first, service.getHistoryByApi("one").getFirst());
+        assertEquals(first, service.getHistoryByApi("one").get(0));
 
         var changed = service.save(this.api("one", "/one", "return 'changed';"), 2);
         assertEquals("one", changed.getApiID());
@@ -136,12 +137,16 @@ class JdbcDataAccessLayerTest {
         var a = new Dataway(runtime.dataAccessLayer(first));
         var b = new Dataway(runtime.dataAccessLayer(new JdbcDataAccessLayer(source, "")));
         a.getAdminService().save(api("one", "/hello", "return 1;"), 0);
-        try (var pool = Executors.newFixedThreadPool(2)) {
+        var pool = Executors.newFixedThreadPool(2);
+        try {
             CountDownLatch start = new CountDownLatch(1);
             var x = pool.submit(() -> publish(start, a));
             var y = pool.submit(() -> publish(start, b));
             start.countDown();
             assertNotEquals(x.get(), y.get());
+        } finally {
+            pool.shutdownNow();
+            assertTrue(pool.awaitTermination(5, TimeUnit.SECONDS));
         }
         assertEquals(2, a.getAdminService().getApiById("one").getRevision());
         assertEquals(1, a.getAdminService().getHistoryByApi("one").size());

@@ -6,6 +6,8 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.web;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import net.hasor.dataway.authorization.Operation;
@@ -26,11 +28,12 @@ public final class ApiHistoryListController extends AbstractApiController {
         return this.executeService(() -> {
             String id = this.id(this.query(request), body);
             ApiState state = this.adminService.getApiById(id);
-            List<ApiRelease> history = this.adminService.getHistoryByApi(id);
+            List<ApiRelease> history = new ArrayList<>(this.adminService.getHistoryByApi(id));
             ApiRelease published = this.adminService.getReleaseByApi(id);
 
             this.checkVersion(id, state.getRevision());
-            return ResultInfoUtils.buildSuccess(history.reversed().stream().map(release -> {
+            Collections.reverse(history);
+            return ResultInfoUtils.buildSuccess(history.stream().map(release -> {
                 int status = state.isEnabled() && published != null && release.getId().equals(published.getId()) ? 1 : 3;
                 return ConvertUtils.convertToApiHistoryVO(release, status);
             }).toList());

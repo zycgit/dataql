@@ -337,13 +337,16 @@ class NacosDataAccessLayerTest {
         var first = this.access(server, mapped);
         var second = this.access(server, mapped);
         server.reads = new CyclicBarrier(2);
-        try (var workers = Executors.newFixedThreadPool(2)) {
+        var workers = Executors.newFixedThreadPool(2);
+        try {
             Callable<Boolean> one = () -> create(first, "one");
             Callable<Boolean> two = () -> create(second, "two");
             var results = workers.invokeAll(List.of(one, two));
             assertNotEquals(results.get(0).get(), results.get(1).get());
         } finally {
             server.reads = null;
+            workers.shutdownNow();
+            assertTrue(workers.awaitTermination(5, TimeUnit.SECONDS));
         }
         assertEquals(1, first.listObjects(EntityType.INFO, Map.of()).size());
     }
@@ -413,7 +416,7 @@ class NacosDataAccessLayerTest {
         oneApi.setScript("return 42;");
         oneApi.setDescription("说明");
         service.getAdminService().save(oneApi, 0);
-        assertNull(service.getAdminService().list().getFirst().getScript());
+        assertNull(service.getAdminService().list().get(0).getScript());
         assertTrue(service.getAdminService().getApiById("one").isHasDraft());
         service.getAdminService().publish("one", 1);
         var publication = service.getAdminService().getReleaseByApi("one");
@@ -425,7 +428,7 @@ class NacosDataAccessLayerTest {
         restarted.getApiHandler().handle(new TestWebRequest("GET", "/one", Map.of()), response);
         Map<?, ?> apiResult = (Map<?, ?>) response.getResult();
         assertEquals(42, ((Number) apiResult.get("value")).intValue());
-        assertEquals("return 42;", server.access().listObjects(EntityType.RELEASE, Map.of()).getFirst().get(SCRIPT));
+        assertEquals("return 42;", server.access().listObjects(EntityType.RELEASE, Map.of()).get(0).get(SCRIPT));
         assertFalse(server.configs.get("test/store").contains("SCRIPT_ORI"));
         var disabled = restarted.getAdminService().disableApi("one", 2);
         assertFalse(disabled.isEnabled());

@@ -21,7 +21,7 @@ subprojects {
             failOnError = false
         }
         tasks.withType(Test).configureEach {
-            useJUnit()
+            useJUnitPlatform()
             jvmArgs '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
                     '--add-opens', 'java.base/java.lang.reflect=ALL-UNNAMED',
                     '--add-opens', 'java.base/java.io=ALL-UNNAMED',

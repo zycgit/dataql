@@ -88,12 +88,11 @@ class SolonTransactionTest {
                 dataway.getAdminService().save(api, 0);
                 dataway.getAdminService().publish("one", 1);
             });
-            try (var client = HttpClient.newHttpClient()) {
-                var request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/api/one")).GET().build();
-                var response = client.send(request, HttpResponse.BodyHandlers.ofString());
-                assertEquals(200, response.statusCode());
-                assertEquals(1, JsonUtils.readTree(response.body()).get("value").intValue());
-            }
+            var client = HttpClient.newHttpClient();
+            var request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/api/one")).GET().build();
+            var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, response.statusCode());
+            assertEquals(1, JsonUtils.readTree(response.body()).get("value").intValue());
         } finally {
             Solon.stopBlock(false, 0);
         }

@@ -43,7 +43,7 @@ class UploadStorageTest {
             if (length > 8) {
                 List<Path> paths = this.files(cache);
                 assertEquals(1, paths.size());
-                assertArrayEquals(content, Files.readAllBytes(paths.getFirst()));
+                assertArrayEquals(content, Files.readAllBytes(paths.get(0)));
             } else {
                 assertFalse(Files.exists(cache));
             }

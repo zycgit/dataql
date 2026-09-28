@@ -94,7 +94,7 @@ public class AdminServiceImpl implements AdminService {
         if (active != null) {
             return active;
         }
-        return releases.isEmpty() ? null : releases.getLast();
+        return releases.isEmpty() ? null : releases.get(releases.size() - 1);
     }
 
     private List<Map<FieldDef, String>> releases(String apiID) {
@@ -285,7 +285,7 @@ public class AdminServiceImpl implements AdminService {
         ApiDefinition draft = this.definition(info, false);
         long publishedAt = System.currentTimeMillis();
         if (!releases.isEmpty()) {
-            publishedAt = Math.max(publishedAt, Long.parseLong(releases.getLast().get(RELEASE_TIME)) + 1);
+            publishedAt = Math.max(publishedAt, Long.parseLong(releases.get(releases.size() - 1).get(RELEASE_TIME)) + 1);
         }
 
         Map<FieldDef, String> snapshot = this.definitionFields(draft);

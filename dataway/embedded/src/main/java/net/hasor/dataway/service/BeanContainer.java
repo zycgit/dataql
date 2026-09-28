@@ -36,7 +36,7 @@ public class BeanContainer {
             throw new IllegalStateException("Expected one bean of type " + type.getName() + "; found " + values.size());
         }
 
-        return type.cast(values.getFirst());
+        return type.cast(values.get(0));
     }
 
     /** Returns an immutable snapshot in registration order; absent types return an empty list. */

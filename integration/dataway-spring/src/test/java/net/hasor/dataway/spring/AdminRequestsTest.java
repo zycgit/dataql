@@ -93,7 +93,7 @@ class AdminRequestsTest {
             assertFalse(summary.has("codeInfo"));
             assertEquals(0, summary.get("status").intValue());
             assertEquals(1, summary.get("version").longValue());
-            assertNull(dataway.getAdminService().list().getFirst().getScript());
+            assertNull(dataway.getAdminService().list().get(0).getScript());
 
             JsonNode detail = this.request(mvc, get("/dataway/api/api-detail").queryParam("id", apiID)).get("result");
             JsonNode info = this.request(mvc, get("/dataway/api/api-info").queryParam("id", apiID)).get("result");
@@ -295,7 +295,7 @@ class AdminRequestsTest {
             assertTrue(dataway.getAdminService().getApiById(apiID).isEnabled());
             assertEquals(2, dataway.getAdminService().getVersionById(apiID));
             this.error(mvc, this.action("delete", apiID, 2), 401);
-            assertEquals(Operation.DISABLE, calls.getLast());
+            assertEquals(Operation.DISABLE, calls.get(calls.size() - 1));
             assertEquals(6, calls.size());
         });
     }

@@ -49,7 +49,7 @@ class RequestBodyTest {
                 }
             });
             assertEquals(1, files.size());
-            assertArrayEquals(content, assertDoesNotThrow(() -> Files.readAllBytes(files.getFirst())));
+            assertArrayEquals(content, assertDoesNotThrow(() -> Files.readAllBytes(files.get(0))));
             throw stop;
         });
         Dataway dataway = config.createDataway();
@@ -186,7 +186,7 @@ class RequestBodyTest {
             assertSame(body, request.readBody());
             assertEquals("form", body.get("title"));
             List<?> files = assertInstanceOf(List.class, body.get("file"));
-            first = assertInstanceOf(WebFile.class, files.getFirst());
+            first = assertInstanceOf(WebFile.class, files.get(0));
             assertEquals("first.bin", first.getName());
             assertEquals(3, first.getSize());
             assertArrayEquals(new byte[] { 0, -1, 2 }, first.openStream().readAllBytes());

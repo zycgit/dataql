@@ -347,7 +347,7 @@ class DatawayAutoConfigurationTest {
         assertEquals("@unknown", first.get("text"));
         Map<?, ?> literal = (Map<?, ?>) first.get("literal");
         List<?> items = (List<?>) literal.get("items");
-        ((Map<?, ?>) items.getFirst()).clear();
+        ((Map<?, ?>) items.get(0)).clear();
         items.clear();
         literal.clear();
 
@@ -551,65 +551,64 @@ class DatawayAutoConfigurationTest {
                 assertEquals(1, rows.getInt(1));
             }
             String base = "http://127.0.0.1:" + application.getWebServer().getPort() + "/host";
-            try (HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()) {
-                assertEquals("spring", JsonUtils.readTree(get(client, base + "/open/v2/hello", "native-user").body()).get("value").asText());
-                var binary = client.send(HttpRequest.newBuilder(URI.create(base + "/open/v2/hello?download=true")).header("X-Test-User", "native-user").build(), HttpResponse.BodyHandlers.ofByteArray());
-                assertEquals(200, binary.statusCode());
-                assertEquals("application/pdf", binary.headers().firstValue("Content-Type").orElseThrow());
-                ApiDefinition cookiesApi = new ApiDefinition();
-                cookiesApi.setId("cookies");
-                cookiesApi.setMethod("GET");
-                cookiesApi.setPath("/cookies");
-                cookiesApi.setType(ApiScriptType.DATA_QL);
-                cookiesApi.setScript("""
-                        import 'net.hasor.dataway.function.WebUdfSource' as w;
-                        var a = w.setHeader('X-Result', 'first');
-                        var b = w.addHeader('X-Result', 'second');
-                        var c = w.setCookie('one', '1');
-                        var d = w.setCookie('two', '2', {'httpOnly': true});
-                        return {'headers': w.headerArray('X-Repeat'), 'cookies': w.cookieArray('id')};
-                        """);
-                cookiesApi.setDescription("");
-                dataway.getAdminService().save(cookiesApi, 0);
-                dataway.getAdminService().publish("cookies", 1);
-                var cookies = client.send(HttpRequest.newBuilder(URI.create(base + "/open/v2/cookies"))//
-                        .header("X-Test-User", "native-user").header("X-Repeat", "one").header("X-Repeat", "two")//
-                        .header("Cookie", "id=first; id=second").build(), HttpResponse.BodyHandlers.ofString());
-                assertEquals(200, cookies.statusCode());
-                assertEquals(List.of("first", "second"), cookies.headers().allValues("X-Result"));
-                assertEquals(List.of("one=1; Path=/", "two=2; Path=/; HttpOnly"), cookies.headers().allValues("Set-Cookie"));
-                var cookieBody = JsonUtils.readTree(cookies.body()).get("value");
-                assertEquals("one", cookieBody.get("headers").get(0).asText());
-                assertEquals("two", cookieBody.get("headers").get(1).asText());
-                assertEquals("first", cookieBody.get("cookies").get(0).asText());
-                assertEquals("second", cookieBody.get("cookies").get(1).asText());
+            HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
+            assertEquals("spring", JsonUtils.readTree(get(client, base + "/open/v2/hello", "native-user").body()).get("value").asText());
+            var binary = client.send(HttpRequest.newBuilder(URI.create(base + "/open/v2/hello?download=true")).header("X-Test-User", "native-user").build(), HttpResponse.BodyHandlers.ofByteArray());
+            assertEquals(200, binary.statusCode());
+            assertEquals("application/pdf", binary.headers().firstValue("Content-Type").orElseThrow());
+            ApiDefinition cookiesApi = new ApiDefinition();
+            cookiesApi.setId("cookies");
+            cookiesApi.setMethod("GET");
+            cookiesApi.setPath("/cookies");
+            cookiesApi.setType(ApiScriptType.DATA_QL);
+            cookiesApi.setScript("""
+                    import 'net.hasor.dataway.function.WebUdfSource' as w;
+                    var a = w.setHeader('X-Result', 'first');
+                    var b = w.addHeader('X-Result', 'second');
+                    var c = w.setCookie('one', '1');
+                    var d = w.setCookie('two', '2', {'httpOnly': true});
+                    return {'headers': w.headerArray('X-Repeat'), 'cookies': w.cookieArray('id')};
+                    """);
+            cookiesApi.setDescription("");
+            dataway.getAdminService().save(cookiesApi, 0);
+            dataway.getAdminService().publish("cookies", 1);
+            var cookies = client.send(HttpRequest.newBuilder(URI.create(base + "/open/v2/cookies"))//
+                    .header("X-Test-User", "native-user").header("X-Repeat", "one").header("X-Repeat", "two")//
+                    .header("Cookie", "id=first; id=second").build(), HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, cookies.statusCode());
+            assertEquals(List.of("first", "second"), cookies.headers().allValues("X-Result"));
+            assertEquals(List.of("one=1; Path=/", "two=2; Path=/; HttpOnly"), cookies.headers().allValues("Set-Cookie"));
+            var cookieBody = JsonUtils.readTree(cookies.body()).get("value");
+            assertEquals("one", cookieBody.get("headers").get(0).asText());
+            assertEquals("two", cookieBody.get("headers").get(1).asText());
+            assertEquals("first", cookieBody.get("cookies").get(0).asText());
+            assertEquals("second", cookieBody.get("cookies").get(1).asText());
 
-                assertArrayEquals(new byte[] { 0, 1, (byte) 255 }, binary.body());
-                assertEquals(401, get(client, base + "/ops/manage/api-list", null).statusCode());
-                assertEquals(200, get(client, base + "/ops/manage/api-list", "native-user").statusCode());
-                var page = get(client, base + "/tools/console/", "native-user");
-                assertEquals(200, page.statusCode());
-                assertEquals(200, get(client, base + "/tools/console/assets/app.js", "native-user").statusCode());
-                var redirect = get(client, base + "/tools/console", "native-user");
-                assertEquals(308, redirect.statusCode());
-                assertEquals("console/", redirect.headers().firstValue("Location").orElseThrow());
-                assertEquals(3, uiRequests.get());
-                assertEquals(401, get(client, base + "/tools/console/host-route", null).statusCode());
-                assertEquals(3, uiRequests.get(), "Host authentication runs before resource lookup");
-                assertEquals(404, get(client, base + "/tools/console/host-route", "native-user").statusCode());
-                assertEquals(4, uiRequests.get(), "The UI handler rejects a missing resource after authentication");
-                assertEquals(404, get(client, base + "/tools/console-other", null).statusCode());
-                assertEquals(404, get(client, base + "/host-route", null).statusCode());
-                assertEquals(4, uiRequests.get(), "Paths outside the UI prefix must not reach the handler");
-                assertEquals(401, get(client, base + "/tools/console/assets/app.css", null).statusCode());
-                assertEquals(4, uiRequests.get(), "Resource denial must happen before the custom handler");
+            assertArrayEquals(new byte[] { 0, 1, (byte) 255 }, binary.body());
+            assertEquals(401, get(client, base + "/ops/manage/api-list", null).statusCode());
+            assertEquals(200, get(client, base + "/ops/manage/api-list", "native-user").statusCode());
+            var page = get(client, base + "/tools/console/", "native-user");
+            assertEquals(200, page.statusCode());
+            assertEquals(200, get(client, base + "/tools/console/assets/app.js", "native-user").statusCode());
+            var redirect = get(client, base + "/tools/console", "native-user");
+            assertEquals(308, redirect.statusCode());
+            assertEquals("console/", redirect.headers().firstValue("Location").orElseThrow());
+            assertEquals(3, uiRequests.get());
+            assertEquals(401, get(client, base + "/tools/console/host-route", null).statusCode());
+            assertEquals(3, uiRequests.get(), "Host authentication runs before resource lookup");
+            assertEquals(404, get(client, base + "/tools/console/host-route", "native-user").statusCode());
+            assertEquals(4, uiRequests.get(), "The UI handler rejects a missing resource after authentication");
+            assertEquals(404, get(client, base + "/tools/console-other", null).statusCode());
+            assertEquals(404, get(client, base + "/host-route", null).statusCode());
+            assertEquals(4, uiRequests.get(), "Paths outside the UI prefix must not reach the handler");
+            assertEquals(401, get(client, base + "/tools/console/assets/app.css", null).statusCode());
+            assertEquals(4, uiRequests.get(), "Resource denial must happen before the custom handler");
 
-            }
         }
     }
 
     private static PropertySource<?> configuration(String resource) throws IOException {
-        var source = new YamlPropertySourceLoader().load("dataway-test", new ClassPathResource(resource)).getFirst();
+        var source = new YamlPropertySourceLoader().load("dataway-test", new ClassPathResource(resource)).get(0);
         var properties = assertInstanceOf(EnumerablePropertySource.class, source);
         Set<String> expectedKeys = Set.of("dataway.api-enabled", "dataway.api-prefix", "dataway.admin-enabled", "dataway.admin-prefix", "dataway.admin-ui", "dataway.docs-enabled", "dataway.docs-prefix", "dataway.metadata.bean");
         assertEquals(expectedKeys, Set.of(properties.getPropertyNames()));
