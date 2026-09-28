@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.util.JsonUtils;
+import net.hasor.dataway.authorization.IdentityProvider;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.model.ResultInfo;
 import net.hasor.dataway.model.WebRequest;
@@ -19,14 +20,10 @@ import net.hasor.dataway.model.WebResponse;
 
 /** Resolves request identity and writes entry results while preserving host exception handling. */
 public abstract class WebHandler {
-    private final Dataway dataway;
+    private final IdentityProvider identityProvider;
 
-    protected WebHandler(Dataway dataway) {
-        this.dataway = dataway;
-    }
-
-    public final Dataway getDataway() {
-        return this.dataway;
+    protected WebHandler(BeanContainer beans) {
+        this.identityProvider = beans.getBean(IdentityProvider.class);
     }
 
     /** Relative paths; a trailing /* denotes a subtree. The host adds its configured prefix. */
@@ -38,7 +35,7 @@ public abstract class WebHandler {
     public final void handle(WebRequest request, WebResponse response) throws Exception {
         response.prepare(request);
 
-        UserIdentity identity = this.dataway.getIdentityProvider().resolve(request);
+        UserIdentity identity = this.identityProvider.resolve(request);
         request.setIdentity(Objects.requireNonNull(identity, "IdentityProvider returned null"));
         ResultInfo result = this.handleRequest(request, response);
         Object data = result.getData();

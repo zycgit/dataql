@@ -30,6 +30,7 @@ import net.hasor.dataql.parser.ast.value.NameRouteVariable;
 import net.hasor.dataql.util.JsonUtils;
 import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ApiScriptType;
+import net.hasor.dataway.service.BeanContainer;
 import net.hasor.dataway.service.DatawayException;
 
 /** Creates Dataway queries with the configured host, query customizers and defaults. */
@@ -43,16 +44,11 @@ public class DatawayEngine {
     private       boolean                      wrapAllParameters;
     private       String                       wrapParameterName;
 
-    DatawayEngine(HostContext hostContext, CustomizeScope customizeScope, //
-            List<ApiInterceptor> interceptors, List<Consumer<QueryBuilder>> customizers) {
-        this.queryManager = new QueryManager(hostContext);
-        this.customizeScope = customizeScope;
-        this.interceptors = interceptors;
+    public DatawayEngine(BeanContainer beans, List<Consumer<QueryBuilder>> customizers) {
+        this.queryManager = new QueryManager(beans.getBean(HostContext.class));
+        this.customizeScope = beans.getBean(CustomizeScope.class);
+        this.interceptors = beans.getBeans(ApiInterceptor.class);
         this.customizers = customizers;
-    }
-
-    public HostContext getHostContext() {
-        return this.queryManager.getHostContext();
     }
 
     public void setResponseFormat(String responseFormat) {
@@ -86,7 +82,7 @@ public class DatawayEngine {
         this.customizers.forEach(c -> c.accept(builder));
         ApiScriptType type = definition.getType();
         QIL compiled;
-        if (type == ApiScriptType.DATAQL) {
+        if (type == ApiScriptType.DATA_QL) {
             compiled = builder.compilerQuery(definition.getScript());
         } else {
             if (wrapAllParameters) {
@@ -140,30 +136,30 @@ public class DatawayEngine {
 
     private boolean readResultStructure(Map<String, Object> options) {
         Object structureOption = options.getOrDefault("resultStructure", this.resultStructure);
-        if (!(structureOption instanceof Boolean resultStructure)) {
+        if (!(structureOption instanceof Boolean r)) {
             throw new DatawayException(400, "resultStructure must be a boolean");
         }
-        return resultStructure;
+        return r;
     }
 
     private boolean readWrapAllParameters(Map<String, Object> options) {
         Object wrapOption = options.getOrDefault("wrapAllParameters", this.wrapAllParameters);
-        if (!(wrapOption instanceof Boolean wrapAllParameters)) {
+        if (!(wrapOption instanceof Boolean r)) {
             throw new DatawayException(400, "wrapAllParameters must be a boolean");
         }
-        return wrapAllParameters;
+        return r;
     }
 
     private String readWrapParameterName(Map<String, Object> options) {
         Object wrapperOption = options.getOrDefault("wrapParameterName", this.wrapParameterName);
-        if (!(wrapperOption instanceof String wrapParameterName)) {
+        if (!(wrapperOption instanceof String r)) {
             throw new DatawayException(400, "wrapParameterName must be a string");
         }
 
-        wrapParameterName = wrapParameterName.trim();
-        if (!wrapParameterName.matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
+        r = r.trim();
+        if (!r.matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
             throw new DatawayException(400, "Invalid parameter wrapper name");
         }
-        return wrapParameterName;
+        return r;
     }
 }

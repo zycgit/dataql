@@ -25,7 +25,7 @@ public interface ApiDataAccessLayer {
 
     /**
      * Entries are created through this access layer. Implementations validate them before writing.
-     * Callers must not modify entries while write is running.
+     * Callers must not modify the list or its entries while write is running.
      * Apply all mutations atomically and in order, or apply none. When joining a host transaction,
      * final commit/rollback belongs to the host; failure must roll back or mark rollback-only.
      * CREATE starts at revision 1;

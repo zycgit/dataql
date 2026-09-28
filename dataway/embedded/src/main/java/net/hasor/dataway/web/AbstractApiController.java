@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.web;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -14,14 +13,13 @@ import java.util.concurrent.Callable;
 import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.model.ResultInfo;
-import net.hasor.dataway.model.ResultInfoUtils;
 import net.hasor.dataway.model.WebRequest;
 import net.hasor.dataway.model.WebResponse;
 import net.hasor.dataway.service.DatawayException;
 import net.hasor.dataway.service.HttpSupport;
 import net.hasor.dataway.service.admin.AdminService;
-
-/** Shared parameter handling and responses for the console APIs. */
+s
+/** Shared parameter handling and service invocation for the console APIs. */
 public abstract class AbstractApiController {
     protected final AdminService adminService;
     private final   Operation    operation;
@@ -66,23 +64,23 @@ public abstract class AbstractApiController {
         return action.call();
     }
 
+    /** Checks that independently loaded response parts still belong to the same API revision. */
+    protected void checkVersion(String apiID, long version) {
+        if (this.adminService.getVersionById(apiID) != version) {
+            throw new DatawayException(409, "API changed; reload and retry");
+        }
+    }
+
     protected String id(Map<String, String> query, Map<String, Object> body) {
         String id = query.getOrDefault("id", Objects.toString(body.get("id"), null));
         if (body.containsKey("id") && !Objects.equals(id, body.get("id"))) {
             throw new DatawayException(400, "Conflicting API ids");
         }
+
         if (id == null || id.isBlank()) {
             throw new DatawayException(400, "id is required");
         }
         return id;
-    }
-
-    protected ResultInfo result(Object value) {
-        return ResultInfoUtils.buildSuccess(value);
-    }
-
-    protected ResultInfo result(Object value, long version) {
-        return ResultInfoUtils.buildSuccess(value, version);
     }
 
     protected long version(Map<String, Object> body) {
@@ -97,10 +95,10 @@ public abstract class AbstractApiController {
     /** Scripts see the simulated business body, never the management command or editor contents. */
     protected Map<String, ?> executionRequest(Map<String, ?> request, Map<String, Object> parameters) {
         Map<String, Object> metadata = new LinkedHashMap<>(request);
-        Map<String, Object> input = Collections.unmodifiableMap(new LinkedHashMap<>(parameters));
+        Map<String, Object> input = new LinkedHashMap<>(parameters);
+
         metadata.put("parameters", input);
         metadata.put("body", input);
-        return Collections.unmodifiableMap(metadata);
+        return metadata;
     }
-
 }

@@ -13,7 +13,9 @@ import net.hasor.dataway.model.ApiRelease;
 import net.hasor.dataway.model.ApiState;
 import net.hasor.dataway.model.ResultInfo;
 import net.hasor.dataway.model.WebResponse;
+import net.hasor.dataway.service.ConvertUtils;
 import net.hasor.dataway.service.DatawayException;
+import net.hasor.dataway.service.ResultInfoUtils;
 import net.hasor.dataway.service.admin.AdminService;
 
 /** GET /get-history. Loads a release belonging to the selected API. */
@@ -26,16 +28,19 @@ public final class ApiHistoryGetController extends AbstractApiController {
     protected ResultInfo execute(Map<String, String> query, Map<String, Object> body, UserIdentity identity, Map<String, ?> request, WebResponse response) throws Exception {
         return this.executeService(() -> {
             String id = this.id(query, body);
-            ApiState state = this.adminService.historyState(id, this.getOperation(), identity, request, response);
-            String releaseId = query.get("historyId");
+            ApiState state = this.adminService.getApiById(id);
+            String historyID = query.get("historyId");
+            if (historyID == null || historyID.isBlank()) {
+                throw new DatawayException(404, "Release not found");
+            }
 
-            ApiRelease release = state.getHistory().stream().filter(item -> {
-                return item.getId().equals(releaseId);
-            }).findFirst().orElseThrow(() -> {
-                return new DatawayException(404, "Release not found");
-            });
+            ApiRelease release = this.adminService.getHistoryById(historyID);
+            if (!id.equals(release.getDefinition().getId())) {
+                throw new DatawayException(404, "Release not found");
+            }
 
-            return this.result(ConvertUtils.detail(release.getDefinition(), state.getRevision(), ConvertUtils.status(state)));
+            this.checkVersion(id, state.getRevision());
+            return ResultInfoUtils.buildSuccess(ConvertUtils.convertToApiDetailVO(release.getDefinition(), state));
         });
     }
 }

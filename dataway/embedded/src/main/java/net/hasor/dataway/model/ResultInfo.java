@@ -9,7 +9,7 @@ package net.hasor.dataway.model;
 import java.util.Map;
 import java.util.TreeMap;
 
-/** Mutable response data with construction helpers provided by ResultInfoUtils. */
+/** Mutable response data containing HTTP status, headers, content and encoding mode. */
 public class ResultInfo {
     private int                 status  = 200;
     private Map<String, String> headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);

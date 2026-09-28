@@ -5,7 +5,7 @@
  * See the LICENSE.txt file for the full license.
  * https://www.apache.org/licenses/LICENSE-2.0
  */
-package net.hasor.dataway.service.script;
+package net.hasor.dataway.service;
 import net.hasor.cobble.loader.ResourceLoader;
 import net.hasor.dataql.kernel.Finder;
 import net.hasor.dataql.kernel.FragmentProcess;

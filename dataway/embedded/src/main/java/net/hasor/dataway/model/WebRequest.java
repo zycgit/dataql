@@ -53,7 +53,7 @@ public abstract class WebRequest {
             values.computeIfAbsent(key, ignored -> new ArrayList<>()).addAll(entries);
         });
         Map<String, String> first = new LinkedHashMap<>();
-        values.replaceAll((name, entries) -> List.copyOf(entries));
+        values.replaceAll((name, entries) -> Collections.unmodifiableList(entries));
         values.forEach((name, entries) -> {
             if (!entries.isEmpty()) {
                 first.put(name, entries.getFirst());
@@ -87,8 +87,7 @@ public abstract class WebRequest {
                 cookies.computeIfAbsent(name, ignored -> new ArrayList<>()).add(value);
             }
         }
-        cookies.replaceAll((name, values) -> List.copyOf(values));
-        return Collections.unmodifiableMap(cookies);
+        return cookies;
     }
 
     public String getMethod() {

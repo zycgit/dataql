@@ -69,8 +69,7 @@ public class WebUdfSource extends AbstractUdfSource {
             }
         });
 
-        values.replaceAll((name, items) -> List.copyOf(items));
-        return Collections.unmodifiableMap(values);
+        return values;
     }
 
     @UdfName("setHeader")
@@ -218,7 +217,7 @@ public class WebUdfSource extends AbstractUdfSource {
             }
         });
 
-        return Collections.unmodifiableMap(first);
+        return first;
     }
 
     private List<?> values(Map<?, ?> source, Object name) {
@@ -229,14 +228,14 @@ public class WebUdfSource extends AbstractUdfSource {
 
         if (source.containsKey(key)) {
             Object value = source.get(key);
-            return value instanceof List<?> list ? List.copyOf(list) : List.of(value);
+            return value instanceof List<?> list ? list : List.of(value);
         }
 
         for (var entry : source.entrySet()) {
             String candidate = entry.getKey().toString();
             if (StringUtils.equalsIgnoreCase(key, candidate)) {
                 Object value = entry.getValue();
-                return value instanceof List<?> list ? List.copyOf(list) : List.of(value);
+                return value instanceof List<?> list ? list : List.of(value);
             }
         }
 

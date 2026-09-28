@@ -5,7 +5,7 @@
  * See the LICENSE.txt file for the full license.
  * https://www.apache.org/licenses/LICENSE-2.0
  */
-package net.hasor.dataway.service.script;
+package net.hasor.dataway.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,13 +19,23 @@ import net.hasor.dataql.host.QueryBuilder;
 import net.hasor.dataql.kernel.CustomizeScope;
 import net.hasor.dataql.kernel.Finder;
 import net.hasor.dataql.kernel.FragmentProcess;
+import net.hasor.dataway.authorization.AuthorizationCheck;
+import net.hasor.dataway.authorization.IdentityProvider;
+import net.hasor.dataway.dal.ApiDataAccessLayer;
+import net.hasor.dataway.service.admin.AdminInterceptor;
+import net.hasor.dataway.service.script.ApiInterceptor;
 
-/** Configures host lookups, loaders and script extensions for a Dataway runtime. */
+/** Configures shared storage, authorization, HTTP entries and the DataQL runtime. */
 public class DatawayConfig {
-
+    private       ApiDataAccessLayer                dataAccessLayer;
+    private       IdentityProvider                  identityProvider;
+    private       AuthorizationCheck                authorizationCheck;
+    private final List<AdminInterceptor>            adminInterceptors = new ArrayList<>();
+    //
     private       Finder                            finder;
     private       ResourceLoader                    resourceLoader;
     private       ClassLoader                       classLoader;
+    //
     private       CustomizeScope                    customizeScope;
     private       boolean                           resultStructure   = true;
     private       boolean                           wrapAllParameters = false;
@@ -43,7 +53,27 @@ public class DatawayConfig {
             """;
     private final List<Consumer<HostConfiguration>> hostCustomizers   = new ArrayList<>();
     private final List<Consumer<QueryBuilder>>      queryCustomizers  = new ArrayList<>();
-    private final List<ApiInterceptor>              interceptors      = new ArrayList<>();
+    private final List<ApiInterceptor>              apiInterceptors   = new ArrayList<>();
+
+    public DatawayConfig dataAccessLayer(ApiDataAccessLayer dataAccessLayer) {
+        this.dataAccessLayer = dataAccessLayer;
+        return this;
+    }
+
+    public DatawayConfig identityProvider(IdentityProvider provider) {
+        this.identityProvider = provider;
+        return this;
+    }
+
+    public DatawayConfig authorizationCheck(AuthorizationCheck check) {
+        this.authorizationCheck = check;
+        return this;
+    }
+
+    public DatawayConfig adminInterceptor(AdminInterceptor interceptor) {
+        this.adminInterceptors.add(interceptor);
+        return this;
+    }
 
     public DatawayConfig finder(Finder finder) {
         this.finder = finder;
@@ -95,8 +125,8 @@ public class DatawayConfig {
         return this;
     }
 
-    public DatawayConfig interceptor(ApiInterceptor interceptor) {
-        this.interceptors.add(interceptor);
+    public DatawayConfig apiInterceptor(ApiInterceptor interceptor) {
+        this.apiInterceptors.add(interceptor);
         return this;
     }
 
@@ -105,6 +135,7 @@ public class DatawayConfig {
     }
 
     public DatawayConfig library(String namespace, Map<String, Udf> functions) {
+        // Keep registered functions stable when the source is loaded later.
         Map<String, Udf> copy = Map.copyOf(functions);
         return this.importSource(namespace, () -> (UdfSource) f -> () -> copy);
     }
@@ -117,26 +148,73 @@ public class DatawayConfig {
         return this.configureHost(h -> h.addFragment(name, provider));
     }
 
+    /** Creates Dataway with the current configuration. */
+    public Dataway createDataway() {
+        return new Dataway(this);
+    }
+
+    //
+    //
     //
 
-    /** Creates a Dataway engine with its own configured host. */
-    public DatawayEngine createEngine() {
-        Finder finder = this.finder;
-        if (finder != null && (this.resourceLoader != null || this.classLoader != null)) {
-            finder = new DatawayFinder(finder, this.resourceLoader, this.classLoader);
-        }
+    /** Lets adapters resolve host storage only when none was explicitly supplied. */
+    public ApiDataAccessLayer getDataAccessLayer() {
+        return this.dataAccessLayer;
+    }
 
-        HostConfiguration host = finder == null ? new HostConfiguration(this.resourceLoader, this.classLoader) : new HostConfiguration(finder);
-        this.hostCustomizers.forEach(c -> c.accept(host));
-        CustomizeScope scope = this.customizeScope;
-        if (scope == null) {
-            scope = symbol -> Map.of();
-        }
-        DatawayEngine engine = new DatawayEngine(host, scope, this.interceptors, this.queryCustomizers);
-        engine.setResponseFormat(this.responseFormat);
-        engine.setResultStructure(this.resultStructure);
-        engine.setWrapAllParameters(this.wrapAllParameters);
-        engine.setWrapParameterName(this.wrapParameterName);
-        return engine;
+    public IdentityProvider getIdentityProvider() {
+        return this.identityProvider;
+    }
+
+    public AuthorizationCheck getAuthorizationCheck() {
+        return this.authorizationCheck;
+    }
+
+    public List<AdminInterceptor> getAdminInterceptors() {
+        return this.adminInterceptors;
+    }
+
+    public Finder getFinder() {
+        return this.finder;
+    }
+
+    public ResourceLoader getResourceLoader() {
+        return this.resourceLoader;
+    }
+
+    public ClassLoader getClassLoader() {
+        return this.classLoader;
+    }
+
+    public CustomizeScope getCustomizeScope() {
+        return this.customizeScope;
+    }
+
+    public boolean isResultStructure() {
+        return this.resultStructure;
+    }
+
+    public String getResponseFormat() {
+        return this.responseFormat;
+    }
+
+    public boolean isWrapAllParameters() {
+        return this.wrapAllParameters;
+    }
+
+    public String getWrapParameterName() {
+        return this.wrapParameterName;
+    }
+
+    public List<Consumer<HostConfiguration>> getHostCustomizers() {
+        return this.hostCustomizers;
+    }
+
+    public List<Consumer<QueryBuilder>> getQueryCustomizers() {
+        return this.queryCustomizers;
+    }
+
+    public List<ApiInterceptor> getApiInterceptors() {
+        return this.apiInterceptors;
     }
 }

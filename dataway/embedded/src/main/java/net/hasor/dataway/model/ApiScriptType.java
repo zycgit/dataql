@@ -8,13 +8,19 @@
 package net.hasor.dataway.model;
 
 public enum ApiScriptType {
-    DATAQL("dataql"),
-    SQL("sql");
+    DATA_QL("DataQL", "dataql"),
+    SQL("SQL", "sql");
 
+    private final String displayName;
     private final String typeName;
 
-    ApiScriptType(String typeName) {
+    ApiScriptType(String displayName, String typeName) {
+        this.displayName = displayName;
         this.typeName = typeName;
+    }
+
+    public String getDisplayName() {
+        return this.displayName;
     }
 
     public String getTypeName() {

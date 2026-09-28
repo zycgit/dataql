@@ -10,11 +10,11 @@ import java.io.InputStream;
 import java.util.Map;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataway.model.ResultInfo;
-import net.hasor.dataway.model.ResultInfoUtils;
 import net.hasor.dataway.model.WebRequest;
 import net.hasor.dataway.model.WebResponse;
-import net.hasor.dataway.service.Dataway;
+import net.hasor.dataway.service.BeanContainer;
 import net.hasor.dataway.service.DatawayException;
+import net.hasor.dataway.service.ResultInfoUtils;
 import net.hasor.dataway.service.WebHandler;
 
 /** Serves console files from the classpath under the host's configured UI prefix. */
@@ -33,8 +33,8 @@ public final class DatawayUiHandler extends WebHandler {
                     frame-ancestors 'none'\
                     """);
 
-    public DatawayUiHandler(Dataway dataway) {
-        super(dataway);
+    public DatawayUiHandler(BeanContainer beans) {
+        super(beans);
     }
 
     @Override
@@ -65,7 +65,7 @@ public final class DatawayUiHandler extends WebHandler {
             throw new DatawayException(404, "Asset not found");
         }
 
-        ResultInfo result = ResultInfoUtils.ofStream(this.contentType(name), stream);
+        ResultInfo result = ResultInfoUtils.convertToResultInfo(this.contentType(name), stream);
         result.getHeaders().putAll(RESOURCE_HEADERS);
         return result;
     }

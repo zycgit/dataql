@@ -11,11 +11,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /** Request identity supplied by the host. Dataway does not own authentication or sessions. */
-public class UserIdentity {
-    private static final UserIdentity   ANONYMOUS = new UserIdentity(null, false, Map.of());
-    private final        String         id;
-    private final        boolean        authenticated;
-    private final        Map<String, ?> attributes;
+public record UserIdentity(String id, boolean authenticated, Map<String, ?> attributes) {
+    private static final UserIdentity ANONYMOUS = new UserIdentity(null, false, Map.of());
 
     public UserIdentity(String id, boolean authenticated, Map<String, ?> attributes) {
         if (authenticated && (id == null || id.isBlank())) {
@@ -33,17 +30,5 @@ public class UserIdentity {
 
     public static UserIdentity authenticated(String id) {
         return new UserIdentity(id, true, Map.of());
-    }
-
-    public String getId() {
-        return this.id;
-    }
-
-    public boolean isAuthenticated() {
-        return this.authenticated;
-    }
-
-    public Map<String, ?> getAttributes() {
-        return this.attributes;
     }
 }

@@ -12,34 +12,42 @@ import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.ref.Tuple;
 import net.hasor.dataway.authorization.AuthorizationCheck;
 import net.hasor.dataway.model.ResultInfo;
-import net.hasor.dataway.model.ResultInfoUtils;
 import net.hasor.dataway.model.WebRequest;
 import net.hasor.dataway.model.WebResponse;
-import net.hasor.dataway.service.*;
+import net.hasor.dataway.service.BeanContainer;
+import net.hasor.dataway.service.DatawayException;
+import net.hasor.dataway.service.ResultInfoUtils;
+import net.hasor.dataway.service.WebHandler;
+import net.hasor.dataway.service.script.DatawayEngine;
 import net.hasor.dataway.web.*;
 
 /** Routes, authorizes and intercepts management requests before invoking the selected controller. */
-public final class DatawayAdminHandler extends AbstractWebHandler {
-    private final Map<String, Tuple> routes;
+public final class DatawayAdminHandler extends WebHandler {
+    private final Map<String, Tuple>     routes;
+    private final AuthorizationCheck     authorizationCheck;
+    private final List<AdminInterceptor> interceptors;
 
-    public DatawayAdminHandler(Dataway dataway) {
-        super(dataway);
+    public DatawayAdminHandler(BeanContainer beans) {
+        super(beans);
+        this.authorizationCheck = beans.getBean(AuthorizationCheck.class);
+        this.interceptors = beans.getBeans(AdminInterceptor.class);
+        AdminService adminService = beans.getBean(AdminService.class);
+        DatawayEngine engine = beans.getBean(DatawayEngine.class);
 
-        DatawayService service = dataway.getService();
         this.routes = Map.ofEntries(//
                 // read
-                Map.entry("/api-list", Tuple.of("GET", new ApiListController(service))),     //
-                Map.entry("/api-info", Tuple.of("GET", new ApiInfoController(service))),     //
-                Map.entry("/api-detail", Tuple.of("GET", new ApiDetailController(service))), //
-                Map.entry("/api-history", Tuple.of("GET", new ApiHistoryListController(service))), //
-                Map.entry("/get-history", Tuple.of("GET", new ApiHistoryGetController(service))),  //
+                Map.entry("/api-list", Tuple.of("GET", new ApiListController(adminService))),          //
+                Map.entry("/api-info", Tuple.of("GET", new ApiInfoController(adminService))),          //
+                Map.entry("/api-detail", Tuple.of("GET", new ApiDetailController(adminService))),      //
+                Map.entry("/api-history", Tuple.of("GET", new ApiHistoryListController(adminService))),//
+                Map.entry("/get-history", Tuple.of("GET", new ApiHistoryGetController(adminService))), //
                 // write
-                Map.entry("/save-api", Tuple.of("POST", new SaveApiController(service))),    //
-                Map.entry("/perform", Tuple.of("POST", new PerformController(service))),     //
-                Map.entry("/smoke", Tuple.of("POST", new SmokeController(service))),         //
-                Map.entry("/publish", Tuple.of("POST", new PublishController(service))),     //
-                Map.entry("/disable", Tuple.of("POST", new DisableController(service))),     //
-                Map.entry("/delete", Tuple.of("POST", new DeleteController(service))));
+                Map.entry("/save-api", Tuple.of("POST", new SaveApiController(adminService))),         //
+                Map.entry("/perform", Tuple.of("POST", new PerformController(adminService, engine))),//
+                Map.entry("/smoke", Tuple.of("POST", new SmokeController(adminService, engine))),    //
+                Map.entry("/publish", Tuple.of("POST", new PublishController(adminService))),          //
+                Map.entry("/disable", Tuple.of("POST", new DisableController(adminService))),          //
+                Map.entry("/delete", Tuple.of("POST", new DeleteController(adminService))));
     }
 
     @Override
@@ -55,22 +63,18 @@ public final class DatawayAdminHandler extends AbstractWebHandler {
         }
 
         AbstractApiController controller = route.getArg1();
-        AuthorizationCheck check = this.getDataway().getAuthorizationCheck();
-        if (!check.check(request.getIdentity(), controller.getOperation())) {
+        if (!this.authorizationCheck.check(request.getIdentity(), controller.getOperation())) {
             throw new DatawayException(401, "Unauthorized");
         }
 
-        Map<String, ?> metadata = HttpSupport.metadata(request, Map.of(), Map.of());
-        var context = new AdminInterceptorContext(null, null, controller.getOperation(), request.getIdentity(), metadata, response, Map.of());
-        List<AdminInterceptor> interceptors = this.getDataway().getActionInterceptors();
-
+        var context = new AdminInterceptorContext(null, controller.getOperation(), request.getIdentity(), Map.of());
         AdminInterceptorChain chain = () -> controller.handle(request, response);
-        for (int i = interceptors.size() - 1; i >= 0; i--) {
-            AdminInterceptor interceptor = interceptors.get(i);
+        for (int i = this.interceptors.size() - 1; i >= 0; i--) {
+            AdminInterceptor interceptor = this.interceptors.get(i);
             AdminInterceptorChain next = chain;
             chain = () -> interceptor.invoke(context, next);
         }
 
-        return ResultInfoUtils.result(chain.proceed());
+        return ResultInfoUtils.convertToResultInfo(chain.proceed());
     }
 }

@@ -6,17 +6,23 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.model;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
-/** Service view assembled from interface data and release snapshots; history is ordered oldest first. */
+/** API identity, revision and publication flags, independent of drafts and release contents. */
 public class ApiState {
-    private long             revision;
-    private ApiDefinition    draft;
-    private ApiRelease       published;
-    private boolean          enabled;
-    private List<ApiRelease> history = new ArrayList<>();
+    private String  apiID;
+    private long    revision;
+    private boolean published;
+    private boolean enabled;
+    private boolean hasDraft;
+
+    public String getApiID() {
+        return this.apiID;
+    }
+
+    public void setApiID(String apiID) {
+        this.apiID = apiID;
+    }
 
     public long getRevision() {
         return this.revision;
@@ -26,19 +32,11 @@ public class ApiState {
         this.revision = revision;
     }
 
-    public ApiDefinition getDraft() {
-        return this.draft;
-    }
-
-    public void setDraft(ApiDefinition draft) {
-        this.draft = draft;
-    }
-
-    public ApiRelease getPublished() {
+    public boolean isPublished() {
         return this.published;
     }
 
-    public void setPublished(ApiRelease published) {
+    public void setPublished(boolean published) {
         this.published = published;
     }
 
@@ -50,23 +48,13 @@ public class ApiState {
         this.enabled = enabled;
     }
 
-    public List<ApiRelease> getHistory() {
-        return this.history;
+    /** Whether the editable definition has changes that have not been published. */
+    public boolean isHasDraft() {
+        return this.hasDraft;
     }
 
-    public void setHistory(List<ApiRelease> history) {
-        this.history = history;
-    }
-
-    public String getStatus() {
-        if (this.published == null) {
-            return "DRAFT";
-        }
-
-        if (!this.enabled) {
-            return "DISABLED";
-        }
-        return Objects.equals(this.draft, this.published.getDefinition()) ? "PUBLISHED" : "MODIFIED";
+    public void setHasDraft(boolean hasDraft) {
+        this.hasDraft = hasDraft;
     }
 
     @Override
@@ -78,16 +66,16 @@ public class ApiState {
             return false;
         }
         ApiState other = (ApiState) object;
-        return this.revision == other.revision && this.enabled == other.enabled && Objects.equals(this.draft, other.draft) && Objects.equals(this.published, other.published) && Objects.equals(this.history, other.history);
+        return Objects.equals(this.apiID, other.apiID) && this.revision == other.revision && this.published == other.published && this.enabled == other.enabled && this.hasDraft == other.hasDraft;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.revision, this.draft, this.published, this.enabled, this.history);
+        return Objects.hash(this.apiID, this.revision, this.published, this.enabled, this.hasDraft);
     }
 
     @Override
     public String toString() {
-        return "ApiState[revision=" + this.revision + ", draft=" + this.draft + ", published=" + this.published + ", enabled=" + this.enabled + ", history=" + this.history + "]";
+        return "ApiState[apiID=" + this.apiID + ", revision=" + this.revision + ", published=" + this.published + ", enabled=" + this.enabled + ", hasDraft=" + this.hasDraft + "]";
     }
 }

@@ -7,7 +7,7 @@
  */
 package net.hasor.dataway.service.admin;
 
-/** Intercepts a published API call or administration action identified by its explicit operation. */
+/** Intercepts administration requests before their controller is invoked. */
 @FunctionalInterface
 public interface AdminInterceptor {
     Object invoke(AdminInterceptorContext context, AdminInterceptorChain chain) throws Exception;

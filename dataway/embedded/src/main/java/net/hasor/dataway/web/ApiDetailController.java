@@ -9,9 +9,12 @@ package net.hasor.dataway.web;
 import java.util.Map;
 import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
+import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ApiState;
 import net.hasor.dataway.model.ResultInfo;
 import net.hasor.dataway.model.WebResponse;
+import net.hasor.dataway.service.ConvertUtils;
+import net.hasor.dataway.service.ResultInfoUtils;
 import net.hasor.dataway.service.admin.AdminService;
 
 /** GET /api-detail. Loads the editor document and its current version. */
@@ -24,8 +27,10 @@ public final class ApiDetailController extends AbstractApiController {
     protected ResultInfo execute(Map<String, String> query, Map<String, Object> body, UserIdentity identity, Map<String, ?> request, WebResponse response) throws Exception {
         return this.executeService(() -> {
             String id = this.id(query, body);
-            ApiState state = this.adminService.getApiById(id, this.getOperation(), identity, request, response);
-            return this.result(ConvertUtils.detail(state.getDraft(), state.getRevision(), ConvertUtils.status(state)));
+            ApiState state = this.adminService.getApiById(id);
+            ApiDefinition draft = this.adminService.getDraftByApi(id);
+            this.checkVersion(id, state.getRevision());
+            return ResultInfoUtils.buildSuccess(ConvertUtils.convertToApiDetailVO(draft, state));
         });
     }
 }
