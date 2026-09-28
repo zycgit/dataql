@@ -24,6 +24,8 @@ import net.hasor.dataway.service.DatawayException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.boot.webmvc.autoconfigure.WebMvcAutoConfiguration;
@@ -143,6 +145,52 @@ class AdminRequestsTest {
             this.error(mvc, get("/dataway/api/api-detail").queryParam("id", apiID), 404);
             this.error(mvc, get("/dataway/api/get-history").queryParam("id", apiID).queryParam("historyId", firstID), 404);
             this.error(mvc, get("/api/sample"), 404);
+        });
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { " \t\n", "null" })
+    void emptyDocumentsSupportSavingPreviewAndSmoke(String document) {
+        Dataway dataway = new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer()).resultStructure(false).createDataway();
+        this.context.withBean(Dataway.class, () -> dataway).run(c -> {
+            var mvc = MockMvcBuilders.webAppContextSetup(c.getSourceApplicationContext()).build();
+            String value = JsonUtils.writeValueAsString(document);
+            String input = """
+                    {"id":"-1","version":0,"select":"POST","apiPath":"/empty","codeType":"DataQL",
+                     "codeValue":"return 7;","requestBody":%1$s,"sample":%1$s,"schema":%1$s,"optionInfo":%1$s}
+                    """.formatted(value);
+            JsonNode saved = this.request(mvc, post("/dataway/api/save-api").contentType("application/json").content(input));
+            String apiID = saved.get("result").stringValue();
+            JsonNode detail = this.request(mvc, get("/dataway/api/api-detail").queryParam("id", apiID)).get("result");
+            assertEquals("{}", detail.get("requestBody").stringValue());
+            assertEquals(0, detail.get("schema").size());
+            assertEquals(0, detail.get("optionData").size());
+
+            JsonNode preview = this.request(mvc, post("/dataway/api/perform").contentType("application/json").content(input));
+            assertEquals(7, preview.intValue());
+            String smoke = """
+                    {"id":"%s","version":1,"requestBody":%s}
+                    """.formatted(apiID, value);
+            JsonNode result = this.request(mvc, post("/dataway/api/smoke").contentType("application/json").content(smoke));
+            assertEquals(7, result.intValue());
+            assertEquals(1, dataway.getAdminService().getApiById(apiID).getRevision());
+        });
+    }
+
+    @ParameterizedTest
+    @CsvSource({ "requestBody,[", "requestBody,[]", "sample,[", "schema,[]", "optionInfo,1" })
+    void invalidDocumentsDoNotSaveOrExecute(String field, String document) {
+        AtomicInteger queries = new AtomicInteger();
+        Dataway dataway = new DatawayConfig().dataAccessLayer(TestDatabase.dataAccessLayer()).configureQuery(builder -> queries.incrementAndGet()).createDataway();
+        this.context.withBean(Dataway.class, () -> dataway).run(c -> {
+            var mvc = MockMvcBuilders.webAppContextSetup(c.getSourceApplicationContext()).build();
+            Map<String, Object> input = new LinkedHashMap<>(Map.of("id", "-1", "version", 0, "select", "POST", "apiPath", "/invalid", "codeType", "DataQL", "codeValue", "return 7;"));
+            input.put(field, document);
+            this.error(mvc, this.json("save-api", input), 400);
+            this.error(mvc, this.json("perform", input), 400);
+            assertTrue(dataway.getAdminService().list().isEmpty());
+            assertEquals(0, queries.get());
         });
     }
 

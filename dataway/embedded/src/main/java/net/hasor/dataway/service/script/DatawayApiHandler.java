@@ -6,6 +6,8 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.service.script;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import net.hasor.dataql.util.JsonUtils;
 import net.hasor.dataway.authorization.AuthorizationCheck;
@@ -18,7 +20,6 @@ import net.hasor.dataway.model.*;
 import net.hasor.dataway.service.*;
 import tools.jackson.databind.JsonNode;
 import static net.hasor.dataway.dal.FieldDef.*;
-import static net.hasor.dataway.service.HttpSupport.decode;
 
 /** Invokes published APIs; it exposes neither management operations nor UI assets. */
 public final class DatawayApiHandler extends WebHandler {
@@ -42,7 +43,7 @@ public final class DatawayApiHandler extends WebHandler {
 
         Map<String, Object> body = request.readBody();
         Map<String, Object> parameters = this.parameters(request, body);
-        Map<String, ?> metadata = HttpSupport.metadata(request, parameters, body);
+        Map<String, ?> metadata = ConvertUtils.convertToWebContext(request, parameters, body);
         String path = request.getPathInfo();
         String apiPath = path.isEmpty() ? "/" : path;
         ApiDefinition definition = this.findApi(request.getMethod(), apiPath);
@@ -131,5 +132,13 @@ public final class DatawayApiHandler extends WebHandler {
             throw new DatawayException(400, "requestBody must be a JSON object");
         }
         return List.copyOf(requestBody.propertyNames());
+    }
+
+    private static String decode(String value) {
+        try {
+            return URLDecoder.decode(value, StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException e) {
+            throw new DatawayException(400, "Invalid request: " + e.getMessage(), e);
+        }
     }
 }

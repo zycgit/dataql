@@ -6,6 +6,8 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.web;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -16,7 +18,6 @@ import net.hasor.dataway.model.ResultInfo;
 import net.hasor.dataway.model.WebRequest;
 import net.hasor.dataway.model.WebResponse;
 import net.hasor.dataway.service.DatawayException;
-import net.hasor.dataway.service.HttpSupport;
 import net.hasor.dataway.service.admin.AdminService;
 
 /** Shared parameter handling and service invocation for the console APIs. */
@@ -47,8 +48,8 @@ public abstract class AbstractApiController {
         if (request.getQuery() != null && !request.getQuery().isBlank()) {
             for (String pair : request.getQuery().split("&")) {
                 String[] parts = pair.split("=", 2);
-                String key = HttpSupport.decode(parts[0]);
-                String value = parts.length == 2 ? HttpSupport.decode(parts[1]) : "";
+                String key = decode(parts[0]);
+                String value = parts.length == 2 ? decode(parts[1]) : "";
                 if (result.putIfAbsent(key, value) != null) {
                     throw new DatawayException(400, "Duplicate query parameter: " + key);
                 }
@@ -56,6 +57,14 @@ public abstract class AbstractApiController {
         }
 
         return result;
+    }
+
+    private static String decode(String value) {
+        try {
+            return URLDecoder.decode(value, StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException e) {
+            throw new DatawayException(400, "Invalid request: " + e.getMessage(), e);
+        }
     }
 
     /** Executes the selected service callback; failures belong to the host exception handlers. */

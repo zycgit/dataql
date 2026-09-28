@@ -16,7 +16,6 @@ import net.hasor.dataway.model.ResultInfo;
 import net.hasor.dataway.model.WebRequest;
 import net.hasor.dataway.model.WebResponse;
 import net.hasor.dataway.service.ConvertUtils;
-import net.hasor.dataway.service.HttpSupport;
 import net.hasor.dataway.service.ResultInfoUtils;
 import net.hasor.dataway.service.admin.AdminService;
 import net.hasor.dataway.service.script.DatawayEngine;
@@ -37,13 +36,13 @@ public final class PerformController extends AbstractApiController {
             String id = this.id(this.query(request), body);
             ApiDefinition definition = ConvertUtils.convertToApiDefinition(id, body);
 
-            Map<String, Object> parameters = HttpSupport.parameters(body.getOrDefault("requestBody", Map.of()));
+            Map<String, Object> parameters = ConvertUtils.convertToApiParameters(body.get("requestBody"));
             List<String> parameterNames = List.copyOf(parameters.keySet());
-            Map<String, Object> options = HttpSupport.document(definition.getOptions());
+            Map<String, Object> options = ConvertUtils.convertToApiParameters(definition.getOptions());
             DatawayQuery query = this.engine.newQuery(definition, parameterNames, options);
 
             Map<String, Object> input = new LinkedHashMap<>(parameters);
-            Map<String, ?> execution = HttpSupport.metadata(request, input, input);
+            Map<String, ?> execution = ConvertUtils.convertToWebContext(request, input, input);
             Object result = query.execute(this.getOperation(), identity, parameters, execution, response);
             return ResultInfoUtils.convertToResultInfo(result);
         });
