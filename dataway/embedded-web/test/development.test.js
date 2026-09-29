@@ -42,7 +42,7 @@ async function developmentServer(mode, env = {}) {
 }
 
 async function management(endpoint, {id, body, query = '', status = 200} = {}) {
-    const url = new URL('/dataway/api/' + endpoint + query, mock.origin);
+    const url = new URL('/admin/api/' + endpoint + query, mock.origin);
     if (id !== undefined) {
         url.searchParams.set('id', id);
     }
@@ -54,10 +54,10 @@ async function management(endpoint, {id, body, query = '', status = 200} = {}) {
 }
 
 test('mock serves the existing page, configuration and seeded management documents', async () => {
-    const page = await fetch(mock.origin + '/dataway/');
+    const page = await fetch(mock.origin + '/admin/');
     assert.equal(page.status, 200);
     assert.match(await page.text(), /src\/main.js/);
-    const config = await (await fetch(mock.origin + '/dataway/config.json')).json();
+    const config = await (await fetch(mock.origin + '/admin/config.json')).json();
     assert.equal(config.adminApi, 'api/');
     const list = await management('api-list');
     assert.equal(list.success, true);
@@ -128,11 +128,11 @@ test('mock enforces method/path uniqueness and validates management requests', a
     await management('missing', {status: 404});
     await management('save-api', {id: '-1', status: 405});
     await management('perform', {id: '-1', body: {...form, requestBody: '[]'}, status: 400});
-    const malformed = await fetch(mock.origin + '/dataway/api/save-api?id=-1', {
+    const malformed = await fetch(mock.origin + '/admin/api/save-api?id=-1', {
         method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{',
     });
     assert.equal(malformed.status, 400);
-    const text = await fetch(mock.origin + '/dataway/api/perform?id=-1', {method: 'POST', body: '{}'});
+    const text = await fetch(mock.origin + '/admin/api/perform?id=-1', {method: 'POST', body: '{}'});
     assert.equal(text.status, 415);
 });
 
@@ -198,7 +198,7 @@ test('proxy rewrites prefixes and preserves request bytes, credentials, cookies 
     const proxy = await developmentServer('proxy', {DATAWAY_DEV_TARGET: target,
         DATAWAY_DEV_ADMIN_PREFIX: '/app/operations/', DATAWAY_DEV_API_PREFIX: '/app/invoke'});
     t.after(() => proxy.server.close());
-    const unauthorized = await fetch(proxy.origin + '/dataway/api/api-list?filter=a%2Fb', {
+    const unauthorized = await fetch(proxy.origin + '/admin/api/api-list?filter=a%2Fb', {
         headers: {Authorization: 'Bearer test', Cookie: 'host-session=current', 'X-CSRF-Token': 'csrf'},
     });
     assert.equal(unauthorized.status, 401);
@@ -222,16 +222,16 @@ test('proxy rewrites prefixes and preserves request bytes, credentials, cookies 
     assert.equal(conflict.status, 409);
     assert.equal((await conflict.json()).message, 'Conflict from backend');
     await fetch(proxy.origin + '/api-extra', {redirect: 'manual'});
-    await fetch(proxy.origin + '/dataway/api-extra', {headers: {Accept: 'text/plain'}});
+    await fetch(proxy.origin + '/admin/api-extra', {headers: {Accept: 'text/plain'}});
     assert.equal(received.length, 3);
     const rootProxy = await developmentServer('proxy', {DATAWAY_DEV_TARGET: target,
-        DATAWAY_DEV_ADMIN_PREFIX: '/dataway/api', DATAWAY_DEV_API_PREFIX: '/'});
+        DATAWAY_DEV_ADMIN_PREFIX: '/admin/api', DATAWAY_DEV_API_PREFIX: '/'});
     t.after(() => rootProxy.server.close());
     const root = await fetch(rootProxy.origin + '/api?tag=root');
     assert.equal(root.status, 200);
     assert.equal(received[3].url, '/?tag=root');
     await new Promise(resolve => backend.close(resolve));
-    const unavailable = await fetch(proxy.origin + '/dataway/api/api-list');
+    const unavailable = await fetch(proxy.origin + '/admin/api/api-list');
     assert.equal(unavailable.status, 502);
     assert.equal(unavailable.headers.get('x-dataway-mock'), null);
 });

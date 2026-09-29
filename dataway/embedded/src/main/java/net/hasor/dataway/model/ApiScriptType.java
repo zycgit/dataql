@@ -9,7 +9,7 @@ package net.hasor.dataway.model;
 
 public enum ApiScriptType {
     DATA_QL("DataQL", "dataql"),
-    SQL("SQL", "sql");
+    SQL("SQL", "executeSql");
 
     private final String displayName;
     private final String typeName;

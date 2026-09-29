@@ -14,12 +14,12 @@ export default defineConfig({
     webServer: [
         {
             command: 'npm run dev:mock -- --port 49182 --strictPort',
-            wait: {stdout: /http:\/\/127\.0\.0\.1:49182\/dataway\//},
+            wait: {stdout: /http:\/\/127\.0\.0\.1:49182\/admin\//},
             timeout: 60_000,
         },
         {
             command: 'npm run dev:proxy -- --port 49183 --strictPort',
-            wait: {stdout: /http:\/\/127\.0\.0\.1:49183\/dataway\//},
+            wait: {stdout: /http:\/\/127\.0\.0\.1:49183\/admin\//},
             env: {DATAWAY_DEV_TARGET: 'http://127.0.0.1:49181',
                 DATAWAY_DEV_ADMIN_PREFIX: '/gateway/operations', DATAWAY_DEV_API_PREFIX: '/gateway/invoke'},
             timeout: 60_000,

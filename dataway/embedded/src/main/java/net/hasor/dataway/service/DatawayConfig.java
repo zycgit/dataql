@@ -202,6 +202,11 @@ public class DatawayConfig {
         return this.configureHost(h -> h.addImport(name, provider));
     }
 
+    /** Registers a host attachment when Dataway is created. */
+    public <T> DatawayConfig attachment(Class<T> attachmentType, T attachment) {
+        return this.configureHost(h -> h.addAttachment(attachmentType, attachment));
+    }
+
     public DatawayConfig fragment(String name, Supplier<? extends FragmentProcess> provider) {
         return this.configureHost(h -> h.addFragment(name, provider));
     }

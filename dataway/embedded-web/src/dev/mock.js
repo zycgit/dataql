@@ -23,7 +23,7 @@ export function mockApi() {
             }
             server.config.logger.info('Dataway Mock: in-memory samples; scripts are not executed. Restart to reset.');
             server.middlewares.use((request, response, next) => {
-                if (!/^\/(?:dataway\/api|api)(?:\/|\?|$)/.test(request.url)) {
+                if (!/^\/(?:admin\/api|api)(?:\/|\?|$)/.test(request.url)) {
                     next();
                     return;
                 }
@@ -117,7 +117,7 @@ function release(draft) {
 async function handle(request, records) {
     const url = new URL(request.url, 'http://localhost');
     const body = await readBody(request);
-    if (url.pathname === '/dataway/api' || url.pathname.startsWith('/dataway/api/')) {
+    if (url.pathname === '/admin/api' || url.pathname.startsWith('/admin/api/')) {
         return management(url, request, body, records);
     }
     const path = url.pathname.slice('/api'.length) || '/';
@@ -149,7 +149,7 @@ async function readBody(request) {
 }
 
 function management(url, request, body, records) {
-    const path = url.pathname.slice('/dataway/api'.length);
+    const path = url.pathname.slice('/admin/api'.length);
     const reads = ['/api-list', '/api-info', '/api-detail', '/api-history', '/get-history'];
     const writes = ['/save-api', '/perform', '/smoke', '/publish', '/disable', '/delete'];
     if (!reads.includes(path) && !writes.includes(path)) {

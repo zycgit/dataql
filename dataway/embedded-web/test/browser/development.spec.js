@@ -8,13 +8,13 @@
 import {expect, test} from '@playwright/test';
 
 async function command(page, button, endpoint) {
-    const response = page.waitForResponse(result => result.url().includes('/dataway/api/' + endpoint));
+    const response = page.waitForResponse(result => result.url().includes('/admin/api/' + endpoint));
     await page.getByRole('button', {name: button, exact: true}).click();
     return response;
 }
 
 async function createAndPublish(page, path) {
-    await page.goto('/dataway/#/new');
+    await page.goto('/admin/#/new');
     await expect(page.locator('.code-editor[aria-label="API script"]')).toBeVisible();
     await page.getByRole('textbox', {name: 'API path', exact: true}).fill(path);
     expect((await command(page, 'Save', 'save-api')).status()).toBe(200);
@@ -48,7 +48,7 @@ test.describe('mock development', () => {
     });
 
     test('sample SQL rows and binary downloads work in the result panel', async ({page}) => {
-        await page.goto('/dataway/');
+        await page.goto('/admin/');
         await page.getByText('/mock/users', {exact: true}).click();
         const rows = page.waitForResponse(result => result.url().endsWith('/api/mock/users'));
         await page.getByRole('button', {name: 'Execute Query', exact: true}).click();
@@ -74,7 +74,7 @@ test.describe('proxy development', () => {
     test.use({baseURL: 'http://127.0.0.1:49183'});
 
     test('custom prefixes reach real Java handlers and retain host authentication', async ({page, context}) => {
-        expect((await context.request.get('/dataway/api/api-list')).status()).toBe(401);
+        expect((await context.request.get('/admin/api/api-list')).status()).toBe(401);
         await context.addCookies([{name: 'host-session', value: 'browser-test', url: 'http://127.0.0.1:49183'}]);
         await createAndPublish(page, '/browser-proxy');
         await page.getByRole('link', {name: 'Interface', exact: true}).click();

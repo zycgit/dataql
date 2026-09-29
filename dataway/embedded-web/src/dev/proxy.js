@@ -12,7 +12,7 @@ export function backendProxy(env) {
         throw new Error('DATAWAY_DEV_TARGET must be an HTTP(S) origin; put context paths in the prefix settings.');
     }
     return {
-        '^/dataway/api(?:/|\\?|$)': endpoint(target.origin, '/dataway/api', env.DATAWAY_DEV_ADMIN_PREFIX || '/dataway/api'),
+        '^/admin/api(?:/|\\?|$)': endpoint(target.origin, '/admin/api', env.DATAWAY_DEV_ADMIN_PREFIX || '/admin/api'),
         '^/api(?:/|\\?|$)': endpoint(target.origin, '/api', env.DATAWAY_DEV_API_PREFIX || '/api'),
     };
 }

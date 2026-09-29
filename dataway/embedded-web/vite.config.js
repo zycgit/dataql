@@ -22,7 +22,7 @@ export default defineConfig(async ({command, mode, isPreview}) => {
         }
     }
     return {
-        base: command === 'serve' ? '/dataway/' : './',
+        base: command === 'serve' ? '/admin/' : './',
         plugins,
         resolve: {alias: {'@': path.resolve(import.meta.dirname, 'src')}},
         build: {
