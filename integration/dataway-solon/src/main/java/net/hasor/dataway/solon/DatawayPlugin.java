@@ -19,8 +19,8 @@ import org.noear.solon.core.*;
  * Reads routing prefixes from Solon Props. Entry switches are owned by this integration.
  */
 public final class DatawayPlugin implements Plugin {
-    /** Order corresponding to Solon's @Init index; dependent initializers must use a larger index. */
-    public static final int           INITIALIZATION_INDEX = 1;
+    /** Initialization phase after ordinary dependency-based @Init ordering; consumers use a larger index. */
+    public static final int           INITIALIZATION_INDEX = 100;
     private final       DatawayConfig config;
     private final       Dataway       dataway;
 
@@ -50,6 +50,7 @@ public final class DatawayPlugin implements Plugin {
         }
 
         if (dataway == null) {
+            // Default @Init indices depend on injection depth; reserve a later phase for Dataway.
             // Solon schedules @Init(index = n) at lifecycle rank n + 1.
             context.lifecycle(INITIALIZATION_INDEX + 1, () -> {
                 if (this.config.getDataAccessLayer() == null) {
@@ -74,42 +75,33 @@ public final class DatawayPlugin implements Plugin {
             this.register(context, apiPrefix, apiHandler, apiPaths);
         }
 
-        // Admin API
-        if (adminEnabled) {
-            String adminPrefix = properties.get("admin-prefix", "/dataway/api");
-            WebHandler adminHandler = dataway.getAdminHandler();
-            List<String> adminPaths = adminHandler.paths().stream().map(path -> adminPrefix + path).toList();
-            this.register(context, adminPrefix, adminHandler, adminPaths);
-
-            // Admin UI
-            String uiPrefix = properties.get("admin-ui", "/dataway");
-            WebHandler uiHandler = dataway.getAdminUiHandler();
-            List<String> uiPaths = uiHandler.paths().stream().map(path -> uiPrefix + path).toList();
-            this.register(context, uiPrefix, uiHandler, uiPaths);
-        }
-
         // API specifications
         if (docsEnabled) {
-            String docsPrefix = properties.get("docs-prefix", "/dataway/docs");
+            String docsPrefix = properties.get("docs-prefix", "/docs");
             WebHandler docsHandler = dataway.getDocumentHandler();
             List<String> docsPaths = docsHandler.paths().stream().map(path -> docsPrefix + path).toList();
             this.register(context, docsPrefix, docsHandler, docsPaths);
         }
+
+        // Admin API and UI
+        if (adminEnabled) {
+            String adminPrefix = properties.get("admin-prefix", "/admin/api");
+            WebHandler adminHandler = dataway.getAdminHandler();
+            List<String> adminPaths = adminHandler.paths().stream().map(path -> adminPrefix + path).toList();
+            this.register(context, adminPrefix, adminHandler, adminPaths);
+
+            // Register the UI wildcard after the API and document routes.
+            String uiPrefix = properties.get("admin-ui", "/admin");
+            WebHandler uiHandler = dataway.getAdminUiHandler();
+            List<String> uiPaths = uiHandler.paths().stream().map(path -> uiPrefix + path).toList();
+            this.register(context, uiPrefix, uiHandler, uiPaths);
+        }
     }
 
     private ApiDataAccessLayer getDataAccessLayer(AppContext context) {
-        String name = context.app().cfg().getProperty("dataway.metadata.bean", "").trim();
-        if (!name.isEmpty()) {
-            Object bean = context.getBean(name);
-            if (!(bean instanceof ApiDataAccessLayer access)) {
-                throw new IllegalStateException("Missing or invalid ApiDataAccessLayer bean: " + name);
-            }
-            return access;
-        }
-
         List<ApiDataAccessLayer> beans = context.getBeansOfType(ApiDataAccessLayer.class).stream().distinct().toList();
         if (beans.size() != 1) {
-            throw new IllegalStateException("Expected one ApiDataAccessLayer bean; found " + beans.size() + "; configure dataway.metadata.bean");
+            throw new IllegalStateException("Expected one ApiDataAccessLayer bean; found " + beans.size());
         }
 
         return beans.get(0);

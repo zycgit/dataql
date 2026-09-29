@@ -1,0 +1,15 @@
+// Copyright 2015-2026 the original author or authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE.txt file for the full license.
+// https://www.apache.org/licenses/LICENSE-2.0
+hint FRAGMENT_SQL_DATA_SOURCE = "ds2"
+hint FRAGMENT_SQL_OPEN_PACKAGE = "off"
+
+var orders = @@selectSql(id)<%
+    SELECT id AS "id", person_id AS "personId", product AS "product", amount AS "amount"
+    FROM example_orders
+    WHERE person_id = #{id}
+    ORDER BY id
+%>;
+return orders(${id});

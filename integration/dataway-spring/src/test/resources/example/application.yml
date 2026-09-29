@@ -1,0 +1,32 @@
+# Standalone example; command-line properties may override these values.
+server:
+  address: 127.0.0.1
+  port: 8080
+
+dataway:
+  api-enabled: true
+  api-prefix: /api
+  admin-enabled: true
+  admin-prefix: /admin/api
+  admin-ui: /admin
+  docs-enabled: true
+  docs-prefix: /docs
+
+example:
+  jwt:
+    # Empty creates a random signing key for this application instance.
+    secret: ''
+    expiration-seconds: 900
+  database:
+    main:
+      url: jdbc:h2:mem:dataway-spring-main
+      username: sa
+      password: ''
+    ds1:
+      url: jdbc:h2:mem:dataway-spring-ds1
+      username: sa
+      password: ''
+    ds2:
+      url: jdbc:h2:mem:dataway-spring-ds2
+      username: sa
+      password: ''

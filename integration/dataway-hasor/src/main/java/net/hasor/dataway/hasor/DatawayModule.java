@@ -32,7 +32,8 @@ public final class DatawayModule implements Module {
     private final        Dataway       dataway;
 
     public DatawayModule() {
-        this(new DatawayConfig());
+        this.config = null;
+        this.dataway = null;
     }
 
     public DatawayModule(DatawayConfig config) {
@@ -58,26 +59,18 @@ public final class DatawayModule implements Module {
 
         Supplier<Dataway> provider;
         if (dataway == null) {
-            String name = settings.getString(CONFIG_PREFIX + "metadata.bean", "").trim();
-            boolean needsMetadata = this.config.getDataAccessLayer() == null;
-            Supplier<ApiDataAccessLayer> metadata = needsMetadata ? binder.getProvider(name, ApiDataAccessLayer.class) : null;
+            Supplier<DatawayConfig> configuration = this.config == null ? binder.getProvider(DatawayConfig.class) : () -> this.config;
+
+            Supplier<ApiDataAccessLayer> metadata = binder.getProvider("", ApiDataAccessLayer.class);
             var factory = Provider.of((Callable<Dataway>) () -> {
-                if (metadata != null) {
-                    this.config.dataAccessLayer(metadata.get());
+                DatawayConfig config = configuration.get();
+                if (config.getDataAccessLayer() == null) {
+                    config.dataAccessLayer(metadata.get());
                 }
-                return this.config.createDataway();
+                return config.createDataway();
             }).asSingle();
 
-            var binding = binder.bindType(Dataway.class).toProvider(factory);
-            if (needsMetadata) {
-                if (name.isEmpty()) {
-                    binding.dependsOn(ApiDataAccessLayer.class);
-                } else {
-                    binding.dependsOn(name, ApiDataAccessLayer.class);
-                }
-            }
-
-            var info = binding.asEagerSingleton().toInfo();
+            var info = binder.bindType(Dataway.class).toProvider(factory).asEagerSingleton().toInfo();
             binder.lazyLoad(context -> context.getInstance(info));
             provider = binder.getProvider(info);
         } else {
@@ -96,20 +89,20 @@ public final class DatawayModule implements Module {
             this.register(web, prefix, provider, Dataway::getApiHandler);
         }
 
-        // Admin API
-        if (adminEnabled) {
-            String prefix = settings.getString(CONFIG_PREFIX + "admin-prefix", "/dataway/api");
-            this.register(web, prefix, provider, Dataway::getAdminHandler);
-
-            // Admin UI
-            String uiPrefix = settings.getString(CONFIG_PREFIX + "admin-ui", "/dataway");
-            this.register(web, uiPrefix, provider, Dataway::getAdminUiHandler);
-        }
-
         // API specifications
         if (docsEnabled) {
-            String prefix = settings.getString(CONFIG_PREFIX + "docs-prefix", "/dataway/docs");
+            String prefix = settings.getString(CONFIG_PREFIX + "docs-prefix", "/docs");
             this.register(web, prefix, provider, Dataway::getDocumentHandler);
+        }
+
+        // Admin API and UI
+        if (adminEnabled) {
+            String prefix = settings.getString(CONFIG_PREFIX + "admin-prefix", "/admin/api");
+            this.register(web, prefix, provider, Dataway::getAdminHandler);
+
+            // Register the UI wildcard after the API and document routes.
+            String uiPrefix = settings.getString(CONFIG_PREFIX + "admin-ui", "/admin");
+            this.register(web, uiPrefix, provider, Dataway::getAdminUiHandler);
         }
     }
 

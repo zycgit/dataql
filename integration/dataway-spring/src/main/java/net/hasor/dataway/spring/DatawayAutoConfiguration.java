@@ -31,17 +31,12 @@ public class DatawayAutoConfiguration {
     @Bean
     @Lazy
     @ConditionalOnMissingBean(Dataway.class)
-    public Dataway dataway(ConfigurableListableBeanFactory beans, ObjectProvider<DatawayConfig> configurations, Environment environment) {
+    public Dataway dataway(ConfigurableListableBeanFactory beans, ObjectProvider<DatawayConfig> configurations) {
         DatawayConfig config = configurations.getIfAvailable(DatawayConfig::new);
         if (config.getDataAccessLayer() == null) {
-            config.dataAccessLayer(this.getDataAccessLayer(beans, environment));
+            config.dataAccessLayer(beans.getBean(ApiDataAccessLayer.class));
         }
         return config.createDataway();
-    }
-
-    private ApiDataAccessLayer getDataAccessLayer(ConfigurableListableBeanFactory beans, Environment environment) {
-        String name = Binder.get(environment).bind("dataway.metadata.bean", String.class).orElse("").trim();
-        return name.isEmpty() ? beans.getBean(ApiDataAccessLayer.class) : beans.getBean(name, ApiDataAccessLayer.class);
     }
 
     @Bean
@@ -54,9 +49,9 @@ public class DatawayAutoConfiguration {
 
         Dataway dataway = apiEnabled || adminEnabled || docsEnabled ? cores.getObject() : null;
         String apiPrefix = binder.bind(CONFIG_PREFIX + ".api-prefix", String.class).orElse("/api");
-        String adminPrefix = binder.bind(CONFIG_PREFIX + ".admin-prefix", String.class).orElse("/dataway/api");
-        String uiPrefix = binder.bind(CONFIG_PREFIX + ".admin-ui", String.class).orElse("/dataway");
-        String docsPrefix = binder.bind(CONFIG_PREFIX + ".docs-prefix", String.class).orElse("/dataway/docs");
+        String adminPrefix = binder.bind(CONFIG_PREFIX + ".admin-prefix", String.class).orElse("/admin/api");
+        String uiPrefix = binder.bind(CONFIG_PREFIX + ".admin-ui", String.class).orElse("/admin");
+        String docsPrefix = binder.bind(CONFIG_PREFIX + ".docs-prefix", String.class).orElse("/docs");
         return new DatawayMvcRegistrar(dataway, apiEnabled, adminEnabled, docsEnabled, apiPrefix, adminPrefix, uiPrefix, docsPrefix, mappings);
     }
 }

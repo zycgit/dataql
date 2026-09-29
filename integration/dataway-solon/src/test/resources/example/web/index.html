@@ -1,0 +1,127 @@
+<!--
+ Copyright 2015-2026 the original author or authors.
+
+ Licensed under the Apache License, Version 2.0.
+ See the LICENSE.txt file for the full license.
+ https://www.apache.org/licenses/LICENSE-2.0
+-->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dataway · Solon 示例</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="./app.css">
+    <script src="./app.js" defer></script>
+</head>
+<body>
+<header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">D</span><strong>Dataway</strong><span class="subtitle">Solon 示例</span></div>
+    <span id="login-status" class="badge" aria-live="polite">正在读取登录状态</span>
+</header>
+<main>
+    <div class="page-heading">
+        <div><h1>接口体验台</h1>
+            <p>登录后，调用已发布的 API，或前往管理控制台编辑接口。</p></div>
+        <button id="refresh-session" class="secondary" type="button">刷新登录状态</button>
+    </div>
+    <div class="workspace">
+        <aside>
+            <section class="panel" aria-labelledby="account-title">
+                <div class="panel-heading"><h2 id="account-title">账户与登录</h2><span id="account-status" class="badge" data-tone="success" hidden>已登录</span></div>
+                <p id="login-notice" class="feedback" role="alert" hidden></p>
+                <form id="login-form">
+                    <label for="username">用户名</label>
+                    <input id="username" name="username" list="accounts" value="admin" autocomplete="username" required>
+                    <datalist id="accounts">
+                        <option value="api"></option>
+                        <option value="reader"></option>
+                        <option value="admin"></option>
+                    </datalist>
+                    <label for="password">密码</label>
+                    <input id="password" name="password" type="password" value="example-password" autocomplete="current-password" required>
+                    <div class="actions">
+                        <button id="login-button" type="submit">登录</button>
+                    </div>
+                    <p class="hint">示例密码：<code>example-password</code></p>
+                    <dl class="accounts">
+                        <div>
+                            <dt>api</dt>
+                            <dd>调用 API、查看文档</dd>
+                        </div>
+                        <div>
+                            <dt>reader</dt>
+                            <dd>额外拥有后台只读权限</dd>
+                        </div>
+                        <div>
+                            <dt>admin</dt>
+                            <dd>开发管理，拥有全部权限</dd>
+                        </div>
+                    </dl>
+                </form>
+                <div id="account-details" class="identity-details" hidden>
+                    <dl>
+                        <div>
+                            <dt>当前用户</dt>
+                            <dd id="identity-name"></dd>
+                        </div>
+                        <div>
+                            <dt>身份</dt>
+                            <dd><span id="identity-role" class="badge"></span></dd>
+                        </div>
+                    </dl>
+                    <button id="logout-button" class="secondary" type="button" disabled>退出登录</button>
+                </div>
+            </section>
+            <section class="panel" aria-labelledby="entry-title">
+                <div class="panel-heading"><h2 id="entry-title">服务入口</h2></div>
+                <nav class="entry-links" aria-label="Dataway 服务入口">
+                    <a id="admin-link" href="#"><span>管理控制台<small id="admin-path">正在读取配置</small></span><span aria-hidden="true">↗</span></a>
+                    <a id="openapi-link" href="#"><span>OpenAPI 3 文档<small id="openapi-path">正在读取配置</small></span><span aria-hidden="true">↗</span></a>
+                    <a id="swagger-link" href="#"><span>Swagger 2 文档<small id="swagger-path">正在读取配置</small></span><span aria-hidden="true">↗</span></a>
+                </nav>
+                <p id="entry-notice" class="feedback" role="alert" hidden></p>
+            </section>
+        </aside>
+        <div class="api-workspace">
+            <section class="panel" aria-labelledby="request-title">
+                <div class="panel-heading"><h2 id="request-title">调用 API</h2><span class="muted">真实 HTTP 请求</span></div>
+                <form id="api-form">
+                    <div class="request-address">
+                        <div><label for="method">方法</label><select id="method">
+                            <option>POST</option>
+                            <option>GET</option>
+                            <option>PUT</option>
+                            <option>PATCH</option>
+                            <option>DELETE</option>
+                            <option>HEAD</option>
+                            <option>OPTIONS</option>
+                        </select></div>
+                        <div><label for="api-url">接口地址</label><input id="api-url" type="text" placeholder="/api/person" spellcheck="false" required></div>
+                    </div>
+                    <label for="json-body">JSON Body</label>
+                    <textarea id="json-body" spellcheck="false" aria-describedby="body-hint">{
+  "id": 1
+}</textarea>
+                    <p id="body-hint" class="hint">以 application/json 发送正文。</p>
+                    <div class="request-footer"><p id="api-hint" class="hint">已预置 person、people、orders、person-orders 接口，登录后即可调用。可在管理控制台查看和修改脚本。</p>
+                        <button id="send-button" type="submit" disabled>发送请求</button>
+                    </div>
+                </form>
+                <p id="api-notice" class="feedback" role="alert" hidden></p>
+            </section>
+            <section class="panel response-panel" aria-labelledby="response-title">
+                <div class="panel-heading"><h2 id="response-title">响应结果</h2><span id="response-status" class="badge" aria-live="polite">尚未发送</span></div>
+                <pre id="response-body" tabindex="0">请求结果将在这里显示。</pre>
+                <details>
+                    <summary>响应头</summary>
+                    <pre id="response-headers">尚无响应头</pre>
+                </details>
+            </section>
+        </div>
+    </div>
+    <footer>Dataway 嵌入 Solon · 登录由示例宿主提供，使用浏览器 Cookie 保持身份。</footer>
+</main>
+</body>
+</html>

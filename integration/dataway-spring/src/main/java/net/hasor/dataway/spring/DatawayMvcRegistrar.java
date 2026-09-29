@@ -14,20 +14,20 @@ import net.hasor.dataway.service.Dataway;
 import net.hasor.dataway.service.WebHandler;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.SmartInitializingSingleton;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 /** Registers enabled Dataway entries in the host MVC mapping. */
 public final class DatawayMvcRegistrar implements SmartInitializingSingleton {
-    private final Dataway dataway;
-    private final boolean apiEnabled;
-    private final String  apiPrefix;
-    private final boolean adminEnabled;
-    private final String  adminPrefix;
-    private final String  adminUiPrefix;
-    private final boolean docsEnabled;
-    private final String  docsPrefix;
-
+    private final Dataway                                      dataway;
+    private final boolean                                      apiEnabled;
+    private final String                                       apiPrefix;
+    private final boolean                                      adminEnabled;
+    private final String                                       adminPrefix;
+    private final String                                       adminUiPrefix;
+    private final boolean                                      docsEnabled;
+    private final String                                       docsPrefix;
     private final ObjectProvider<RequestMappingHandlerMapping> mappings;
 
     public DatawayMvcRegistrar(Dataway dataway, boolean apiEnabled, boolean adminEnabled, boolean docsEnabled,//
@@ -53,26 +53,26 @@ public final class DatawayMvcRegistrar implements SmartInitializingSingleton {
             this.register("datawayApi", apiHandler, apiPrefix, apiPaths);
         }
 
-        // Admin API
-        if (this.adminEnabled) {
-            WebHandler adminHandler = this.dataway.getAdminHandler();
-            String adminPrefix = this.adminPrefix;
-            String[] adminPaths = adminHandler.paths().stream().map(path -> adminPrefix + path).toArray(String[]::new);
-            this.register("datawayAdmin", adminHandler, adminPrefix, adminPaths);
-
-            // Admin UI
-            String uiPrefix = this.adminUiPrefix;
-            WebHandler uiHandler = this.dataway.getAdminUiHandler();
-            String[] uiPaths = uiHandler.paths().stream().map(path -> uiPrefix + path).toArray(String[]::new);
-            this.register("datawayUi", uiHandler, uiPrefix, uiPaths);
-        }
-
         // API specifications
         if (this.docsEnabled) {
             WebHandler docsHandler = this.dataway.getDocumentHandler();
             String docsPrefix = this.docsPrefix;
             String[] docsPaths = docsHandler.paths().stream().map(path -> docsPrefix + path).toArray(String[]::new);
             this.register("datawayDocs", docsHandler, docsPrefix, docsPaths);
+        }
+
+        // Admin API and UI
+        if (this.adminEnabled) {
+            WebHandler adminHandler = this.dataway.getAdminHandler();
+            String adminPrefix = this.adminPrefix;
+            String[] adminPaths = adminHandler.paths().stream().map(path -> adminPrefix + path).toArray(String[]::new);
+            this.register("datawayAdmin", adminHandler, adminPrefix, adminPaths);
+
+            // Register the UI wildcard after the API and document routes.
+            String uiPrefix = this.adminUiPrefix;
+            WebHandler uiHandler = this.dataway.getAdminUiHandler();
+            String[] uiPaths = uiHandler.paths().stream().map(path -> uiPrefix + path).toArray(String[]::new);
+            this.register("datawayUi", uiHandler, uiPrefix, uiPaths);
         }
     }
 
@@ -82,7 +82,7 @@ public final class DatawayMvcRegistrar implements SmartInitializingSingleton {
             return path.endsWith("/*") ? path.substring(0, path.length() - 2) + "/{*path}" : path;
         }).toArray(String[]::new);
 
-        var info = RequestMappingInfo.paths(patterns).mappingName(name).options(mapping.getBuilderConfiguration()).build();
+        var info = RequestMappingInfo.paths(patterns).methods(RequestMethod.values()).mappingName(name).options(mapping.getBuilderConfiguration()).build();
         try {
             var method = DatawayController.class.getMethod("handle", HttpServletRequest.class, HttpServletResponse.class);
             mapping.registerMapping(info, new DatawayController(prefix, handler), method);

@@ -31,6 +31,7 @@ public class LocalJdbcExecutor implements JdbcExecutor {
                 throw failure;
             }
         }
+
         try (Connection connection = this.source.getConnection()) {
             if (!connection.getAutoCommit()) {
                 throw new SQLException("Standalone context requires an independent auto-commit connection");

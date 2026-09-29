@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Copyright 2015-2026 the original author or authors.
+
+ Licensed under the Apache License, Version 2.0.
+ See the LICENSE.txt file for the full license.
+ https://www.apache.org/licenses/LICENSE-2.0
+-->
+<config xmlns="https://www.hasor.net/sechma/main">
+    <hasor.loadPackages>net.hasor.dataway.hasor.example</hasor.loadPackages>
+    <hasor.boot.web.connectors.http.host>127.0.0.1</hasor.boot.web.connectors.http.host>
+    <hasor.boot.web.connectors.http.port>8080</hasor.boot.web.connectors.http.port>
+    <hasor.boot.web.server.contextPath>/</hasor.boot.web.server.contextPath>
+
+    <dataway>
+        <api-enabled>true</api-enabled>
+        <api-prefix>/api</api-prefix>
+        <admin-enabled>true</admin-enabled>
+        <admin-prefix>/admin/api</admin-prefix>
+        <admin-ui>/admin</admin-ui>
+        <docs-enabled>true</docs-enabled>
+        <docs-prefix>/docs</docs-prefix>
+    </dataway>
+
+    <example>
+        <jwt>
+            <!-- Empty creates a random signing key for this application instance. -->
+            <secret></secret>
+            <expiration-seconds>900</expiration-seconds>
+        </jwt>
+        <database>
+            <main>
+                <url>jdbc:h2:mem:dataway-example-main</url>
+                <username>sa</username>
+                <password></password>
+            </main>
+            <ds1>
+                <url>jdbc:h2:mem:dataway-example-ds1</url>
+                <username>sa</username>
+                <password></password>
+            </ds1>
+            <ds2>
+                <url>jdbc:h2:mem:dataway-example-ds2</url>
+                <username>sa</username>
+                <password></password>
+            </ds2>
+        </database>
+    </example>
+</config>
