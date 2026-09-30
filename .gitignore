@@ -1,6 +1,7 @@
 # Build output and logs
 .gradle/
 build/
+target/
 logs/
 
 # Node.js

@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright 2015-2026 the original author or authors.
+
+  Licensed under the Apache License, Version 2.0.
+  See the LICENSE.txt file for the full license.
+  https://www.apache.org/licenses/LICENSE-2.0
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>net.hasor.example</groupId>
+    <artifactId>dataway-example-parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>dataway-spring-example</module>
+        <module>dataway-solon-example</module>
+        <module>dataway-hasor-example</module>
+    </modules>
+
+    <properties>
+        <dataway.version>4.3.0-SNAPSHOT</dataway.version>
+        <spring-boot.version>4.1.1</spring-boot.version>
+        <solon.version>4.1.0</solon.version>
+        <hasor.version>5.3.0-SNAPSHOT</hasor.version>
+        <dbvisitor.version>6.8.2-SNAPSHOT</dbvisitor.version>
+        <jackson.version>3.2.2</jackson.version>
+        <swagger-ui.version>5.32.15</swagger-ui.version>
+        <maven.compiler.release>17</maven.compiler.release>
+        <maven.compiler.parameters>true</maven.compiler.parameters>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Keep Jackson's runtime and annotations aligned with DataQL. -->
+            <dependency>
+                <groupId>tools.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- Services shared by all three applications; the host adapter is selected by each module. -->
+    <dependencies>
+        <dependency>
+            <groupId>net.hasor</groupId>
+            <artifactId>dataway-meta-jdbc</artifactId>
+            <version>${dataway.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.hasor</groupId>
+            <artifactId>dataway-meta-nacos</artifactId>
+            <version>${dataway.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.hasor</groupId>
+            <artifactId>dataql-sqlproc</artifactId>
+            <version>${dataway.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.5.250</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.13.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.13.0</version>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>${project.artifactId}</finalName>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.14.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>3.3.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>3.4.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.5.3</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>3.9.0</version>
+                    <executions>
+                        <execution>
+                            <id>swagger-ui-resources</id>
+                            <phase>generate-resources</phase>
+                            <goals>
+                                <goal>unpack</goal>
+                            </goals>
+                            <configuration>
+                                <artifactItems>
+                                    <artifactItem>
+                                        <groupId>org.webjars</groupId>
+                                        <artifactId>swagger-ui</artifactId>
+                                        <version>${swagger-ui.version}</version>
+                                        <outputDirectory>${project.build.outputDirectory}/web/swagger</outputDirectory>
+                                        <includes>**/swagger-ui.css,**/swagger-ui-bundle.js,**/swagger-ui-bundle.js.LICENSE.txt</includes>
+                                        <fileMappers>
+                                            <org.codehaus.plexus.components.io.filemappers.FlattenFileMapper/>
+                                        </fileMappers>
+                                    </artifactItem>
+                                </artifactItems>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

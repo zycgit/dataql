@@ -1,0 +1,17 @@
+# Local example metadata storage. Ports are only exposed on the loopback interface.
+services:
+  nacos:
+    image: nacos/nacos-server:v3.1.2
+    environment:
+      MODE: standalone
+      NACOS_AUTH_ENABLE: "false"
+      NACOS_AUTH_TOKEN: "ZGF0YXdheS1leGFtcGxlLWxvY2FsLW5hY29zLXNpZ25pbmcta2V5LTIwMjY="
+      NACOS_AUTH_IDENTITY_KEY: dataway-example
+      NACOS_AUTH_IDENTITY_VALUE: local-development
+      JVM_XMS: 256m
+      JVM_XMX: 512m
+      JVM_XMN: 128m
+    ports:
+      - "127.0.0.1:8848:8848"
+      - "127.0.0.1:9848:9848"
+      - "127.0.0.1:18080:8080"
