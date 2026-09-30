@@ -16,4 +16,7 @@ description = 'Nacos metadata storage extension for Dataway.'
 dependencies {
     api project(':dataway-embedded')
     api 'com.alibaba.nacos:nacos-client:3.1.2'
+
+    // for test
+    testImplementation 'org.mockito:mockito-core:5.23.0'
 }

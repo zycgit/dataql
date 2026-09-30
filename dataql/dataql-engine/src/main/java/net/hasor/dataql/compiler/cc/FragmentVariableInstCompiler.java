@@ -14,7 +14,7 @@ import net.hasor.dataql.parser.ast.value.FragmentVariable.FragmentParam;
 import static net.hasor.dataql.compiler.qil.CompilerContext.ContainsIndex;
 
 /**
- * Fragment 片段（支持 `@@type(name=val, ...)<% body %>` 语法）。
+ * Compiles fragments using the {@code @@type(name=val, ...)<% body %>} syntax.
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-03-23
  */

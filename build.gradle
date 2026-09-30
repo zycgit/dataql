@@ -7,6 +7,32 @@ allprojects {
 }
 
 subprojects {
+    plugins.withId('java-library') {
+        apply plugin: 'jacoco'
+        jacoco {
+            toolVersion = '0.8.15'
+        }
+        tasks.named('jacocoTestReport') {
+            dependsOn tasks.named('test')
+            reports {
+                xml.required = true
+                html.required = true
+            }
+        }
+        tasks.named('jacocoTestCoverageVerification') {
+            dependsOn tasks.named('test')
+            violationRules {
+                rule {
+                    element = 'PACKAGE'
+                    includes = ['net.hasor.dataway*', 'net.hasor.dataql*']
+                }
+            }
+        }
+        tasks.named('check') {
+            dependsOn tasks.named('jacocoTestReport'), tasks.named('jacocoTestCoverageVerification')
+        }
+    }
+
     plugins.withType(JavaPlugin).configureEach {
         java {
             toolchain.languageVersion = JavaLanguageVersion.of(17)

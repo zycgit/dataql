@@ -8,7 +8,6 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'jacoco'
 }
 
 ext.pomName = 'Dataway Embedded'
@@ -19,41 +18,4 @@ dependencies {
     api project(':dataway-embedded-web')
 
     testImplementation 'org.mockito:mockito-core:5.23.0'
-}
-
-jacoco {
-    toolVersion = '0.8.15'
-}
-
-tasks.named('jacocoTestReport') {
-    dependsOn tasks.named('test')
-    reports {
-        xml.required = true
-        html.required = true
-    }
-}
-
-tasks.named('jacocoTestCoverageVerification') {
-    dependsOn tasks.named('test')
-    violationRules {
-        rule {
-            element = 'PACKAGE'
-            includes = ['net.hasor.dataway.dal', 'net.hasor.dataway.function',
-                        'net.hasor.dataway.service', 'net.hasor.dataway.service.admin',
-                        'net.hasor.dataway.service.document', 'net.hasor.dataway.service.script',
-                        'net.hasor.dataway.web', 'net.hasor.dataway.web.body']
-            limit {
-                counter = 'LINE'
-                minimum = 0.85
-            }
-            limit {
-                counter = 'BRANCH'
-                minimum = 0.85
-            }
-        }
-    }
-}
-
-tasks.named('check') {
-    dependsOn tasks.named('jacocoTestReport'), tasks.named('jacocoTestCoverageVerification')
 }

@@ -20,9 +20,16 @@ dependencies {
     compileOnly 'org.springframework:spring-jdbc'
 
     // for test
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation project(path: ':dataql-sqlproc', configuration: 'shadow')
+    testImplementation 'com.squareup.okhttp3:okhttp-jvm:5.3.2'
     testImplementation project(':dataway-meta-jdbc')
     testImplementation 'org.springframework:spring-jdbc'
     testImplementation 'com.h2database:h2:2.5.250'
-    testImplementation project(':dataway-meta-nacos')
+    testImplementation 'io.jsonwebtoken:jjwt-api:0.13.0'
+    testRuntimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
+}
+
+// Spring Boot initializes its logging system with the starter's Logback provider.
+configurations.testRuntimeClasspath {
+    exclude group: 'org.slf4j', module: 'slf4j-simple'
 }

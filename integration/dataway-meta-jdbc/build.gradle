@@ -16,4 +16,5 @@ dependencies {
 
     // for test
     testImplementation 'com.h2database:h2:2.5.250'
+    testImplementation 'org.mockito:mockito-core:5.23.0'
 }

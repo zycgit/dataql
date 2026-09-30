@@ -20,10 +20,12 @@ dependencies {
     compileOnly 'org.noear:solon-data:4.1.0'
 
     // for test
-    testImplementation 'org.noear:solon-test:4.1.0'
-    testRuntimeOnly 'org.noear:solon-server-smarthttp:4.1.0'
+    testImplementation project(path: ':dataql-sqlproc', configuration: 'shadow')
     testImplementation project(':dataway-meta-jdbc')
     testImplementation 'org.noear:solon-data:4.1.0'
     testImplementation 'com.h2database:h2:2.5.250'
-    testImplementation project(':dataway-meta-nacos')
+    testImplementation 'io.jsonwebtoken:jjwt-api:0.13.0'
+    testRuntimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
+    testImplementation 'org.noear:solon-server-smarthttp:4.1.0'
+    testImplementation 'com.squareup.okhttp3:okhttp-jvm:5.3.2'
 }

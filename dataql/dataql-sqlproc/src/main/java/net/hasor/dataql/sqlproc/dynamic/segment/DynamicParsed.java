@@ -28,8 +28,8 @@ public class DynamicParsed {
     };
 
     /**
-     * support like them
-     * <pre>
+     * Supported parameter syntax:
+     * <pre>{@code
      * select from user where id = ?
      * select from user where id = :id
      * select from user where id = :id.ccc['aaa'][0]
@@ -39,7 +39,7 @@ public class DynamicParsed {
      * select from user where id = #{abc}
      * select from user where id = ${abc}
      * select from user where id = @{abc,true, :name}
-     * </pre>
+     * }</pre>
      */
     public static PlanDynamicSql getParsedSql(final String originalSql) {
         PlanDynamicSql segment = new PlanDynamicSql();
@@ -52,8 +52,8 @@ public class DynamicParsed {
     }
 
     /**
-     * support like them
-     * <pre>
+     * Supported parameter syntax:
+     * <pre>{@code
      * select from user where id = ?
      * select from user where id = :id
      * select from user where id = :id.ccc['aaa'][0]
@@ -63,7 +63,7 @@ public class DynamicParsed {
      * select from user where id = #{abc}
      * select from user where id = ${abc}
      * select from user where id = @{abc,true, :name}
-     * </pre>
+     * }</pre>
      */
     public static void parsedSqlTo(final String originalSql, PlanDynamicSql segment) {
         if (segment == null) {

@@ -12,7 +12,7 @@ import net.hasor.dataql.kernel.operator.OperatorUtils;
 import net.hasor.dataql.parser.location.RuntimeLocation;
 
 /**
- * 二元比较运算，负责处理：, "&", "|", "^", "<<", ">>", ">>>"
+ * Bitwise operations: {@code &}, {@code |}, {@code ^}, {@code <<}, {@code >>}, {@code >>>}.
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-03-23
  */

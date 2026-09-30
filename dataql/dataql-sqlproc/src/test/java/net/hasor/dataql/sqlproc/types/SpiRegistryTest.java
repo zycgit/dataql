@@ -31,9 +31,9 @@ public class SpiRegistryTest {
         assert TypeHandlerRegistry.DEFAULT.getTypeHandler(Short.valueOf((short) 123).getClass()) instanceof ShortTypeHandler;
         assert TypeHandlerRegistry.DEFAULT.getTypeHandler(Integer.valueOf(123).getClass()) instanceof IntegerTypeHandler;
         assert TypeHandlerRegistry.DEFAULT.getTypeHandler(Long.valueOf(123).getClass()) instanceof LongTypeHandler;
-        assert TypeHandlerRegistry.DEFAULT.getTypeHandler(new Float(123.123f).getClass()) instanceof FloatTypeHandler;
-        assert TypeHandlerRegistry.DEFAULT.getTypeHandler(new Double(123.123f).getClass()) instanceof DoubleTypeHandler;
-        assert TypeHandlerRegistry.DEFAULT.getTypeHandler(new Date().getClass()) instanceof SqlTimestampAsDateTypeHandler;
+        assert TypeHandlerRegistry.DEFAULT.getTypeHandler(Float.valueOf(123.123f).getClass()) instanceof FloatTypeHandler;
+        assert TypeHandlerRegistry.DEFAULT.getTypeHandler(Double.valueOf(123.123f).getClass()) instanceof DoubleTypeHandler;
+        assert TypeHandlerRegistry.DEFAULT.getTypeHandler(Date.class) instanceof SqlTimestampAsDateTypeHandler;
         assert TypeHandlerRegistry.DEFAULT.getTypeHandler(Class.forName("java.sql." + "Date")) instanceof SqlDateTypeHandler;
         assert TypeHandlerRegistry.DEFAULT.getTypeHandler(Class.forName("java.sql." + "Timestamp")) instanceof SqlTimestampTypeHandler;
         assert TypeHandlerRegistry.DEFAULT.getTypeHandler(Class.forName("java.sql." + "Time")) instanceof SqlTimeTypeHandler;

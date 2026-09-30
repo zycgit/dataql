@@ -15,7 +15,7 @@ import net.hasor.dataql.parser.ast.token.StringToken;
 import net.hasor.dataql.parser.location.BlockLocation;
 
 /**
- * 外部片段调用（@@type(params)<% body %>）
+ * External fragment call: {@code @@type(params)<% body %>}.
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-03-23
  */
