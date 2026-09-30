@@ -7,7 +7,6 @@ logs/
 node_modules/
 dist/
 npm-debug.log*
-/document/package-lock.json
 
 # Console development
 /dataway/embedded-web/test-results/
@@ -17,6 +16,9 @@ npm-debug.log*
 
 # Documentation
 .docusaurus/
+/document/.deploy-venv/
+/document/__pycache__/
+/document/oss-config.json
 
 # IDE and OS files
 bin/
