@@ -7,32 +7,30 @@
  */
 import {afterEach, test} from 'node:test';
 import assert from 'node:assert/strict';
-import {baseAddress, DatawayClient, loadConfiguration, parameters, readResponse, requestHeaders} from '../src/utils/api.js';
+import {baseAddress, DatawayClient, parameters, readResponse, requestHeaders} from '../src/utils/api.js';
 import {directories, editInterface} from '../src/utils/model.js';
 const originalFetch = globalThis.fetch;
 const page = 'https://example.test/gateway/console/';
 afterEach(() => { globalThis.fetch = originalFetch; });
 
-test('public endpoints are resolved from static browser configuration under a rewritten prefix', () => {
+test('public endpoints are resolved relative to the page under a rewritten prefix', () => {
     assert.equal(baseAddress('../operations/', page, 'adminApi').href, 'https://example.test/gateway/operations/');
     for (const value of ['https://other.test/api/', '/missing-slash', '/api/?secret=1', '/api/#x', 'https://a:b@example.test/api/']) {
         assert.throws(() => baseAddress(value, page, 'adminApi'));
     }
 });
 
-test('configuration and management requests retain the host session without a Dataway login', async () => {
+test('management requests retain the host session without fetching configuration', async () => {
     const calls = [];
     globalThis.fetch = async (url, options) => {
         calls.push({url: url.href, options});
-        return Response.json(calls.length === 1 ? {adminApi: '../operations/', api: '../invoke/'} : {success: true, result: []});
+        return Response.json({success: true, result: []});
     };
-    const config = await loadConfiguration(page);
-    const client = new DatawayClient(config, page);
+    const client = new DatawayClient({adminApi: '../operations/', api: '../invoke/'}, page);
     await client.management('api-detail', {id: 'a b'});
-    assert.equal(calls[0].url, page + 'config.json');
-    assert.equal(calls[1].url, 'https://example.test/gateway/operations/api-detail?id=a+b');
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].url, 'https://example.test/gateway/operations/api-detail?id=a+b');
     assert.equal(calls[0].options.credentials, 'same-origin');
-    assert.equal(calls[1].options.credentials, 'same-origin');
 });
 
 test('version conflicts are surfaced instead of silently retrying a write', async () => {

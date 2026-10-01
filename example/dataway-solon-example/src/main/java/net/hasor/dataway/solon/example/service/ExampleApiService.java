@@ -15,7 +15,6 @@ import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ApiScriptType;
 import net.hasor.dataway.model.ApiState;
 import net.hasor.dataway.service.Dataway;
-import net.hasor.dataway.service.DatawayException;
 import net.hasor.dataway.service.admin.AdminService;
 import net.hasor.dataway.solon.DatawayPlugin;
 import org.noear.solon.annotation.Component;
@@ -32,6 +31,7 @@ public class ExampleApiService {
     @Init(index = DatawayPlugin.INITIALIZATION_INDEX + 1)
     public void initialize() throws IOException {
         this.adminService = this.dataway.getAdminService();
+        this.publish("transfer", ApiScriptType.DATA_QL, "Transfer balances using the application transaction manager", Map.of("fromId", 1, "toId", 2, "amount", 5));
         this.publish("echo", ApiScriptType.DATA_QL, "Echo a JSON request", Map.of("message", "Hello Dataway"));
         this.publish("form", ApiScriptType.DATA_QL, "Submit URL-encoded form fields", Map.of("name", "Dataway", "tag", List.of("one", "two")));
         this.publish("upload", ApiScriptType.DATA_QL, "Inspect a multipart upload", Map.of("title", "Example upload"));
@@ -71,39 +71,15 @@ public class ExampleApiService {
             case "upload" -> "multipart/form-data";
             default -> "application/json";
         };
-        definition.setSample(JsonUtils.writeValueAsString(Map.of("requestBody", parameters,
-                "requestHeader", Map.of("Content-Type", contentType))));
-        if ("upload".equals(name)) {
-            Map<String, Object> bodySchema = Map.of("type", "object", "required", List.of("file"),
-                    "properties", Map.of("title", Map.of("type", "string"),
-                            "file", Map.of("type", "string", "format", "binary")));
+        definition.setSample(JsonUtils.writeValueAsString(Map.of("requestBody", parameters, "requestHeader", Map.of("Content-Type", contentType))));
+        if ("form".equals(name)) {
+            Map<String, Object> bodySchema = Map.of("type", "object", "properties", Map.of("name", Map.of("type", "string"), "tag", Map.of("type", "array", "items", Map.of("type", "string"))));
+            definition.setSchema(JsonUtils.writeValueAsString(Map.of("requestBody", bodySchema)));
+        } else if ("upload".equals(name)) {
+            Map<String, Object> bodySchema = Map.of("type", "object", "required", List.of("file"), "properties", Map.of("title", Map.of("type", "string"), "file", Map.of("type", "string", "format", "binary")));
             definition.setSchema(JsonUtils.writeValueAsString(Map.of("requestBody", bodySchema)));
         }
         ApiState saved = this.adminService.save(definition, 0);
-        this.awaitVersion(saved.getApiID(), saved.getRevision());
-        ApiState published = this.adminService.publish(saved.getApiID(), saved.getRevision());
-        this.awaitVersion(published.getApiID(), published.getRevision());
-    }
-
-    // Nacos publication and query visibility are asynchronous; never repeat the write blindly.
-    private void awaitVersion(String apiID, long version) throws IOException {
-        for (int attempt = 0; attempt < 100; attempt++) {
-            try {
-                if (this.adminService.getVersionById(apiID) >= version) {
-                    return;
-                }
-            } catch (DatawayException error) {
-                if (error.status() != 404) {
-                    throw error;
-                }
-            }
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new IOException("Interrupted while initializing example APIs", e);
-            }
-        }
-        throw new IOException("API metadata version is not visible: " + apiID + " / " + version);
+        this.adminService.publish(saved.getApiID(), saved.getRevision());
     }
 }

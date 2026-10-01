@@ -7,8 +7,12 @@
  */
 package net.hasor.dataway.service.admin;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import net.hasor.cobble.StringUtils;
+import net.hasor.dataql.util.JsonUtils;
 import net.hasor.dataway.model.ResultInfo;
 import net.hasor.dataway.model.WebRequest;
 import net.hasor.dataway.model.WebResponse;
@@ -32,9 +36,38 @@ public final class DatawayUiHandler extends WebHandler {
                     base-uri 'self'; \
                     frame-ancestors 'none'\
                     """);
+    private              byte[]              initializer;
 
     public DatawayUiHandler(BeanContainer beans) {
         super(beans);
+    }
+
+    /** Configures browser addresses during route registration; a null API prefix disables UI invocations. */
+    public void configureAddresses(String uiPrefix, String adminPrefix, String apiPrefix) {
+        Map<String, String> options = new LinkedHashMap<>();
+        options.put("adminApi", this.relativeAddress(uiPrefix, adminPrefix));
+        if (apiPrefix != null) {
+            options.put("api", this.relativeAddress(uiPrefix, apiPrefix));
+        }
+
+        String script = "window.addEventListener('load', () => { window.DatawayUI(" + JsonUtils.writeValueAsString(options) + "); });\n";
+        this.initializer = script.getBytes(StandardCharsets.UTF_8);
+    }
+
+    private String relativeAddress(String uiPrefix, String targetPrefix) {
+        String[] base = Arrays.stream(uiPrefix.split("/")).filter(part -> !part.isEmpty()).toArray(String[]::new);
+        String[] target = Arrays.stream(targetPrefix.split("/")).filter(part -> !part.isEmpty()).toArray(String[]::new);
+        int common = 0;
+        while (common < base.length && common < target.length && base[common].equals(target[common])) {
+            common++;
+        }
+
+        StringBuilder address = new StringBuilder("../".repeat(base.length - common));
+        for (int index = common; index < target.length; index++) {
+            address.append(target[index]).append('/');
+        }
+
+        return address.isEmpty() ? "./" : address.toString();
     }
 
     @Override
@@ -60,12 +93,17 @@ public final class DatawayUiHandler extends WebHandler {
         }
 
         String name = path.equals("/") ? "index.html" : path.substring(1);
-        InputStream stream = DatawayUiHandler.class.getResourceAsStream(DEFAULT_UI_RESOURCE + name);
-        if (stream == null) {
-            throw new DatawayException(404, "Asset not found");
+        ResultInfo result;
+        if (name.equals("initializer.js") && this.initializer != null) {
+            result = ResultInfoUtils.convertToResultInfo(this.contentType(name), this.initializer);
+        } else {
+            InputStream stream = DatawayUiHandler.class.getResourceAsStream(DEFAULT_UI_RESOURCE + name);
+            if (stream == null) {
+                throw new DatawayException(404, "Asset not found");
+            }
+            result = ResultInfoUtils.convertToResultInfo(this.contentType(name), stream);
         }
 
-        ResultInfo result = ResultInfoUtils.convertToResultInfo(this.contentType(name), stream);
         result.getHeaders().putAll(RESOURCE_HEADERS);
         return result;
     }

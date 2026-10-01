@@ -20,9 +20,11 @@ import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /** The primary database stores metadata; ds1 and ds2 contain independent business data. */
 @Configuration(proxyBeanMethods = false)
+@EnableTransactionManagement
 public class DatabaseConfiguration {
     @Bean(destroyMethod = "dispose")
     @Primary
@@ -94,6 +96,7 @@ public class DatabaseConfiguration {
     public PlatformTransactionManager ds2TransactionManager(@Qualifier("ds2") DataSource source) {
         return new DataSourceTransactionManager(source);
     }
+
     @Bean
     public UserService users(DataSource source) {
         return new UserService(source);

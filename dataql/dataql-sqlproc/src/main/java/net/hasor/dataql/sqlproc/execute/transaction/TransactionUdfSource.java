@@ -74,18 +74,9 @@ public class TransactionUdfSource extends AbstractUdfSource {
         String sourceName = SqlHintNames.getValue(hints, SqlHintNames.FRAGMENT_SQL_DATA_SOURCE);
         Isolation isolation = this.resolveIsolation(hints);
 
-        TransactionManager txManager = this.findTransactionConnectionProvider().findTransactionManager(sourceName);
-        TransactionStatus status = txManager.begin(hints, propagation, isolation);
-        try {
-            return udf.call(hints, () -> ArrayUtils.EMPTY_BOOLEAN_OBJECT_ARRAY);
-        } catch (Throwable e) {
-            status.setRollback();
-            throw e;
-        } finally {
-            if (!status.isCompleted()) {
-                txManager.commit(status);
-            }
-        }
+        TransactionalProvider provider = this.findTransactionalProvider();
+        TransactionCallback callback = () -> udf.call(hints, () -> ArrayUtils.EMPTY_BOOLEAN_OBJECT_ARRAY);
+        return provider.execute(sourceName, hints, propagation, isolation, callback);
     }
 
     private Isolation resolveIsolation(Hints hints) {
@@ -96,14 +87,14 @@ public class TransactionUdfSource extends AbstractUdfSource {
         return Isolation.valueOf(isolation.trim().toUpperCase().replace('-', '_'));
     }
 
-    private TransactionProvider findTransactionConnectionProvider() {
+    private TransactionalProvider findTransactionalProvider() {
         if (this.context == null) {
             throw new IllegalStateException("TransactionUdfSource must be created by HostContext.");
         }
         ConnectionProvider provider = this.context.getAttachment(ConnectionProvider.class);
-        if (provider instanceof TransactionProvider tx) {
+        if (provider instanceof TransactionalProvider tx) {
             return tx;
         }
-        throw new IllegalStateException("ConnectionProvider must be TransactionConnectionProvider when using transaction functions.");
+        throw new IllegalStateException("ConnectionProvider must implement TransactionalProvider when using transaction functions.");
     }
 }

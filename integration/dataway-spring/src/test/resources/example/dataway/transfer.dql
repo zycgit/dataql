@@ -1,0 +1,22 @@
+// Copyright 2015-2026 the original author or authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE.txt file for the full license.
+// https://www.apache.org/licenses/LICENSE-2.0
+hint FRAGMENT_SQL_DATA_SOURCE = "ds1"
+import 'net.hasor.dataql.sqlproc.execute.transaction.TransactionUdfSource' as tran;
+var changeBalance = @@updateSql(id, amount)<%
+    UPDATE example_people SET balance = balance + #{amount} WHERE id = #{id}
+%>;
+if (${amount} <= 0) {
+    throw 400, "Amount must be positive";
+}
+return tran.required(() -> {
+    if (changeBalance(${fromId}, 0 - ${amount}) != 1) {
+        throw 404, "Source account not found";
+    }
+    if (changeBalance(${toId}, ${amount}) != 1) {
+        throw 404, "Target account not found";
+    }
+    return true;
+});

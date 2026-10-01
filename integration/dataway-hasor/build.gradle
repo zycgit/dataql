@@ -16,6 +16,7 @@ dependencies {
     api 'javax.servlet:javax.servlet-api:4.0.1'
 
     // optional
+    compileOnly project(':dataql-sqlproc')
     compileOnly project(':dataway-meta-jdbc')
     compileOnly "net.hasor:dbvisitor:${property('lib.dbvisitor')}"
 

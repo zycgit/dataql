@@ -16,6 +16,7 @@ dependencies {
     implementation 'org.noear:solon-handle:4.1.0'
 
     // optional
+    compileOnly project(':dataql-sqlproc')
     compileOnly project(':dataway-meta-jdbc')
     compileOnly 'org.noear:solon-data:4.1.0'
 

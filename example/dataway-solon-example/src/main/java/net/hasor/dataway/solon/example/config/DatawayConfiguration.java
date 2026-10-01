@@ -7,13 +7,12 @@
  */
 package net.hasor.dataway.solon.example.config;
 import java.nio.file.Path;
-import javax.sql.DataSource;
 import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
-import net.hasor.dataql.sqlproc.execute.transaction.TransactionProvider;
 import net.hasor.dataway.authorization.IdentityProvider;
 import net.hasor.dataway.authorization.RequestIdentityProvider;
 import net.hasor.dataway.service.DatawayConfig;
 import net.hasor.dataway.solon.DatawayPlugin;
+import net.hasor.dataway.solon.SolonTransactionProvider;
 import net.hasor.dataway.solon.example.config.auth.LoginInterceptor;
 import net.hasor.dataway.solon.example.service.UploadFunctions;
 import org.noear.solon.annotation.Bean;
@@ -39,12 +38,12 @@ public class DatawayConfiguration {
     public DatawayConfig datawayConfig(IdentityProvider identityProvider, ConnectionProvider connections, AppContext context) {
         var settings = context.cfg();
         return new DatawayConfig()//
-                .identityProvider(identityProvider)
-                .documentServer(settings.get("dataway.api-prefix", "/api"))
-                .uploadTempDirectory(Path.of(settings.get("example.upload.directory", "./target/uploads")))
-                .uploadMemoryThreshold(Integer.parseInt(settings.get("example.upload.memory-threshold", "65536")))
+                .identityProvider(identityProvider)//
+                .documentServer(settings.get("dataway.api-prefix", "/api"))//
+                .uploadTempDirectory(Path.of(settings.get("example.upload.directory", "./target/uploads")))//
+                .uploadMemoryThreshold(Integer.parseInt(settings.get("example.upload.memory-threshold", "65536")))//
                 .importSource("example.Upload", UploadFunctions::new)//
-                .attachment(ConnectionProvider.class, new TransactionProvider(connections));
+                .attachment(ConnectionProvider.class, connections);
     }
 
     @Bean
@@ -55,9 +54,6 @@ public class DatawayConfiguration {
     /** Named SQL fragments use ds1/ds2; unnamed fragments use the default application source. */
     @Bean
     public ConnectionProvider connectionProvider(AppContext context) {
-        return (name, hints) -> {
-            DataSource source = name == null || name.isBlank() ? context.getBean(DataSource.class) : context.getBean(name);
-            return source == null ? null : source.getConnection();
-        };
+        return new SolonTransactionProvider(context);
     }
 }

@@ -19,6 +19,7 @@ import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.service.Dataway;
 import net.hasor.dataway.service.DatawayConfig;
 import net.hasor.dataway.service.WebHandler;
+import net.hasor.dataway.service.admin.DatawayUiHandler;
 import net.hasor.web.WebApiBinder;
 import net.hasor.web.binder.MappingDef;
 
@@ -84,9 +85,9 @@ public final class DatawayModule implements Module {
         }
 
         // API
+        String apiPrefix = settings.getString(CONFIG_PREFIX + "api-prefix", "/api");
         if (apiEnabled) {
-            String prefix = settings.getString(CONFIG_PREFIX + "api-prefix", "/api");
-            this.register(web, prefix, provider, Dataway::getApiHandler);
+            this.register(web, apiPrefix, provider, Dataway::getApiHandler);
         }
 
         // API specifications
@@ -102,7 +103,11 @@ public final class DatawayModule implements Module {
 
             // Register the UI wildcard after the API and document routes.
             String uiPrefix = settings.getString(CONFIG_PREFIX + "admin-ui", "/admin");
-            this.register(web, uiPrefix, provider, Dataway::getAdminUiHandler);
+            this.register(web, uiPrefix, provider, core -> {
+                DatawayUiHandler uiHandler = (DatawayUiHandler) core.getAdminUiHandler();
+                uiHandler.configureAddresses(uiPrefix, prefix, apiEnabled ? apiPrefix : null);
+                return uiHandler;
+            });
         }
     }
 

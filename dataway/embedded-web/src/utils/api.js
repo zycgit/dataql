@@ -7,31 +7,13 @@
  */
 export function baseAddress(value, page, name) {
     if (typeof value !== 'string' || !value.trim()) {
-        throw new Error('config.json must provide ' + name + '.');
+        throw new Error('DatawayUI requires ' + name + '.');
     }
     const url = new URL(value, page);
     if (url.origin !== new URL(page).origin || url.username || url.password || url.search || url.hash || !url.pathname.endsWith('/')) {
         throw new Error(name + ' must be a same-origin address ending in /, without credentials, query or fragment.');
     }
     return url;
-}
-
-export async function loadConfiguration(page = document.baseURI) {
-    const response = await fetch(new URL('config.json', page), {credentials: 'same-origin', cache: 'no-store'});
-    if (!response.ok) {
-        throw new Error('Cannot load config.json (HTTP ' + response.status + ').');
-    }
-    let config;
-    try {
-        config = await response.json();
-    } catch {
-        throw new Error('config.json is not valid JSON. Check the host login and deployment configuration.');
-    }
-    baseAddress(config.adminApi, page, 'adminApi');
-    if (config.api) {
-        baseAddress(config.api, page, 'api');
-    }
-    return config;
 }
 
 export function requestHeaders(rows = []) {
@@ -126,7 +108,7 @@ export class DatawayClient {
 
     async invoke(api, text, rows) {
         if (!this.api) {
-            throw new Error('Set api in config.json to the public business API address.');
+            throw new Error('Set the DatawayUI api option to the public business API address.');
         }
         const values = parameters(text, api.select);
         const url = new URL(api.path.replace(/^\/+/, ''), this.api);

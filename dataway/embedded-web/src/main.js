@@ -13,4 +13,4 @@ import './assets/public.css';
 import App from './App.vue';
 import router from './router/index.js';
 
-createApp(App).use(ElementPlus, {locale: en}).use(router).mount('#app');
+window.DatawayUI = options => createApp(App, {options}).use(ElementPlus, {locale: en}).use(router).mount('#app');

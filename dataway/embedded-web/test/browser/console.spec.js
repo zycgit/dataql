@@ -7,6 +7,17 @@
  */
 import {expect, test} from '@playwright/test';
 
+test.beforeEach(async ({page}) => {
+    // Supply the public addresses used by the external test host.
+    await page.route('**/initializer.js', async route => {
+        await route.fulfill({contentType: 'text/javascript', body: `
+            window.addEventListener('load', () => {
+                window.DatawayUI({adminApi: '../operations/', api: '../invoke/'});
+            });
+        `});
+    });
+});
+
 async function openEditor(page, context, path) {
     await context.addCookies([{name: 'host-session', value: 'browser-test', url: 'http://127.0.0.1:49181'}]);
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
@@ -197,7 +208,11 @@ test('management requires host identity and the console rejects an invalid deplo
     expect((await context.request.get('/gateway/console/assets/app.js')).status()).toBe(200);
     expect((await context.request.get('/gateway/operations/api-list')).status()).toBe(401);
     await context.addCookies([{name: 'host-session', value: 'browser-test', url: 'http://127.0.0.1:49181'}]);
-    await page.route('**/config.json', route => route.fulfill({json: {adminApi: 'https://other.test/api/'}}));
+    await page.route('**/initializer.js', async route => {
+        await route.fulfill({contentType: 'text/javascript', body: `
+            window.addEventListener('load', () => window.DatawayUI({adminApi: 'https://other.test/api/'}));
+        `});
+    });
     await page.goto('/gateway/console/');
     await expect(page.getByRole('alert')).toContainText('same-origin');
     await expect(page.getByRole('button', {name: 'Retry', exact: true})).toBeVisible();

@@ -12,6 +12,7 @@ import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.service.Dataway;
 import net.hasor.dataway.service.DatawayConfig;
 import net.hasor.dataway.service.WebHandler;
+import net.hasor.dataway.service.admin.DatawayUiHandler;
 import org.noear.solon.core.*;
 
 /**
@@ -68,8 +69,8 @@ public final class DatawayPlugin implements Plugin {
         context.wrapAndPut(Dataway.class, dataway);
 
         // API
+        String apiPrefix = properties.get("api-prefix", "/api");
         if (apiEnabled) {
-            String apiPrefix = properties.get("api-prefix", "/api");
             WebHandler apiHandler = dataway.getApiHandler();
             List<String> apiPaths = apiHandler.paths().stream().map(path -> apiPrefix + path).toList();
             this.register(context, apiPrefix, apiHandler, apiPaths);
@@ -92,7 +93,8 @@ public final class DatawayPlugin implements Plugin {
 
             // Register the UI wildcard after the API and document routes.
             String uiPrefix = properties.get("admin-ui", "/admin");
-            WebHandler uiHandler = dataway.getAdminUiHandler();
+            DatawayUiHandler uiHandler = (DatawayUiHandler) dataway.getAdminUiHandler();
+            uiHandler.configureAddresses(uiPrefix, adminPrefix, apiEnabled ? apiPrefix : null);
             List<String> uiPaths = uiHandler.paths().stream().map(path -> uiPrefix + path).toList();
             this.register(context, uiPrefix, uiHandler, uiPaths);
         }

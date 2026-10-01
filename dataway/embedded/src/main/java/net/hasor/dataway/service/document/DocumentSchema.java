@@ -149,6 +149,21 @@ final class DocumentSchema {
         if (this.hasSample(section)) {
             content.put("example", this.sample(section));
         }
+
+        if ("requestBody".equals(section) && StringUtils.equalsIgnoreCase(this.contentType("requestHeader"), "application/x-www-form-urlencoded")) {
+            Map<String, Object> properties = this.object(this.object(this.schemas.get(section)).get("properties"));
+            Map<String, Object> encoding = new LinkedHashMap<>();
+            for (var property : properties.entrySet()) {
+                if ("array".equals(this.object(property.getValue()).get("type"))) {
+                    // Declare repeated form fields explicitly for clients such as Swagger UI.
+                    encoding.put(property.getKey(), Map.of("style", "form", "explode", true));
+                }
+            }
+
+            if (!encoding.isEmpty()) {
+                content.put("encoding", encoding);
+            }
+        }
         return content;
     }
 

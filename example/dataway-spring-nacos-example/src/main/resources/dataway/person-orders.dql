@@ -1,0 +1,31 @@
+// Copyright 2015-2026 the original author or authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE.txt file for the full license.
+// https://www.apache.org/licenses/LICENSE-2.0
+
+{
+    hint FRAGMENT_SQL_DATA_SOURCE = "ds1"
+    var findPerson = @@selectSql(id)<%
+        SELECT id AS "id", name AS "name", balance AS "balance"
+        FROM example_people
+        WHERE id = #{id}
+    %>;
+    var person = findPerson(${id});
+}
+
+{
+    hint FRAGMENT_SQL_DATA_SOURCE = "ds2"
+    hint FRAGMENT_SQL_OPEN_PACKAGE = "off"
+    var findOrders = @@selectSql(id)<%
+        SELECT id AS "id", person_id AS "personId", product AS "product", amount AS "amount"
+        FROM example_orders
+        WHERE person_id = #{id}
+        ORDER BY id
+    %>;
+    var orders = findOrders(${id});
+}
+return {
+    "person": person,
+    "orders": orders
+};

@@ -7,13 +7,12 @@
  */
 package net.hasor.dataway.spring.example.config;
 import java.nio.file.Path;
-import javax.sql.DataSource;
 import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
-import net.hasor.dataql.sqlproc.execute.transaction.TransactionProvider;
 import net.hasor.dataway.authorization.IdentityProvider;
 import net.hasor.dataway.authorization.RequestIdentityProvider;
 import net.hasor.dataway.service.Dataway;
 import net.hasor.dataway.service.DatawayConfig;
+import net.hasor.dataway.spring.SpringTransactionProvider;
 import net.hasor.dataway.spring.example.config.auth.LoginInterceptor;
 import net.hasor.dataway.spring.example.service.ExampleApiService;
 import net.hasor.dataway.spring.example.service.UploadFunctions;
@@ -27,12 +26,12 @@ public class DatawayConfiguration {
     @Bean
     public DatawayConfig datawayConfig(IdentityProvider identityProvider, ConnectionProvider connections, Environment settings) {
         return new DatawayConfig()//
-                .identityProvider(identityProvider)
-                .documentServer(settings.getProperty("dataway.api-prefix", "/api"))
-                .uploadTempDirectory(Path.of(settings.getProperty("example.upload.directory", "./target/uploads")))
-                .uploadMemoryThreshold(Integer.parseInt(settings.getProperty("example.upload.memory-threshold", "65536")))
+                .identityProvider(identityProvider)//
+                .documentServer(settings.getProperty("dataway.api-prefix", "/api"))//
+                .uploadTempDirectory(Path.of(settings.getProperty("example.upload.directory", "./target/uploads")))//
+                .uploadMemoryThreshold(Integer.parseInt(settings.getProperty("example.upload.memory-threshold", "65536")))//
                 .importSource("example.Upload", UploadFunctions::new)//
-                .attachment(ConnectionProvider.class, new TransactionProvider(connections));
+                .attachment(ConnectionProvider.class, connections);
     }
 
     @Bean
@@ -43,12 +42,7 @@ public class DatawayConfiguration {
     /** Named SQL fragments use ds1/ds2; unnamed fragments use the primary application source. */
     @Bean
     public ConnectionProvider connectionProvider(ApplicationContext context) {
-        return (name, hints) -> {
-            if (name == null || name.isBlank()) {
-                return context.getBean(DataSource.class).getConnection();
-            }
-            return context.containsBean(name) ? context.getBean(name, DataSource.class).getConnection() : null;
-        };
+        return new SpringTransactionProvider(context);
     }
 
     @Bean(initMethod = "initialize")

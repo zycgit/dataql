@@ -11,6 +11,7 @@ import javax.sql.DataSource;
 import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
 import net.hasor.dataway.service.DatawayException;
 import net.hasor.dataway.solon.DatawayPlugin;
+import net.hasor.dataway.solon.SolonTransactionProvider;
 import org.noear.solon.data.annotation.TransactionAnno;
 import org.noear.solon.data.tran.TranUtils;
 
@@ -21,12 +22,7 @@ public final class HostSqlTestApplication implements AutoCloseable {
     public HostSqlTestApplication(H2Database database) throws Throwable {
         this.application = new TestApplication(context -> {
             context.wrapAndPut(DataSource.class, database.source);
-            ConnectionProvider provider = (name, hints) -> {
-                if (name == null || name.isBlank()) {
-                    return TranUtils.getConnectionProxy(context.getBean(DataSource.class));
-                }
-                return null;
-            };
+            ConnectionProvider provider = new SolonTransactionProvider(context);
             context.wrapAndPut(ConnectionProvider.class, provider);
             var config = TestSettings.configuration().configureHost(host -> {
                 host.addAttachment(ConnectionProvider.class, context.getBean(ConnectionProvider.class));

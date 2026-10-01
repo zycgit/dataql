@@ -22,16 +22,6 @@
     </dataway>
 
     <example>
-        <!-- Change to nacos to store API metadata in the configured Nacos instance. -->
-        <metadata>jdbc</metadata>
-        <nacos>
-            <server-addr>127.0.0.1:8848</server-addr>
-            <namespace></namespace>
-            <username></username>
-            <password></password>
-            <group>DATAWAY_EXAMPLE</group>
-            <data-id>dataway-hasor-example</data-id>
-        </nacos>
         <upload>
             <directory>./target/uploads</directory>
             <memory-threshold>65536</memory-threshold>

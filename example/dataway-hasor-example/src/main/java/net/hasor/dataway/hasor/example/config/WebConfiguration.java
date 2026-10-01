@@ -44,12 +44,8 @@ public class WebConfiguration implements WebMvcConfigurer {
     @Exception(DatawayException.class)
     public ExceptionHandler<DatawayException> errors() {
         return (invoker, error) -> {
-            var response = invoker.getHttpResponse();
-            response.setStatus(error.status());
-            response.setContentType("application/json");
-            JsonUtils.writeValue(response.getOutputStream(), Map.of("message", error.getMessage()));
-            invoker.setSkipRender();
-            return true;
+            invoker.getHttpResponse().setStatus(error.status());
+            return Map.of("message", error.getMessage());
         };
     }
 

@@ -6,7 +6,9 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.solon.example.config;
+import java.util.Map;
 import net.hasor.dataql.util.JsonUtils;
+import net.hasor.dataway.service.DatawayException;
 import net.hasor.dataway.solon.example.config.auth.JwtTokenService;
 import net.hasor.dataway.solon.example.config.auth.LoginInterceptor;
 import net.hasor.dataway.solon.example.service.UserService;
@@ -15,6 +17,9 @@ import org.noear.solon.annotation.Configuration;
 import org.noear.solon.annotation.Init;
 import org.noear.solon.annotation.Inject;
 import org.noear.solon.core.AppContext;
+import org.noear.solon.core.handle.Context;
+import org.noear.solon.core.handle.Handler;
+import org.noear.solon.core.route.RouterInterceptorChain;
 
 @Configuration
 public class WebConfiguration {
@@ -33,8 +38,18 @@ public class WebConfiguration {
     @Init
     public void initialize() {
         var app = this.context.app();
-        app.chains().addRouterInterceptor(new HostExceptionHandler(), -10);
+        app.chains().addRouterInterceptor(this::handleException, -10);
         app.chains().addRouterInterceptor(new LoginInterceptor(this.tokens, app.cfg()), 0);
         app.renders().register("@json", (value, request) -> request.outputAsJson(JsonUtils.writeValueAsString(value)));
+    }
+
+    private void handleException(Context context, Handler handler, RouterInterceptorChain chain) throws Throwable {
+        try {
+            chain.doIntercept(context, handler);
+        } catch (DatawayException error) {
+            context.status(error.status());
+            context.setHandled(true);
+            context.render(Map.of("message", error.getMessage()));
+        }
     }
 }

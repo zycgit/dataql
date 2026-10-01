@@ -25,7 +25,11 @@ public class UploadFunctions extends AbstractUdfSource {
                 digest.update(buffer, 0, size);
             }
         }
-        return Map.of("name", file.getName(), "size", file.getSize(),
-                "contentType", file.getContentType(), "sha256", HexFormat.of().formatHex(digest.digest()));
+
+        return Map.of(//
+                "name", file.getName(),//
+                "size", file.getSize(),//
+                "contentType", file.getContentType(), //
+                "sha256", HexFormat.of().formatHex(digest.digest()));
     }
 }

@@ -63,7 +63,6 @@ function chooseDirectory(node) {
 async function reload() {
     loading.value = true;
     try {
-        await services.reload();
         rows.value = (await services.client.value.management('api-list')).result;
         const row = rows.value.find(item => item.id === selected.value?.id) || rows.value[0];
         if (row) {

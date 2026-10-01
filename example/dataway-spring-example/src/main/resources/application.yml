@@ -19,15 +19,6 @@ dataway:
   docs-prefix: /docs
 
 example:
-  # Change to nacos to store API metadata in the configured Nacos instance.
-  metadata: jdbc
-  nacos:
-    server-addr: 127.0.0.1:8848
-    namespace: ''
-    username: ''
-    password: ''
-    group: DATAWAY_EXAMPLE
-    data-id: dataway-spring-example
   upload:
     directory: ./target/uploads
     memory-threshold: 65536

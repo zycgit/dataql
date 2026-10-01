@@ -19,6 +19,11 @@
     <dependencies>
         <dependency>
             <groupId>net.hasor</groupId>
+            <artifactId>dataway-meta-jdbc</artifactId>
+            <version>${dataway.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.hasor</groupId>
             <artifactId>dataway-solon</artifactId>
             <version>${dataway.version}</version>
         </dependency>

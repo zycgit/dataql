@@ -49,7 +49,13 @@ public final class LoginController {
     @PostMapping("/me")
     public Map<String, ?> currentUser(HttpServletRequest request) {
         var identity = this.identityProvider.resolve(new SpringWebRequest(request));
-        return Map.of("identity", identity.identityId(), "authenticated", identity.authenticated(), "attributes", identity.attributes(), "consoleAccess", identity.checkOperation(Operation.LIST), "consoleManage", identity.checkOperation(Operation.SAVE), "documentAccess", identity.checkOperation(Operation.DOCUMENT));
+        return Map.of(//
+                "identity", identity.identityId(), //
+                "authenticated", identity.authenticated(), //
+                "attributes", identity.attributes(), //
+                "consoleAccess", identity.checkOperation(Operation.LIST),//
+                "consoleManage", identity.checkOperation(Operation.SAVE), //
+                "documentAccess", identity.checkOperation(Operation.DOCUMENT));
     }
 
     private void writeCookie(HttpServletRequest request, HttpServletResponse response, String token) {

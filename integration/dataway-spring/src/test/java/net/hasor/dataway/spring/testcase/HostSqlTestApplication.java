@@ -9,9 +9,9 @@ package net.hasor.dataway.spring.testcase;
 import javax.sql.DataSource;
 import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
 import net.hasor.dataway.service.DatawayException;
+import net.hasor.dataway.spring.SpringTransactionProvider;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
@@ -25,15 +25,7 @@ public final class HostSqlTestApplication implements AutoCloseable {
             beans.registerBean(DataSource.class, () -> database.source);
             beans.registerBean(JdbcTemplate.class, () -> new JdbcTemplate(beans.getBean(DataSource.class)));
             beans.registerBean(PlatformTransactionManager.class, () -> new DataSourceTransactionManager(beans.getBean(DataSource.class)));
-            beans.registerBean(ConnectionProvider.class, () -> {
-                var source = new TransactionAwareDataSourceProxy(beans.getBean(DataSource.class));
-                return (name, hints) -> {
-                    if (name == null || name.isBlank()) {
-                        return source.getConnection();
-                    }
-                    return null;
-                };
-            });
+            beans.registerBean(ConnectionProvider.class, () -> new SpringTransactionProvider(beans));
             config.apiInterceptor((call, chain) -> {
                 var manager = beans.getBean(PlatformTransactionManager.class);
                 var status = manager.getTransaction(new DefaultTransactionDefinition());

@@ -7,7 +7,6 @@
  */
 package net.hasor.dataway.hasor.example.config;
 import java.nio.file.Path;
-import javax.sql.DataSource;
 import net.hasor.cobble.setting.Settings;
 import net.hasor.config.Bean;
 import net.hasor.config.Configuration;
@@ -15,10 +14,10 @@ import net.hasor.core.ApiBinder;
 import net.hasor.core.AppContext;
 import net.hasor.core.Module;
 import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
-import net.hasor.dataql.sqlproc.execute.transaction.TransactionProvider;
 import net.hasor.dataway.authorization.IdentityProvider;
 import net.hasor.dataway.authorization.RequestIdentityProvider;
 import net.hasor.dataway.hasor.DatawayModule;
+import net.hasor.dataway.hasor.HasorTransactionProvider;
 import net.hasor.dataway.hasor.example.config.auth.LoginInterceptor;
 import net.hasor.dataway.hasor.example.service.ExampleApiService;
 import net.hasor.dataway.hasor.example.service.UploadFunctions;
@@ -37,12 +36,12 @@ public class DatawayConfiguration implements Module {
     @Bean
     public DatawayConfig datawayConfig(IdentityProvider identityProvider, ConnectionProvider connections, Settings settings) {
         return new DatawayConfig()                  //
-                .identityProvider(identityProvider)
-                .documentServer(settings.getString("dataway.api-prefix", "/api"))
-                .uploadTempDirectory(Path.of(settings.getString("example.upload.directory", "./target/uploads")))
-                .uploadMemoryThreshold(Integer.parseInt(settings.getString("example.upload.memory-threshold", "65536")))
+                .identityProvider(identityProvider)//
+                .documentServer(settings.getString("dataway.api-prefix", "/api"))//
+                .uploadTempDirectory(Path.of(settings.getString("example.upload.directory", "./target/uploads")))//
+                .uploadMemoryThreshold(Integer.parseInt(settings.getString("example.upload.memory-threshold", "65536")))//
                 .importSource("example.Upload", UploadFunctions::new) //
-                .attachment(ConnectionProvider.class, new TransactionProvider(connections));
+                .attachment(ConnectionProvider.class, connections);
     }
 
     @Bean
@@ -50,14 +49,10 @@ public class DatawayConfiguration implements Module {
         return new RequestIdentityProvider(LoginInterceptor.IDENTITY_ATTRIBUTE);
     }
 
-    /** Resolves data sources by Bean name and supplies independent connections for script transactions. */
+    /** Uses the same named data sources and transactions as the host application. */
     @Bean
     public ConnectionProvider connectionProvider(AppContext appContext) {
-        return (name, hints) -> {
-            String sourceName = name == null || name.isBlank() ? null : name;
-            DataSource source = appContext.findBindingBean(sourceName, DataSource.class);
-            return source != null ? source.getConnection() : null;
-        };
+        return new HasorTransactionProvider(appContext);
     }
 
     //

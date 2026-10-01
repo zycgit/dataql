@@ -7,26 +7,91 @@
  */
 package net.hasor.dataql.sqlproc.execute.transaction;
 import java.sql.SQLException;
+import java.sql.Savepoint;
 
-/** State returned by a transaction manager. */
-public interface TransactionStatus {
-    Propagation getPropagation();
+/** State of one local transaction scope, including its savepoint or suspended transaction. */
+final class TransactionStatus {
+    private final Isolation         isolation;
+    private       TransactionObject transactionObject;
+    private       TransactionObject suspendedTransaction;
+    private       Savepoint         savepoint;
+    private       boolean           completed;
+    private       boolean           rollbackOnly;
+    private       boolean           newConnection;
 
-    Isolation getIsolationLevel();
+    TransactionStatus(Isolation isolation) {
+        this.isolation = isolation;
+    }
 
-    boolean isCompleted();
+    TransactionObject getTransactionObject() {
+        return this.transactionObject;
+    }
 
-    boolean isRollbackOnly();
+    void setTransactionObject(TransactionObject transactionObject) {
+        this.transactionObject = transactionObject;
+    }
 
-    boolean isReadOnly();
+    TransactionObject getSuspendedTransaction() {
+        return this.suspendedTransaction;
+    }
 
-    boolean isNewConnection();
+    void setSuspendedTransaction(TransactionObject suspendedTransaction) {
+        this.suspendedTransaction = suspendedTransaction;
+    }
 
-    boolean isSuspend();
+    void markNewConnection() {
+        this.newConnection = true;
+    }
 
-    boolean hasSavepoint();
+    void setCompleted() {
+        this.completed = true;
+    }
 
-    void setRollback() throws SQLException;
+    void markSavepoint() throws SQLException {
+        ConnectionHolder holder = this.transactionObject.getHolder();
+        if (!holder.supportsSavePoints()) {
+            throw new SQLException("Connection does not support savepoints.");
+        }
+        this.savepoint = holder.createSavepoint();
+    }
 
-    void setReadOnly() throws SQLException;
+    void releaseSavepoint() throws SQLException {
+        this.transactionObject.getHolder().releaseSavepoint(this.savepoint);
+        this.savepoint = null;
+    }
+
+    void rollbackToSavepoint() throws SQLException {
+        this.transactionObject.getHolder().rollback(this.savepoint);
+    }
+
+    Isolation getIsolationLevel() {
+        return this.isolation;
+    }
+
+    boolean isCompleted() {
+        return this.completed;
+    }
+
+    boolean isRollbackOnly() {
+        return this.rollbackOnly;
+    }
+
+    boolean isNewConnection() {
+        return this.newConnection;
+    }
+
+    boolean isSuspend() {
+        return this.suspendedTransaction != null;
+    }
+
+    boolean hasSavepoint() {
+        return this.savepoint != null;
+    }
+
+    void setRollback() throws SQLException {
+        if (this.completed) {
+            throw new SQLException("Transaction is already completed.");
+        }
+        this.rollbackOnly = true;
+    }
 }

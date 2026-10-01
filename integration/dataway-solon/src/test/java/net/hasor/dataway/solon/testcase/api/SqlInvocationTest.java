@@ -6,6 +6,7 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.solon.testcase.api;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import net.hasor.dataql.util.JsonUtils;
@@ -258,4 +259,30 @@ class SqlInvocationTest {
             assertEquals(105, this.result(client.json("/api/balance", Map.of("id", 1))).asInt());
         }
     }
+
+    @Test
+    void publishedTransferExampleRollsBackWhenTheTargetAccountIsMissing() throws Throwable {
+        try (SqlTestApplication app = new SqlTestApplication(); HttpClient client = new HttpClient(app.baseUrl())) {
+            assertEquals(200, client.login("admin").status);
+            String script;
+            try (var input = this.getClass().getResourceAsStream("/example/dataway/transfer.dql")) {
+                assertNotNull(input);
+                script = new String(input.readAllBytes(), StandardCharsets.UTF_8);
+            }
+            Map<String, Object> draft = this.draft("DataQL", "/transfer", script, Map.of("fromId", 1, "toId", 2, "amount", 5));
+            draft.put("optionInfo", Map.of("resultStructure", true));
+            this.publish(client, draft);
+            this.publish(client, this.draft("DataQL", "/balance", this.readValue("ds1", "example_people", "balance"), Map.of("id", 1)));
+            assertEquals(200, client.login("api").status);
+
+            assertTrue(this.result(client.json("/api/transfer", Map.of("fromId", 1, "toId", 2, "amount", 5))).path("success").asBoolean());
+            assertEquals(95, this.result(client.json("/api/balance", Map.of("id", 1))).asInt());
+            assertEquals(205, this.result(client.json("/api/balance", Map.of("id", 2))).asInt());
+            JsonNode failure = this.result(client.json("/api/transfer", Map.of("fromId", 1, "toId", 999, "amount", 10)));
+            assertFalse(failure.path("success").asBoolean(true), failure.toString());
+            assertEquals(95, this.result(client.json("/api/balance", Map.of("id", 1))).asInt());
+            assertEquals(205, this.result(client.json("/api/balance", Map.of("id", 2))).asInt());
+        }
+    }
+
 }

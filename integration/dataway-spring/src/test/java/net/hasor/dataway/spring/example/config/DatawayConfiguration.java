@@ -8,13 +8,13 @@
 package net.hasor.dataway.spring.example.config;
 import javax.sql.DataSource;
 import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
-import net.hasor.dataql.sqlproc.execute.transaction.TransactionProvider;
 import net.hasor.dataway.authorization.IdentityProvider;
 import net.hasor.dataway.authorization.RequestIdentityProvider;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 import net.hasor.dataway.service.Dataway;
 import net.hasor.dataway.service.DatawayConfig;
+import net.hasor.dataway.spring.SpringTransactionProvider;
 import net.hasor.dataway.spring.example.config.auth.LoginInterceptor;
 import net.hasor.dataway.spring.example.service.ExampleApiService;
 import org.springframework.context.ApplicationContext;
@@ -27,7 +27,7 @@ public class DatawayConfiguration {
     public DatawayConfig datawayConfig(IdentityProvider identityProvider, ConnectionProvider connections) {
         return new DatawayConfig()//
                 .identityProvider(identityProvider)//
-                .attachment(ConnectionProvider.class, new TransactionProvider(connections));
+                .attachment(ConnectionProvider.class, connections);
     }
 
     @Bean
@@ -43,12 +43,7 @@ public class DatawayConfiguration {
     /** Named SQL fragments use ds1/ds2; unnamed fragments use the primary application source. */
     @Bean
     public ConnectionProvider connectionProvider(ApplicationContext context) {
-        return (name, hints) -> {
-            if (name == null || name.isBlank()) {
-                return context.getBean(DataSource.class).getConnection();
-            }
-            return context.containsBean(name) ? context.getBean(name, DataSource.class).getConnection() : null;
-        };
+        return new SpringTransactionProvider(context);
     }
 
     @Bean(initMethod = "initialize")

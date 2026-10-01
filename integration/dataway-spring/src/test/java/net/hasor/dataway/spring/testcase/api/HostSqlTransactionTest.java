@@ -13,16 +13,25 @@ import net.hasor.dataway.spring.testcase.H2Database;
 import net.hasor.dataway.spring.testcase.HostSqlTestApplication;
 import net.hasor.dataway.spring.testcase.HttpClient;
 import net.hasor.dataway.spring.testcase.HttpResult;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import tools.jackson.databind.JsonNode;
 import static org.junit.jupiter.api.Assertions.*;
 
 class HostSqlTransactionTest {
-    @Test
-    void sqlConnectionsParticipateInHostCommitAndRollback() throws Throwable {
+    @ParameterizedTest
+    @ValueSource(strings = { "SQL", "DataQL" })
+    void sqlConnectionsParticipateInHostCommitAndRollback(String type) throws Throwable {
         try (H2Database database = new H2Database(); HostSqlTestApplication app = new HostSqlTestApplication(database); HttpClient client = new HttpClient(app.baseUrl())) {
             assertEquals(200, client.login("admin").status);
-            Map<String, Object> draft = this.draft("SQL", "/transaction", "UPDATE example_people SET balance = balance + #{amount} WHERE id = #{id}", Map.of("id", 1, "amount", 0, "rollback", false));
+            String script = type.equals("SQL") ? "UPDATE example_people SET balance = balance + #{amount} WHERE id = #{id}" : """
+                    import 'net.hasor.dataql.sqlproc.execute.transaction.TransactionUdfSource' as tran;
+                    var change = @@updateSql(id, amount)<%
+                        UPDATE example_people SET balance = balance + #{amount} WHERE id = #{id}
+                    %>;
+                    return tran.required(() -> { return change(${id}, ${amount}); });
+                    """;
+            Map<String, Object> draft = this.draft(type, "/transaction", script, Map.of("id", 1, "amount", 0, "rollback", false));
             draft.put("optionInfo", Map.of("resultStructure", true));
             this.publish(client, draft);
             this.publish(client, this.draft("SQL", "/balance", "SELECT balance FROM example_people WHERE id = #{id}", Map.of("id", 1)));

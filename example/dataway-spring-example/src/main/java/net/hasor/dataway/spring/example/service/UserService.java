@@ -29,8 +29,8 @@ public class UserService {
         if (username == null || password == null) {
             return UserIdentity.anonymous(Map.of());
         }
-        try (var connection = this.source.getConnection();
-             var query = connection.prepareStatement("SELECT * FROM example_users WHERE username = ? AND enabled = TRUE")) {
+
+        try (var connection = this.source.getConnection(); var query = connection.prepareStatement("SELECT * FROM example_users WHERE username = ? AND enabled = TRUE")) {
             query.setString(1, username);
             try (var row = query.executeQuery()) {
                 if (row.next() && this.matches(password, row.getString("password_hash"), row.getString("password_salt"))) {
@@ -57,7 +57,7 @@ public class UserService {
     }
 
     public UserIdentity findIdentity(String username) {
-        try (var connection = this.source.getConnection();
+        try (var connection = this.source.getConnection();//
              var query = connection.prepareStatement("SELECT * FROM example_users WHERE username = ? AND enabled = TRUE")) {
             query.setString(1, username);
             try (var row = query.executeQuery()) {

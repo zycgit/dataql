@@ -146,6 +146,29 @@ class DocumentServiceTest extends ServiceTestSupport {
         assertEquals("formData", ((Map<?, ?>) ((List<?>) operation.get("parameters")).get(0)).get("in"));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = { "application/x-www-form-urlencoded", "application/json", "multipart/form-data" })
+    void urlEncodedArrayFieldsExplicitlyUseRepeatedNames(String type) {
+        Map<FieldDef, String> row = this.release(this.info("form", "1", 1), "release", "1", 1);
+        row.put(METHOD, "POST");
+        row.put(SCHEMA, """
+                {"requestBody":{"type":"object","properties":{
+                  "name":{"type":"string"},"tag":{"type":"array","items":{"type":"string"}}}}}
+                """);
+        row.put(SAMPLE, "{\"requestHeader\":{\"Content-Type\":\"" + type + "\"},\"requestBody\":{\"name\":\"Dataway\",\"tag\":[\"one\",\"two\"]}}");
+        when(this.access.listObjects(EntityType.RELEASE, Map.of(STATUS, "1"))).thenReturn(List.of(row));
+        Map<?, ?> operation = this.operation(this.service("/api").openapi(), "/form", "post");
+        Map<?, ?> request = (Map<?, ?>) operation.get("requestBody");
+        Map<?, ?> media = (Map<?, ?>) ((Map<?, ?>) request.get("content")).get(type);
+        assertEquals(Map.of("name", "Dataway", "tag", List.of("one", "two")), media.get("example"));
+        assertTrue(((Map<?, ?>) media.get("schema")).containsKey("$ref"));
+        if ("application/x-www-form-urlencoded".equals(type)) {
+            assertEquals(Map.of("tag", Map.of("style", "form", "explode", true)), media.get("encoding"));
+        } else {
+            assertFalse(media.containsKey("encoding"));
+        }
+    }
+
     @Test
     void traceIsSupportedOnlyByOpenapiAndUnknownMethodsFail() {
         Map<FieldDef, String> row = this.release(this.info("api", "1", 1), "release", "1", 1);

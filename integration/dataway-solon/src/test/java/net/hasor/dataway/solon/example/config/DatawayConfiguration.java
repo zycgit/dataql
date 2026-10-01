@@ -8,13 +8,13 @@
 package net.hasor.dataway.solon.example.config;
 import javax.sql.DataSource;
 import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
-import net.hasor.dataql.sqlproc.execute.transaction.TransactionProvider;
 import net.hasor.dataway.authorization.IdentityProvider;
 import net.hasor.dataway.authorization.RequestIdentityProvider;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 import net.hasor.dataway.service.DatawayConfig;
 import net.hasor.dataway.solon.DatawayPlugin;
+import net.hasor.dataway.solon.SolonTransactionProvider;
 import net.hasor.dataway.solon.example.config.auth.LoginInterceptor;
 import org.noear.solon.annotation.Bean;
 import org.noear.solon.annotation.Configuration;
@@ -39,7 +39,7 @@ public class DatawayConfiguration {
     public DatawayConfig datawayConfig(IdentityProvider identityProvider, ConnectionProvider connections) {
         return new DatawayConfig()//
                 .identityProvider(identityProvider)//
-                .attachment(ConnectionProvider.class, new TransactionProvider(connections));
+                .attachment(ConnectionProvider.class, connections);
     }
 
     @Bean
@@ -55,9 +55,6 @@ public class DatawayConfiguration {
     /** Named SQL fragments use ds1/ds2; unnamed fragments use the default application source. */
     @Bean
     public ConnectionProvider connectionProvider(AppContext context) {
-        return (name, hints) -> {
-            DataSource source = name == null || name.isBlank() ? context.getBean(DataSource.class) : context.getBean(name);
-            return source == null ? null : source.getConnection();
-        };
+        return new SolonTransactionProvider(context);
     }
 }

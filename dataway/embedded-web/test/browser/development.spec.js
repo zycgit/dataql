@@ -29,6 +29,103 @@ async function createAndPublish(page, path) {
 test.describe('mock development', () => {
     test.use({baseURL: 'http://127.0.0.1:49182'});
 
+    test('initializer options select both public endpoints and repository button visibility', async ({page}) => {
+        const requests = [];
+        page.on('request', request => {
+            if (request.resourceType() === 'fetch') {
+                requests.push(new URL(request.url()).pathname);
+            }
+        });
+        await page.route('**/initializer.js', async route => {
+            await route.fulfill({contentType: 'text/javascript', body: `
+                window.addEventListener('load', () => {
+                    window.DatawayUI({adminApi: '../operations/', api: '../invoke/', showGitButton: false});
+                });
+            `});
+        });
+        for (const [publicPath, backendPath] of [['/operations/', '/admin/api/'], ['/invoke/', '/api/']]) {
+            await page.route('**' + publicPath + '**', async route => {
+                const url = new URL(route.request().url());
+                url.pathname = url.pathname.replace(publicPath, backendPath);
+                await route.fulfill({response: await route.fetch({url: url.href})});
+            });
+        }
+        await page.goto('/admin/');
+        await expect(page.locator('.gitStyle')).toHaveCount(0);
+        await page.getByText('/mock/hello', {exact: true}).click();
+        const invoked = page.waitForResponse(response => response.url().endsWith('/invoke/mock/hello'));
+        await page.getByRole('button', {name: 'Execute Query', exact: true}).click();
+        expect((await invoked).status()).toBe(200);
+        await expect(page.locator('.responsePanel')).toContainText('Hello Dataway Mock.');
+        expect(requests).toContain('/operations/api-list');
+        expect(requests).toContain('/invoke/mock/hello');
+        expect(requests.every(path => path.startsWith('/operations/') || path.startsWith('/invoke/'))).toBe(true);
+    });
+
+    test('async initialization retains the host session and retries before loading management data', async ({page, context}) => {
+        await context.addCookies([{name: 'host-session', value: 'example', url: 'http://127.0.0.1:49182'}]);
+        const requests = [];
+        let configurations = 0;
+        page.on('request', request => {
+            if (request.resourceType() === 'fetch') {
+                requests.push(new URL(request.url()).pathname);
+            }
+        });
+        await page.route('**/initializer.js', async route => {
+            await route.fulfill({contentType: 'text/javascript', body: `
+                window.addEventListener('load', () => {
+                    window.DatawayUI(async () => {
+                        const response = await fetch('../host/ui-options', {credentials: 'same-origin'});
+                        if (!response.ok) {
+                            throw new Error('Host settings unavailable');
+                        }
+                        return response.json();
+                    });
+                });
+            `});
+        });
+        await page.route('**/host/ui-options', async route => {
+            expect(await route.request().headerValue('cookie')).toContain('host-session=example');
+            configurations++;
+            if (configurations === 1) {
+                await route.fulfill({status: 503});
+            } else {
+                await route.fulfill({json: {adminApi: 'api/', api: '../api/'}});
+            }
+        });
+        await page.goto('/admin/');
+        await expect(page.getByRole('alert')).toContainText('Host settings unavailable');
+        expect(requests).toEqual(['/host/ui-options']);
+        await page.getByRole('button', {name: 'Retry', exact: true}).click();
+        await expect(page.getByText('/mock/hello', {exact: true})).toBeVisible();
+        await expect(page.locator('.gitStyle')).toBeVisible();
+        expect(requests.slice(0, 3)).toEqual(['/host/ui-options', '/host/ui-options', '/admin/api/api-list']);
+        expect(configurations).toBe(2);
+    });
+
+    for (const [name, options, message] of [
+        ['missing', {}, 'adminApi'],
+        ['cross-origin', {adminApi: 'https://other.test/api/'}, 'same-origin'],
+    ]) {
+        test('initializer reports ' + name + ' management address before sending requests', async ({page}) => {
+            const requests = [];
+            page.on('request', request => {
+                if (request.resourceType() === 'fetch') {
+                    requests.push(request.url());
+                }
+            });
+            await page.route('**/initializer.js', async route => {
+                await route.fulfill({contentType: 'text/javascript', body: `
+                    window.addEventListener('load', () => window.DatawayUI(${JSON.stringify(options)}));
+                `});
+            });
+            await page.goto('/admin/');
+            await expect(page.getByRole('alert')).toContainText(message);
+            await expect(page.getByRole('button', {name: 'Retry', exact: true})).toBeVisible();
+            expect(requests).toEqual([]);
+        });
+    }
+
     test('the unchanged editor can save, smoke test, publish and call a mock API', async ({page}) => {
         const errors = [];
         page.on('pageerror', error => errors.push(error.message));

@@ -13,12 +13,12 @@ import net.hasor.core.ApiBinder;
 import net.hasor.core.AppContext;
 import net.hasor.core.Module;
 import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
-import net.hasor.dataql.sqlproc.execute.transaction.TransactionProvider;
 import net.hasor.dataway.authorization.IdentityProvider;
 import net.hasor.dataway.authorization.RequestIdentityProvider;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 import net.hasor.dataway.hasor.DatawayModule;
+import net.hasor.dataway.hasor.HasorTransactionProvider;
 import net.hasor.dataway.hasor.example.config.auth.LoginInterceptor;
 import net.hasor.dataway.hasor.example.service.ExampleApiService;
 import net.hasor.dataway.service.Dataway;
@@ -37,7 +37,7 @@ public class DatawayConfiguration implements Module {
     public DatawayConfig datawayConfig(IdentityProvider identityProvider, ConnectionProvider connections) {
         return new DatawayConfig()                  //
                 .identityProvider(identityProvider) //
-                .attachment(ConnectionProvider.class, new TransactionProvider(connections));
+                .attachment(ConnectionProvider.class, connections);
     }
 
     @Bean
@@ -50,14 +50,10 @@ public class DatawayConfiguration implements Module {
         return new JdbcDataAccessLayer(mainSource, "");
     }
 
-    /** Resolves data sources by Bean name and supplies independent connections for script transactions. */
+    /** Uses the same named data sources and transactions as the host application. */
     @Bean
     public ConnectionProvider connectionProvider(AppContext appContext) {
-        return (name, hints) -> {
-            String sourceName = name == null || name.isBlank() ? null : name;
-            DataSource source = appContext.findBindingBean(sourceName, DataSource.class);
-            return source != null ? source.getConnection() : null;
-        };
+        return new HasorTransactionProvider(appContext);
     }
 
     //

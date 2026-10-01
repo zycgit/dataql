@@ -6,6 +6,8 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.spring.example.config;
+import java.util.Map;
+import net.hasor.dataway.service.DatawayException;
 import net.hasor.dataway.spring.example.config.auth.JwtTokenService;
 import net.hasor.dataway.spring.example.config.auth.LoginInterceptor;
 import net.hasor.dataway.spring.example.service.UserService;
@@ -13,12 +15,16 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.http.CacheControl;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.handler.MappedInterceptor;
 
 @Configuration
+@RestControllerAdvice
 public class WebConfiguration implements WebMvcConfigurer {
     private final Environment settings;
 
@@ -39,10 +45,15 @@ public class WebConfiguration implements WebMvcConfigurer {
         return new MappedInterceptor(null, new LoginInterceptor(tokens, this.settings));
     }
 
+    @ExceptionHandler(DatawayException.class)
+    public ResponseEntity<Map<String, String>> handleDatawayException(DatawayException error) {
+        return ResponseEntity.status(error.status()).body(Map.of("message", error.getMessage()));
+    }
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/swagger/**")
-                .addResourceLocations("classpath:/web/swagger/")
+        registry.addResourceHandler("/swagger/**")//
+                .addResourceLocations("classpath:/web/swagger/")//
                 .setCacheControl(CacheControl.noCache());
         registry.addResourceHandler("/index.html", "/app.css", "/app.js")//
                 .addResourceLocations("classpath:/web/")//
@@ -51,6 +62,7 @@ public class WebConfiguration implements WebMvcConfigurer {
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addViewController("/").setViewName("forward:/index.html");
+        registry.addViewController("/")//
+                .setViewName("forward:/index.html");
     }
 }

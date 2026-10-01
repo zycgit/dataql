@@ -20,9 +20,9 @@ import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
  * Coordinates SQL fragment connections and transaction managers by datasource name.
  * Transaction state is bound to the current thread.
  */
-public class TransactionProvider implements ConnectionProvider, Closeable {
-    private final ConnectionProvider                               delegate;
-    private final ThreadLocal<Map<String, TransactionManagerImpl>> contexts = ThreadLocal.withInitial(HashMap::new);
+public class TransactionProvider implements TransactionalProvider, Closeable {
+    private final ConnectionProvider                           delegate;
+    private final ThreadLocal<Map<String, TransactionManager>> contexts = ThreadLocal.withInitial(HashMap::new);
 
     public TransactionProvider(ConnectionProvider delegate) {
         this.delegate = Objects.requireNonNull(delegate, "connectionProvider is null.");
@@ -33,22 +33,23 @@ public class TransactionProvider implements ConnectionProvider, Closeable {
         return this.transactionContext(sourceName).getConnection(hints);
     }
 
-    public TransactionManager findTransactionManager(String sourceName) {
-        return this.transactionContext(sourceName);
-    }
-
-    private TransactionManagerImpl transactionContext(String sourceName) {
+    private TransactionManager transactionContext(String sourceName) {
         String sourceKey = sourceName == null ? "" : sourceName;
         return this.contexts.get().computeIfAbsent(sourceKey, key -> {
-            return new TransactionManagerImpl(sourceName, this.delegate);
+            return new TransactionManager(sourceName, this.delegate);
         });
+    }
+
+    @Override
+    public Object execute(String sourceName, Hints hints, Propagation propagation, Isolation isolation, TransactionCallback callback) throws Throwable {
+        return this.transactionContext(sourceName).execute(hints, propagation, isolation, callback);
     }
 
     @Override
     public void close() throws IOException {
         IOException error = null;
         try {
-            for (TransactionManagerImpl manager : this.contexts.get().values()) {
+            for (TransactionManager manager : this.contexts.get().values()) {
                 try {
                     manager.close();
                 } catch (IOException e) {
@@ -66,5 +67,4 @@ public class TransactionProvider implements ConnectionProvider, Closeable {
             throw error;
         }
     }
-
 }

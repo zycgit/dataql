@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.hasor.dataway.service.Dataway;
 import net.hasor.dataway.service.WebHandler;
+import net.hasor.dataway.service.admin.DatawayUiHandler;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -70,7 +71,8 @@ public final class DatawayMvcRegistrar implements SmartInitializingSingleton {
 
             // Register the UI wildcard after the API and document routes.
             String uiPrefix = this.adminUiPrefix;
-            WebHandler uiHandler = this.dataway.getAdminUiHandler();
+            DatawayUiHandler uiHandler = (DatawayUiHandler) this.dataway.getAdminUiHandler();
+            uiHandler.configureAddresses(uiPrefix, adminPrefix, this.apiEnabled ? this.apiPrefix : null);
             String[] uiPaths = uiHandler.paths().stream().map(path -> uiPrefix + path).toArray(String[]::new);
             this.register("datawayUi", uiHandler, uiPrefix, uiPaths);
         }

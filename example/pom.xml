@@ -16,6 +16,7 @@
 
     <modules>
         <module>dataway-spring-example</module>
+        <module>dataway-spring-nacos-example</module>
         <module>dataway-solon-example</module>
         <module>dataway-hasor-example</module>
     </modules>
@@ -46,18 +47,8 @@
         </dependencies>
     </dependencyManagement>
 
-    <!-- Services shared by all three applications; the host adapter is selected by each module. -->
+    <!-- Shared application services; each example selects its host adapter and metadata store. -->
     <dependencies>
-        <dependency>
-            <groupId>net.hasor</groupId>
-            <artifactId>dataway-meta-jdbc</artifactId>
-            <version>${dataway.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>net.hasor</groupId>
-            <artifactId>dataway-meta-nacos</artifactId>
-            <version>${dataway.version}</version>
-        </dependency>
         <dependency>
             <groupId>net.hasor</groupId>
             <artifactId>dataql-sqlproc</artifactId>

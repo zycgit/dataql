@@ -53,12 +53,16 @@ async function management(endpoint, {id, body, query = '', status = 200} = {}) {
     return response.json();
 }
 
-test('mock serves the existing page, configuration and seeded management documents', async () => {
+test('mock serves the independent initializer and seeded management documents', async () => {
     const page = await fetch(mock.origin + '/admin/');
     assert.equal(page.status, 200);
-    assert.match(await page.text(), /src\/main.js/);
-    const config = await (await fetch(mock.origin + '/admin/config.json')).json();
-    assert.equal(config.adminApi, 'api/');
+    const html = await page.text();
+    assert.match(html, /src\/main.js/);
+    assert.match(html, /src="\/admin\/initializer.js" defer/);
+    assert.doesNotMatch(html, /dataway-admin-api|dataway-api|config\.json/);
+    const initializer = await fetch(mock.origin + '/admin/initializer.js');
+    assert.equal(initializer.status, 200);
+    assert.match(await initializer.text(), /window\.DatawayUI\(/);
     const list = await management('api-list');
     assert.equal(list.success, true);
     assert.deepEqual(list.result.map(item => item.status), [1, 1, 1, 0, 3]);

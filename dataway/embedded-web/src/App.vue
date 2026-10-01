@@ -32,21 +32,19 @@
 import {onMounted, provide, ref, shallowRef} from 'vue';
 import {useRoute} from 'vue-router';
 import {Notebook, Plus, Warning} from '@element-plus/icons-vue';
-import {DatawayClient, loadConfiguration} from './utils/api.js';
+import {DatawayClient} from './utils/api.js';
+const props = defineProps({options: {type: [Object, Function], required: true}});
 const route = useRoute();
 const configuration = ref({showGitButton: true});
 const client = shallowRef();
 const startupError = ref('');
-async function reload() {
-    const config = await loadConfiguration();
-    client.value = new DatawayClient(config);
-    configuration.value = config;
-}
-provide('dataway', {client, reload});
+provide('dataway', {client});
 async function start() {
     startupError.value = '';
     try {
-        await reload();
+        const config = typeof props.options === 'function' ? await props.options() : props.options;
+        client.value = new DatawayClient(config);
+        configuration.value = {showGitButton: config.showGitButton !== false};
     } catch (error) {
         startupError.value = error.message;
     }

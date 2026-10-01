@@ -331,7 +331,7 @@ public class TransactionDataQLIntegrationTest {
                     """).execute();
             fail("Transaction function should require TransactionConnectionProvider.");
         } catch (Throwable e) {
-            assertTrue(hasMessage(e, "ConnectionProvider must be TransactionConnectionProvider when using transaction functions."));
+            assertTrue(hasMessage(e, "ConnectionProvider must implement TransactionalProvider when using transaction functions."));
         }
     }
 
