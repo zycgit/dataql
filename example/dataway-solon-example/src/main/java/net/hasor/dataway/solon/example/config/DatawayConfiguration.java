@@ -14,7 +14,6 @@ import net.hasor.dataway.service.DatawayConfig;
 import net.hasor.dataway.solon.DatawayPlugin;
 import net.hasor.dataway.solon.SolonTransactionProvider;
 import net.hasor.dataway.solon.example.config.auth.LoginInterceptor;
-import net.hasor.dataway.solon.example.service.UploadFunctions;
 import org.noear.solon.annotation.Bean;
 import org.noear.solon.annotation.Configuration;
 import org.noear.solon.annotation.Init;
@@ -42,7 +41,6 @@ public class DatawayConfiguration {
                 .documentServer(settings.get("dataway.api-prefix", "/api"))//
                 .uploadTempDirectory(Path.of(settings.get("example.upload.directory", "./target/uploads")))//
                 .uploadMemoryThreshold(Integer.parseInt(settings.get("example.upload.memory-threshold", "65536")))//
-                .importSource("example.Upload", UploadFunctions::new)//
                 .attachment(ConnectionProvider.class, connections);
     }
 

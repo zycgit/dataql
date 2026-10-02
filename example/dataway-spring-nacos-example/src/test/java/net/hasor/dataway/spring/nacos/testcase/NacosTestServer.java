@@ -73,7 +73,7 @@ public final class NacosTestServer implements AutoCloseable {
                 "-Dnacos.standalone=true", "-Dnacos.deployment.type=server", "-Dnacos.functionMode=config",//
                 "-Dnacos.remote.grpc.listen.ip=127.0.0.1", "-Dnacos.server.main.port=" + this.port,//
                 "-Dnacos.home=" + this.directory, "-jar", jar.toString(),//
-                "--spring.config.additional-location=" + config.resolve("application.properties").toUri(),//
+                "--spring.config.additional-location=file:" + config + "/",//
                 "--logging.config=" + config.resolve("nacos-logback.xml").toUri());
         builder.directory(this.directory.toFile());
         builder.redirectErrorStream(true);

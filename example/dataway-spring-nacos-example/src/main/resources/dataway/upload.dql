@@ -5,8 +5,8 @@
 // https://www.apache.org/licenses/LICENSE-2.0
 
 
-import 'example.Upload' as files;
+import 'net.hasor.dataway.function.WebUdfSource' as web;
 return {
     "title": ${title},
-    "file": files.inspect(${file})
+    "file": web.uploadFileInfo(${file})
 };

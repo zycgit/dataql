@@ -9,6 +9,7 @@ const baseUrl = new URL('./', document.baseURI);
 const elements = Object.fromEntries([...document.querySelectorAll('[id]')].map(element => [element.id, element]));
 let configuration;
 let identity;
+let downloadUrl;
 
 function notify(target, message) {
     elements[target].textContent = message;
@@ -17,14 +18,15 @@ function notify(target, message) {
 
 async function request(path, options = {}) {
     const response = await fetch(new URL(path, baseUrl), {credentials: 'same-origin', cache: 'no-store', ...options});
-    const text = await response.text();
+    const blob = await response.blob();
+    const text = await blob.text();
     let data;
     try {
         data = JSON.parse(text);
     } catch {
         data = null;
     }
-    return {response, text, data};
+    return {response, text, data, blob};
 }
 
 function errorMessage(result, fallback) {
@@ -186,6 +188,18 @@ function updateBodyMode() {
 
 elements.method.addEventListener('change', updateBodyMode);
 
+elements['result-example'].addEventListener('change', () => {
+    const name = elements['result-example'].value;
+    if (!name || !configuration) {
+        return;
+    }
+    const parameters = name === 'verifyCode' ? {text: 'A7K9'} : name === 'people-csv' ? {} : {message: 'Hello Dataway'};
+    elements['api-url'].value = `${configuration.apiPrefix}/${name}`;
+    elements.method.value = 'POST';
+    elements['json-body'].value = JSON.stringify(parameters, null, 2);
+    updateBodyMode();
+});
+
 elements['api-form'].addEventListener('submit', async event => {
     event.preventDefault();
     elements['send-button'].disabled = true;
@@ -214,6 +228,7 @@ elements['api-form'].addEventListener('submit', async event => {
         elements['response-status'].dataset.tone = result.response.ok ? 'success' : 'error';
         elements['response-body'].textContent = result.data !== null ? JSON.stringify(result.data, null, 2) : result.text || '无响应正文';
         elements['response-headers'].textContent = [...result.response.headers].map(([key, value]) => `${key}: ${value}`).join('\n');
+        showMedia(result);
         if (result.response.status === 401 || result.response.status === 403) {
             notify('api-notice', '请求被拒绝，请确认已登录且当前账号拥有该接口的访问权限。');
             await refreshIdentity();
@@ -251,11 +266,55 @@ elements['upload-form'].addEventListener('submit', async event => {
     notify('api-notice', '');
     try {
         const body = new FormData(elements['upload-form']);
-        const result = await request(`${configuration.apiPrefix}/upload`, {method: 'POST', body});
+        const path = event.submitter?.value === 'download' ? 'upload-download' : 'upload';
+        const result = await request(`${configuration.apiPrefix}/${path}`, {method: 'POST', body});
         elements['response-status'].textContent = `HTTP ${result.response.status}`;
         elements['response-body'].textContent = result.data ? JSON.stringify(result.data, null, 2) : result.text;
         elements['response-headers'].textContent = [...result.response.headers].map(([key, value]) => `${key}: ${value}`).join('\n');
+        showMedia(result);
     } catch (error) {
         notify('api-notice', error.message);
+    }
+});
+
+function showMedia(result) {
+    const link = elements['response-download'];
+    const preview = elements['response-image'];
+    preview.hidden = true;
+    preview.removeAttribute('src');
+    elements['response-body'].hidden = false;
+    if (downloadUrl) {
+        URL.revokeObjectURL(downloadUrl);
+        downloadUrl = null;
+    }
+    const disposition = result.response.headers.get('content-disposition') || '';
+    const type = result.response.headers.get('content-type') || '';
+    const image = result.response.ok && /^image\//i.test(type);
+    link.hidden = !result.response.ok || (!image && !/attachment/i.test(disposition) && !/application\/octet-stream/i.test(type));
+    if (link.hidden) {
+        return;
+    }
+    let filename = /filename="?([^";]+)"?/i.exec(disposition)?.[1] || (type.startsWith('image/png') ? 'dataway-result.png' : 'dataway-result.bin');
+    const encoded = /filename\*=UTF-8''([^;]+)/i.exec(disposition)?.[1];
+    if (encoded) {
+        try {
+            filename = decodeURIComponent(encoded);
+        } catch {
+            // Retain the fallback filename.
+        }
+    }
+    downloadUrl = URL.createObjectURL(result.blob);
+    if (image) {
+        preview.src = downloadUrl;
+        preview.hidden = false;
+        elements['response-body'].hidden = true;
+    }
+    link.href = downloadUrl;
+    link.download = filename;
+    link.textContent = '保存响应文件：' + filename;
+}
+window.addEventListener('pagehide', () => {
+    if (downloadUrl) {
+        URL.revokeObjectURL(downloadUrl);
     }
 });

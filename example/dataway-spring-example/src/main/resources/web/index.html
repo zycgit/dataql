@@ -89,6 +89,15 @@
             <section class="panel" aria-labelledby="request-title">
                 <div class="panel-heading"><h2 id="request-title">调用 API</h2><span class="muted">真实 HTTP 请求</span></div>
                 <form id="api-form">
+                    <label for="result-example">结果处理器示例</label>
+                    <select id="result-example">
+                        <option value="">手动填写接口</option>
+                        <option value="result-structure">Structure · 结构化 JSON</option>
+                        <option value="result-raw">Raw Value · 原始 JSON</option>
+                        <option value="people-csv">CSV · 人员列表下载</option>
+                        <option value="result-text">Text · 纯文本</option>
+                        <option value="verifyCode">VerifyCode · 验证码图片</option>
+                    </select>
                     <div class="request-address">
                         <div><label for="method">方法</label><select id="method">
                             <option>POST</option>
@@ -106,7 +115,7 @@
   "id": 1
 }</textarea>
                     <p id="body-hint" class="hint">以 application/json 发送正文。</p>
-                    <div class="request-footer"><p id="api-hint" class="hint">已预置 echo、person、people、orders、person-orders 接口，登录后即可调用。可在管理控制台查看和修改脚本。</p>
+                    <div class="request-footer"><p id="api-hint" class="hint">已预置 echo、person、people、orders、person-orders、people-csv、binary 接口，登录后即可调用。可在管理控制台查看和修改脚本。</p>
                         <button id="send-button" type="submit" disabled>发送请求</button>
                     </div>
                 </form>
@@ -121,10 +130,13 @@
                     <input id="upload-file" name="file" type="file" required>
                     <p class="hint">返回文件名、大小和 SHA-256。请求结束后释放临时文件，不保存上传内容。</p>
                     <button type="submit">上传并检查</button>
+                    <button type="submit" value="download">上传并下载</button>
                 </form>
             </section>
             <section class="panel response-panel" aria-labelledby="response-title">
                 <div class="panel-heading"><h2 id="response-title">响应结果</h2><span id="response-status" class="badge" aria-live="polite">尚未发送</span></div>
+                <a id="response-download" hidden>保存响应文件</a>
+                <img id="response-image" alt="接口图片响应" hidden>
                 <pre id="response-body" tabindex="0">请求结果将在这里显示。</pre>
                 <details>
                     <summary>响应头</summary>

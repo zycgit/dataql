@@ -76,14 +76,14 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring-boot.version}</version>
-                <configuration>
-                    <mainClass>net.hasor.dataway.spring.nacos.example.ExampleApplication</mainClass>
-                </configuration>
                 <executions>
                     <execution>
                         <goals>
                             <goal>repackage</goal>
                         </goals>
+                        <configuration>
+                            <mainClass>net.hasor.dataway.spring.nacos.example.ExampleApplication</mainClass>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

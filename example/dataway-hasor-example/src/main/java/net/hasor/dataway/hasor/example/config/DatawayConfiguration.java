@@ -20,7 +20,6 @@ import net.hasor.dataway.hasor.DatawayModule;
 import net.hasor.dataway.hasor.HasorTransactionProvider;
 import net.hasor.dataway.hasor.example.config.auth.LoginInterceptor;
 import net.hasor.dataway.hasor.example.service.ExampleApiService;
-import net.hasor.dataway.hasor.example.service.UploadFunctions;
 import net.hasor.dataway.service.Dataway;
 import net.hasor.dataway.service.DatawayConfig;
 
@@ -40,7 +39,6 @@ public class DatawayConfiguration implements Module {
                 .documentServer(settings.getString("dataway.api-prefix", "/api"))//
                 .uploadTempDirectory(Path.of(settings.getString("example.upload.directory", "./target/uploads")))//
                 .uploadMemoryThreshold(Integer.parseInt(settings.getString("example.upload.memory-threshold", "65536")))//
-                .importSource("example.Upload", UploadFunctions::new) //
                 .attachment(ConnectionProvider.class, connections);
     }
 

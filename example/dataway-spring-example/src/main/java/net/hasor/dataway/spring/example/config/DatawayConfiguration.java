@@ -15,7 +15,6 @@ import net.hasor.dataway.service.DatawayConfig;
 import net.hasor.dataway.spring.SpringTransactionProvider;
 import net.hasor.dataway.spring.example.config.auth.LoginInterceptor;
 import net.hasor.dataway.spring.example.service.ExampleApiService;
-import net.hasor.dataway.spring.example.service.UploadFunctions;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,7 +29,6 @@ public class DatawayConfiguration {
                 .documentServer(settings.getProperty("dataway.api-prefix", "/api"))//
                 .uploadTempDirectory(Path.of(settings.getProperty("example.upload.directory", "./target/uploads")))//
                 .uploadMemoryThreshold(Integer.parseInt(settings.getProperty("example.upload.memory-threshold", "65536")))//
-                .importSource("example.Upload", UploadFunctions::new)//
                 .attachment(ConnectionProvider.class, connections);
     }
 
