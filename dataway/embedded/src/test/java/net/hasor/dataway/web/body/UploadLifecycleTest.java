@@ -56,7 +56,7 @@ class UploadLifecycleTest extends ServiceTestSupport {
         if (outcome.equals("response-failure")) {
             response.failWith(failure);
         }
-        this.config.uploadTempDirectory(this.directory).uploadMemoryThreshold(1).resultHandler("raw").apiInterceptor((context, chain) -> {
+        this.config.uploadTempDirectory(this.directory).uploadMemoryThreshold(1).defaultResultHandler("raw").apiInterceptor((context, chain) -> {
             assertEquals(Operation.INVOKE, context.operation());
             assertEquals("form title", context.parameters().get("title"));
             assertEquals(List.of("one", "two"), context.parameters().get("tag"));

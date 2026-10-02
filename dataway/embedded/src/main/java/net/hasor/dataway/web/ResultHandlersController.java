@@ -16,7 +16,7 @@ import net.hasor.dataway.service.ResultInfoUtils;
 import net.hasor.dataway.service.admin.AdminService;
 import net.hasor.dataway.service.script.DatawayEngine;
 
-/** GET /result-handlers. Lists the names available in API options. */
+/** GET /get-handlers. Lists the names available in API options. */
 public class ResultHandlersController extends AbstractApiController {
     private final DatawayEngine engine;
 

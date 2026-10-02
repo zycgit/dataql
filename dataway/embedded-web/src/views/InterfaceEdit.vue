@@ -126,7 +126,7 @@ function validate() {
     if (!form.value.codeValue.trim()) {
         throw new Error('Script cannot be empty.');
     }
-    if (form.value.optionInfo.resultHandler === 'structure') {
+    if (form.value.optionInfo.resultHandler === 'structure' && Object.hasOwn(form.value.optionInfo, 'responseFormat')) {
         JSON.parse(form.value.optionInfo.responseFormat);
     }
 }
@@ -214,7 +214,7 @@ onBeforeRouteLeave(() => !dirty.value || window.confirm('Discard unsaved changes
 onMounted(() => {
     window.addEventListener('beforeunload', beforeUnload);
     action(async () => {
-        resultHandlers.value = (await services.client.value.management('result-handlers')).result;
+        resultHandlers.value = (await services.client.value.management('get-handlers')).result;
         if (route.params.id) {
             await load(route.params.id);
         }

@@ -17,6 +17,7 @@ import net.hasor.dataql.kernel.QueryResult;
 import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.model.ResultInfo;
+import net.hasor.dataway.result.structure.StructureResultHandler;
 import net.hasor.dataway.service.ResultInfoUtils;
 import net.hasor.dataway.service.config.MemoryResponse;
 import org.junit.jupiter.api.Test;
@@ -30,7 +31,7 @@ import static org.mockito.Mockito.when;
 class DatawayQueryTest extends ScriptTestSupport {
     @Test
     void scopeDefaultsMergeWithRequestParametersAndOtherScopesRemainDelegated() throws Exception {
-        this.config.resultHandler("raw");
+        this.config.defaultResultHandler("raw");
         this.scope = symbol -> switch (symbol) {
             case "$" -> Map.of("name", "default", "fallback", "host");
             case "@" -> Map.of("name", "context");
@@ -45,7 +46,7 @@ class DatawayQueryTest extends ScriptTestSupport {
 
     @Test
     void interceptorsSeePreparedParametersAndExecuteInRegistrationOrder() throws Exception {
-        this.config.resultHandler("raw");
+        this.config.defaultResultHandler("raw");
         this.scope = symbol -> null;
         List<String> events = new ArrayList<>();
         UserIdentity identity = UserIdentity.authenticated("caller", Map.of());
@@ -121,7 +122,7 @@ class DatawayQueryTest extends ScriptTestSupport {
     @ParameterizedTest
     @ValueSource(booleans = { false, true })
     void executionFailuresUseTheSelectedResponseStructure(boolean structured) throws Exception {
-        this.config.resultHandler(structured ? "structure" : "raw");
+        this.config.defaultResultHandler(structured ? "structure" : "raw");
         this.interceptors.add((context, chain) -> {
             throw new ExecutionException(new IllegalStateException("storage offline"));
         });
@@ -141,7 +142,7 @@ class DatawayQueryTest extends ScriptTestSupport {
 
     @Test
     void nullErrorMessagesStillProduceAnErrorEnvelopeWhenStructureIsDisabled() throws Exception {
-        this.config.resultHandler("raw");
+        this.config.defaultResultHandler("raw");
         this.interceptors.add((context, chain) -> {
             throw new IllegalStateException();
         });
@@ -154,12 +155,13 @@ class DatawayQueryTest extends ScriptTestSupport {
 
     @Test
     void responseTemplateResolvesPlaceholdersAndCopiesNestedLiteralsBetweenCalls() throws Exception {
-        this.config.responseFormat("""
+        DatawayEngine engine = this.engine();
+        engine.setResultHandlers(Map.of("structure", new StructureResultHandler(Map.of("responseFormat", """
                 {"data":"@resultData","status":"@resultStatus","code":"@resultCode","message":"@resultMessage",
                  "where":"@codeLocation","lifecycle":"@timeLifeCycle","execution":"@timeExecution",
                  "literal":{"list":[{"name":"original"},null]},"text":"@unknown"}
-                """);
-        DatawayQuery query = this.engine().newQuery(this.definition("api", "return 'value';"), List.of(), null);
+                """))));
+        DatawayQuery query = engine.newQuery(this.definition("api", "return 'value';"), List.of(), null);
         Map<?, ?> first = (Map<?, ?>) this.execute(query, Map.of());
         assertEquals("value", first.get("data"));
         assertEquals(true, first.get("status"));

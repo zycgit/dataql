@@ -7,9 +7,14 @@
  */
 package net.hasor.dataway.web.body;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import net.hasor.dataql.host.HostConfiguration;
+import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataway.function.WebFile;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -22,6 +27,25 @@ import static org.mockito.Mockito.*;
 class UploadStorageTest {
     @TempDir
     Path directory;
+
+    @Test
+    void conversionFunctionsReadUploadsWithoutReleasingTheRequestFile() throws Exception {
+        byte[] content = "你好".getBytes(StandardCharsets.UTF_8);
+        WebFile file = new UploadStorage(this.directory, 0).cache("text.txt", "text/plain", new ByteArrayInputStream(content));
+        try (file) {
+            Object result = new QueryManager(new HostConfiguration()).newBuilder().createQuery("""
+                    import 'net.hasor.dataql.host.function.basic.ConvertUdfSource' as convert;
+                    return [convert.byteToHex(${file}), convert.byteToString(${file})];
+                    """).execute(symbol -> Map.of("file", file)).getData().unwrap();
+            assertEquals(List.of("E4BDA0E5A5BD", "你好"), result);
+            this.assertFileCount(1);
+            try (InputStream input = file.openStream()) {
+                assertArrayEquals(content, input.readAllBytes());
+            }
+        }
+        this.assertFileCount(0);
+        assertThrows(IOException.class, file::openStream);
+    }
 
     @ParameterizedTest
     @CsvSource({ "0,0,false", "4,4,false", "5,4,true", "1,0,true", "8192,8192,false", "20000,10000,true" })

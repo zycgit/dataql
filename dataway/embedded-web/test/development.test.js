@@ -65,7 +65,7 @@ test('mock serves the independent initializer and seeded management documents', 
     assert.match(await initializer.text(), /window\.DatawayUI\(/);
     const list = await management('api-list');
     assert.equal(list.success, true);
-    assert.deepEqual(list.result.map(item => item.status), [1, 1, 1, 0, 3, 1, 1, 1]);
+    assert.deepEqual(list.result.map(item => item.status), [1, 1, 1, 0, 3, 1, 1, 1, 1]);
     const detail = (await management('api-detail', {id: 'mock-hello'})).result;
     assert.equal(detail.version, 2);
     assert.equal(JSON.parse(detail.requestBody).message, 'Hello Dataway Mock.');
@@ -168,7 +168,7 @@ test('restarting mock mode resets changes to the sample definitions', async () =
     assert.equal(restored.status, 1);
     assert.equal(restored.version, 2);
     const list = (await management('api-list')).result;
-    assert.equal(list.length, 8);
+    assert.equal(list.length, 9);
 });
 
 test('proxy rewrites prefixes and preserves request bytes, credentials, cookies and backend errors', async t => {

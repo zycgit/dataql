@@ -35,7 +35,7 @@ class AuthorizationHttpTest extends ServiceTestSupport {
     @MethodSource("identities")
     void everyPresetCanInvokeAPublishedApiWithItsIdentity(UserIdentity identity) throws Exception {
         AtomicInteger executions = new AtomicInteger();
-        this.config.resultHandler("raw").identityProvider(request -> identity).apiInterceptor((context, chain) -> {
+        this.config.defaultResultHandler("raw").identityProvider(request -> identity).apiInterceptor((context, chain) -> {
             assertSame(identity, context.identity());
             assertEquals(Operation.INVOKE, context.operation());
             executions.incrementAndGet();
@@ -56,7 +56,7 @@ class AuthorizationHttpTest extends ServiceTestSupport {
 
     @Test
     void defaultIdentityCannotInvokePublishedApisOrReadConsoleOrSpecifications() throws Exception {
-        this.config.resultHandler("raw");
+        this.config.defaultResultHandler("raw");
         this.publishRoute(this.release(this.info("api", "1", 1), "release", "1", 1));
         Dataway dataway = this.config.createDataway();
         try (HttpTestServer api = new HttpTestServer("/api", dataway.getApiHandler()); HttpTestServer admin = new HttpTestServer("/console", dataway.getAdminHandler()); HttpTestServer documents = new HttpTestServer("/docs", dataway.getDocumentHandler())) {

@@ -73,7 +73,8 @@
           </div>
         </div>
       </el-tab-pane>
-      <el-tab-pane v-if="onEditPage" name="structure" label="Structure" :disabled="!selectedOutput.structure">
+      <el-tab-pane v-if="onEditPage" name="structure" label="Structure" class="result-structure-pane" :disabled="!selectedOutput.structure">
+        <p class="result-template-hint">Leave blank to use the handler’s default response template.</p>
         <CodeEditor :model-value="optionInfo.responseFormat || ''" language="json" label="Response structure" @update:model-value="option('responseFormat', $event)" />
       </el-tab-pane>
     </el-tabs>
@@ -128,7 +129,7 @@ const size = computed(() => {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MiB';
 });
 const outputs = computed(() => {
-    const labels = {structure: 'Structure', raw: 'Raw Value', csv: 'CSV', text: 'Text'};
+    const labels = {structure: 'Structure', raw: 'Raw Value', csv: 'CSV', text: 'Text', verifyCode: 'VerifyCode'};
     return ['structure', 'raw', ...props.resultHandlers.filter(name => !['structure', 'raw'].includes(name))]
         .map(name => ({label: Object.hasOwn(labels, name) ? labels[name] : name, handler: name, structure: name === 'structure'}));
 });
@@ -172,7 +173,11 @@ function cellText(value) {
     return typeof value === 'object' ? JSON.stringify(value) : String(value);
 }
 function option(name, value) {
-    emit('update:optionInfo', {...props.optionInfo, [name]: value});
+    const options = {...props.optionInfo, [name]: value};
+    if (name === 'responseFormat' && !value.trim()) {
+        delete options.responseFormat;
+    }
+    emit('update:optionInfo', options);
 }
 function selectOutput(output) {
     emit('update:optionInfo', {...props.optionInfo, resultHandler: output.handler});
@@ -180,6 +185,9 @@ function selectOutput(output) {
 function format() {
     try {
         if (tab.value === 'structure') {
+            if (!props.optionInfo.responseFormat) {
+                return;
+            }
             option('responseFormat', JSON.stringify(JSON.parse(props.optionInfo.responseFormat), null, 2));
         } else {
             display.value = JSON.stringify(JSON.parse(display.value), null, 2);
@@ -189,7 +197,7 @@ function format() {
     }
 }
 async function copy() {
-    const text = tab.value === 'structure' ? props.optionInfo.responseFormat
+    const text = tab.value === 'structure' ? props.optionInfo.responseFormat || ''
         : view.value === 'table' ? props.response.rawText : display.value;
     try {
         if (navigator.clipboard && window.isSecureContext) {

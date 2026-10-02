@@ -24,6 +24,7 @@ import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ApiScriptType;
 import net.hasor.dataway.service.BeanContainer;
+import net.hasor.dataway.service.DatawayConfig;
 import net.hasor.dataway.service.script.DatawayEngine;
 import net.hasor.dataway.service.script.DatawayQuery;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,7 @@ class WebUdfSourceInvocationTest {
     void registrationExposesOnlyTheDocumentedFunctions() throws Exception {
         Map<String, Udf> functions = this.source.getUdfResource(new HostConfiguration()).get();
 
-        assertEquals(Set.of("header", "headerArray", "headerMap", "headerArrayMap", "setHeader", "addHeader", "setHeaderAll", "addHeaderAll", "cookie", "cookieArray", "cookieMap", "cookieArrayMap", "setCookie", "removeCookie", "jsonBody", "fileInfo", "binary"), functions.keySet());
+        assertEquals(Set.of("header", "headerArray", "headerMap", "headerArrayMap", "setHeader", "addHeader", "setHeaderAll", "addHeaderAll", "cookie", "cookieArray", "cookieMap", "cookieArrayMap", "setCookie", "removeCookie", "jsonBody", "uploadFileInfo"), functions.keySet());
         assertSame(this.source, this.source.get(WebUdfSource.class));
     }
 
@@ -109,8 +110,8 @@ class WebUdfSourceInvocationTest {
         beans.setBean(HostContext.class, host);
         beans.setBean(CustomizeScope.class, symbol -> Map.of());
         DatawayEngine engine = new DatawayEngine(beans, List.of());
-        engine.setResponseFormat("{\"value\":\"@resultData\"}");
         engine.setWrapParameterName("root");
+        engine.setResultHandlers(new DatawayConfig().getResultHandlers());
         engine.setResultHandler("raw");
 
         ApiDefinition definition = new ApiDefinition();

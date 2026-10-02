@@ -30,8 +30,8 @@ abstract class ScriptTestSupport extends ServiceTestSupport {
             beans.addBean(ApiInterceptor.class, interceptor);
         }
         DatawayEngine engine = new DatawayEngine(beans, List.of(builder -> builder.addShareVar("customized", () -> "query")));
-        engine.setResponseFormat(this.config.getResponseFormat());
-        engine.setResultHandler(this.config.getResultHandler());
+        engine.setResultHandlers(this.config.getResultHandlers());
+        engine.setResultHandler(this.config.getDefaultResultHandler());
         engine.setWrapAllParameters(this.config.isWrapAllParameters());
         engine.setWrapParameterName(this.config.getWrapParameterName());
         return engine;

@@ -7,8 +7,6 @@
  */
 export const defaultOptions = {
     resultHandler: 'structure',
-    responseFormat: JSON.stringify({success: '@resultStatus', message: '@resultMessage', location: '@codeLocation',
-        code: '@resultCode', lifeCycleTime: '@timeLifeCycle', executionTime: '@timeExecution', value: '@resultData'}, null, 2),
     wrapAllParameters: false,
     wrapParameterName: 'root',
 };

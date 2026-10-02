@@ -50,7 +50,7 @@ class WebUdfSourceFileTest {
     }
 
     private Map<?, ?> inspect(WebFile file) throws Exception {
-        String script = "import '" + WebUdfSource.class.getName() + "' as web; return web.fileInfo(${file});";
+        String script = "import '" + WebUdfSource.class.getName() + "' as web; return web.uploadFileInfo(${file});";
         Query query = new QueryManager(new HostConfiguration()).newBuilder().createQuery(script);
         return assertInstanceOf(Map.class, query.execute(Map.of("file", file)).getData().unwrap());
     }
@@ -75,7 +75,7 @@ class WebUdfSourceFileTest {
         when(stream.read(any(byte[].class))).thenThrow(failure);
 
         try (file) {
-            assertSame(failure, assertThrows(IOException.class, () -> new WebUdfSource().fileInfo(file)));
+            assertSame(failure, assertThrows(IOException.class, () -> new WebUdfSource().uploadFileInfo(file)));
             verify(stream).close();
             verify(file, never()).deleteContent();
         }

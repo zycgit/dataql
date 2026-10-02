@@ -42,7 +42,7 @@ class ApiHandlerTest extends ServiceTestSupport {
         Map<FieldDef, String> newest = this.release(this.info("api", "1", 1), "new", "1", 2);
         newest.put(SCRIPT, "return 'newest';");
         when(this.access.listObjects(EntityType.RELEASE, Map.of(METHOD, "GET", PATH, "/api", STATUS, "1"))).thenReturn(List.of(newest, old));
-        this.config.resultHandler("raw");
+        this.config.defaultResultHandler("raw");
         assertEquals("newest", this.handle(this.config.createDataway().getApiHandler(), "get", "/api").json());
         verify(this.access, never()).listObjects(eq(EntityType.INFO), anyMap());
         verify(this.access, never()).write(anyList());
@@ -57,7 +57,7 @@ class ApiHandlerTest extends ServiceTestSupport {
                 return [${name}, ${repeated}, ${flag}, ${encoded}, web.jsonBody(), web.header('Authorization'), web.cookie('session')];
                 """);
         this.publishRoute(release);
-        this.config.resultHandler("raw");
+        this.config.defaultResultHandler("raw");
         MemoryRequest request = this.request("POST", "/api");
         request.setQuery("name=query&repeated=one&repeated=two&repeated=three&flag&encoded=a%2Bb+c");
         request.json(Map.of("name", "body"));
@@ -92,7 +92,7 @@ class ApiHandlerTest extends ServiceTestSupport {
         Map<FieldDef, String> release = this.release(this.info("root", "1", 1), "release", "1", 1);
         release.put(PATH, "/");
         this.publishRoute(release);
-        this.config.resultHandler("raw").identityProvider(request -> identity).apiInterceptor((context, chain) -> {
+        this.config.defaultResultHandler("raw").identityProvider(request -> identity).apiInterceptor((context, chain) -> {
             assertEquals(Operation.INVOKE, context.operation());
             assertSame(identity, context.identity());
             assertEquals("root", context.definition().getId());
@@ -117,7 +117,7 @@ class ApiHandlerTest extends ServiceTestSupport {
         Map<FieldDef, String> release = this.release(this.info("api", "1", 1), "release", "1", 1);
         release.put(OPTION, options);
         this.publishRoute(release);
-        this.config.resultHandler("raw");
+        this.config.defaultResultHandler("raw");
         assertEquals("value", this.handle(this.config.createDataway().getApiHandler(), "GET", "/api").json());
     }
 
@@ -126,7 +126,7 @@ class ApiHandlerTest extends ServiceTestSupport {
     @ValueSource(strings = { " ", "{}", "{\"requestBody\":null}" })
     void missingSampleParameterDefinitionsDoNotInventFragmentArguments(String sample) throws Exception {
         AtomicReference<Map<String, Object>> parameters = new AtomicReference<>();
-        this.config.resultHandler("raw").fragment(ApiScriptType.SQL.getTypeName(), () -> (hints, values, script) -> {
+        this.config.defaultResultHandler("raw").fragment(ApiScriptType.SQL.getTypeName(), () -> (hints, values, script) -> {
             parameters.set(values);
             return "sql-result";
         });
@@ -142,7 +142,7 @@ class ApiHandlerTest extends ServiceTestSupport {
     @ParameterizedTest
     @ValueSource(booleans = { false, true })
     void fragmentParameterNamesComeFromObjectOrLegacyStringSamples(boolean legacyString) throws Exception {
-        this.config.resultHandler("raw").fragment(ApiScriptType.SQL.getTypeName(), () -> (hints, values, script) -> values);
+        this.config.defaultResultHandler("raw").fragment(ApiScriptType.SQL.getTypeName(), () -> (hints, values, script) -> values);
         Map<FieldDef, String> release = this.release(this.info("api", "1", 1), "release", "1", 1);
         release.put(TYPE, "SQL");
         release.put(SCRIPT, "select :id");

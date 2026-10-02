@@ -6,8 +6,12 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 import {randomUUID} from 'node:crypto';
+import {readFileSync} from 'node:fs';
 import {isDeepStrictEqual} from 'node:util';
 import {definitions, responses, defaultResponse} from './fixtures.js';
+
+// A fixed PNG rendered by VerifyCodeResultHandler; mock mode never executes Java or DataQL.
+const verifyCodeImage = readFileSync(new URL('./verify-code.png', import.meta.url));
 
 export function mockApi() {
     return {
@@ -69,7 +73,7 @@ function definition(id, input, previous) {
             fail(400, name + ' must be a boolean');
         }
     }
-    if (Object.hasOwn(optionInfo, 'resultHandler') && !['structure', 'raw', 'csv', 'text'].includes(optionInfo.resultHandler)) {
+    if (Object.hasOwn(optionInfo, 'resultHandler') && !['structure', 'raw', 'csv', 'text', 'verifyCode'].includes(optionInfo.resultHandler)) {
         fail(400, 'Unknown result handler: ' + optionInfo.resultHandler);
     }
     if (optionInfo.wrapAllParameters && !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(wrapper(optionInfo))) {
@@ -153,7 +157,7 @@ async function readBody(request) {
 
 function management(url, request, body, records) {
     const path = url.pathname.slice('/admin/api'.length);
-    const reads = ['/api-list', '/api-info', '/api-detail', '/api-history', '/get-history', '/result-handlers'];
+    const reads = ['/api-list', '/api-info', '/api-detail', '/api-history', '/get-history', '/get-handlers'];
     const writes = ['/save-api', '/perform', '/smoke', '/publish', '/disable', '/delete'];
     if (!reads.includes(path) && !writes.includes(path)) {
         fail(404, 'Not found');
@@ -170,12 +174,12 @@ function management(url, request, body, records) {
     if (Object.hasOwn(body, 'id') && id !== body.id) {
         fail(400, 'Conflicting API ids');
     }
-    if (!['/api-list', '/result-handlers'].includes(path) && (typeof id !== 'string' || !id.trim())) {
+    if (!['/api-list', '/get-handlers'].includes(path) && (typeof id !== 'string' || !id.trim())) {
         fail(400, 'id is required');
     }
     switch (path) {
-        case '/result-handlers': {
-            return result(['structure', 'raw', 'csv', 'text']);
+        case '/get-handlers': {
+            return result(['structure', 'raw', 'csv', 'text', 'verifyCode']);
         }
         case '/api-list': {
             return result([...records.values()].map(record => ({id: record.draft.id, version: record.version,
@@ -298,15 +302,18 @@ async function execute(definition, values, request) {
     const responder = responses[definition.select + ' ' + definition.apiPath] ?? defaultResponse;
     const response = await responder({definition: structuredClone(definition), parameters, request});
     const handler = options.resultHandler ?? 'structure';
-    if (!['structure', 'raw', 'text', 'csv'].includes(handler)) {
+    if (!['structure', 'raw', 'text', 'csv', 'verifyCode'].includes(handler)) {
         fail(400, 'Unknown result handler: ' + handler);
+    }
+    if ((response.status ?? 200) < 400 && handler === 'verifyCode') {
+        return {...response, body: verifyCodeImage, headers: {...response.headers, 'Content-Type': 'image/png', 'Cache-Control': 'no-store'}};
     }
     if ((response.status ?? 200) < 400 && ['text', 'csv'].includes(handler)) {
         if (handler === 'text') {
             if (Buffer.isBuffer(response.body)) {
                 fail(400, 'Use Raw Value to return binary content');
             }
-            const text = typeof response.body === 'string' ? response.body : JSON.stringify(response.body);
+            const text = textValue(response.body);
             return {...response, body: Buffer.from(text), headers: {...response.headers, 'Content-Type': 'text/plain; charset=UTF-8'}};
         }
         if (!Array.isArray(response.body) || response.body.some(row => !row || typeof row !== 'object' || Array.isArray(row))) {
@@ -336,6 +343,16 @@ async function execute(definition, values, request) {
     } : object(options.responseFormat, 'responseFormat');
     return {...response, body: Object.fromEntries(Object.entries(format).map(([key, value]) =>
         [key, typeof value === 'string' && Object.hasOwn(fields, value) ? fields[value] : value]))};
+}
+
+function textValue(value) {
+    if (Array.isArray(value)) {
+        return '[' + value.map(textValue).join(', ') + ']';
+    }
+    if (value !== null && typeof value === 'object') {
+        return '{' + Object.entries(value).map(([key, item]) => key + '=' + textValue(item)).join(', ') + '}';
+    }
+    return String(value);
 }
 
 function respond(request, response, result) {

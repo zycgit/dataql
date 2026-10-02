@@ -55,6 +55,11 @@ export const definitions = [
         codeValue: '// The mock responder supplies an SVG image.\nreturn null;', requestBody: {},
         optionInfo: {resultHandler: 'raw'},
     },
+    {
+        id: 'mock-verifyCode', select: 'POST', apiPath: '/mock/verifyCode', published: true,
+        comment: 'Fixed PNG verification code preview', codeType: 'DataQL', codeValue: 'return ${text};',
+        requestBody: {text: 'A7K9'}, optionInfo: {resultHandler: 'verifyCode'},
+    },
 ];
 
 // Responses are selected by method and path. Editor scripts are never evaluated.
@@ -70,6 +75,7 @@ export const responses = {
         headers: {'Content-Type': 'application/octet-stream', 'Content-Disposition': 'attachment; filename="mock-result.bin"'},
     }),
     'GET /mock/text': () => ({body: 'Hello Dataway\nPlain text · 你好'}),
+    'POST /mock/verifyCode': () => ({body: 'A7K9'}),
     'GET /mock/csv': () => ({body: [{id: 1, name: 'Alice, "A"'}, {id: 2, name: 'Bob'}]}),
     'GET /mock/image': () => ({
         body: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="640" height="240" viewBox="0 0 640 240">'

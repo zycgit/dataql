@@ -49,7 +49,7 @@ class DebugHttpTest extends ServiceTestSupport {
         this.storeInfo(draft);
         UserIdentity identity = UserIdentity.consoleAdmin("editor", Map.of());
         AtomicInteger intercepted = new AtomicInteger();
-        this.config.resultHandler("raw").identityProvider(request -> identity).apiInterceptor((context, chain) -> {
+        this.config.defaultResultHandler("raw").identityProvider(request -> identity).apiInterceptor((context, chain) -> {
             assertSame(identity, context.identity());
             assertEquals(Operation.DEBUG, context.operation());
             assertEquals(Map.of("name", "actual"), context.parameters());

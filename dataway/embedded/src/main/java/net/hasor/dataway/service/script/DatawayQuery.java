@@ -6,8 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.service.script;
-import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,14 +23,17 @@ import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ResultInfo;
 import net.hasor.dataway.model.WebResponse;
+import net.hasor.dataway.result.ResultContext;
+import net.hasor.dataway.result.ResultHandler;
+import net.hasor.dataway.result.structure.StructureResultHandler;
+import net.hasor.dataway.service.ResultInfoUtils;
 import static net.hasor.dataway.function.WebUdfSource.HINT_REQUEST;
 import static net.hasor.dataway.function.WebUdfSource.HINT_RESPONSE;
 
 /** Prepares, intercepts and executes a script, then formats its result. */
 public class DatawayQuery {
     private final List<ApiInterceptor> interceptors;
-    private final Map<?, ?>            responseFormat;
-    private final boolean              resultStructure;
+    private final Map<String, Object>  resultOptions;
     private final boolean              wrapAllParameters;
     private final String               wrapParameterName;
     //
@@ -40,23 +41,25 @@ public class DatawayQuery {
     private final QueryBuilder         queryBuilder;
     private final CustomizeScope       scope;
     private final QIL                  compiled;
+    private final ResultHandler        resultHandler;
 
     DatawayQuery(ApiDefinition definition, QIL compiled, List<ApiInterceptor> interceptors, QueryBuilder queryBuilder, CustomizeScope scope, //
-            Map<?, ?> responseFormat, boolean resultStructure, boolean wrapAllParameters, String wrapParameterName) {
+            Map<String, Object> resultOptions, boolean wrapAllParameters, String wrapParameterName, ResultHandler resultHandler) {
         this.definition = definition;
         this.compiled = compiled;
         this.interceptors = interceptors;
         this.queryBuilder = queryBuilder;
         this.scope = scope;
 
-        this.responseFormat = responseFormat;
-        this.resultStructure = resultStructure;
+        this.resultOptions = resultOptions;
         this.wrapAllParameters = wrapAllParameters;
         this.wrapParameterName = wrapParameterName;
+        this.resultHandler = resultHandler;
     }
 
     /** Prepares parameters, invokes interceptors, and formats results or unhandled execution exceptions. */
-    public Object execute(Operation operation, UserIdentity identity, Map<String, ?> parameters, Map<String, ?> request, WebResponse response) throws Exception {
+    public ResultInfo execute(Operation operation, UserIdentity identity, Map<String, ?> parameters, Map<String, ?> request, WebResponse response) throws Exception {
+        Map<String, Object> options = this.resultHandler.prepareOptions(this.resultOptions);
         long started = System.nanoTime();
 
         // real call
@@ -87,20 +90,28 @@ public class DatawayQuery {
             chain = c -> interceptor.invoke(c, next);
         }
 
-        // do call
+        ResultContext resultContext;
         try {
             ApiInterceptorContext context = new ApiInterceptorContext(this.definition, operation, identity, parameters);
-            ApiInterceptorContext invocation = this.prepareContext(context);
-            Object result = chain.proceed(invocation);
-            long elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
-            return this.processResult(result, elapsed);
-        } catch (Exception e) {
-            long elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
-            return this.processException(e, elapsed);
-        }
-    }
+            Object result = chain.proceed(this.prepareContext(context));
+            if (!(result instanceof QueryResult queryResult)) {
+                return ResultInfoUtils.convertToResultInfo(result);
+            }
 
-    //
+            resultContext = new ResultContext();
+            resultContext.setSuccess(true);
+            resultContext.setCode(queryResult.getCode());
+            resultContext.setMessage("OK");
+            resultContext.setValue(queryResult.getData().unwrap());
+            resultContext.setExecutionTime(queryResult.executionTime());
+        } catch (Exception error) {
+            resultContext = this.failureContext(error);
+        }
+
+        resultContext.setLifeCycleTime(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started));
+        resultContext.setOptions(options);
+        return this.processResult(resultContext);
+    }
 
     private ApiInterceptorContext prepareContext(ApiInterceptorContext context) {
         Map<String, Object> values = new LinkedHashMap<>();
@@ -117,92 +128,48 @@ public class DatawayQuery {
         return new ApiInterceptorContext(context.definition(), context.operation(), context.identity(), parameters);
     }
 
-    private Object processResult(Object result, long elapsed) {
-        if (!(result instanceof QueryResult r)) {
-            return result;
-        }
+    private ResultInfo processResult(ResultContext context) throws Exception {
+        try {
+            ResultInfo response = this.resultHandler.handle(context);
+            if (response == null) {
+                throw new IllegalStateException("Result handler returned null");
+            }
 
-        Object value = r.getData().unwrap();
-        if (!this.resultStructure || value instanceof ResultInfo || value instanceof byte[] || value instanceof InputStream) {
-            return value;
+            return response;
+        } catch (Exception error) {
+            if (context.getError() != null && error != context.getError()) {
+                error.addSuppressed(context.getError());
+            }
+            ResultContext failure = this.failureContext(error);
+            failure.setLifeCycleTime(context.getLifeCycleTime());
+            failure.setOptions(this.resultOptions);
+            return new StructureResultHandler().handle(failure);
         }
-
-        Map<String, Object> fields = new LinkedHashMap<>();
-        fields.put("success", true);
-        fields.put("message", "OK");
-        fields.put("code", r.getCode());
-        fields.put("location", null);
-        fields.put("lifeCycleTime", elapsed);
-        fields.put("executionTime", r.executionTime());
-        fields.put("value", value);
-        return this.formatResult(fields);
     }
 
-    private Object processException(Exception error, long elapsed) {
+    private ResultContext failureContext(Exception error) {
         if (error instanceof ExecutionException && error.getCause() instanceof Exception cause) {
             error = cause;
         }
 
-        Object value = error.getMessage();
-        int code = 500;
-        long executionTime = -1;
+        ResultContext context = new ResultContext();
+        context.setSuccess(false);
+        context.setError(error);
+        context.setMessage(error.getLocalizedMessage());
+        context.setValue(error.getMessage());
+        context.setCode(500);
+        context.setExecutionTime(-1);
+        context.setLocation("Unknown");
+
         if (error instanceof ThrowRuntimeException e) {
-            value = e.getResult() == null ? null : e.getResult().unwrap();
-            code = e.getThrowCode();
-            executionTime = e.getExecutionTime();
-        }
-        if (!this.resultStructure && value != null) {
-            return value;
+            context.setValue(e.getResult() == null ? null : e.getResult().unwrap());
+            context.setCode(e.getThrowCode());
+            context.setExecutionTime(e.getExecutionTime());
         }
 
-        String location = "Unknown";
         if (error instanceof DataQueryException e) {
-            location = e.getLocation().toString();
+            context.setLocation(e.getLocation().toString());
         }
-
-        Map<String, Object> fields = new LinkedHashMap<>();
-        fields.put("success", false);
-        fields.put("message", error.getLocalizedMessage());
-        fields.put("code", code);
-        fields.put("location", location);
-        fields.put("lifeCycleTime", elapsed);
-        fields.put("executionTime", executionTime);
-        fields.put("value", value);
-        return this.formatResult(fields);
-    }
-
-    private Object formatResult(Map<String, Object> fields) {
-        Map<String, Object> formatted = new LinkedHashMap<>();
-        this.responseFormat.forEach((key, placeholder) -> {
-            String field = switch (String.valueOf(placeholder)) {
-                case "@resultStatus" -> "success";
-                case "@resultMessage" -> "message";
-                case "@resultCode" -> "code";
-                case "@blockLocation", "@codeLocation" -> "location";
-                case "@timeLifeCycle" -> "lifeCycleTime";
-                case "@timeExecution" -> "executionTime";
-                case "@resultData" -> "value";
-                default -> null;
-            };
-            formatted.put(key.toString(), field == null ? this.copyTemplateValue(placeholder) : fields.get(field));
-        });
-        return formatted;
-    }
-
-    /** Keeps literal objects and arrays independent between executions. */
-    private Object copyTemplateValue(Object value) {
-        if (value instanceof Map<?, ?> map) {
-            Map<String, Object> copy = new LinkedHashMap<>();
-            map.forEach((key, item) -> copy.put(key.toString(), this.copyTemplateValue(item)));
-            return copy;
-        }
-        if (value instanceof List<?> list) {
-            List<Object> copy = new ArrayList<>(list.size());
-            for (Object item : list) {
-                copy.add(this.copyTemplateValue(item));
-            }
-            return copy;
-        }
-        return value;
+        return context;
     }
 }

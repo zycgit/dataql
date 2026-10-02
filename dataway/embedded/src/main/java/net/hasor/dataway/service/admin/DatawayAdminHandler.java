@@ -36,17 +36,18 @@ public final class DatawayAdminHandler extends WebHandler {
 
         this.routes = Map.ofEntries(//
                 // read
-                Map.entry("/api-list", Tuple.of("GET", new ApiListController(adminService))),          //
-                Map.entry("/api-info", Tuple.of("GET", new ApiInfoController(adminService))),          //
-                Map.entry("/api-detail", Tuple.of("GET", new ApiDetailController(adminService))),      //
-                Map.entry("/api-history", Tuple.of("GET", new ApiHistoryListController(adminService))),//
-                Map.entry("/get-history", Tuple.of("GET", new ApiHistoryGetController(adminService))), //
+                Map.entry("/api-list", Tuple.of("GET", new ApiListController(adminService))),           //
+                Map.entry("/api-info", Tuple.of("GET", new ApiInfoController(adminService))),           //
+                Map.entry("/api-detail", Tuple.of("GET", new ApiDetailController(adminService))),       //
+                Map.entry("/api-history", Tuple.of("GET", new ApiHistoryListController(adminService))), //
+                Map.entry("/get-history", Tuple.of("GET", new ApiHistoryGetController(adminService))),  //
+                Map.entry("/get-handlers", Tuple.of("GET", new ResultHandlersController(adminService, engine))), //
                 // write
-                Map.entry("/save-api", Tuple.of("POST", new SaveApiController(adminService))),         //
-                Map.entry("/perform", Tuple.of("POST", new PerformController(adminService, engine))),//
-                Map.entry("/smoke", Tuple.of("POST", new SmokeController(adminService, engine))),    //
-                Map.entry("/publish", Tuple.of("POST", new PublishController(adminService))),          //
-                Map.entry("/disable", Tuple.of("POST", new DisableController(adminService))),          //
+                Map.entry("/save-api", Tuple.of("POST", new SaveApiController(adminService))),          //
+                Map.entry("/perform", Tuple.of("POST", new PerformController(adminService, engine))),   //
+                Map.entry("/smoke", Tuple.of("POST", new SmokeController(adminService, engine))),       //
+                Map.entry("/publish", Tuple.of("POST", new PublishController(adminService))),           //
+                Map.entry("/disable", Tuple.of("POST", new DisableController(adminService))),           //
                 Map.entry("/delete", Tuple.of("POST", new DeleteController(adminService))));
     }
 

@@ -6,6 +6,7 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.service.script;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -17,10 +18,19 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
+import javax.imageio.ImageIO;
 import net.hasor.dataql.domain.BinaryValue;
+import net.hasor.dataql.util.JsonUtils;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.FieldDef;
 import net.hasor.dataway.model.ResultInfo;
+import net.hasor.dataway.result.ResultContext;
+import net.hasor.dataway.result.ResultHandler;
+import net.hasor.dataway.result.csv.CsvResultHandler;
+import net.hasor.dataway.result.raw.RawResultHandler;
+import net.hasor.dataway.result.structure.StructureResultHandler;
+import net.hasor.dataway.result.text.TextResultHandler;
+import net.hasor.dataway.result.verifycode.VerifyCodeResultHandler;
 import net.hasor.dataway.service.Dataway;
 import net.hasor.dataway.service.DatawayException;
 import net.hasor.dataway.service.ResultInfoUtils;
@@ -31,6 +41,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import static net.hasor.dataway.dal.FieldDef.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -47,6 +58,60 @@ class ResultHandlerTest extends ServiceTestSupport {
         info.put(OPTION, options);
         info.put(METHOD, method);
         this.publishRoute(this.release(info, "release", "1", 1));
+    }
+
+    @Test
+    void constructorDefaultsAndApiOverridesRemainIndependent() throws Exception {
+        Map<String, Object> defaults = new LinkedHashMap<>();
+        defaults.put("responseFormat", "{\"defaultData\":\"@resultData\"}");
+        StructureResultHandler handler = new StructureResultHandler(defaults);
+        defaults.put("responseFormat", "{}");
+        this.config.resultHandler("structure", handler);
+        Dataway dataway = this.config.createDataway();
+        this.publish("return 'first';", "{}", "GET");
+        assertEquals(Map.of("defaultData", "first"), this.handle(dataway.getApiHandler(), "GET", "/result").json());
+        String options = JsonUtils.writeValueAsString(Map.of("responseFormat", "{\"apiData\":\"@resultData\"}"));
+        this.publish("return 'override';", options, "GET");
+        assertEquals(Map.of("apiData", "override"), this.handle(dataway.getApiHandler(), "GET", "/result").json());
+        this.publish("return 'second';", "{}", "GET");
+        assertEquals(Map.of("defaultData", "second"), this.handle(dataway.getApiHandler(), "GET", "/result").json());
+    }
+
+    @Test
+    void allBuiltInHandlersUseConstructorAndApiOptionsForFailureResponses() throws Exception {
+        this.config.apiInterceptor((context, chain) -> {
+            throw new IllegalStateException();
+        });
+        Map<String, Object> defaults = Map.of("responseFormat", "{\"problem\":\"@resultData\"}");
+        List<ResultHandler> handlers = List.of(new StructureResultHandler(defaults), new RawResultHandler(defaults), new CsvResultHandler(defaults), new TextResultHandler(defaults), new VerifyCodeResultHandler(defaults));
+        for (ResultHandler handler : handlers) {
+            this.config.resultHandler("configured", handler);
+            Dataway dataway = this.config.createDataway();
+            // Raw returns non-null error values directly; null uses the configured failure template.
+            this.publish("return 1;", "{\"resultHandler\":\"configured\"}", "GET");
+            assertEquals(Map.of(), this.handle(dataway.getApiHandler(), "GET", "/result").json());
+            String options = JsonUtils.writeValueAsString(Map.of("resultHandler", "configured", "responseFormat", "{\"ok\":\"@resultStatus\"}"));
+            this.publish("return 1;", options, "GET");
+            assertEquals(Map.of("ok", false), this.handle(dataway.getApiHandler(), "GET", "/result").json());
+        }
+    }
+
+    @Test
+    void customHandlerReceivesFinalOptionsWithoutLeakingMutableDefaults() throws Exception {
+        List<String> labels = new ArrayList<>(List.of("default"));
+        this.config.resultHandler("options", new OptionsResultHandler(Map.of("status", 201, "labels", labels)));
+        labels.clear();
+        Dataway dataway = this.config.createDataway();
+        this.publish("return 'value';", "{\"resultHandler\":\"options\",\"status\":202}", "GET");
+        for (int i = 0; i < 2; i++) {
+            MemoryResponse response = this.handle(dataway.getApiHandler(), "GET", "/result");
+            assertEquals(202, response.getStatus());
+            assertEquals(Map.of("labels", List.of("default"), "value", "value"), response.json());
+        }
+        this.publish("return 'other';", "{\"resultHandler\":\"options\",\"labels\":[\"api\"]}", "GET");
+        MemoryResponse response = this.handle(dataway.getApiHandler(), "GET", "/result");
+        assertEquals(201, response.getStatus());
+        assertEquals(Map.of("labels", List.of("api"), "value", "other"), response.json());
     }
 
     @Test
@@ -85,8 +150,8 @@ class ResultHandlerTest extends ServiceTestSupport {
         assertEquals("OK", received.get().getMessage());
         assertTrue(received.get().getLifeCycleTime() >= 0);
         assertTrue(received.get().getExecutionTime() >= 0);
-        Map<?, ?> names = (Map<?, ?>) this.handle(dataway.getAdminHandler(), "GET", "/result-handlers").json();
-        assertEquals(List.of("structure", "raw", "csv", "text", "created"), names.get("result"));
+        Map<?, ?> names = (Map<?, ?>) this.handle(dataway.getAdminHandler(), "GET", "/get-handlers").json();
+        assertEquals(List.of("structure", "raw", "csv", "text", "verifyCode", "created"), names.get("result"));
     }
 
     @Test
@@ -119,7 +184,7 @@ class ResultHandlerTest extends ServiceTestSupport {
         });
         this.publish("return 'value';", "{}", "GET");
         assertEquals(Map.of("wrapped", "value"), this.handle(this.config.createDataway().getApiHandler(), "GET", "/result").json());
-        this.config.resultHandler("raw");
+        this.config.defaultResultHandler("raw");
         assertEquals("value", this.handle(this.config.createDataway().getApiHandler(), "GET", "/result").json());
         this.publish("return 'override';", "{\"resultHandler\":\"structure\"}", "GET");
         assertEquals(Map.of("wrapped", "override"), this.handle(this.config.createDataway().getApiHandler(), "GET", "/result").json());
@@ -127,8 +192,8 @@ class ResultHandlerTest extends ServiceTestSupport {
     }
 
     @Test
-    void textAndCsvKeepFailuresStructuredUsingTheApiTemplate() throws Exception {
-        for (String handler : List.of("csv", "text")) {
+    void outputHandlersKeepFailuresStructuredUsingTheApiTemplate() throws Exception {
+        for (String handler : List.of("csv", "text", "verifyCode")) {
             this.publish("throw 422, 'invalid';", "{\"resultHandler\":\"" + handler + "\",\"responseFormat\":\"{\\\"ok\\\":\\\"@resultStatus\\\",\\\"error\\\":\\\"@resultData\\\"}\"}", "GET");
             MemoryResponse response = this.handle(this.config.createDataway().getApiHandler(), "GET", "/result");
             assertEquals(Map.of("ok", false, "error", "invalid"), response.json());
@@ -187,8 +252,8 @@ class ResultHandlerTest extends ServiceTestSupport {
     }
 
     @Test
-    void webBinaryAndTextHandlerProduceUnquotedUtf8() throws Exception {
-        this.publish("import 'net.hasor.dataway.function.WebUdfSource' as web; return web.binary('你好');", "{}", "GET");
+    void textToByteAndTextHandlerProduceUnquotedUtf8() throws Exception {
+        this.publish("import 'net.hasor.dataql.host.function.basic.ConvertUdfSource' as convert; return convert.textToByte('你好');", "{}", "GET");
         assertArrayEquals("你好".getBytes(StandardCharsets.UTF_8), this.handle(this.config.createDataway().getApiHandler(), "GET", "/result").bytes());
         this.publish("return '你好';", "{\"resultHandler\":\"text\"}", "GET");
         MemoryResponse response = this.handle(this.config.createDataway().getApiHandler(), "GET", "/result");
@@ -208,7 +273,48 @@ class ResultHandlerTest extends ServiceTestSupport {
     }
 
     private static Stream<Arguments> textResults() {
-        return Stream.of(Arguments.of("return '';", ""), Arguments.of("return '你好';", "你好"), Arguments.of("return 42;", "42"), Arguments.of("return 1.25;", "1.25"), Arguments.of("return true;", "true"), Arguments.of("return false;", "false"), Arguments.of("return null;", "null"), Arguments.of("return {\"name\": \"Ada\"};", "{\"name\":\"Ada\"}"), Arguments.of("return [{\"id\": 1}, {\"id\": 2}];", "[{\"id\":1},{\"id\":2}]"), Arguments.of("return {\"items\": [1, true, null], \"empty\": null};", "{\"items\":[1,true,null]}"));
+        return Stream.of(Arguments.of("return '';", ""), Arguments.of("return '你好';", "你好"), Arguments.of("return 42;", "42"), Arguments.of("return 1.25;", "1.25"), Arguments.of("return true;", "true"), Arguments.of("return false;", "false"), Arguments.of("return null;", "null"), Arguments.of("return {\"name\": \"Ada\"};", "{name=Ada}"), Arguments.of("return [{\"id\": 1}, {\"id\": 2}];", "[{id=1}, {id=2}]"), Arguments.of("return {\"items\": [1, true, null], \"empty\": null};", "{items=[1, true, null], empty=null}"));
+    }
+
+    @Test
+    void verifyCodeRendersTextAsPngAndHeadOmitsTheBody() throws Exception {
+        this.publish("return 'A7K9';", "{\"resultHandler\":\"verifyCode\"}", "GET");
+        MemoryResponse response = this.handle(this.config.createDataway().getApiHandler(), "GET", "/result");
+        assertEquals(200, response.getStatus());
+        assertEquals(List.of("image/png"), response.getHeaders().get("Content-Type"));
+        assertEquals(List.of("no-store"), response.getHeaders().get("Cache-Control"));
+        var image = ImageIO.read(new ByteArrayInputStream(response.bytes()));
+        assertNotNull(image);
+        assertEquals(160, image.getWidth());
+        assertEquals(64, image.getHeight());
+        long darkPixels = 0;
+        for (int x = 16; x < image.getWidth() - 16; x++) {
+            for (int y = 8; y < image.getHeight() - 8; y++) {
+                int pixel = image.getRGB(x, y);
+                if ((pixel >> 16 & 255) < 120 && (pixel >> 8 & 255) < 120 && (pixel & 255) < 120) {
+                    darkPixels++;
+                }
+            }
+        }
+        assertTrue(darkPixels > 100, "The image must contain rendered text");
+
+        this.publish("return 'A7K9';", "{\"resultHandler\":\"verifyCode\"}", "HEAD");
+        MemoryResponse head = this.handle(this.config.createDataway().getApiHandler(), "HEAD", "/result");
+        assertEquals(200, head.getStatus());
+        assertEquals(List.of("image/png"), head.getHeaders().get("Content-Type"));
+        assertEquals(0, head.bytes().length);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "return null;", "return 1234;", "return '';", "return '   ';", "return '123456789012345678901234567890123';", "return multiline();" })
+    void invalidVerifyCodeValuesProduceStructuredErrors(String script) throws Exception {
+        this.config.function("multiline", (hints, params) -> "a\nb");
+        this.publish(script, "{\"resultHandler\":\"verifyCode\"}", "GET");
+        MemoryResponse response = this.handle(this.config.createDataway().getApiHandler(), "GET", "/result");
+        assertEquals(List.of("application/json; charset=utf-8"), response.getHeaders().get("Content-Type"));
+        Map<?, ?> failure = (Map<?, ?>) response.json();
+        assertEquals(false, failure.get("success"));
+        assertTrue(failure.get("message").toString().startsWith("VerifyCode"));
     }
 
     @Test

@@ -8,6 +8,7 @@
 package net.hasor.dataway.web;
 import java.net.http.HttpResponse;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import net.hasor.dataql.util.JsonUtils;
@@ -70,6 +71,18 @@ class AdminWriteHttpTest extends AdminHttpSupport {
         verify(this.service).save(saved.capture(), eq(4L));
         assertEquals("api", saved.getValue().getId());
         assertEquals("return ${name};", saved.getValue().getScript());
+    }
+
+    @Test
+    void savingPreservesApplicationHandlerOptions() throws Exception {
+        when(this.service.save(any(ApiDefinition.class), eq(4L))).thenReturn(this.state(5));
+        Map<String, Object> body = this.editor("api", 4);
+        Map<String, Object> options = Map.of("resultHandler", "created", "status", 202, "labels", List.of("api"));
+        body.put("optionInfo", options);
+        this.success(this.post("/save-api", body));
+        ArgumentCaptor<ApiDefinition> saved = ArgumentCaptor.forClass(ApiDefinition.class);
+        verify(this.service).save(saved.capture(), eq(4L));
+        assertEquals(options, JsonUtils.readValue(saved.getValue().getOptions(), Map.class));
     }
 
     @ParameterizedTest

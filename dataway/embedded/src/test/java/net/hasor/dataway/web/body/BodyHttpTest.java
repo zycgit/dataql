@@ -41,7 +41,7 @@ class BodyHttpTest extends ServiceTestSupport {
                 return [${name}, ${tag}, ${flag}, web.jsonBody()];
                 """);
         this.publishRoute(release);
-        this.config.resultHandler("raw").identityProvider(r -> UserIdentity.authenticated("caller", Map.of()));
+        this.config.defaultResultHandler("raw").identityProvider(r -> UserIdentity.authenticated("caller", Map.of()));
         this.server = new HttpTestServer("/api", this.config.createDataway().getApiHandler());
     }
 

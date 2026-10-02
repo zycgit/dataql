@@ -182,22 +182,66 @@ test.describe('mock development', () => {
         expect(response.headers()['content-type']).toBe('text/plain; charset=UTF-8');
         expect(response.request().postDataJSON().optionInfo.resultHandler).toBe('text');
         const result = page.locator('.responsePanel');
-        await expect(result).toContainText('[{"id":1,"name":"Alice"},{"id":2,"name":"Bob"}]');
+        await expect(result).toContainText('[{id=1, name=Alice}, {id=2, name=Bob}]');
         await expect(result).not.toContainText('Text result must be a string');
         await expect(result.getByRole('button', {name: 'Format Result', exact: true})).toHaveCount(0);
         await expect(page.getByRole('tab', {name: 'Structure', exact: true})).toHaveClass(/is-disabled/);
         await page.screenshot({path: 'test-results/text-result-rows.png', animations: 'disabled'});
     });
 
+    test('VerifyCode previews a PNG in the editor and the published API list', async ({page}) => {
+        await page.goto('/admin/#/edit/mock-verifyCode');
+        await expect(page.getByRole('button', {name: 'Result Handler', exact: true})).toHaveText('VerifyCode');
+        const response = await command(page, 'Execute Query', 'perform');
+        expect(response.headers()['content-type']).toBe('image/png');
+        const preview = page.getByRole('img', {name: 'Response preview', exact: true});
+        await expect(preview).toBeVisible();
+        await expect.poll(() => preview.evaluate(image => image.naturalWidth)).toBe(160);
+        await page.getByRole('link', {name: 'Interface', exact: true}).click();
+        await page.getByText('/mock/verifyCode', {exact: true}).click();
+        const invoked = page.waitForResponse(result => result.url().endsWith('/api/mock/verifyCode'));
+        await page.getByRole('button', {name: 'Execute Query', exact: true}).click();
+        expect((await invoked).headers()['content-type']).toBe('image/png');
+        await expect(preview).toBeVisible();
+        await expect.poll(() => preview.evaluate(image => image.naturalHeight)).toBe(64);
+    });
+
+    test('API options preserve custom settings and omitted handler defaults', async ({page}) => {
+        await page.goto('/admin/#/new');
+        await page.getByRole('textbox', {name: 'API path', exact: true}).fill('/browser-options');
+        await page.getByRole('button', {name: 'More Settings', exact: true}).click();
+        const editor = page.getByRole('textbox', {name: 'API options JSON', exact: true});
+        expect(JSON.parse(await editor.inputValue())).not.toHaveProperty('responseFormat');
+        await editor.fill('[]');
+        await page.getByRole('button', {name: 'Apply Options', exact: true}).click();
+        await expect(page.getByRole('alert').filter({hasText: 'API options must'})).toHaveText('API options must be a JSON object.');
+        const options = {resultHandler: 'structure', customStatus: 202, labels: {source: 'api'}};
+        await editor.fill(JSON.stringify(options));
+        await page.getByRole('button', {name: 'Apply Options', exact: true}).click();
+        await page.keyboard.press('Escape');
+        const saved = await command(page, 'Save', 'save-api');
+        expect(saved.request().postDataJSON().optionInfo).toEqual(options);
+        await command(page, 'Reload API', 'api-detail');
+        const response = await command(page, 'Execute Query', 'perform');
+        expect(response.request().postDataJSON().optionInfo).toMatchObject(options);
+        expect(response.request().postDataJSON().optionInfo).not.toHaveProperty('responseFormat');
+    });
+
     test('output selection is exclusive and survives saving without losing the template', async ({page}) => {
         await page.goto('/admin/#/new');
         await page.getByRole('textbox', {name: 'API path', exact: true}).fill('/browser-output');
+        await page.getByRole('button', {name: 'More Settings', exact: true}).click();
+        await page.getByRole('textbox', {name: 'API options JSON', exact: true}).fill(JSON.stringify({
+            resultHandler: 'structure', responseFormat: '{"success":"@resultStatus","value":"@resultData"}',
+        }));
+        await page.getByRole('button', {name: 'Apply Options', exact: true}).click();
+        await page.keyboard.press('Escape');
         const selector = page.getByRole('button', {name: 'Result Handler', exact: true});
         const structureTab = page.getByRole('tab', {name: 'Structure', exact: true});
         await expect(selector).toHaveText('Structure');
         await expect(page.getByRole('checkbox', {name: 'Structure', exact: true})).toHaveCount(0);
         await selector.click();
-        await expect(page.getByRole('menu', {name: 'Result Handler'}).getByRole('menuitem')).toHaveText(['Structure', 'Raw Value', 'CSV', 'Text']);
+        await expect(page.getByRole('menu', {name: 'Result Handler'}).getByRole('menuitem')).toHaveText(['Structure', 'Raw Value', 'CSV', 'Text', 'VerifyCode']);
         await expect(page.getByRole('menu', {name: 'Result Handler'}).locator('[aria-current="true"]')).toHaveText('Structure');
         await page.screenshot({path: 'test-results/result-handler-menu.png', animations: 'disabled'});
         await page.getByRole('menuitem', {name: 'Raw Value', exact: true}).click();
@@ -207,7 +251,7 @@ test.describe('mock development', () => {
         const raw = await command(page, 'Execute Query', 'perform');
         expect(raw.request().postDataJSON().optionInfo).toMatchObject({resultHandler: 'raw'});
         await expect(page.locator('.responsePanel')).toContainText(/"mock":\s*true/);
-        await expect(page.locator('.responsePanel')).not.toContainText('"success"');
+        await expect(page.locator('.result-preview')).not.toContainText('"success"');
         const template = raw.request().postDataJSON().optionInfo.responseFormat;
         await command(page, 'Save', 'save-api');
         await expect(page).toHaveURL(/\/edit\/[^/]+$/);
@@ -240,7 +284,7 @@ test.describe('mock development', () => {
 
     test('custom handlers fit a narrow result panel and preserve their registered names', async ({page}) => {
         const name = 'application-specific-result-handler';
-        await page.route('**/admin/api/result-handlers', route => route.fulfill({json: {success: true, result: ['structure', 'raw', 'csv', 'text', name]}}));
+        await page.route('**/admin/api/get-handlers', route => route.fulfill({json: {success: true, result: ['structure', 'raw', 'csv', 'text', name]}}));
         await page.setViewportSize({width: 900, height: 700});
         await page.goto('/admin/#/new');
         await page.getByRole('textbox', {name: 'API path', exact: true}).fill('/browser-custom-output');

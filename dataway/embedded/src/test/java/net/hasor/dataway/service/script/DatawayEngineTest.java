@@ -6,6 +6,7 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.service.script;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class DatawayEngineTest extends ScriptTestSupport {
     @Test
     void dataqlUsesTheRealCompilerAndQueryCustomizers() throws Exception {
-        this.config.resultHandler("raw");
+        this.config.defaultResultHandler("raw");
         DatawayQuery query = this.engine().newQuery(this.definition("api", "return [customized, ${name}];"), List.of("name"), null);
         assertEquals(List.of("query", "value"), this.execute(query, Map.of("name", "value")));
         assertThrows(QueryParseException.class, () -> this.engine().newQuery(this.definition("api", "invalid script !!!"), List.of(), null));
@@ -45,6 +46,21 @@ class DatawayEngineTest extends ScriptTestSupport {
         assertNull(structured.get("location"));
         assertTrue(((Number) structured.get("lifeCycleTime")).longValue() >= 0);
         assertTrue(((Number) structured.get("executionTime")).longValue() >= 0);
+    }
+
+    @Test
+    void repeatedExecutionGetsIndependentResolvedOptions() throws Exception {
+        DatawayEngine engine = this.engine();
+        engine.setResultHandlers(Map.of("options", new OptionsResultHandler(Map.of("status", 201, "labels", List.of("default")))));
+        List<String> labels = new ArrayList<>(List.of("api"));
+        Map<String, Object> options = Map.of("resultHandler", "options", "labels", labels);
+        DatawayQuery query = engine.newQuery(this.definition("api", "return 'value';"), List.of(), options);
+        labels.clear();
+        for (int i = 0; i < 2; i++) {
+            assertEquals(Map.of("labels", List.of("api"), "value", "value"), this.execute(query, Map.of()));
+        }
+        DatawayQuery other = engine.newQuery(this.definition("other", "return 'other';"), List.of(), Map.of("resultHandler", "options"));
+        assertEquals(Map.of("labels", List.of("default"), "value", "other"), this.execute(other, Map.of()));
     }
 
     @Test
@@ -87,7 +103,7 @@ class DatawayEngineTest extends ScriptTestSupport {
             return parameters;
         };
         this.host.addFragment(ApiScriptType.SQL.getTypeName(), () -> fragment);
-        this.config.resultHandler("raw").wrapAllParameters(wrap).wrapParameterName("args");
+        this.config.defaultResultHandler("raw").wrapAllParameters(wrap).wrapParameterName("args");
         ApiDefinition definition = this.definition("api", "select :id, '<% unchanged %>'");
         definition.setType(ApiScriptType.SQL);
         DatawayQuery query = this.engine().newQuery(definition, List.of("id"), null);
@@ -106,7 +122,7 @@ class DatawayEngineTest extends ScriptTestSupport {
     @Test
     void aFragmentWithNoDeclaredParametersReceivesAnEmptyMap() throws Exception {
         this.host.addFragment(ApiScriptType.SQL.getTypeName(), () -> (hints, parameters, script) -> parameters);
-        this.config.resultHandler("raw");
+        this.config.defaultResultHandler("raw");
         ApiDefinition definition = this.definition("api", "select 1");
         definition.setType(ApiScriptType.SQL);
         DatawayQuery query = this.engine().newQuery(definition, null, Map.of());

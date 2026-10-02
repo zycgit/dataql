@@ -29,7 +29,7 @@
       <el-tooltip v-else content="Delete Api" placement="bottom-end"><el-button size="small" round aria-label="Delete API" :disabled="busy || newMode" @click="$emit('delete')"><ActionIcon name="delete" /></el-button></el-tooltip>
     </el-button-group>
     <el-drawer v-model="settings" :with-header="false" size="70%" title="More Settings">
-      <el-collapse :model-value="['parameters', 'cors']">
+      <el-collapse :model-value="['parameters', 'options', 'cors']">
         <el-collapse-item title="Parameters" name="parameters">
           <div class="parameter-settings">
             <span>Wrap All Parameters</span>
@@ -38,13 +38,19 @@
             <el-input :model-value="optionInfo.wrapParameterName" :disabled="!optionInfo.wrapAllParameters" size="small" aria-label="Parameter wrapper name" @update:model-value="option('wrapParameterName', $event)" />
           </div>
         </el-collapse-item>
+        <el-collapse-item title="API Options" name="options">
+          <p>API options override the selected handler’s defaults. Omit an option to use its default.</p>
+          <el-input v-model="optionsText" type="textarea" :rows="12" aria-label="API options JSON" />
+          <p v-if="optionsError" role="alert">{{ optionsError }}</p>
+          <el-button size="small" type="primary" @click="applyOptions">Apply Options</el-button>
+        </el-collapse-item>
         <el-collapse-item title="Cross Domain" name="cors">Cross-origin access is configured by the host web framework.</el-collapse-item>
       </el-collapse>
     </el-drawer>
   </div>
 </template>
 <script setup>
-import {ref} from 'vue';
+import {ref, watch} from 'vue';
 import {Edit} from '@element-plus/icons-vue';
 import ActionIcon from './ActionIcon.vue';
 const props = defineProps({
@@ -55,6 +61,31 @@ const props = defineProps({
 });
 const emit = defineEmits(['save', 'execute', 'smoke', 'publish', 'history', 'restore', 'disable', 'delete', 'update:optionInfo']);
 const settings = ref(false);
+const optionsText = ref('');
+const optionsError = ref('');
+watch([settings, () => props.optionInfo], () => {
+    if (settings.value) {
+        optionsText.value = JSON.stringify(props.optionInfo, null, 2);
+        optionsError.value = '';
+    }
+}, {deep: true});
+function applyOptions() {
+    try {
+        const options = JSON.parse(optionsText.value);
+        if (!options || typeof options !== 'object' || Array.isArray(options)) {
+            throw new Error('API options must be a JSON object.');
+        }
+        for (const [name, value] of Object.entries(options)) {
+            if (value === null) {
+                throw new Error(name + ' must not be null. Omit it to use the default.');
+            }
+        }
+        emit('update:optionInfo', options);
+        optionsError.value = '';
+    } catch (error) {
+        optionsError.value = error.message;
+    }
+}
 function option(name, value) {
     emit('update:optionInfo', {...props.optionInfo, [name]: value});
 }

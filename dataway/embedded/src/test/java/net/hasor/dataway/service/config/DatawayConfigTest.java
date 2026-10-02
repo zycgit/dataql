@@ -24,6 +24,7 @@ import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.EntityType;
 import net.hasor.dataway.dal.FieldDef;
 import net.hasor.dataway.function.WebFile;
+import net.hasor.dataway.result.structure.StructureResultHandler;
 import net.hasor.dataway.service.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -34,11 +35,24 @@ import static org.mockito.Mockito.*;
 
 class DatawayConfigTest extends ServiceTestSupport {
     @Test
+    void configurationsOwnIndependentBuiltInHandlerRegistrations() {
+        assertEquals(List.of("structure", "raw", "csv", "text", "verifyCode"), new ArrayList<>(this.config.getResultHandlers().keySet()));
+        DatawayConfig other = new DatawayConfig();
+        this.config.getResultHandlers().forEach((name, handler) -> {
+            assertNotSame(handler, other.getResultHandlers().get(name));
+            assertEquals(handler.getClass(), other.getResultHandlers().get(name).getClass());
+        });
+        StructureResultHandler replacement = new StructureResultHandler(Map.of("responseFormat", "{}"));
+        this.config.resultHandler("structure", replacement);
+        assertSame(replacement, this.config.getResultHandlers().get("structure"));
+        assertNotSame(replacement, other.getResultHandlers().get("structure"));
+    }
+
+    @Test
     void defaultsCreateIndependentEntriesSharingTheConfiguredStorage() throws Exception {
-        assertEquals("structure", this.config.getResultHandler());
+        assertEquals("structure", this.config.getDefaultResultHandler());
         assertFalse(this.config.isWrapAllParameters());
         assertEquals("root", this.config.getWrapParameterName());
-        assertTrue(this.config.getResponseFormat().contains("@resultData"));
         assertSame(this.access, this.config.getDataAccessLayer());
         assertNull(this.config.getIdentityProvider());
         assertNull(this.config.getAuthorizationCheck());
@@ -104,7 +118,7 @@ class DatawayConfigTest extends ServiceTestSupport {
         Map<String, Udf> library = new HashMap<>();
         library.put("value", (hints, params) -> "library");
         AtomicInteger customized = new AtomicInteger();
-        this.config.resultHandler("raw").function("greet", (hints, params) -> "function").library("library", library).importSource("imported", () -> (Udf) (hints, params) -> "import").configureHost(host -> customized.incrementAndGet()).configureQuery(builder -> builder.addShareVar("extra", () -> "query"));
+        this.config.defaultResultHandler("raw").function("greet", (hints, params) -> "function").library("library", library).importSource("imported", () -> (Udf) (hints, params) -> "import").configureHost(host -> customized.incrementAndGet()).configureQuery(builder -> builder.addShareVar("extra", () -> "query"));
         library.put("value", (hints, params) -> "changed");
 
         Object result = this.invokeScript("""
@@ -119,9 +133,10 @@ class DatawayConfigTest extends ServiceTestSupport {
     @Test
     void defaultsAndCustomScopeArePassedToTheExecutionEngine() throws Exception {
         this.config.identityProvider(request -> UserIdentity.authenticated("caller", Map.of()));
-        this.config.wrapAllParameters(true).wrapParameterName("args").customizeScope(symbol -> Map.of("name", "configured")).responseFormat("""
+        this.config.wrapAllParameters(true).wrapParameterName("args").customizeScope(symbol -> Map.of("name", "configured"));
+        this.config.resultHandler("structure", new StructureResultHandler(Map.of("responseFormat", """
                 {"payload":"@resultData","ok":"@resultStatus"}
-                """);
+                """)));
         assertEquals(Map.of("payload", "configured", "ok", true), this.invokeScript("return ${args}.name;").json());
     }
 
@@ -212,7 +227,7 @@ class DatawayConfigTest extends ServiceTestSupport {
         this.publishRoute(this.release(info, "release", "1", 1));
         this.config.function("version", (hints, params) -> "first");
         Dataway first = this.config.createDataway();
-        this.config.function("version", (hints, params) -> "second").resultHandler("raw");
+        this.config.function("version", (hints, params) -> "second").defaultResultHandler("raw");
         Dataway second = this.config.createDataway();
         Map<?, ?> original = (Map<?, ?>) this.handle(first.getApiHandler(), "GET", "/api").json();
         assertEquals("first", original.get("value"));

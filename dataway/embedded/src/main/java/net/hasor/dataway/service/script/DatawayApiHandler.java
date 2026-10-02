@@ -17,7 +17,10 @@ import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.dal.EntityType;
 import net.hasor.dataway.dal.FieldDef;
 import net.hasor.dataway.model.*;
-import net.hasor.dataway.service.*;
+import net.hasor.dataway.service.BeanContainer;
+import net.hasor.dataway.service.ConvertUtils;
+import net.hasor.dataway.service.DatawayException;
+import net.hasor.dataway.service.WebHandler;
 import tools.jackson.databind.JsonNode;
 import static net.hasor.dataway.dal.FieldDef.*;
 
@@ -54,8 +57,7 @@ public final class DatawayApiHandler extends WebHandler {
         Map<String, Object> options = this.options(definition);
         List<String> parameterNames = this.parameterNames(definition);
         DatawayQuery query = this.engine.newQuery(definition, parameterNames, options);
-        Object result = query.execute(Operation.INVOKE, identity, parameters, metadata, response);
-        return ResultInfoUtils.convertToResultInfo(result);
+        return query.execute(Operation.INVOKE, identity, parameters, metadata, response);
     }
 
     private Map<String, Object> parameters(WebRequest request, Map<String, Object> body) {

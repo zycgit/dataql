@@ -7,6 +7,8 @@
  */
 package net.hasor.dataway.service.script;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -27,9 +29,9 @@ import net.hasor.dataql.parser.ast.value.FragmentVariable;
 import net.hasor.dataql.parser.ast.value.FragmentVariable.FragmentParam;
 import net.hasor.dataql.parser.ast.value.FunCallRouteVariable;
 import net.hasor.dataql.parser.ast.value.NameRouteVariable;
-import net.hasor.dataql.util.JsonUtils;
 import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ApiScriptType;
+import net.hasor.dataway.result.ResultHandler;
 import net.hasor.dataway.service.BeanContainer;
 import net.hasor.dataway.service.DatawayException;
 
@@ -39,8 +41,8 @@ public class DatawayEngine {
     private final CustomizeScope               customizeScope;
     private final List<Consumer<QueryBuilder>> customizers;
     private final List<ApiInterceptor>         interceptors;
-    private       String                       responseFormat;
-    private       boolean                      resultStructure;
+    private final Map<String, ResultHandler>   resultHandlers = new LinkedHashMap<>();
+    private       String                       resultHandler  = "structure";
     private       boolean                      wrapAllParameters;
     private       String                       wrapParameterName;
 
@@ -51,12 +53,16 @@ public class DatawayEngine {
         this.customizers = customizers;
     }
 
-    public void setResponseFormat(String responseFormat) {
-        this.responseFormat = responseFormat;
+    public void setResultHandlers(Map<String, ResultHandler> handlers) {
+        this.resultHandlers.putAll(handlers);
     }
 
-    public void setResultStructure(boolean resultStructure) {
-        this.resultStructure = resultStructure;
+    public List<String> getResultHandlers() {
+        return new ArrayList<>(this.resultHandlers.keySet());
+    }
+
+    public void setResultHandler(String resultHandler) {
+        this.resultHandler = resultHandler;
     }
 
     public void setWrapAllParameters(boolean wrapAllParameters) {
@@ -73,10 +79,10 @@ public class DatawayEngine {
             options = Map.of();
         }
 
-        Map<?, ?> responseFormat = this.readResponseFormat(options);
-        boolean resultStructure = this.readResultStructure(options);
         boolean wrapAllParameters = this.readWrapAllParameters(options);
         String wrapParameterName = this.readWrapParameterName(options);
+        ResultHandler resultHandler = this.readResultHandler(options);
+        Map<String, Object> resultOptions = resultHandler.prepareOptions(options);
 
         QueryBuilder builder = this.queryManager.newBuilder();
         this.customizers.forEach(c -> c.accept(builder));
@@ -95,7 +101,33 @@ public class DatawayEngine {
         }
 
         return new DatawayQuery(definition, compiled, this.interceptors, builder, this.customizeScope, //
-                responseFormat, resultStructure, wrapAllParameters, wrapParameterName);
+                resultOptions, wrapAllParameters, wrapParameterName, resultHandler);
+    }
+
+    private ResultHandler readResultHandler(Map<String, Object> options) {
+        Object value = options.getOrDefault("resultHandler", this.resultHandler);
+        if (!(value instanceof String name)) {
+            throw new DatawayException(400, "resultHandler must be a name");
+        }
+
+        // Resolve saved options once; queries only retain the selected handler.
+        if (!options.containsKey("resultHandler") || "default".equals(name)) {
+            if (options.containsKey("resultStructure")) {
+                Object structure = options.get("resultStructure");
+                if (!(structure instanceof Boolean enabled)) {
+                    throw new DatawayException(400, "resultStructure must be a boolean");
+                }
+                name = enabled ? "structure" : "raw";
+            } else if ("default".equals(name)) {
+                name = this.resultHandler;
+            }
+        }
+
+        ResultHandler handler = this.resultHandlers.get(name);
+        if (handler == null) {
+            throw new DatawayException(400, "Unknown resultHandler: " + name);
+        }
+        return handler;
     }
 
     private RootBlockSet atFragment(ApiScriptType type, String script, List<String> parameterNames) {
@@ -115,31 +147,6 @@ public class DatawayEngine {
         model.addInst(new VarInst(functionName, fragment));
         model.addInst(new ReturnInst(new IntegerToken(0), call));
         return model;
-    }
-
-    private Map<?, ?> readResponseFormat(Map<String, Object> options) {
-        Object responseOption = options.getOrDefault("responseFormat", this.responseFormat);
-        if (!(responseOption instanceof String s)) {
-            throw new DatawayException(400, "responseFormat must be a JSON object string");
-        }
-
-        try {
-            Object template = JsonUtils.readValue(s, Object.class);
-            if (!(template instanceof Map<?, ?> format)) {
-                throw new IllegalArgumentException("Expected a JSON object");
-            }
-            return format;
-        } catch (RuntimeException e) {
-            throw new DatawayException(400, "responseFormat must be a JSON object string", e);
-        }
-    }
-
-    private boolean readResultStructure(Map<String, Object> options) {
-        Object structureOption = options.getOrDefault("resultStructure", this.resultStructure);
-        if (!(structureOption instanceof Boolean r)) {
-            throw new DatawayException(400, "resultStructure must be a boolean");
-        }
-        return r;
     }
 
     private boolean readWrapAllParameters(Map<String, Object> options) {

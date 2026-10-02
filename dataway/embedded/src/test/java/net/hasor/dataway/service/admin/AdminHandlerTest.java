@@ -119,7 +119,7 @@ class AdminHandlerTest extends ServiceTestSupport {
         MemoryRequest request = this.request("POST", "/perform");
         request.json(Map.of("id", "-1", "select", "POST", "apiPath", "/preview", "codeType", "DataQL", "codeValue", "return 'preview';"));
         MemoryResponse response = new MemoryResponse();
-        this.config.resultHandler("raw").createDataway().getAdminHandler().handle(request, response);
+        this.config.defaultResultHandler("raw").createDataway().getAdminHandler().handle(request, response);
         assertEquals("preview", response.json());
         verify(this.access, never()).write(anyList());
     }

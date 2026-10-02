@@ -7,10 +7,7 @@
  */
 package net.hasor.dataway.service;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import net.hasor.cobble.loader.ResourceLoader;
@@ -26,6 +23,12 @@ import net.hasor.dataway.authorization.IdentityProvider;
 import net.hasor.dataway.dal.ApiDataAccessLayer;
 import net.hasor.dataway.dal.EntityType;
 import net.hasor.dataway.dal.FieldDef;
+import net.hasor.dataway.result.ResultHandler;
+import net.hasor.dataway.result.csv.CsvResultHandler;
+import net.hasor.dataway.result.raw.RawResultHandler;
+import net.hasor.dataway.result.structure.StructureResultHandler;
+import net.hasor.dataway.result.text.TextResultHandler;
+import net.hasor.dataway.result.verifycode.VerifyCodeResultHandler;
 import net.hasor.dataway.service.admin.AdminInterceptor;
 import net.hasor.dataway.service.script.ApiInterceptor;
 import net.hasor.dataway.web.body.UploadStorage;
@@ -47,23 +50,31 @@ public class DatawayConfig {
     //
     private       Finder                                 finder                = new DatawayFinder();
     private       CustomizeScope                         customizeScope;
-    private       boolean                                resultStructure       = true;
+    private       String                                 defaultResultHandler  = "structure";
     private       boolean                                wrapAllParameters     = false;
     private       String                                 wrapParameterName     = "root";
-    private       String                                 responseFormat        = """
-            {
-                "success"      : "@resultStatus",
-                "message"      : "@resultMessage",
-                "location"     : "@blockLocation",
-                "code"         : "@resultCode",
-                "lifeCycleTime": "@timeLifeCycle",
-                "executionTime": "@timeExecution",
-                "value"        : "@resultData"
-            }
-            """;
     private final List<Consumer<HostConfiguration>>      hostCustomizers       = new ArrayList<>();
     private final List<Consumer<QueryBuilder>>           queryCustomizers      = new ArrayList<>();
     private final List<ApiInterceptor>                   apiInterceptors       = new ArrayList<>();
+    private final Map<String, ResultHandler>             resultHandlers        = new LinkedHashMap<>();
+
+    public DatawayConfig() {
+        this.resultHandlers.put("structure", new StructureResultHandler());
+        this.resultHandlers.put("raw", new RawResultHandler());
+        this.resultHandlers.put("csv", new CsvResultHandler());
+        this.resultHandlers.put("text", new TextResultHandler());
+        this.resultHandlers.put("verifyCode", new VerifyCodeResultHandler());
+    }
+
+    /** Registers a named response converter selectable through the API's resultHandler option. */
+    public DatawayConfig resultHandler(String name, ResultHandler handler) {
+        if (name == null || !name.matches("[a-zA-Z][a-zA-Z0-9_.-]*") || "default".equals(name) || handler == null) {
+            throw new IllegalArgumentException("A result handler requires a name other than 'default' and an implementation");
+        }
+
+        this.resultHandlers.put(name, handler);
+        return this;
+    }
 
     public DatawayConfig dataAccessLayer(ApiDataAccessLayer dataAccessLayer) {
         this.dataAccessLayer = dataAccessLayer;
@@ -153,13 +164,9 @@ public class DatawayConfig {
         return this;
     }
 
-    public DatawayConfig resultStructure(boolean resultStructure) {
-        this.resultStructure = resultStructure;
-        return this;
-    }
-
-    public DatawayConfig responseFormat(String responseFormat) {
-        this.responseFormat = responseFormat;
+    /** Selects the default result handler; an API can override it through its options. */
+    public DatawayConfig defaultResultHandler(String name) {
+        this.defaultResultHandler = name;
         return this;
     }
 
@@ -225,11 +232,11 @@ public class DatawayConfig {
         return this.dataAccessLayer;
     }
 
-    Map<EntityType, String> getTableMappings() {
+    public Map<EntityType, String> getTableMappings() {
         return this.tableMappings;
     }
 
-    Map<EntityType, Map<FieldDef, String>> getFieldMappings() {
+    public Map<EntityType, Map<FieldDef, String>> getFieldMappings() {
         return this.fieldMappings;
     }
 
@@ -253,15 +260,15 @@ public class DatawayConfig {
         return this.uploadMemoryThreshold;
     }
 
-    String getDocumentTitle() {
+    public String getDocumentTitle() {
         return this.documentTitle;
     }
 
-    String getDocumentVersion() {
+    public String getDocumentVersion() {
         return this.documentVersion;
     }
 
-    String getDocumentServer() {
+    public String getDocumentServer() {
         return this.documentServer;
     }
 
@@ -281,12 +288,12 @@ public class DatawayConfig {
         return this.customizeScope;
     }
 
-    public boolean isResultStructure() {
-        return this.resultStructure;
+    public String getDefaultResultHandler() {
+        return this.defaultResultHandler;
     }
 
-    public String getResponseFormat() {
-        return this.responseFormat;
+    public Map<String, ResultHandler> getResultHandlers() {
+        return this.resultHandlers;
     }
 
     public boolean isWrapAllParameters() {

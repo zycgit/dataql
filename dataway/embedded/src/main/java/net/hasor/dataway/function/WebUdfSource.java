@@ -6,7 +6,10 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.function;
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.function.Predicate;
 import net.hasor.cobble.StringUtils;
@@ -199,6 +202,29 @@ public class WebUdfSource extends AbstractUdfSource {
     @UdfName("jsonBody")
     public Object jsonBody(Hints hints) {
         return this.requestValue("body", hints);
+    }
+
+    //
+    // for uploads
+
+    /** Reads upload metadata and a SHA-256 digest without releasing the request's file. */
+    @UdfName("uploadFileInfo")
+    public Map<String, Object> uploadFileInfo(WebFile file) throws IOException, NoSuchAlgorithmException {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] buffer = new byte[8192];
+        try (var input = file.openStream()) {
+            int size;
+            while ((size = input.read(buffer)) != -1) {
+                digest.update(buffer, 0, size);
+            }
+        }
+
+        Map<String, Object> info = new LinkedHashMap<>();
+        info.put("name", file.getName());
+        info.put("size", file.getSize());
+        info.put("contentType", file.getContentType());
+        info.put("sha256", HexFormat.of().formatHex(digest.digest()));
+        return info;
     }
 
     //
