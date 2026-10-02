@@ -13,9 +13,7 @@ package net.hasor.dataql.domain;
  */
 public interface DataModel {
     /** Whether this value carries opaque binary content. */
-    default boolean isBinary() {
-        return false;
-    }
+    boolean isBinary();
 
     /** 得到本来面目 */
     Object asOri();

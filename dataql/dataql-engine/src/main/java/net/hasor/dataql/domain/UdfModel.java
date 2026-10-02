@@ -29,6 +29,11 @@ public class UdfModel implements DataModel, Udf {
         return this.udf;
     }
 
+    @Override
+    public boolean isBinary() {
+        return false;
+    }
+
     /** 判断是否为 UdfModel 类型值 */
     public boolean isUdf() {
         return true;

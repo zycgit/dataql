@@ -54,6 +54,11 @@ public class ObjectModel implements DataModel {
         return unwrap;
     }
 
+    @Override
+    public boolean isBinary() {
+        return false;
+    }
+
     /** 判断是否为 ObjectModel 类型值 */
     public boolean isObject() {
         return true;

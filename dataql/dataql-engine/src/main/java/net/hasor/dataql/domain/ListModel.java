@@ -53,6 +53,11 @@ public class ListModel implements DataModel {
         return unwrap;
     }
 
+    @Override
+    public boolean isBinary() {
+        return false;
+    }
+
     /** 判断是否为 ListModel 类型值 */
     public boolean isList() {
         return true;

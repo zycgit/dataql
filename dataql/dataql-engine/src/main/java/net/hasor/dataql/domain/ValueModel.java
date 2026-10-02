@@ -35,6 +35,11 @@ public class ValueModel implements DataModel {
         return this.value;
     }
 
+    @Override
+    public boolean isBinary() {
+        return false;
+    }
+
     /** 判断是否为 ValueModel 类型值 */
     public boolean isValue() {
         return true;
