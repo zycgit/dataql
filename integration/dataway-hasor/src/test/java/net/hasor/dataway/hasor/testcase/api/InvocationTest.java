@@ -69,7 +69,7 @@ class InvocationTest {
     @ValueSource(strings = { "GET", "HEAD" })
     void binaryStreamsKeepTheirBytesContentTypeAndHeadSemantics(String method) throws Throwable {
         var config = TestSettings.configuration().apiInterceptor((context, chain) -> {
-            return ResultInfoUtils.convertToResultInfo("application/octet-stream", new ByteArrayInputStream(new byte[] { 0, 1, -1 }));
+            return ResultInfoUtils.stream("application/octet-stream", new ByteArrayInputStream(new byte[] { 0, 1, -1 }));
         });
         try (H2Database database = new H2Database(); TestApplication app = new TestApplication(config, database.access, TestSettings.enabled()); HttpClient client = new HttpClient(app.baseUrl())) {
             database.publish(app.dataway(), method, "/binary", "return 1;");

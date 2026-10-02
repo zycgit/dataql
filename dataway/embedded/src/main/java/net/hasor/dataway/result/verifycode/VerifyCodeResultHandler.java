@@ -74,7 +74,7 @@ public class VerifyCodeResultHandler extends AbstractResultHandler {
         if (!ImageIO.write(image, "png", output)) {
             throw new IOException("PNG encoder is unavailable");
         }
-        ResultInfo response = ResultInfoUtils.convertToResultInfo("image/png", output.toByteArray());
+        ResultInfo response = ResultInfoUtils.binary("image/png", output.toByteArray());
         response.getHeaders().put("Cache-Control", "no-store");
         return response;
     }

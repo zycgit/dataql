@@ -95,13 +95,13 @@ public final class DatawayUiHandler extends WebHandler {
         String name = path.equals("/") ? "index.html" : path.substring(1);
         ResultInfo result;
         if (name.equals("initializer.js") && this.initializer != null) {
-            result = ResultInfoUtils.convertToResultInfo(this.contentType(name), this.initializer);
+            result = ResultInfoUtils.binary(this.contentType(name), this.initializer);
         } else {
             InputStream stream = DatawayUiHandler.class.getResourceAsStream(DEFAULT_UI_RESOURCE + name);
             if (stream == null) {
                 throw new DatawayException(404, "Asset not found");
             }
-            result = ResultInfoUtils.convertToResultInfo(this.contentType(name), stream);
+            result = ResultInfoUtils.stream(this.contentType(name), stream);
         }
 
         result.getHeaders().putAll(RESOURCE_HEADERS);

@@ -76,6 +76,6 @@ public final class DatawayAdminHandler extends WebHandler {
             chain = () -> interceptor.invoke(context, next);
         }
 
-        return ResultInfoUtils.convertToResultInfo(chain.proceed());
+        return ResultInfoUtils.toResult(chain.proceed());
     }
 }

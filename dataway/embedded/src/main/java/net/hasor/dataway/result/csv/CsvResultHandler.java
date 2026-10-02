@@ -66,7 +66,7 @@ public class CsvResultHandler extends AbstractResultHandler {
             }
         }
 
-        ResultInfo response = ResultInfoUtils.convertToResultInfo("text/csv; charset=UTF-8", csv.toString().getBytes(StandardCharsets.UTF_8));
+        ResultInfo response = ResultInfoUtils.binary("text/csv; charset=UTF-8", csv.toString().getBytes(StandardCharsets.UTF_8));
         response.getHeaders().put("Content-Disposition", "attachment; filename=results.csv");
         return response;
     }

@@ -38,6 +38,6 @@ public class TextResultHandler extends AbstractResultHandler {
         }
 
         String text = String.valueOf(value);
-        return ResultInfoUtils.convertToResultInfo("text/plain; charset=UTF-8", text.getBytes(StandardCharsets.UTF_8));
+        return ResultInfoUtils.binary("text/plain; charset=UTF-8", text.getBytes(StandardCharsets.UTF_8));
     }
 }

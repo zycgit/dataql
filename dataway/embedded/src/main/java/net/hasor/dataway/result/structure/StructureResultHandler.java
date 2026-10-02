@@ -77,7 +77,7 @@ public class StructureResultHandler extends AbstractResultHandler {
     public ResultInfo handle(ResultContext context) {
         Object value = context.getValue();
         if (context.isSuccess() && (value instanceof ResultInfo || value instanceof BinaryModel || value instanceof byte[] || value instanceof InputStream)) {
-            return ResultInfoUtils.convertToResultInfo(value);
+            return ResultInfoUtils.toResult(value);
         }
 
         Map<String, Object> formatted = new LinkedHashMap<>();

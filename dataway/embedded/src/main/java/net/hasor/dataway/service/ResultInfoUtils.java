@@ -51,7 +51,7 @@ public final class ResultInfoUtils {
     }
 
     /** Preserves explicit responses and binary results without a management envelope. */
-    public static ResultInfo convertToResultInfo(Object value) {
+    public static ResultInfo toResult(Object value) {
         if (value instanceof ResultInfo serialized) {
             return serialized;
         }
@@ -79,16 +79,16 @@ public final class ResultInfoUtils {
             return result;
         }
         if (value instanceof byte[] bytes) {
-            return ResultInfoUtils.convertToResultInfo("application/octet-stream", bytes);
+            return ResultInfoUtils.binary("application/octet-stream", bytes);
         }
         if (value instanceof InputStream stream) {
-            return ResultInfoUtils.convertToResultInfo("application/octet-stream", stream);
+            return ResultInfoUtils.stream("application/octet-stream", stream);
         }
 
         return json(200, value);
     }
 
-    public static ResultInfo convertToResultInfo(String contentType, byte[] value) {
+    public static ResultInfo binary(String contentType, byte[] value) {
         ResultInfo result = new ResultInfo();
         result.setData(value);
         result.setJson(false);
@@ -98,7 +98,7 @@ public final class ResultInfoUtils {
     }
 
     /** The response source is closed after output, including HEAD and failed writes. */
-    public static ResultInfo convertToResultInfo(String contentType, InputStream value) {
+    public static ResultInfo stream(String contentType, InputStream value) {
         ResultInfo result = new ResultInfo();
         result.setData(Objects.requireNonNull(value));
         result.setJson(false);

@@ -95,7 +95,7 @@ public class DatawayQuery {
             ApiInterceptorContext context = new ApiInterceptorContext(this.definition, operation, identity, parameters);
             Object result = chain.proceed(this.prepareContext(context));
             if (!(result instanceof QueryResult queryResult)) {
-                return ResultInfoUtils.convertToResultInfo(result);
+                return ResultInfoUtils.toResult(result);
             }
 
             resultContext = new ResultContext();

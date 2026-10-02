@@ -55,7 +55,7 @@ class WebHandlerTest extends ServiceTestSupport {
     @ValueSource(strings = { "GET", "HEAD" })
     void streamingResultsCloseTheirSourceEvenForHead(String method) throws Exception {
         ByteArrayInputStream source = spy(new ByteArrayInputStream(new byte[] { 1, 2, 3 }));
-        ResultInfo result = ResultInfoUtils.convertToResultInfo("application/custom", source);
+        ResultInfo result = ResultInfoUtils.stream("application/custom", source);
         ResultWebHandler handler = new ResultWebHandler(this.beans(r -> UserIdentity.anonymous(Map.of())), (r, output) -> result);
         MemoryResponse response = this.handle(handler, method, "/");
 
@@ -67,7 +67,7 @@ class WebHandlerTest extends ServiceTestSupport {
     @Test
     void failedOutputStillClosesTheSourceAndRequestWithoutReplacingTheException() throws Exception {
         ByteArrayInputStream source = spy(new ByteArrayInputStream(new byte[] { 1 }));
-        ResultWebHandler handler = new ResultWebHandler(this.beans(r -> UserIdentity.anonymous(Map.of())), (r, output) -> ResultInfoUtils.convertToResultInfo(source));
+        ResultWebHandler handler = new ResultWebHandler(this.beans(r -> UserIdentity.anonymous(Map.of())), (r, output) -> ResultInfoUtils.toResult(source));
         MemoryRequest request = this.request("GET", "/");
         MemoryResponse response = new MemoryResponse();
         IOException failure = new IOException("Disconnected");
@@ -143,15 +143,15 @@ class WebHandlerTest extends ServiceTestSupport {
     @Test
     void binaryAndExplicitResultsRemainUnwrapped() throws Exception {
         byte[] bytes = { 0, 1, 2, (byte) 255 };
-        ResultInfo binary = ResultInfoUtils.convertToResultInfo(bytes);
-        assertSame(binary, ResultInfoUtils.convertToResultInfo(binary));
+        ResultInfo binary = ResultInfoUtils.toResult(bytes);
+        assertSame(binary, ResultInfoUtils.toResult(binary));
         assertFalse(binary.isJson());
         ResultWebHandler handler = new ResultWebHandler(this.beans(r -> UserIdentity.anonymous(Map.of())), (r, output) -> binary);
         MemoryResponse response = this.handle(handler, "GET", "/");
         assertArrayEquals(bytes, response.bytes());
         assertEquals("4", response.getHeaders().get("Content-Length").get(0));
 
-        ResultInfo json = ResultInfoUtils.convertToResultInfo(null);
+        ResultInfo json = ResultInfoUtils.toResult(null);
         assertTrue(json.isJson());
         assertNull(json.getData());
         assertEquals(200, json.getStatus());

@@ -28,6 +28,6 @@ public class RawResultHandler extends AbstractResultHandler {
         if (!context.isSuccess() && context.getValue() == null) {
             return new StructureResultHandler().handle(context);
         }
-        return ResultInfoUtils.convertToResultInfo(context.getValue());
+        return ResultInfoUtils.toResult(context.getValue());
     }
 }
