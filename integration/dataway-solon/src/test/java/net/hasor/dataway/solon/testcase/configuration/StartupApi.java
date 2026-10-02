@@ -31,7 +31,7 @@ public class StartupApi {
         definition.setDescription("Published during host initialization");
         definition.setSchema("{}");
         definition.setSample("{}");
-        definition.setOptions("{\"resultStructure\":false}");
+        definition.setOptions("{\"resultHandler\":\"raw\"}");
         this.dataway.getAdminService().save(definition, 0);
         this.dataway.getAdminService().publish(definition.getId(), 1);
     }

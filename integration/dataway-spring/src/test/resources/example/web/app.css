@@ -429,3 +429,5 @@ footer {
         width: 100%;
     }
 }
+
+#response-image { max-width: 100%; margin: 16px 0; }

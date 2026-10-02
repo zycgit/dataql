@@ -39,7 +39,7 @@ public final class H2Database implements AutoCloseable {
         definition.setScript(script);
         definition.setDescription("Integration test API");
         definition.setSample("{}");
-        definition.setOptions("{\"resultStructure\":false}");
+        definition.setOptions("{\"resultHandler\":\"raw\"}");
         dataway.getAdminService().save(definition, 0);
         dataway.getAdminService().publish(definition.getId(), 1);
     }

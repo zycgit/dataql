@@ -57,7 +57,7 @@ class SqlInvocationTest {
         draft.put("codeValue", script);
         draft.put("comment", "SQL through the host data source");
         draft.put("requestBody", parameters);
-        draft.put("optionInfo", Map.of("resultStructure", false));
+        draft.put("optionInfo", Map.of("resultHandler", "raw"));
         return draft;
     }
 
@@ -122,7 +122,7 @@ class SqlInvocationTest {
         try (SqlTestApplication app = new SqlTestApplication(); HttpClient client = new HttpClient(app.baseUrl())) {
             assertEquals(200, client.login("admin").status);
             Map<String, Object> invalid = this.draft("SQL", "/broken", "SELECT name FROM missing_business_table WHERE id = #{id}", Map.of("id", 1));
-            invalid.put("optionInfo", Map.of("resultStructure", true));
+            invalid.put("optionInfo", Map.of("resultHandler", "structure"));
             this.publish(client, invalid);
             JsonNode failed = this.result(client.json("/api/broken", Map.of("id", 1)));
             assertFalse(failed.path("success").asBoolean(true), failed.toString());
@@ -160,7 +160,7 @@ class SqlInvocationTest {
                     });
                     """.formatted(sourceName, table, column, column, column, table);
             Map<String, Object> draft = this.draft("DataQL", "/transaction", script, Map.of("id", id, "amount", 0, "rollback", false));
-            draft.put("optionInfo", Map.of("resultStructure", true));
+            draft.put("optionInfo", Map.of("resultHandler", "structure"));
             this.publish(client, draft);
             this.publish(client, this.draft("DataQL", "/value", this.readValue(sourceName, table, column), Map.of("id", id)));
             if (!sourceName.equals("ds2")) {
@@ -220,7 +220,7 @@ class SqlInvocationTest {
                     });
                     """;
             Map<String, Object> draft = this.draft("DataQL", "/transaction", script, Map.of());
-            draft.put("optionInfo", Map.of("resultStructure", true));
+            draft.put("optionInfo", Map.of("resultHandler", "structure"));
             this.publish(client, draft);
             this.publish(client, this.draft("SQL", "/balance", "SELECT balance FROM example_people WHERE id = #{id}", Map.of("id", 1)));
             assertEquals(200, client.login("api").status);
@@ -248,7 +248,7 @@ class SqlInvocationTest {
                     return failSql();
                     """;
             Map<String, Object> draft = this.draft("DataQL", "/without-transaction", script, Map.of());
-            draft.put("optionInfo", Map.of("resultStructure", true));
+            draft.put("optionInfo", Map.of("resultHandler", "structure"));
             this.publish(client, draft);
             this.publish(client, this.draft("SQL", "/balance", "SELECT balance FROM example_people WHERE id = #{id}", Map.of("id", 1)));
             assertEquals(200, client.login("api").status);
@@ -270,7 +270,7 @@ class SqlInvocationTest {
                 script = new String(input.readAllBytes(), StandardCharsets.UTF_8);
             }
             Map<String, Object> draft = this.draft("DataQL", "/transfer", script, Map.of("fromId", 1, "toId", 2, "amount", 5));
-            draft.put("optionInfo", Map.of("resultStructure", true));
+            draft.put("optionInfo", Map.of("resultHandler", "structure"));
             this.publish(client, draft);
             this.publish(client, this.draft("DataQL", "/balance", this.readValue("ds1", "example_people", "balance"), Map.of("id", 1)));
             assertEquals(200, client.login("api").status);

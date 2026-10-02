@@ -55,7 +55,7 @@ public final class HostTransactionController implements Handler {
         definition.setDescription("Host transaction example");
         definition.setSchema("{}");
         definition.setSample("{}");
-        definition.setOptions("{\"resultStructure\":false}");
+        definition.setOptions("{\"resultHandler\":\"raw\"}");
         dataway.getAdminService().save(definition, 0);
         dataway.getAdminService().publish("transaction", 1);
         if (mode.equals("rollback")) {

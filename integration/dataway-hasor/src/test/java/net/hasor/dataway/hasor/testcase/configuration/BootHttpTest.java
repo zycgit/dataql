@@ -6,11 +6,13 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.hasor.testcase.configuration;
+import java.io.ByteArrayInputStream;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import javax.imageio.ImageIO;
 import javax.sql.DataSource;
 import net.hasor.boot.Boot;
 import net.hasor.boot.BootApplication;
@@ -27,6 +29,9 @@ import net.hasor.dataway.service.admin.AdminService;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
 import net.hasor.dbvisitor.session.Session;
 import net.hasor.dbvisitor.transaction.TransactionTemplate;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
 import static org.junit.jupiter.api.Assertions.*;
@@ -45,12 +50,13 @@ class BootHttpTest {
                 assertEquals("/admin/", client.json("/example/config", Map.of()).json().get("admin"));
                 assertEquals(401, client.get("/admin/").status);
                 assertEquals(200, client.login("admin").status);
+                this.assertResultHandlers(client);
                 assertEquals(200, client.get("/admin/").status);
-                assertEquals(4, this.result(client.get("/admin/api/api-list")).path("result").size());
+                assertEquals(11, this.result(client.get("/admin/api/api-list")).path("result").size());
                 JsonNode code = this.result(client.get("/admin/api/api-detail?id=example-person-orders")).path("result").path("codeInfo").path("codeValue");
                 assertTrue(code.asText().contains("\"ds1\""), code.toString());
                 assertTrue(code.asText().contains("\"ds2\""), code.toString());
-                JsonNode saved = this.result(client.json("/admin/api/save-api", Map.of("id", "-1", "version", 0, "select", "POST", "apiPath", "/default-source", "codeType", "SQL", "codeValue", "SELECT api_path FROM interface_info WHERE api_id = #{id}", "requestBody", Map.of("id", "example-person"), "optionInfo", Map.of("resultStructure", false))));
+                JsonNode saved = this.result(client.json("/admin/api/save-api", Map.of("id", "-1", "version", 0, "select", "POST", "apiPath", "/default-source", "codeType", "SQL", "codeValue", "SELECT api_path FROM interface_info WHERE api_id = #{id}", "requestBody", Map.of("id", "example-person"), "optionInfo", Map.of("resultHandler", "raw"))));
                 assertTrue(saved.path("success").asBoolean(), saved.toString());
                 JsonNode published = this.result(client.json("/admin/api/publish", Map.of("id", saved.path("result").asText(), "version", 1)));
                 assertTrue(published.path("success").asBoolean(), published.toString());
@@ -229,7 +235,7 @@ class BootHttpTest {
 
             context.getInstance(ExampleApiService.class).initialize();
 
-            assertEquals(4, admin.list().size());
+            assertEquals(11, admin.list().size());
             assertEquals("return 'edited';", admin.getDraftByApi(draft.getId()).getScript());
             assertEquals(saved.getRevision(), admin.getVersionById(draft.getId()));
             assertEquals(1, admin.getHistoryByApi(draft.getId()).size());
@@ -256,5 +262,64 @@ class BootHttpTest {
             assertEquals(200, response.status, response.text());
             assertEquals("\"hello\"", response.text());
         }
+    }
+
+    private void assertResultHandlers(HttpClient client) throws Exception {
+        var handlers = client.get("/admin/api/get-handlers");
+        assertEquals(200, handlers.status, handlers.text());
+        assertTrue(handlers.text().contains("csv"));
+        assertTrue(handlers.text().contains("verifyCode"));
+        var structured = client.json("/api/result-structure", Map.of("message", "Hello Dataway"));
+        assertEquals("Hello Dataway", this.structuredResult(structured).path("message").asText());
+        assertTrue(structured.headers.get("Content-Type").startsWith("application/json"));
+        var raw = client.json("/api/result-raw", Map.of("message", "Hello Dataway"));
+        assertEquals(Map.of("message", "Hello Dataway"), raw.json());
+        assertEquals(200, raw.status);
+        assertTrue(raw.headers.get("Content-Type").startsWith("application/json"));
+        var text = client.json("/api/result-text", Map.of("message", "Hello Dataway"));
+        assertEquals(200, text.status);
+        assertEquals("Hello Dataway", text.text());
+        assertTrue(text.headers.get("Content-Type").startsWith("text/plain"));
+        var verifyCode = client.json("/api/verifyCode", Map.of("text", "A7K9"));
+        assertEquals(200, verifyCode.status);
+        assertEquals("image/png", verifyCode.headers.get("Content-Type").split(";")[0]);
+        assertEquals("no-store", verifyCode.headers.get("Cache-Control"));
+        var image = ImageIO.read(new ByteArrayInputStream(verifyCode.bytes));
+        assertNotNull(image);
+        assertEquals(160, image.getWidth());
+        assertEquals(64, image.getHeight());
+        var imagePreview = client.json("/admin/api/perform", Map.of("id", "-1", "version", 0, "select", "POST", "apiPath", "/preview-verifyCode", "codeType", "DataQL", "codeValue", "return ${text};", "requestBody", Map.of("text", "B8L2"), "optionInfo", Map.of("resultHandler", "verifyCode")));
+        assertEquals(200, imagePreview.status);
+        assertEquals("image/png", imagePreview.headers.get("Content-Type").split(";")[0]);
+        assertNotNull(ImageIO.read(new ByteArrayInputStream(imagePreview.bytes)));
+        var imageSmoke = client.json("/admin/api/smoke", Map.of("id", "example-verifyCode", "version", 2, "requestBody", Map.of("text", "C9M3")));
+        assertEquals(200, imageSmoke.status);
+        assertEquals("image/png", imageSmoke.headers.get("Content-Type").split(";")[0]);
+        assertNotNull(ImageIO.read(new ByteArrayInputStream(imageSmoke.bytes)));
+        JsonNode paths = this.result(client.get("/docs/openapi.json")).path("paths");
+        assertTrue(paths.path("/verifyCode").path("post").path("responses").path("200").path("content").has("image/png"));
+        assertTrue(paths.path("/result-text").path("post").path("responses").path("200").path("content").has("text/plain"));
+        var csv = client.json("/api/people-csv", Map.of());
+        assertEquals(200, csv.status, csv.text());
+        assertEquals("text/csv;charset=UTF-8", csv.headers.get("Content-Type").replace(" ", ""));
+        assertTrue(csv.text().startsWith("id,name,balance\r\n"), csv.text());
+        assertTrue(csv.text().contains("Alice"), csv.text());
+        assertTrue(csv.headers.get("Content-Disposition").contains("results.csv"));
+        var binary = client.json("/api/binary", Map.of());
+        assertEquals(200, binary.status, binary.text());
+        assertEquals("Hello Dataway", binary.text());
+        assertEquals("application/octet-stream", binary.headers.get("Content-Type").split(";")[0]);
+        byte[] bytes = { 0, 1, -1, 127 };
+        var multipart = new MultipartBody.Builder().setType(MultipartBody.FORM).addFormDataPart("file", "report.bin", RequestBody.create(bytes, MediaType.get("application/octet-stream"))).build();
+        var upload = client.send("POST", "/api/upload-download", multipart);
+        assertEquals(200, upload.status, upload.text());
+        assertArrayEquals(bytes, upload.bytes);
+        assertTrue(upload.headers.get("Content-Disposition").contains("report.bin"));
+        var preview = client.json("/admin/api/perform", Map.of("id", "-1", "version", 0, "select", "POST", "apiPath", "/preview-csv", "codeType", "DataQL", "codeValue", "return [{'id': 1, 'name': 'Ada'}];", "requestBody", Map.of(), "optionInfo", Map.of("resultHandler", "csv")));
+        assertEquals(200, preview.status, preview.text());
+        assertEquals("id,name\r\n1,Ada\r\n", preview.text());
+        var smoke = client.json("/admin/api/smoke", Map.of("id", "example-people-csv", "version", 2, "requestBody", Map.of()));
+        assertEquals(200, smoke.status, smoke.text());
+        assertEquals(csv.text(), smoke.text());
     }
 }

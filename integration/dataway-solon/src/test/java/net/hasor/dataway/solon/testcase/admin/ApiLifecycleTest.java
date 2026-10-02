@@ -33,7 +33,7 @@ class ApiLifecycleTest {
             draft.put("codeValue", "return ${value} + 1;");
             draft.put("comment", "Managed through MVC");
             draft.put("requestBody", Map.of("value", 0));
-            draft.put("optionInfo", Map.of("resultStructure", false));
+            draft.put("optionInfo", Map.of("resultHandler", "raw"));
             JsonNode saved = this.send(host, "POST", "/admin/api/save-api", draft, 200);
             assertTrue(saved.path("success").asBoolean());
             assertEquals(1, saved.path("version").asLong());

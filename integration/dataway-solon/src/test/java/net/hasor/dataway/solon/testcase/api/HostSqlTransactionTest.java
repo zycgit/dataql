@@ -32,7 +32,7 @@ class HostSqlTransactionTest {
                     return tran.required(() -> { return change(${id}, ${amount}); });
                     """;
             Map<String, Object> draft = this.draft(type, "/transaction", script, Map.of("id", 1, "amount", 0, "rollback", false));
-            draft.put("optionInfo", Map.of("resultStructure", true));
+            draft.put("optionInfo", Map.of("resultHandler", "structure"));
             this.publish(client, draft);
             this.publish(client, this.draft("SQL", "/balance", "SELECT balance FROM example_people WHERE id = #{id}", Map.of("id", 1)));
             assertEquals(200, client.login("api").status);
@@ -63,7 +63,7 @@ class HostSqlTransactionTest {
         draft.put("codeValue", script);
         draft.put("comment", "SQL through the host data source");
         draft.put("requestBody", parameters);
-        draft.put("optionInfo", Map.of("resultStructure", false));
+        draft.put("optionInfo", Map.of("resultHandler", "raw"));
         return draft;
     }
 
