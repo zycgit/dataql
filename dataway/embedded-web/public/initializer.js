@@ -9,6 +9,5 @@ window.addEventListener('load', () => {
     window.DatawayUI({
         adminApi: 'api/',
         api: '../api/',
-        showGitButton: true,
     });
 });

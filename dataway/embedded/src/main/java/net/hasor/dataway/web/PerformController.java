@@ -16,7 +16,6 @@ import net.hasor.dataway.model.ResultInfo;
 import net.hasor.dataway.model.WebRequest;
 import net.hasor.dataway.model.WebResponse;
 import net.hasor.dataway.service.ConvertUtils;
-import net.hasor.dataway.service.ResultInfoUtils;
 import net.hasor.dataway.service.admin.AdminService;
 import net.hasor.dataway.service.script.DatawayEngine;
 import net.hasor.dataway.service.script.DatawayQuery;
@@ -43,8 +42,7 @@ public final class PerformController extends AbstractApiController {
 
             Map<String, Object> input = new LinkedHashMap<>(parameters);
             Map<String, ?> execution = ConvertUtils.convertToWebContext(request, input, input);
-            Object result = query.execute(this.getOperation(), identity, parameters, execution, response);
-            return ResultInfoUtils.convertToResultInfo(result);
+            return query.execute(this.getOperation(), identity, parameters, execution, response);
         });
     }
 }

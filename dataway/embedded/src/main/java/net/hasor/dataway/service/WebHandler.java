@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Objects;
 import net.hasor.cobble.StringUtils;
+import net.hasor.dataql.domain.BinaryModel;
 import net.hasor.dataql.util.JsonUtils;
 import net.hasor.dataway.authorization.IdentityProvider;
 import net.hasor.dataway.authorization.UserIdentity;
@@ -46,14 +47,18 @@ public abstract class WebHandler {
             ResultInfo result = this.handleRequest(request, response);
             Object data = result.getData();
             InputStream source = !result.isJson() && data instanceof InputStream stream ? stream : null;
-            try (source) {
+            if (!result.isJson() && data instanceof BinaryModel binary) {
+                source = binary.openStream();
+            }
+
+            try (InputStream input = source) {
                 OutputStream output = response.write(result.getStatus(), result.getHeaders());
                 if (StringUtils.equalsIgnoreCase(request.getMethod(), "HEAD")) {
                     return;
                 }
 
-                if (source != null) {
-                    source.transferTo(output);
+                if (input != null) {
+                    input.transferTo(output);
                     return;
                 }
 

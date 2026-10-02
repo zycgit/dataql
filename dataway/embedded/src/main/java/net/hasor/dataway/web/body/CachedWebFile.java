@@ -9,7 +9,7 @@ package net.hasor.dataway.web.body;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import net.hasor.dataway.model.WebFile;
+import net.hasor.dataway.function.WebFile;
 
 /** Keeps small uploads in memory and spills the complete content when the threshold is exceeded. */
 public class CachedWebFile extends WebFile {

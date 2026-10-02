@@ -5,16 +5,17 @@
  * See the LICENSE.txt file for the full license.
  * https://www.apache.org/licenses/LICENSE-2.0
  */
-package net.hasor.dataway.model;
+package net.hasor.dataway.function;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import net.hasor.dataql.domain.BinaryModel;
 
 /** An upload valid until the request finishes. The client filename is metadata, never a storage path. */
-public abstract class WebFile implements Closeable {
+public abstract class WebFile extends BinaryModel implements Closeable {
     private final List<InputStream> streams = new ArrayList<>();
     private       boolean           closed;
 

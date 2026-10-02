@@ -64,15 +64,18 @@ function definition(id, input, previous) {
         fail(400, 'Each header requires checked, name and value');
     }
     const optionInfo = document(input.optionInfo);
-    for (const name of ['resultStructure', 'wrapAllParameters']) {
+    for (const name of ['wrapAllParameters']) {
         if (Object.hasOwn(optionInfo, name) && typeof optionInfo[name] !== 'boolean') {
             fail(400, name + ' must be a boolean');
         }
     }
+    if (Object.hasOwn(optionInfo, 'resultHandler') && !['structure', 'raw', 'csv', 'text'].includes(optionInfo.resultHandler)) {
+        fail(400, 'Unknown result handler: ' + optionInfo.resultHandler);
+    }
     if (optionInfo.wrapAllParameters && !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(wrapper(optionInfo))) {
         fail(400, 'Invalid parameter wrapper name');
     }
-    if (optionInfo.resultStructure && optionInfo.responseFormat != null) {
+    if ((optionInfo.resultHandler ?? 'structure') === 'structure' && optionInfo.responseFormat != null) {
         object(optionInfo.responseFormat, 'responseFormat');
     }
     const requestBody = object(input.requestBody ?? {}, 'requestBody');
@@ -150,7 +153,7 @@ async function readBody(request) {
 
 function management(url, request, body, records) {
     const path = url.pathname.slice('/admin/api'.length);
-    const reads = ['/api-list', '/api-info', '/api-detail', '/api-history', '/get-history'];
+    const reads = ['/api-list', '/api-info', '/api-detail', '/api-history', '/get-history', '/result-handlers'];
     const writes = ['/save-api', '/perform', '/smoke', '/publish', '/disable', '/delete'];
     if (!reads.includes(path) && !writes.includes(path)) {
         fail(404, 'Not found');
@@ -167,10 +170,13 @@ function management(url, request, body, records) {
     if (Object.hasOwn(body, 'id') && id !== body.id) {
         fail(400, 'Conflicting API ids');
     }
-    if (path !== '/api-list' && (typeof id !== 'string' || !id.trim())) {
+    if (!['/api-list', '/result-handlers'].includes(path) && (typeof id !== 'string' || !id.trim())) {
         fail(400, 'id is required');
     }
     switch (path) {
+        case '/result-handlers': {
+            return result(['structure', 'raw', 'csv', 'text']);
+        }
         case '/api-list': {
             return result([...records.values()].map(record => ({id: record.draft.id, version: record.version,
                 checked: false, select: record.draft.select, path: record.draft.apiPath,
@@ -291,7 +297,35 @@ async function execute(definition, values, request) {
     const parameters = options.wrapAllParameters ? {[wrapper(options)]: values} : values;
     const responder = responses[definition.select + ' ' + definition.apiPath] ?? defaultResponse;
     const response = await responder({definition: structuredClone(definition), parameters, request});
-    if (!options.resultStructure || Buffer.isBuffer(response.body) || response.status >= 400) {
+    const handler = options.resultHandler ?? 'structure';
+    if (!['structure', 'raw', 'text', 'csv'].includes(handler)) {
+        fail(400, 'Unknown result handler: ' + handler);
+    }
+    if ((response.status ?? 200) < 400 && ['text', 'csv'].includes(handler)) {
+        if (handler === 'text') {
+            if (Buffer.isBuffer(response.body)) {
+                fail(400, 'Use Raw Value to return binary content');
+            }
+            const text = typeof response.body === 'string' ? response.body : JSON.stringify(response.body);
+            return {...response, body: Buffer.from(text), headers: {...response.headers, 'Content-Type': 'text/plain; charset=UTF-8'}};
+        }
+        if (!Array.isArray(response.body) || response.body.some(row => !row || typeof row !== 'object' || Array.isArray(row))) {
+            fail(400, 'CSV result must be a list of objects');
+        }
+        const columns = [...new Set(response.body.flatMap(row => Object.keys(row)))];
+        const cell = value => {
+            if (value != null && typeof value === 'object') {
+                fail(400, 'CSV cells must be scalar values');
+            }
+            const text = String(value ?? '');
+            return /[",\r\n]/.test(text) ? '"' + text.replaceAll('"', '""') + '"' : text;
+        };
+        const rows = columns.length ? [columns, ...response.body.map(row => columns.map(name => row[name]))] : [];
+        const csv = rows.map(row => row.map(cell).join(',') + '\r\n').join('');
+        return {...response, body: Buffer.from(csv), headers: {...response.headers,
+            'Content-Type': 'text/csv; charset=UTF-8', 'Content-Disposition': 'attachment; filename=results.csv'}};
+    }
+    if (handler === 'raw' || Buffer.isBuffer(response.body) || response.status >= 400) {
         return response;
     }
     const fields = {'@resultStatus': true, '@resultMessage': 'OK', '@resultCode': 0,

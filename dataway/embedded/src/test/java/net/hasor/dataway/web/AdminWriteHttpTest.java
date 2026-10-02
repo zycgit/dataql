@@ -44,7 +44,7 @@ class AdminWriteHttpTest extends AdminHttpSupport {
         assertEquals("POST", definition.getMethod());
         assertEquals("/saved", definition.getPath());
         assertEquals("description", definition.getDescription());
-        assertEquals(Map.of("resultStructure", false), JsonUtils.readValue(definition.getOptions(), Map.class));
+        assertEquals(Map.of("resultHandler", "raw"), JsonUtils.readValue(definition.getOptions(), Map.class));
         assertEquals(Map.of("name", "demo"), JsonUtils.readValue(definition.getSample(), Map.class).get("requestBody"));
     }
 
@@ -58,7 +58,7 @@ class AdminWriteHttpTest extends AdminHttpSupport {
         body.put("codeValue", "return ${name};");
         body.put("comment", "description");
         body.put("requestBody", Map.of("name", "demo"));
-        body.put("optionInfo", Map.of("resultStructure", false));
+        body.put("optionInfo", Map.of("resultHandler", "raw"));
         return body;
     }
 
@@ -73,7 +73,7 @@ class AdminWriteHttpTest extends AdminHttpSupport {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = { "responseFormat", "resultStructure", "wrapAllParameters", "wrapParameterName" })
+    @ValueSource(strings = { "responseFormat", "resultHandler", "wrapAllParameters", "wrapParameterName" })
     void savingADraftRejectsExplicitNullOptionsBeforeCallingTheService(String option) throws Exception {
         String body = """
                 {"id":"api","version":4,"select":"POST","apiPath":"/saved","codeType":"DataQL",

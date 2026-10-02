@@ -6,7 +6,7 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 export const defaultOptions = {
-    resultStructure: true,
+    resultHandler: 'structure',
     responseFormat: JSON.stringify({success: '@resultStatus', message: '@resultMessage', location: '@codeLocation',
         code: '@resultCode', lifeCycleTime: '@timeLifeCycle', executionTime: '@timeExecution', value: '@resultData'}, null, 2),
     wrapAllParameters: false,
@@ -20,11 +20,16 @@ export function newInterface() {
 }
 
 export function editInterface(detail) {
+    const options = {...detail.optionData};
+    if (options.resultHandler == null || options.resultHandler === 'default') {
+        options.resultHandler = options.resultStructure === false ? 'raw' : 'structure';
+    }
+    delete options.resultStructure;
     return {id: detail.id, version: detail.version, select: detail.select, apiPath: detail.path,
         comment: detail.apiComment || '', status: detail.status, codeType: detail.codeType,
         codeValue: detail.codeInfo.codeValue || '', requestBody: detail.codeInfo.requestBody || '{}',
         headerData: structuredClone(detail.codeInfo.headerData || []),
-        optionInfo: {...defaultOptions, ...detail.optionData}, sample: detail.sample, schema: detail.schema};
+        optionInfo: {...defaultOptions, ...options}, sample: detail.sample, schema: detail.schema};
 }
 
 export function statusTag(status) {

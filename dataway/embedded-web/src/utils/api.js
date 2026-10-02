@@ -47,24 +47,45 @@ export async function readResponse(response, started) {
     const mime = contentType.split(';')[0].trim().toLowerCase();
     const charset = /charset\s*=\s*["']?([^;"'\s]+)/i.exec(contentType)?.[1] || 'utf-8';
     const isJson = mime === 'application/json' || mime.endsWith('+json');
-    const isText = isJson || mime.startsWith('text/') || /(?:xml|javascript|x-www-form-urlencoded)$/.test(mime);
-    const bytes = new Uint8Array(await blob.arrayBuffer());
+    const isImage = mime.startsWith('image/');
+    const isText = !isImage && (isJson || mime.startsWith('text/') || mime === 'application/csv'
+        || /(?:xml|javascript|x-www-form-urlencoded)$/.test(mime));
     let data = null;
+    let hasJson = false;
+    let rawText = '';
     let text = '';
+    let kind = isImage ? 'image' : isText ? 'text' : 'bytes';
     if (isText) {
-        text = new TextDecoder(charset).decode(bytes);
-        if (isJson && text) {
-            data = JSON.parse(text);
+        let decoder;
+        try {
+            decoder = new TextDecoder(charset);
+        } catch {
+            decoder = new TextDecoder('utf-8');
+        }
+        rawText = decoder.decode(await blob.arrayBuffer());
+        text = rawText;
+        try {
+            data = JSON.parse(rawText);
+            hasJson = true;
+        } catch {
+            // Keep malformed JSON and ordinary text visible in the Text view.
+        }
+        if (isJson && hasJson) {
+            kind = 'json';
             text = JSON.stringify(data, null, 2);
         }
-    } else {
+    } else if (!isImage) {
+        // Bound the binary summary; downloads always use the complete original blob.
+        const bytes = new Uint8Array(await blob.slice(0, 4096).arrayBuffer());
         for (let offset = 0; offset < bytes.length; offset += 16) {
             text += Array.from(bytes.subarray(offset, offset + 16), byte => byte.toString(16).padStart(2, '0').toUpperCase()).join(' ') + '\n';
         }
         text = text.trim();
     }
     const disposition = response.headers.get('content-disposition') || '';
-    let filename = /filename="?([^";]+)"?/i.exec(disposition)?.[1] || 'dataway-result.bin';
+    const extension = isJson ? 'json' : ['text/csv', 'application/csv'].includes(mime) ? 'csv' : isText ? 'txt'
+        : isImage ? mime.split('/')[1].split('+')[0].replace('jpeg', 'jpg') : mime === 'application/pdf' ? 'pdf' : 'bin';
+    let filename = /filename="?([^";]+)"?/i.exec(disposition)?.[1] || 'dataway-result.' + extension;
     const encoded = /filename\*=UTF-8''([^;]+)/i.exec(disposition)?.[1];
     if (encoded) {
         try {
@@ -73,8 +94,8 @@ export async function readResponse(response, started) {
             // Keep the plain filename when the encoded form is malformed.
         }
     }
-    return {status: response.status, ok: response.ok, kind: isJson ? 'json' : isText ? 'text' : 'bytes',
-        data, text, blob, filename, elapsed: Math.round(performance.now() - started)};
+    return {status: response.status, ok: response.ok, kind, contentType, mime, hasJson,
+        data, text, rawText, blob, filename, downloadable: !isText || /attachment/i.test(disposition), elapsed: Math.round(performance.now() - started)};
 }
 
 export class DatawayClient {

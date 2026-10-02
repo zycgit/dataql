@@ -7,9 +7,13 @@
  */
 package net.hasor.dataway.service;
 import java.io.InputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import net.hasor.dataql.domain.BinaryModel;
+import net.hasor.dataway.function.WebFile;
 import net.hasor.dataway.model.ResultInfo;
 
 /** Constructs management envelopes and converts JSON, binary and streaming responses. */
@@ -50,6 +54,29 @@ public final class ResultInfoUtils {
     public static ResultInfo convertToResultInfo(Object value) {
         if (value instanceof ResultInfo serialized) {
             return serialized;
+        }
+        if (value instanceof BinaryModel binary) {
+            ResultInfo result = new ResultInfo();
+            result.setJson(false);
+            result.setData(binary);
+            result.getHeaders().put("Content-Type", "application/octet-stream");
+            if (binary.getSize() >= 0) {
+                result.getHeaders().put("Content-Length", Long.toString(binary.getSize()));
+            }
+            if (binary instanceof WebFile file) {
+                String contentType = file.getContentType();
+                if (contentType != null && !contentType.isBlank() && !contentType.contains("\r") && !contentType.contains("\n")) {
+                    result.getHeaders().put("Content-Type", contentType);
+                }
+                String name = file.getName();
+                if (name != null) {
+                    name = name.replace('\\', '/');
+                    name = name.substring(name.lastIndexOf('/') + 1);
+                    String encoded = URLEncoder.encode(name, StandardCharsets.UTF_8).replace("+", "%20");
+                    result.getHeaders().put("Content-Disposition", "attachment; filename*=UTF-8''" + encoded);
+                }
+            }
+            return result;
         }
         if (value instanceof byte[] bytes) {
             return ResultInfoUtils.convertToResultInfo("application/octet-stream", bytes);

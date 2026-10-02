@@ -35,7 +35,7 @@ class ConvertUtilsTest extends ServiceTestSupport {
         input.put("sample", originalSample);
         input.put("requestBody", "{\"name\":\"value\"}");
         input.put("schema", Map.of("responseBody", Map.of("type", "string")));
-        input.put("optionInfo", Map.of("resultStructure", false));
+        input.put("optionInfo", Map.of("resultHandler", "raw"));
         input.put("headerData", List.of(Map.of("checked", true, "name", "X-Name", "value", "example")));
         ApiDefinition definition = ConvertUtils.convertToApiDefinition("api", input);
         assertEquals("api", definition.getId());
@@ -46,7 +46,7 @@ class ConvertUtilsTest extends ServiceTestSupport {
         assertEquals(1, sample.get("extra"));
         assertFalse(sample.containsKey("headerData"));
         assertTrue(originalSample.containsKey("headerData"));
-        assertEquals(Map.of("resultStructure", false), JsonUtils.readValue(definition.getOptions(), Map.class));
+        assertEquals(Map.of("resultHandler", "raw"), JsonUtils.readValue(definition.getOptions(), Map.class));
     }
 
     private Map<String, Object> editor() {
@@ -54,7 +54,7 @@ class ConvertUtilsTest extends ServiceTestSupport {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = { "responseFormat", "resultStructure", "wrapAllParameters", "wrapParameterName" })
+    @ValueSource(strings = { "responseFormat", "resultHandler", "wrapAllParameters", "wrapParameterName" })
     void explicitNullOptionsAreRejectedBeforeSerialization(String option) {
         Map<String, Object> options = new LinkedHashMap<>();
         options.put(option, null);

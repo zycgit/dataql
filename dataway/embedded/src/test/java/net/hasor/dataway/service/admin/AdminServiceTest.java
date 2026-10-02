@@ -117,7 +117,7 @@ class AdminServiceTest extends ServiceTestSupport {
             case "script" -> editable.setScript("return 'edited';");
             case "schema" -> editable.setSchema("{\"type\":\"object\"}");
             case "sample" -> editable.setSample("{\"requestBody\":{\"id\":1}}");
-            case "options" -> editable.setOptions("{\"resultStructure\":false}");
+            case "options" -> editable.setOptions("{\"resultHandler\":\"raw\"}");
             case "description" -> editable.setDescription("Edited description");
             default -> throw new AssertionError("Unexpected field: " + field);
         }
@@ -236,7 +236,7 @@ class AdminServiceTest extends ServiceTestSupport {
         Map<FieldDef, String> info = this.info("api", "1", 4);
         info.put(SCHEMA, "{\"type\":\"object\"}");
         info.put(SAMPLE, "{\"requestBody\":{\"id\":1}}");
-        info.put(OPTION, "{\"resultStructure\":false}");
+        info.put(OPTION, "{\"resultHandler\":\"raw\"}");
         this.storeInfo(info);
         Map<FieldDef, String> release = this.release(info, "old", "1", 1);
         this.storeReleases("api", List.of(release));

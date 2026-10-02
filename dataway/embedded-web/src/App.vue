@@ -13,10 +13,6 @@
         <el-menu-item index="2"><router-link to="/new"><el-icon><Plus /></el-icon>New</router-link></el-menu-item>
         <el-menu-item index="3"><a href="https://www.dataql.net/web/dataql/what_is_dataql.html" target="_blank" rel="noopener noreferrer"><el-icon><Warning /></el-icon>What is DataQL?</a></el-menu-item>
       </el-menu>
-      <div v-if="configuration.showGitButton" class="gitStyle">
-        <div><a href="https://github.com/zycgit/hasor/stargazers" target="_blank" rel="noopener noreferrer">GitHub ☆ Star</a><a href="https://github.com/zycgit/hasor/network" target="_blank" rel="noopener noreferrer">⑂ Fork</a></div>
-        <div><a href="https://gitee.com/zycgit/hasor/stargazers" target="_blank" rel="noopener noreferrer">Gitee ☆ Star</a><a href="https://gitee.com/zycgit/hasor/members" target="_blank" rel="noopener noreferrer">⑂ Fork</a></div>
-      </div>
     </el-header>
     <el-main>
       <div v-if="startupError" class="startup-error">
@@ -35,7 +31,6 @@ import {Notebook, Plus, Warning} from '@element-plus/icons-vue';
 import {DatawayClient} from './utils/api.js';
 const props = defineProps({options: {type: [Object, Function], required: true}});
 const route = useRoute();
-const configuration = ref({showGitButton: true});
 const client = shallowRef();
 const startupError = ref('');
 provide('dataway', {client});
@@ -44,7 +39,6 @@ async function start() {
     try {
         const config = typeof props.options === 'function' ? await props.options() : props.options;
         client.value = new DatawayClient(config);
-        configuration.value = {showGitButton: config.showGitButton !== false};
     } catch (error) {
         startupError.value = error.message;
     }

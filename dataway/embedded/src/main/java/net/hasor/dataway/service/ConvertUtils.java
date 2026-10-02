@@ -8,10 +8,7 @@
 package net.hasor.dataway.service;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import net.hasor.dataql.util.JsonUtils;
 import net.hasor.dataway.model.*;
 import net.hasor.dataway.model.vo.ApiCodeVO;
@@ -50,7 +47,7 @@ public final class ConvertUtils {
             sample.remove("headerData");
             String schema = input.containsKey("schema") ? JsonUtils.writeValueAsString(ConvertUtils.convertToApiParameters(input.get("schema"))) : null;
             Map<String, Object> queryOptions = ConvertUtils.convertToApiParameters(input.get("optionInfo"));
-            for (String name : List.of("responseFormat", "resultStructure", "wrapAllParameters", "wrapParameterName")) {
+            for (String name : List.of("responseFormat", "resultStructure", "wrapAllParameters", "wrapParameterName", "resultHandler")) {
                 if (queryOptions.containsKey(name) && queryOptions.get(name) == null) {
                     throw new IllegalArgumentException(name + " must not be null");
                 }
@@ -170,6 +167,17 @@ public final class ConvertUtils {
         Object headers = sample.getOrDefault("headerData", sample.getOrDefault("requestHeader", List.of()));
         if (headers instanceof String text) {
             headers = JsonUtils.readValue(text, Object.class);
+        }
+
+        if (headers instanceof Map<?, ?> values) {
+            List<Map<String, Object>> rows = new ArrayList<>();
+            for (var header : values.entrySet()) {
+                List<?> items = header.getValue() instanceof List<?> list ? list : List.of(Objects.toString(header.getValue(), ""));
+                for (Object value : items) {
+                    rows.add(Map.of("checked", true, "name", header.getKey().toString(), "value", Objects.toString(value, "")));
+                }
+            }
+            headers = rows;
         }
 
         ApiCodeVO result = new ApiCodeVO();

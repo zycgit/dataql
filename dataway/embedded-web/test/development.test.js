@@ -65,7 +65,7 @@ test('mock serves the independent initializer and seeded management documents', 
     assert.match(await initializer.text(), /window\.DatawayUI\(/);
     const list = await management('api-list');
     assert.equal(list.success, true);
-    assert.deepEqual(list.result.map(item => item.status), [1, 1, 1, 0, 3]);
+    assert.deepEqual(list.result.map(item => item.status), [1, 1, 1, 0, 3, 1, 1, 1]);
     const detail = (await management('api-detail', {id: 'mock-hello'})).result;
     assert.equal(detail.version, 2);
     assert.equal(JSON.parse(detail.requestBody).message, 'Hello Dataway Mock.');
@@ -73,7 +73,7 @@ test('mock serves the independent initializer and seeded management documents', 
 });
 
 test('mock supports edits, immutable publications, conflicts, history, disabling and deletion', async () => {
-    const form = {...newInterface(), apiPath: '/test/lifecycle', optionInfo: {resultStructure: false},
+    const form = {...newInterface(), apiPath: '/test/lifecycle', optionInfo: {resultHandler: 'raw'},
         sample: {custom: 'preserved'}, schema: {type: 'object'}};
     const created = await management('save-api', {id: '-1', body: form});
     const id = created.result;
@@ -91,7 +91,7 @@ test('mock supports edits, immutable publications, conflicts, history, disabling
     await management('save-api', {id, body: {...form, ...command}, status: 409});
     await management('save-api', {id, body: {...form, id, version: 2, apiPath: '/changed'}, status: 409});
     const updated = {...form, id, version: 2, codeValue: 'changed script',
-        optionInfo: {resultStructure: true, responseFormat: '{"data":"@resultData"}'}};
+        optionInfo: {resultHandler: 'structure', responseFormat: '{"data":"@resultData"}'}};
     assert.equal((await management('save-api', {id, body: updated})).version, 3);
     assert.equal((await management('api-detail', {id})).result.status, 2);
     const published = await (await fetch(mock.origin + '/api/test/lifecycle', {method: 'POST'})).json();
@@ -148,7 +148,7 @@ test('mock applies headers, parameter wrapping, response templates and binary do
     assert.equal(value.message, 'body');
     assert.equal(value.header, 'custom');
     const form = {...newInterface(), apiPath: '/test/wrapping', requestBody: {name: 'example'},
-        optionInfo: {wrapAllParameters: true, wrapParameterName: 'root', resultStructure: true,
+        optionInfo: {wrapAllParameters: true, wrapParameterName: 'root',
             responseFormat: '{"ok":"@resultStatus","data":"@resultData","literal":"kept"}'}};
     const wrapped = await management('perform', {id: '-1', body: form});
     assert.equal(wrapped.ok, true);
@@ -168,7 +168,7 @@ test('restarting mock mode resets changes to the sample definitions', async () =
     assert.equal(restored.status, 1);
     assert.equal(restored.version, 2);
     const list = (await management('api-list')).result;
-    assert.equal(list.length, 5);
+    assert.equal(list.length, 8);
 });
 
 test('proxy rewrites prefixes and preserves request bytes, credentials, cookies and backend errors', async t => {

@@ -9,7 +9,7 @@ package net.hasor.dataway.web.body;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import net.hasor.dataway.model.WebFile;
+import net.hasor.dataway.function.WebFile;
 
 /** Shared upload cache policy; each cached file owns its memory or temporary file. */
 public class UploadStorage {

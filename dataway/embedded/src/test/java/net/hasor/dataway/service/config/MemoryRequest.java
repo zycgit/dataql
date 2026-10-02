@@ -13,7 +13,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import net.hasor.dataql.util.JsonUtils;
-import net.hasor.dataway.model.WebFile;
+import net.hasor.dataway.function.WebFile;
 import net.hasor.dataway.model.WebRequest;
 
 /** In-process host request with real parsing and resource cleanup. */

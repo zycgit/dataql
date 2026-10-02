@@ -33,10 +33,22 @@ class AdminReadHttpTest extends AdminHttpSupport {
         assertEquals("DataQL", detail.get("codeType"));
         assertEquals("Example description", detail.get("apiComment"));
         assertEquals(Map.of("codeValue", "return 'draft';", "requestBody", "{\"name\":\"example\"}", "headerData", List.of()), detail.get("codeInfo"));
-        assertEquals(Map.of("resultStructure", false), detail.get("optionData"));
+        assertEquals(Map.of("resultHandler", "raw"), detail.get("optionData"));
         assertEquals(Map.of("type", "object"), detail.get("schema"));
         verify(this.service).getVersionById("api");
         verify(this.service, never()).getHistoryByApi(anyString());
+    }
+
+    @Test
+    void programmaticHeaderSamplesBecomeEditableConsoleRows() throws Exception {
+        this.draft.setSample("""
+                {"requestBody":{},"requestHeader":{"Content-Type":"application/json","X-Tag":["one","two"]}}
+                """);
+        Map<?, ?> detail = assertInstanceOf(Map.class, this.success(this.get("/api-detail?id=api")).get("result"));
+        List<?> headers = assertInstanceOf(List.class, detail.get("headerData"));
+        assertEquals(List.of(Map.of("checked", true, "name", "Content-Type", "value", "application/json"), Map.of("checked", true, "name", "X-Tag", "value", "one"), Map.of("checked", true, "name", "X-Tag", "value", "two")), headers);
+        Map<?, ?> code = assertInstanceOf(Map.class, detail.get("codeInfo"));
+        assertEquals(headers, code.get("headerData"));
     }
 
     @Test

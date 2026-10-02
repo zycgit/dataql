@@ -49,7 +49,7 @@ class DebugHttpTest extends ServiceTestSupport {
         this.storeInfo(draft);
         UserIdentity identity = UserIdentity.consoleAdmin("editor", Map.of());
         AtomicInteger intercepted = new AtomicInteger();
-        this.config.resultStructure(false).identityProvider(request -> identity).apiInterceptor((context, chain) -> {
+        this.config.resultHandler("raw").identityProvider(request -> identity).apiInterceptor((context, chain) -> {
             assertSame(identity, context.identity());
             assertEquals(Operation.DEBUG, context.operation());
             assertEquals(Map.of("name", "actual"), context.parameters());
@@ -93,7 +93,7 @@ class DebugHttpTest extends ServiceTestSupport {
         draft.put(TYPE, "SQL");
         draft.put(SCRIPT, "select :name");
         draft.put(SAMPLE, "{\"requestBody\":{\"name\":\"saved\"}}");
-        draft.put(OPTION, "{\"resultStructure\":false}");
+        draft.put(OPTION, "{\"resultHandler\":\"raw\"}");
         this.storeInfo(draft);
         this.config.fragment(ApiScriptType.SQL.getTypeName(), () -> (hints, parameters, script) -> {
             assertEquals("select :name", script);
@@ -102,7 +102,7 @@ class DebugHttpTest extends ServiceTestSupport {
         });
         Map<String, Object> body = this.editor("return 'unsaved';");
         body.put("requestBody", Map.of("name", "actual", "undeclared", "ignored"));
-        body.put("optionInfo", Map.of("resultStructure", true));
+        body.put("optionInfo", Map.of("resultHandler", "structure"));
         try (HttpTestServer server = new HttpTestServer("/console", this.config.createDataway().getAdminHandler())) {
             HttpResponse<String> response = this.post(server, "/smoke", body);
             assertEquals(200, response.statusCode());
@@ -129,7 +129,7 @@ class DebugHttpTest extends ServiceTestSupport {
     void performUsesEditorOptionsWithoutMutatingEngineDefaults() throws Exception {
         Map<String, Object> body = this.editor("return ${name};");
         body.put("requestBody", "{\"name\":\"preview\"}");
-        body.put("optionInfo", Map.of("resultStructure", false));
+        body.put("optionInfo", Map.of("resultHandler", "raw"));
         try (HttpTestServer server = new HttpTestServer("/console", this.config.createDataway().getAdminHandler())) {
             assertEquals("preview", JsonUtils.readValue(this.post(server, "/perform", body).body(), Object.class));
             body.remove("optionInfo");
@@ -142,7 +142,7 @@ class DebugHttpTest extends ServiceTestSupport {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = { "responseFormat", "resultStructure", "wrapAllParameters", "wrapParameterName" })
+    @ValueSource(strings = { "responseFormat", "resultHandler", "wrapAllParameters", "wrapParameterName" })
     void explicitNullOptionsReturn400WhileOmittedOptionsUseDefaults(String option) throws Exception {
         String body = """
                 {"id":"-1","select":"POST","apiPath":"/preview","codeType":"DataQL",

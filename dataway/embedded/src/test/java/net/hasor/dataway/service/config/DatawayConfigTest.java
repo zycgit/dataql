@@ -23,7 +23,7 @@ import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.EntityType;
 import net.hasor.dataway.dal.FieldDef;
-import net.hasor.dataway.model.WebFile;
+import net.hasor.dataway.function.WebFile;
 import net.hasor.dataway.service.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -35,7 +35,7 @@ import static org.mockito.Mockito.*;
 class DatawayConfigTest extends ServiceTestSupport {
     @Test
     void defaultsCreateIndependentEntriesSharingTheConfiguredStorage() throws Exception {
-        assertTrue(this.config.isResultStructure());
+        assertEquals("structure", this.config.getResultHandler());
         assertFalse(this.config.isWrapAllParameters());
         assertEquals("root", this.config.getWrapParameterName());
         assertTrue(this.config.getResponseFormat().contains("@resultData"));
@@ -104,7 +104,7 @@ class DatawayConfigTest extends ServiceTestSupport {
         Map<String, Udf> library = new HashMap<>();
         library.put("value", (hints, params) -> "library");
         AtomicInteger customized = new AtomicInteger();
-        this.config.resultStructure(false).function("greet", (hints, params) -> "function").library("library", library).importSource("imported", () -> (Udf) (hints, params) -> "import").configureHost(host -> customized.incrementAndGet()).configureQuery(builder -> builder.addShareVar("extra", () -> "query"));
+        this.config.resultHandler("raw").function("greet", (hints, params) -> "function").library("library", library).importSource("imported", () -> (Udf) (hints, params) -> "import").configureHost(host -> customized.incrementAndGet()).configureQuery(builder -> builder.addShareVar("extra", () -> "query"));
         library.put("value", (hints, params) -> "changed");
 
         Object result = this.invokeScript("""
@@ -212,7 +212,7 @@ class DatawayConfigTest extends ServiceTestSupport {
         this.publishRoute(this.release(info, "release", "1", 1));
         this.config.function("version", (hints, params) -> "first");
         Dataway first = this.config.createDataway();
-        this.config.function("version", (hints, params) -> "second").resultStructure(false);
+        this.config.function("version", (hints, params) -> "second").resultHandler("raw");
         Dataway second = this.config.createDataway();
         Map<?, ?> original = (Map<?, ?>) this.handle(first.getApiHandler(), "GET", "/api").json();
         assertEquals("first", original.get("value"));

@@ -136,7 +136,7 @@ test('version conflicts keep edits and unsaved navigation can be cancelled', asy
     expect((await context.request.post('/gateway/operations/save-api?id=' + id, {
         data: {
             version: detail.version, select: detail.select, apiPath: detail.path, codeType: 'DataQL',
-            codeValue: "return 'another user';", requestBody: '{}', optionInfo: {resultStructure: false},
+            codeValue: "return 'another user';", requestBody: '{}', optionInfo: {resultHandler: 'raw'},
         }
     })).status()).toBe(200);
     await editor(page, 'API script', "return 'my unsaved change';");

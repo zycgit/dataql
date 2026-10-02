@@ -74,27 +74,47 @@ test('business invocations use the configured address and correct HTTP body sema
 test('JSON, text, and binary results preserve the original download bytes and content type', async () => {
     let result = await readResponse(Response.json({name: 'Ada'}), performance.now());
     assert.equal(result.kind, 'json');
+    assert.equal(result.downloadable, false);
     assert.deepEqual(result.data, {name: 'Ada'});
     result = await readResponse(new Response('plain text', {headers: {'Content-Type': 'text/plain'}}), performance.now());
     assert.equal(result.text, 'plain text');
+    assert.equal(result.downloadable, false);
+    result = await readResponse(new Response('id,name\r\n1,Ada\r\n', {headers: {'Content-Type': 'text/csv; charset=UTF-8',
+        'Content-Disposition': 'attachment; filename=results.csv'}}), performance.now());
+    assert.equal(result.kind, 'text');
+    assert.equal(result.downloadable, true);
+    assert.equal(result.filename, 'results.csv');
+    assert.equal(await result.blob.text(), 'id,name\r\n1,Ada\r\n');
     const bytes = new Uint8Array([0, 128, 255, 10]);
     result = await readResponse(new Response(bytes, {headers: {'Content-Type': 'application/pdf',
         'Content-Disposition': "attachment; filename*=UTF-8''report%20one.pdf"}}), performance.now());
     assert.equal(result.kind, 'bytes');
+    assert.equal(result.downloadable, true);
     assert.equal(result.filename, 'report one.pdf');
     assert.equal(result.text, '00 80 FF 0A');
     assert.deepEqual(new Uint8Array(await result.blob.arrayBuffer()), bytes);
 });
 
-test('imported metadata and false editor options survive an edit round trip', () => {
+test('imported metadata and result handlers survive an edit round trip', () => {
     const detail = {id: 'id', version: 4, select: 'POST', path: '/hello', status: 1, codeType: 'DataQL',
         codeInfo: {codeValue: 'return 1;', requestBody: '{}', headerData: []},
-        optionData: {resultStructure: false, extra: 123}, schema: {custom: 1}, sample: {custom: 2}};
+        optionData: {resultHandler: 'raw', extra: 123}, schema: {custom: 1}, sample: {custom: 2}};
     const form = editInterface(detail);
     assert.equal(form.version, 4);
-    assert.equal(form.optionInfo.resultStructure, false);
+    assert.equal(form.optionInfo.resultHandler, 'raw');
     assert.equal(form.optionInfo.extra, 123);
     assert.deepEqual(form.schema, detail.schema);
     assert.deepEqual(form.sample, detail.sample);
     assert.equal(directories([{path: '/one/two'}, {path: '/one/three'}])[0].children.length, 1);
+});
+
+test('saved Structure switches become a single handler option on editing', () => {
+    const detail = {id: 'saved', version: 1, codeInfo: {codeValue: 'return 1;'}};
+    for (const optionData of [{resultStructure: false}, {resultHandler: 'default', resultStructure: false}]) {
+        const options = editInterface({...detail, optionData}).optionInfo;
+        assert.equal(options.resultHandler, 'raw');
+        assert.equal(Object.hasOwn(options, 'resultStructure'), false);
+    }
+    assert.equal(editInterface({...detail, optionData: {resultStructure: true}}).optionInfo.resultHandler, 'structure');
+    assert.equal(editInterface({...detail, optionData: {resultHandler: 'csv', resultStructure: true}}).optionInfo.resultHandler, 'csv');
 });

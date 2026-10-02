@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class DatawayEngineTest extends ScriptTestSupport {
     @Test
     void dataqlUsesTheRealCompilerAndQueryCustomizers() throws Exception {
-        this.config.resultStructure(false);
+        this.config.resultHandler("raw");
         DatawayQuery query = this.engine().newQuery(this.definition("api", "return [customized, ${name}];"), List.of("name"), null);
         assertEquals(List.of("query", "value"), this.execute(query, Map.of("name", "value")));
         assertThrows(QueryParseException.class, () -> this.engine().newQuery(this.definition("api", "invalid script !!!"), List.of(), null));
@@ -36,7 +36,7 @@ class DatawayEngineTest extends ScriptTestSupport {
     void queryOptionsOverrideDefaultsWithoutChangingOtherQueries() throws Exception {
         DatawayEngine engine = this.engine();
         ApiDefinition definition = this.definition("api", "return ${name};");
-        DatawayQuery raw = engine.newQuery(definition, List.of("name"), Map.of("resultStructure", false));
+        DatawayQuery raw = engine.newQuery(definition, List.of("name"), Map.of("resultHandler", "raw"));
         assertEquals("value", this.execute(raw, Map.of("name", "value")));
         Map<?, ?> structured = (Map<?, ?>) this.execute(engine.newQuery(definition, List.of("name"), null), Map.of("name", "value"));
         assertEquals(true, structured.get("success"));
@@ -45,6 +45,21 @@ class DatawayEngineTest extends ScriptTestSupport {
         assertNull(structured.get("location"));
         assertTrue(((Number) structured.get("lifeCycleTime")).longValue() >= 0);
         assertTrue(((Number) structured.get("executionTime")).longValue() >= 0);
+    }
+
+    @Test
+    void savedStructureOptionsResolveToHandlersAndExplicitNamesTakePrecedence() throws Exception {
+        DatawayEngine engine = this.engine();
+        ApiDefinition definition = this.definition("api", "return 'saved';");
+        for (Map<String, Object> options : List.<Map<String, Object>>of(Map.of("resultStructure", false), Map.of("resultHandler", "default", "resultStructure", false))) {
+            assertEquals("saved", this.execute(engine.newQuery(definition, List.of(), options), Map.of()));
+        }
+        Map<?, ?> structured = (Map<?, ?>) this.execute(engine.newQuery(definition, List.of(), Map.of("resultStructure", true)), Map.of());
+        assertEquals("saved", structured.get("value"));
+        assertEquals("saved", this.execute(engine.newQuery(definition, List.of(), Map.of("resultHandler", "raw", "resultStructure", true)), Map.of()));
+        Map<String, Object> invalid = new LinkedHashMap<>();
+        invalid.put("resultStructure", null);
+        assertEquals(400, assertThrows(DatawayException.class, () -> engine.newQuery(definition, List.of(), invalid)).status());
     }
 
     @ParameterizedTest
@@ -58,7 +73,7 @@ class DatawayEngineTest extends ScriptTestSupport {
     }
 
     private static Stream<Arguments> invalidOptions() {
-        return Stream.of(Arguments.of("responseFormat", null), Arguments.of("responseFormat", Map.of()), Arguments.of("responseFormat", "[]"), Arguments.of("responseFormat", "null"), Arguments.of("responseFormat", "{invalid"), Arguments.of("resultStructure", "true"), Arguments.of("resultStructure", null), Arguments.of("wrapAllParameters", 1), Arguments.of("wrapAllParameters", null), Arguments.of("wrapParameterName", null), Arguments.of("wrapParameterName", 1), Arguments.of("wrapParameterName", "bad-name"), Arguments.of("wrapParameterName", " "), Arguments.of("wrapParameterName", "1name"));
+        return Stream.of(Arguments.of("responseFormat", null), Arguments.of("responseFormat", Map.of()), Arguments.of("responseFormat", "[]"), Arguments.of("responseFormat", "null"), Arguments.of("responseFormat", "{invalid"), Arguments.of("resultHandler", "missing"), Arguments.of("resultHandler", null), Arguments.of("wrapAllParameters", 1), Arguments.of("wrapAllParameters", null), Arguments.of("wrapParameterName", null), Arguments.of("wrapParameterName", 1), Arguments.of("wrapParameterName", "bad-name"), Arguments.of("wrapParameterName", " "), Arguments.of("wrapParameterName", "1name"));
     }
 
     @ParameterizedTest
@@ -72,7 +87,7 @@ class DatawayEngineTest extends ScriptTestSupport {
             return parameters;
         };
         this.host.addFragment(ApiScriptType.SQL.getTypeName(), () -> fragment);
-        this.config.resultStructure(false).wrapAllParameters(wrap).wrapParameterName("args");
+        this.config.resultHandler("raw").wrapAllParameters(wrap).wrapParameterName("args");
         ApiDefinition definition = this.definition("api", "select :id, '<% unchanged %>'");
         definition.setType(ApiScriptType.SQL);
         DatawayQuery query = this.engine().newQuery(definition, List.of("id"), null);
@@ -91,7 +106,7 @@ class DatawayEngineTest extends ScriptTestSupport {
     @Test
     void aFragmentWithNoDeclaredParametersReceivesAnEmptyMap() throws Exception {
         this.host.addFragment(ApiScriptType.SQL.getTypeName(), () -> (hints, parameters, script) -> parameters);
-        this.config.resultStructure(false);
+        this.config.resultHandler("raw");
         ApiDefinition definition = this.definition("api", "select 1");
         definition.setType(ApiScriptType.SQL);
         DatawayQuery query = this.engine().newQuery(definition, null, Map.of());
@@ -101,7 +116,7 @@ class DatawayEngineTest extends ScriptTestSupport {
     @Test
     void dataqlWrappingUsesThePerQueryWrapperAndIncludesScopeDefaults() throws Exception {
         this.scope = symbol -> Map.of("default", "host", "name", "host-name");
-        DatawayQuery query = this.engine().newQuery(this.definition("api", "return ${args};"), List.of("name"), Map.of("resultStructure", false, "wrapAllParameters", true, "wrapParameterName", " args "));
+        DatawayQuery query = this.engine().newQuery(this.definition("api", "return ${args};"), List.of("name"), Map.of("resultHandler", "raw", "wrapAllParameters", true, "wrapParameterName", " args "));
         assertEquals(Map.of("default", "host", "name", "request"), this.execute(query, Map.of("name", "request")));
     }
 }

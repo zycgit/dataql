@@ -96,8 +96,9 @@ public final class Dataway {
 
         // Later configuration changes must not affect engines already created.
         DatawayEngine engine = new DatawayEngine(beans, List.copyOf(config.getQueryCustomizers()));
+        engine.setResultHandlers(config.getResultHandlers());
         engine.setResponseFormat(config.getResponseFormat());
-        engine.setResultStructure(config.isResultStructure());
+        engine.setResultHandler(config.getResultHandler());
         engine.setWrapAllParameters(config.isWrapAllParameters());
         engine.setWrapParameterName(config.getWrapParameterName());
         return engine;

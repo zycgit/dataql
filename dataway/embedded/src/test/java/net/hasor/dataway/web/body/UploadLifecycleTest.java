@@ -17,7 +17,7 @@ import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.EntityType;
 import net.hasor.dataway.dal.FieldDef;
-import net.hasor.dataway.model.WebFile;
+import net.hasor.dataway.function.WebFile;
 import net.hasor.dataway.service.Dataway;
 import net.hasor.dataway.service.DatawayException;
 import net.hasor.dataway.service.config.MemoryRequest;
@@ -56,7 +56,7 @@ class UploadLifecycleTest extends ServiceTestSupport {
         if (outcome.equals("response-failure")) {
             response.failWith(failure);
         }
-        this.config.uploadTempDirectory(this.directory).uploadMemoryThreshold(1).resultStructure(false).apiInterceptor((context, chain) -> {
+        this.config.uploadTempDirectory(this.directory).uploadMemoryThreshold(1).resultHandler("raw").apiInterceptor((context, chain) -> {
             assertEquals(Operation.INVOKE, context.operation());
             assertEquals("form title", context.parameters().get("title"));
             assertEquals(List.of("one", "two"), context.parameters().get("tag"));

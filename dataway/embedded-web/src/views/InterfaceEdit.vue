@@ -36,7 +36,7 @@
       <template #paneR>
         <SplitPane split="horizontal">
           <template #paneL><RequestPanel v-model:request-body="form.requestBody" v-model:header-data="form.headerData" hide-run-btn @run="action(execute)" @save="action(save)" /></template>
-          <template #paneR><ResponsePanel v-model:option-info="form.optionInfo" :response="response" on-edit-page /></template>
+          <template #paneR><ResponsePanel v-model:option-info="form.optionInfo" :response="response" :result-handlers="resultHandlers" on-edit-page /></template>
         </SplitPane>
       </template>
     </SplitPane>
@@ -72,6 +72,7 @@ const snapshot = ref(JSON.stringify(form.value));
 const busy = ref(false);
 const tested = ref(false);
 const history = ref([]);
+const resultHandlers = ref(['structure', 'raw']);
 const response = ref(null);
 const showComment = ref(false);
 const commentDraft = ref('');
@@ -125,7 +126,7 @@ function validate() {
     if (!form.value.codeValue.trim()) {
         throw new Error('Script cannot be empty.');
     }
-    if (form.value.optionInfo.resultStructure) {
+    if (form.value.optionInfo.resultHandler === 'structure') {
         JSON.parse(form.value.optionInfo.responseFormat);
     }
 }
@@ -212,9 +213,12 @@ function beforeUnload(event) {
 onBeforeRouteLeave(() => !dirty.value || window.confirm('Discard unsaved changes?'));
 onMounted(() => {
     window.addEventListener('beforeunload', beforeUnload);
-    if (route.params.id) {
-        action(() => load(route.params.id));
-    }
+    action(async () => {
+        resultHandlers.value = (await services.client.value.management('result-handlers')).result;
+        if (route.params.id) {
+            await load(route.params.id);
+        }
+    });
 });
 onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload));
 </script>

@@ -58,6 +58,7 @@ class UiHandlerTest extends ServiceTestSupport {
         assertEquals(List.of("nosniff"), response.getHeaders().get("X-Content-Type-Options"));
         assertEquals(List.of("no-cache"), response.getHeaders().get("Cache-Control"));
         assertTrue(response.getHeaders().get("Content-Security-Policy").get(0).contains("frame-ancestors 'none'"));
+        assertTrue(response.getHeaders().get("Content-Security-Policy").get(0).contains("img-src 'self' data: blob:"));
     }
 
     @Test

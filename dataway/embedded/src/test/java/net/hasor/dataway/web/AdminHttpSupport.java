@@ -54,7 +54,7 @@ abstract class AdminHttpSupport {
         definition.setScript(script);
         definition.setDescription("Example description");
         definition.setSample("{\"requestBody\":{\"name\":\"example\"},\"requestHeader\":\"[]\"}");
-        definition.setOptions("{\"resultStructure\":false}");
+        definition.setOptions("{\"resultHandler\":\"raw\"}");
         definition.setSchema("{\"type\":\"object\"}");
         return definition;
     }

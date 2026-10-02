@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.*;
 import net.hasor.dataway.authorization.UserIdentity;
+import net.hasor.dataway.function.WebFile;
 import net.hasor.dataway.service.DatawayException;
 import net.hasor.dataway.web.body.BodyReaders;
 import net.hasor.dataway.web.body.UploadStorage;

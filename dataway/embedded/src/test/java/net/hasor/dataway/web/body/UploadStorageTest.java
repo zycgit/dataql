@@ -10,7 +10,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Random;
-import net.hasor.dataway.model.WebFile;
+import net.hasor.dataway.function.WebFile;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;

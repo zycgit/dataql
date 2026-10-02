@@ -30,7 +30,7 @@ import static org.mockito.Mockito.when;
 class DatawayQueryTest extends ScriptTestSupport {
     @Test
     void scopeDefaultsMergeWithRequestParametersAndOtherScopesRemainDelegated() throws Exception {
-        this.config.resultStructure(false);
+        this.config.resultHandler("raw");
         this.scope = symbol -> switch (symbol) {
             case "$" -> Map.of("name", "default", "fallback", "host");
             case "@" -> Map.of("name", "context");
@@ -45,7 +45,7 @@ class DatawayQueryTest extends ScriptTestSupport {
 
     @Test
     void interceptorsSeePreparedParametersAndExecuteInRegistrationOrder() throws Exception {
-        this.config.resultStructure(false);
+        this.config.resultHandler("raw");
         this.scope = symbol -> null;
         List<String> events = new ArrayList<>();
         UserIdentity identity = UserIdentity.authenticated("caller", Map.of());
@@ -66,7 +66,7 @@ class DatawayQueryTest extends ScriptTestSupport {
             return result;
         });
         DatawayQuery query = this.engine().newQuery(this.definition("api", "return ${name};"), List.of(), null);
-        assertEquals("input", query.execute(Operation.INVOKE, identity, Map.of("name", "input"), Map.of(), new MemoryResponse()));
+        assertEquals("input", query.execute(Operation.INVOKE, identity, Map.of("name", "input"), Map.of(), new MemoryResponse()).getData());
         assertEquals(List.of("first-before", "second-before", "second-after", "first-after"), events);
     }
 
@@ -81,7 +81,7 @@ class DatawayQueryTest extends ScriptTestSupport {
             return response;
         });
         DatawayQuery query = this.engine().newQuery(this.definition("api", "throw 500, 'must not execute';"), List.of(), null);
-        assertSame(response, this.execute(query, Map.of()));
+        assertSame(response, query.execute(Operation.INVOKE, null, Map.of(), Map.of(), new MemoryResponse()));
     }
 
     @ParameterizedTest
@@ -93,7 +93,13 @@ class DatawayQueryTest extends ScriptTestSupport {
         when(result.getData()).thenReturn(model);
         this.interceptors.add((context, chain) -> result);
         DatawayQuery query = this.engine().newQuery(this.definition("api", "return 1;"), List.of(), null);
-        assertSame(value, this.execute(query, Map.of()));
+        ResultInfo response = query.execute(Operation.INVOKE, null, Map.of(), Map.of(), new MemoryResponse());
+        if (value instanceof ResultInfo) {
+            assertSame(value, response);
+        } else {
+            assertSame(value, response.getData());
+            assertFalse(response.isJson());
+        }
     }
 
     private static Stream<Object> binaryResults() {
@@ -115,7 +121,7 @@ class DatawayQueryTest extends ScriptTestSupport {
     @ParameterizedTest
     @ValueSource(booleans = { false, true })
     void executionFailuresUseTheSelectedResponseStructure(boolean structured) throws Exception {
-        this.config.resultStructure(structured);
+        this.config.resultHandler(structured ? "structure" : "raw");
         this.interceptors.add((context, chain) -> {
             throw new ExecutionException(new IllegalStateException("storage offline"));
         });
@@ -135,7 +141,7 @@ class DatawayQueryTest extends ScriptTestSupport {
 
     @Test
     void nullErrorMessagesStillProduceAnErrorEnvelopeWhenStructureIsDisabled() throws Exception {
-        this.config.resultStructure(false);
+        this.config.resultHandler("raw");
         this.interceptors.add((context, chain) -> {
             throw new IllegalStateException();
         });

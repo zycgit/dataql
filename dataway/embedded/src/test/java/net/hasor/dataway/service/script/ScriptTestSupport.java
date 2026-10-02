@@ -31,13 +31,13 @@ abstract class ScriptTestSupport extends ServiceTestSupport {
         }
         DatawayEngine engine = new DatawayEngine(beans, List.of(builder -> builder.addShareVar("customized", () -> "query")));
         engine.setResponseFormat(this.config.getResponseFormat());
-        engine.setResultStructure(this.config.isResultStructure());
+        engine.setResultHandler(this.config.getResultHandler());
         engine.setWrapAllParameters(this.config.isWrapAllParameters());
         engine.setWrapParameterName(this.config.getWrapParameterName());
         return engine;
     }
 
     protected Object execute(DatawayQuery query, Map<String, ?> parameters) throws Exception {
-        return query.execute(Operation.INVOKE, null, parameters, Map.of(), new MemoryResponse());
+        return query.execute(Operation.INVOKE, null, parameters, Map.of(), new MemoryResponse()).getData();
     }
 }
