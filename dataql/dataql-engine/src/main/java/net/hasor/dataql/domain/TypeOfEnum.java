@@ -21,6 +21,7 @@ public enum TypeOfEnum {
     Object("object"),   //
     List("list"),       //
     Udf("udf"),         //
+    Binary("binary"),   //
     Null("null");       //
     private final String typeOfEnum;
 

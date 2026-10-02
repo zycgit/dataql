@@ -35,6 +35,10 @@ class TYPEOF implements InsetProcess {
     @Override
     public void doWork(InstSequence sequence, DataHeap dataHeap, DataStack dataStack, EnvStack envStack, InsetProcessContext context) {
         DataModel dataModel = DomainHelper.convertTo(dataStack.pop());
+        if (dataModel.isBinary()) {
+            dataStack.push(Binary.typeCode());
+            return;
+        }
         if (dataModel.isObject()) {
             dataStack.push(Object.typeCode());
             return;
