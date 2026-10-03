@@ -49,7 +49,7 @@ public class DatawayConfiguration {
 
     @Bean
     public ApiDataAccessLayer metadata(DataSource source) {
-        return new JdbcDataAccessLayer(source, "");
+        return new JdbcDataAccessLayer(source);
     }
 
     /** Named SQL fragments use ds1/ds2; unnamed fragments use the default application source. */

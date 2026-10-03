@@ -24,7 +24,7 @@ public class InitializedStorage implements ApiDataAccessLayer, InitializingBean 
 
     @Override
     public void afterPropertiesSet() {
-        this.delegate = new JdbcDataAccessLayer(this.source, "");
+        this.delegate = new JdbcDataAccessLayer(this.source);
     }
 
     @Override

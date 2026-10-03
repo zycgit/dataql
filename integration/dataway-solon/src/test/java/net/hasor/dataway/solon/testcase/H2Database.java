@@ -27,7 +27,7 @@ public final class H2Database implements AutoCloseable {
         try (var connection = this.source.getConnection(); var stream = this.getClass().getResourceAsStream("/META-INF/dataway/schema/h2.sql"); var reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
             RunScript.execute(connection, reader);
         }
-        this.access = new JdbcDataAccessLayer(this.source, "");
+        this.access = new JdbcDataAccessLayer(this.source);
     }
 
     public void publish(Dataway dataway, String method, String path, String script) {

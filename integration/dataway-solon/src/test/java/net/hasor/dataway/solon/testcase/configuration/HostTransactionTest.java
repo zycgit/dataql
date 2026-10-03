@@ -25,7 +25,7 @@ class HostTransactionTest {
     void httpBusinessTransactionsCommitOrRollBackMetadataTogether(String mode, int status, int rows) throws Throwable {
         try (H2Database database = new H2Database()) {
             JdbcExecutor executor = new SolonJdbcExecutor(database.source);
-            var access = new JdbcDataAccessLayer(executor, "");
+            var access = new JdbcDataAccessLayer(executor);
             try (TestApplication app = new TestApplication(context -> {
                 new DatawayPlugin(TestSettings.configuration()).start(context);
                 context.app().router().post("/host-transaction", new HostTransactionController(context, executor));

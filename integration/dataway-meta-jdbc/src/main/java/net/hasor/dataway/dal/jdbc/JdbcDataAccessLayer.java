@@ -22,8 +22,18 @@ public class JdbcDataAccessLayer implements ApiDataAccessLayer {
     private final String                         tablePrefix;
     private       Map<EntityType, EntityMapping> mappings;
 
+    /** Uses the default table names with local transactions. */
+    public JdbcDataAccessLayer(DataSource source) {
+        this(source, "");
+    }
+
     public JdbcDataAccessLayer(DataSource source, String tablePrefix) {
         this(new LocalJdbcExecutor(source), tablePrefix);
+    }
+
+    /** Uses the default table names with the supplied executor. */
+    public JdbcDataAccessLayer(JdbcExecutor dbExecutor) {
+        this(dbExecutor, "");
     }
 
     public JdbcDataAccessLayer(JdbcExecutor dbExecutor, String tablePrefix) {

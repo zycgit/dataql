@@ -23,7 +23,7 @@ class StorageFailureTest {
     @Test
     void emptyBatchesAndInvalidMutationsNeverAcquireAConnection() throws Exception {
         JdbcExecutor executor = mock(JdbcExecutor.class);
-        var access = new JdbcDataAccessLayer(executor, "");
+        var access = new JdbcDataAccessLayer(executor);
         access.write(List.of());
         assertThrows(IllegalArgumentException.class, () -> access.createObject(EntityType.INFO, "bad", Map.of(API_ID, "not supported")));
         assertThrows(IllegalArgumentException.class, () -> access.listObjects(EntityType.RELEASE, Map.of(GMT_TIME, "not supported")));
@@ -35,7 +35,7 @@ class StorageFailureTest {
         JdbcExecutor executor = mock(JdbcExecutor.class);
         SQLException cause = new SQLException("connection unavailable", "08001");
         when(executor.execute(any())).thenThrow(cause);
-        var access = new JdbcDataAccessLayer(executor, "");
+        var access = new JdbcDataAccessLayer(executor);
         assertSame(cause, assertThrows(DataAccessException.class, () -> access.listObjects(EntityType.INFO, Map.of())).getCause());
         assertSame(cause, assertThrows(DataAccessException.class, () -> access.createObject(EntityType.INFO, "one", JdbcFixture.info("GET", "/one"))).getCause());
     }
@@ -52,7 +52,7 @@ class StorageFailureTest {
             }
             JdbcExecutor executor = mock(JdbcExecutor.class);
             when(executor.execute(any())).thenThrow(wrapper);
-            var access = new JdbcDataAccessLayer(executor, "");
+            var access = new JdbcDataAccessLayer(executor);
             assertSame(wrapper, assertThrows(DataConflictException.class, () -> access.createObject(EntityType.INFO, "one", JdbcFixture.info("GET", "/one"))).getCause());
         }
     }

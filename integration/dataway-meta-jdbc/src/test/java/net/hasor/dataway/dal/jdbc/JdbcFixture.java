@@ -24,7 +24,7 @@ final class JdbcFixture implements AutoCloseable {
     JdbcFixture() throws Exception {
         this.source.setURL("jdbc:h2:mem:metadata_" + UUID.randomUUID().toString().replace("-", "") + ";DB_CLOSE_DELAY=-1");
         this.load("/META-INF/dataway/schema/h2.sql");
-        this.access = new JdbcDataAccessLayer(this.source, "");
+        this.access = new JdbcDataAccessLayer(this.source);
     }
 
     void load(String resource) throws Exception {

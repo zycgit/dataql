@@ -17,6 +17,6 @@ import net.hasor.dataway.dal.jdbc.JdbcDataAccessLayer;
 public class MetadataConfiguration {
     @Bean
     public ApiDataAccessLayer metadata(DataSource source) {
-        return new JdbcDataAccessLayer(source, "");
+        return new JdbcDataAccessLayer(source);
     }
 }

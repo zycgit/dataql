@@ -47,7 +47,7 @@ public class DatawayConfiguration implements Module {
 
     @Bean
     public ApiDataAccessLayer metadata(DataSource mainSource) {
-        return new JdbcDataAccessLayer(mainSource, "");
+        return new JdbcDataAccessLayer(mainSource);
     }
 
     /** Uses the same named data sources and transactions as the host application. */

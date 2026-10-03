@@ -17,6 +17,6 @@ import org.noear.solon.annotation.Configuration;
 public class MetadataConfiguration {
     @Bean
     public ApiDataAccessLayer metadata(DataSource source) {
-        return new JdbcDataAccessLayer(source, "");
+        return new JdbcDataAccessLayer(source);
     }
 }

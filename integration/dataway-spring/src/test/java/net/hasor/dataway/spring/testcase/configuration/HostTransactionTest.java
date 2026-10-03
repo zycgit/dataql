@@ -28,7 +28,7 @@ class HostTransactionTest {
         try (H2Database database = new H2Database()) {
             var manager = new DataSourceTransactionManager(database.source);
             JdbcExecutor executor = new SpringJdbcExecutor(new TransactionAwareDataSourceProxy(database.source), manager);
-            var access = new JdbcDataAccessLayer(executor, "");
+            var access = new JdbcDataAccessLayer(executor);
             try (TestApplication app = new TestApplication(TestSettings.configuration(), access, TestSettings.enabled(), context -> {
                 context.registerBean(JdbcExecutor.class, () -> executor);
                 context.registerBean(PlatformTransactionManager.class, () -> manager);
