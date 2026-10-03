@@ -8,6 +8,7 @@
 package net.hasor.dataql.kernel;
 import java.util.Collections;
 import java.util.Map;
+import net.hasor.cobble.ExceptionUtils;
 import net.hasor.dataql.compiler.qil.QIL;
 import net.hasor.dataql.domain.DataModel;
 import net.hasor.dataql.domain.Hints;
@@ -47,9 +48,17 @@ public class QueryExecutor {
         });
 
         OpcodesPool opcodesPool = OpcodesPool.defaultOpcodesPool();
-        while (instSequence.hasNext()) {
-            opcodesPool.doWork(instSequence, dataHeap, dataStack, envStack, processContext);
-            instSequence.doNext(1);
+        try {
+            while (instSequence.hasNext()) {
+                opcodesPool.doWork(instSequence, dataHeap, dataStack, envStack, processContext);
+                instSequence.doNext(1);
+            }
+        } catch (QueryRuntimeException e) {
+            // Reflection-based UDFs may wrap the exit signal in an invocation exception.
+            if (ExceptionUtils.getRootCause(e) instanceof QueryExitException exit) {
+                return new QueryResultImpl(ExitType.Exit, exit.getResultCode(), exit.getResult(), processContext.executionTime());
+            }
+            throw e;
         }
 
         ExitType exitType = (dataStack.getExitType() == null) ? ExitType.Return : dataStack.getExitType();

@@ -12,13 +12,16 @@ import net.hasor.dataql.kernel.operator.OperatorUtils;
 import net.hasor.dataql.parser.location.RuntimeLocation;
 
 /**
- * 一元运算。number类型的只处理：负号
+ * Unary plus and minus for numbers.
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2017-03-23
  */
 public class NumberUOP extends AbstractUOP {
     @Override
     public Object doUnaryProcess(RuntimeLocation location, String operator, Object object, Hints option) throws QueryRuntimeException {
+        if ("+".equals(operator) && object instanceof Number) {
+            return object;
+        }
         if ("-".equals(operator) && object instanceof Number) {
             return OperatorUtils.negate((Number) object);
         }

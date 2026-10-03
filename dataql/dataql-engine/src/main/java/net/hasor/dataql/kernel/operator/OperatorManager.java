@@ -85,6 +85,7 @@ public class OperatorManager implements DyadicOperatorRegistry, UnaryOperatorReg
         // .一元运算(注册一元操作符，第二个操作数类型无效但是必须要有，所以给 Object)
         om.registryOperator("!", boolSet, new BooleanUOP());
         om.registryOperator("-", Number.class, new NumberUOP());
+        om.registryOperator("+", Number.class, new NumberUOP());
         // .通用类型运算
         om.registryOperator("!=", Object.class, Object.class, new ObjectEqDOP());
         om.registryOperator("==", Object.class, Object.class, new ObjectEqDOP());

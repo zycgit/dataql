@@ -5,7 +5,6 @@
  * See the LICENSE.txt file for the full license.
  * https://www.apache.org/licenses/LICENSE-2.0
  */
-// Define a grammar called Hello
 parser grammar DataQLParser;
 options { tokenVocab = DataQLLexer; }
 /* ----------------------------------------------------------------------------------- 语句 & 命令 */
@@ -29,7 +28,7 @@ ifInst          : IF LBT expr RBT blockSet
                  (ELSE IF LBT expr RBT blockSet)*
                  (ELSE blockSet)?;
 /* 退出 语句 */
-breakInst       : (RETURN | THROW | EXIT) (INTEGER_NUM COMMA)? anyObject;
+breakInst       : (RETURN | THROW | EXIT) (MINUS? INTEGER_NUM COMMA)? anyObject;
 
 /* lambda函数声明 */
 lambdaDef       : LBT (IDENTIFIER (COMMA IDENTIFIER)*)? RBT LAMBDA blockSet;
@@ -65,7 +64,7 @@ routeNameSet    : routeName (DOT routeName)*
 routeName       : IDENTIFIER routeSubscript*;
 
 /* 下标 */
-routeSubscript  : LSBT ( STRING | INTEGER_NUM | expr ) RSBT;
+routeSubscript  : LSBT ( STRING | MINUS? INTEGER_NUM | expr ) RSBT;
 
 /* 函数调用(不含转换,可用于表达式) */
 funcCall        : routeMapping LBT ( anyObject (COMMA anyObject)* )? RBT funcCallResult?;
@@ -90,7 +89,7 @@ listValue       : LSBT anyObject? (COMMA anyObject)* RSBT;
 primitiveValue  : STRING                                                    #stringValue    // 字符串
                 | NULL                                                      #nullValue      // 空值
                 | (TRUE | FALSE)                                            #booleanValue   // boolean 类型
-                | (DECIMAL_NUM | INTEGER_NUM | HEX_NUM | OCT_NUM | BIT_NUM) #numberValue    // 数字类型
+                | MINUS? (DECIMAL_NUM | INTEGER_NUM | HEX_NUM | OCT_NUM | BIT_NUM) #numberValue    // 数字类型
                 ;
 
 /* ----------------------------------------------------------------------------------- 表达式 */
@@ -101,9 +100,14 @@ expr            : (primitiveValue | funcCall | routeMapping)                    
                 | prefix=(PLUS | MINUS | NOT) expr                              #unaryExpr      // 一元运算
                 | expr bop=(MUL | DIV | DIV2 | MOD) expr                        #dyadicExpr_A   // 二元运算优先级 1st
                 | expr bop=(PLUS | MINUS) expr                                  #dyadicExpr_B   // 二元运算优先级 2st
-                | expr bop=(AND | OR | XOR | LSHIFT | RSHIFT | RSHIFT2) expr    #dyadicExpr_C   // 二元运算优先级 3st
-                | expr bop=(GT | GE | NE | EQ | LE | LT) expr                   #dyadicExpr_D   // 二元运算优先级 4st
-                | expr bop=(SC_OR | SC_AND) expr                                #dyadicExpr_E   // 二元运算优先级 5st
+                | expr bop=(LSHIFT | RSHIFT | RSHIFT2) expr                     #dyadicExpr_C
+                | expr bop=(GT | GE | LE | LT) expr                              #dyadicExpr_D
+                | expr bop=(NE | EQ) expr                                        #dyadicExpr_D
+                | expr bop=AND expr                                             #dyadicExpr_C
+                | expr bop=XOR expr                                             #dyadicExpr_C
+                | expr bop=OR expr                                              #dyadicExpr_C
+                | expr bop=SC_AND expr                                          #dyadicExpr_E
+                | expr bop=SC_OR expr                                           #dyadicExpr_E
                 | <assoc=right> expr QUE expr COLON expr                        #ternaryExpr    // 三元运算
                 ;
 

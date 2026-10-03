@@ -44,10 +44,10 @@ public class FragmentVariableInstCompiler implements InstCompiler<FragmentVariab
             String name = param.name().getValue();
             if (param.hasValue()) {
                 // @@type(name = value) — 编译 value 表达式
-                compilerContext.findInstCompilerByInst(param.value()).doCompiler(queue);
+                compilerContext.findInstCompilerByInst(param.value()).doCompiler(newMethodInst);
                 newMethodInst.inst(PUT, name);
             } else {
-                // @@type(name) — 从外层作用域加载同名变量
+                // Read the positional argument from this fragment call.
                 ContainsIndex index = compilerContext.containsWithTree(name);
                 instLocation(newMethodInst, param.name());
                 newMethodInst.inst(LOAD, index.depth, index.index);

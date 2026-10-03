@@ -9,6 +9,7 @@ package net.hasor.dataql.parser.ast.value;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import net.hasor.cobble.text.StringEscapeUtils;
 import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.parser.ast.*;
 import net.hasor.dataql.parser.location.BlockLocation;
@@ -86,7 +87,7 @@ public class PrimitiveVariable extends BlockLocation implements Variable, Inst {
         if (this.valueType == ValueType.Null) {
             writer.write("null");
         } else if (this.valueType == ValueType.String) {
-            String newValue = this.value.toString().replace(String.valueOf(quoteChar), "\\" + quoteChar);
+            String newValue = StringEscapeUtils.escapeJava(this.value.toString());
             writer.write(quoteChar + newValue + quoteChar);
         } else if (this.value instanceof Number number) {
             if (isByteType(number.getClass()) || isShortType(number.getClass()) || isIntType(number.getClass()) || isLongType(number.getClass())) {

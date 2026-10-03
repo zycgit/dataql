@@ -25,7 +25,7 @@ abstract class AbstractUOP implements OperatorProcess {
         if (args.length != 1) {
             throw new QueryRuntimeException(location, "unary operator error, args count expect 1 , but " + args.length);
         }
-        if (!testIn(new String[] { "!", "-" }, operator)) {
+        if (!testIn(new String[] { "!", "-", "+" }, operator)) {
             throw new QueryRuntimeException(location, "does not support unary Operator -> " + operator);
         }
         //

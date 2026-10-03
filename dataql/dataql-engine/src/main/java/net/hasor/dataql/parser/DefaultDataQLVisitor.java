@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
+import net.hasor.cobble.text.StringEscapeUtils;
 import net.hasor.dataql.parser.DataQLParser.*;
 import net.hasor.dataql.parser.ast.Expression;
 import net.hasor.dataql.parser.ast.RouteVariable;
@@ -246,8 +247,11 @@ public class DefaultDataQLVisitor<T> extends AbstractParseTreeVisitor<T> impleme
         TerminalNode breakCodeNode = ctx.INTEGER_NUM();
         IntegerToken breakCodeToken = null;
         if (breakCodeNode != null) {
-            int breakCode = Integer.parseInt(breakCodeNode.getText());
+            int breakCode = Integer.parseInt((ctx.MINUS() == null ? "" : "-") + breakCodeNode.getText());
             breakCodeToken = code(new IntegerToken(breakCode), breakCodeNode);
+            if (ctx.MINUS() != null) {
+                breakCodeToken.setStartPosition(code(new BlockLocation(), ctx.MINUS()).getStartPosition());
+            }
         } else {
             breakCodeToken = code(new IntegerToken(0), ctx.start);
         }
@@ -364,64 +368,58 @@ public class DefaultDataQLVisitor<T> extends AbstractParseTreeVisitor<T> impleme
         //
         int radix = 10;
         String radixNumber = null;
-        TerminalNode atTerm = null;
         if (bitNode != null) {
             radix = 2;
             radixNumber = bitNode.getText();
-            radixNumber = (radixNumber.charAt(0) == '-') ? ("-" + radixNumber.substring(3)) : radixNumber.substring(2);
-            atTerm = bitNode;
+            radixNumber = radixNumber.substring(2);
         }
         if (octNode != null) {
             radix = 8;
             radixNumber = octNode.getText();
-            radixNumber = (radixNumber.charAt(0) == '-') ? ("-" + radixNumber.substring(3)) : radixNumber.substring(2);
-            atTerm = octNode;
+            radixNumber = radixNumber.substring(2);
         }
         if (intNode != null) {
             radix = 10;
             radixNumber = intNode.getText();
-            atTerm = intNode;
         }
         if (hexNode != null) {
             radix = 16;
             radixNumber = hexNode.getText();
-            radixNumber = (radixNumber.charAt(0) == '-') ? ("-" + radixNumber.substring(3)) : radixNumber.substring(2);
-            atTerm = hexNode;
+            radixNumber = radixNumber.substring(2);
         }
         if (radixNumber != null) {
-            BigInteger bigInt = new BigInteger(radixNumber, radix);
+            BigInteger bigInt = new BigInteger((ctx.MINUS() == null ? "" : "-") + radixNumber, radix);
             int bitLength = bigInt.bitLength();
             if (bitLength < 8) {
-                this.instStack.push(code(new PrimitiveVariable(bigInt.byteValue(), ValueType.Number, radix), atTerm));
+                this.instStack.push(code(new PrimitiveVariable(bigInt.byteValue(), ValueType.Number, radix), ctx));
                 return null;
             }
             if (bitLength < 16) {
-                this.instStack.push(code(new PrimitiveVariable(bigInt.shortValue(), ValueType.Number, radix), atTerm));
+                this.instStack.push(code(new PrimitiveVariable(bigInt.shortValue(), ValueType.Number, radix), ctx));
                 return null;
             }
             if (bitLength < 32) {
-                this.instStack.push(code(new PrimitiveVariable(bigInt.intValue(), ValueType.Number, radix), atTerm));
+                this.instStack.push(code(new PrimitiveVariable(bigInt.intValue(), ValueType.Number, radix), ctx));
                 return null;
             }
             if (bitLength < 64) {
-                this.instStack.push(code(new PrimitiveVariable(bigInt.longValue(), ValueType.Number, radix), atTerm));
+                this.instStack.push(code(new PrimitiveVariable(bigInt.longValue(), ValueType.Number, radix), ctx));
                 return null;
             }
-            this.instStack.push(code(new PrimitiveVariable(bigInt, ValueType.Number, radix), atTerm));
+            this.instStack.push(code(new PrimitiveVariable(bigInt, ValueType.Number, radix), ctx));
             return null;
         } else {
-            BigDecimal bigDec = new BigDecimal(decimalNode.getText());
-            atTerm = decimalNode;
+            BigDecimal bigDec = new BigDecimal((ctx.MINUS() == null ? "" : "-") + decimalNode.getText());
             int precisionLength = bigDec.precision();
             if (precisionLength < 8 && !Float.isInfinite(bigDec.floatValue())) {
-                this.instStack.push(code(new PrimitiveVariable(bigDec.floatValue(), ValueType.Number, radix), atTerm));
+                this.instStack.push(code(new PrimitiveVariable(bigDec.floatValue(), ValueType.Number, radix), ctx));
                 return null;
             }
             if (precisionLength < 16 && !Double.isInfinite(bigDec.doubleValue())) {
-                this.instStack.push(code(new PrimitiveVariable(bigDec.doubleValue(), ValueType.Number, radix), atTerm));
+                this.instStack.push(code(new PrimitiveVariable(bigDec.doubleValue(), ValueType.Number, radix), ctx));
                 return null;
             }
-            this.instStack.push(code(new PrimitiveVariable(bigDec, ValueType.Number, radix), atTerm));
+            this.instStack.push(code(new PrimitiveVariable(bigDec, ValueType.Number, radix), ctx));
             return null;
         }
     }
@@ -683,7 +681,12 @@ public class DefaultDataQLVisitor<T> extends AbstractParseTreeVisitor<T> impleme
         }
         //
         if (intNode != null) {
-            IntegerToken subscriptToken = code(new IntegerToken(Integer.parseInt(intNode.getText())), intNode);
+            String subscriptText = (ctx.MINUS() == null ? "" : "-") + intNode.getText();
+            int subscript = Integer.parseInt(subscriptText);
+            IntegerToken subscriptToken = code(new IntegerToken(subscript), intNode);
+            if (ctx.MINUS() != null) {
+                subscriptToken.setStartPosition(code(new BlockLocation(), ctx.MINUS()).getStartPosition());
+            }
             this.instStack.push(code(new SubscriptRouteVariable(atNode, subscriptToken), startPos, endPos));
             return null;
         }
@@ -929,6 +932,8 @@ public class DefaultDataQLVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 
     private String fixString(TerminalNode stringNode) {
         String nodeText = stringNode.getText();
-        return nodeText.substring(1, nodeText.length() - 1);
+        String quote = nodeText.substring(0, 1);
+        String content = nodeText.substring(1, nodeText.length() - 1).replace(quote + quote, quote);
+        return StringEscapeUtils.unescapeJava(content);
     }
 }

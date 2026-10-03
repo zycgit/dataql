@@ -27,12 +27,15 @@ public class NameRouteVariableInstCompiler implements InstCompiler<NameRouteVari
     public void doCompiler(NameRouteVariable astInst, InstQueue queue, CompilerContext compilerContext) {
         StringToken nameRouteToken = astInst.getName();
         RouteVariable parent = astInst.getParent();
+        boolean explicitField = false;
         if (parent instanceof NameRouteVariable) {
             if (StringUtils.isBlank(((NameRouteVariable) parent).getName().getValue())) {
                 parent = parent.getParent();
+                explicitField = true;
             }
         }
-        if (parent instanceof EnterRouteVariable enterParent) {
+
+        if (!explicitField && parent instanceof EnterRouteVariable enterParent) {
             if (enterParent.getRouteType() == RouteType.Expr) {
                 ContainsIndex withTree = compilerContext.containsWithTree(nameRouteToken.getValue());
                 if (withTree.isValid()) {

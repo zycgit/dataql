@@ -5,13 +5,12 @@
  * See the LICENSE.txt file for the full license.
  * https://www.apache.org/licenses/LICENSE-2.0
  */
-// Define a grammar called Hello
 lexer grammar DataQLLexer;
 
 /* skip spaces */
 WS      : [ \t\n\r\f]+          -> skip ; // skip spaces, (空格\水平制表符\换行\回车\换页)
 COMMENT1: '//' (~[\n\r])* EOL?  -> skip ;
-COMMENT2: '/*' .*? '*/';
+COMMENT2: '/*' .*? '*/' -> skip;
 EOL     : [\n\r\f];
 
 //
@@ -45,7 +44,7 @@ LBT     : '(';      // 优先级
 RBT     : ')';      // 优先级
 AND     : '&';      // 按位于运算
 OR      : '|';      // 按位或运算
-NOT     : '!';      // 按位取反
+NOT     : '!';      // Boolean negation
 XOR     : '^';      // 异或
 LSHIFT  : '<<';     // 左位移
 RSHIFT  : '>>';     // 有符号右位移
@@ -88,9 +87,10 @@ fragment HEX    : [0-9a-fA-F];
 HEX_NUM         : '0' [xX] [0-9a-fA-F]+;                // 十六进制：0x12345
 OCT_NUM         : '0' [oO] [0-7]+;                      // 八 进 制：0o1234567
 BIT_NUM         : '0' [bB] [01]+;                       // 二 进 制：0b01010101100
-INTEGER_NUM     : '-'? [0-9]+;                          // 十进制数：-0000234 or 123
-DECIMAL_NUM     : '-'? (([0-9]* '.' [0-9]+) | [1-9]+)   // 浮点数
-                  ([eE] [+-]? [1-9][0-9]*)?;            // 科学计数法
+INTEGER_NUM     : [0-9]+;                             // The parser handles the sign.
+DECIMAL_NUM     : ([0-9]* '.' [0-9]+) EXPONENT?
+                | [0-9]+ EXPONENT;
+fragment EXPONENT: [eE] [+-]? [0-9]+;
 
 /* 标识符 */
 IDENTIFIER      : ([_a-zA-Z] [_0-9a-zA-Z]*) | ID_EXT;

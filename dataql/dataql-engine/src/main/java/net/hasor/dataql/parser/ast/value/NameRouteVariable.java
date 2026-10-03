@@ -68,9 +68,7 @@ public class NameRouteVariable extends BlockLocation implements Variable, RouteV
         if (this.parent instanceof EnterRouteVariable) {
             if (StringUtils.isBlank(this.name.getValue())) {
                 EnterRouteVariable.SpecialType special = ((EnterRouteVariable) this.parent).getSpecialType();
-                if (special != EnterRouteVariable.SpecialType.Special_A) {
-                    writer.write(((EnterRouteVariable) this.parent).getSpecialType().getCode());
-                }
+                writer.write(special.getCode() + ".");
             } else {
                 if (EnterRouteVariable.RouteType.Params != routeType && EnterRouteVariable.SpecialType.Special_A != specialType) {
                     writer.write(specialType.getCode());

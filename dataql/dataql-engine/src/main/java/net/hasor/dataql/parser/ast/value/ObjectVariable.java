@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.hasor.cobble.StringUtils;
+import net.hasor.cobble.text.StringEscapeUtils;
 import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.parser.ast.*;
 import net.hasor.dataql.parser.ast.expr.AtomExpression;
@@ -85,8 +86,9 @@ public class ObjectVariable extends BlockLocation implements Inst, Variable {
             if (i > 0) {
                 writer.write(",\n");
             }
+
             String key = this.fieldSort.get(i);
-            String newKey = key.replace(String.valueOf(quoteChar), "\\" + quoteChar);
+            String newKey = StringEscapeUtils.escapeJava(key);
             writer.write(fixedString + quoteChar + newKey + quoteChar);
             //
             Variable variable = this.objectData.get(key);

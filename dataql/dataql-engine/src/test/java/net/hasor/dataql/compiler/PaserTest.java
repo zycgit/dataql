@@ -17,13 +17,8 @@ import org.junit.Test;
  */
 public class PaserTest extends AbstractTestResource {
     @Test
-    public void testPaser_1() {
-        try {
-            CompilerHelper.queryParser("return ${a} -1");
-            assert false;
-        } catch (Exception e) {
-            assert e.getMessage().contains("no viable alternative at input");
-        }
+    public void testPaser_1() throws IOException {
+        CompilerHelper.queryParser("return ${a} -1");
     }
 
     @Test

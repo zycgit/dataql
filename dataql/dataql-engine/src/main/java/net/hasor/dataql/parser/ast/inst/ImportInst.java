@@ -7,6 +7,7 @@
  */
 package net.hasor.dataql.parser.ast.inst;
 import java.io.IOException;
+import net.hasor.cobble.text.StringEscapeUtils;
 import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.parser.ast.AstVisitor;
 import net.hasor.dataql.parser.ast.FormatWriter;
@@ -65,7 +66,7 @@ public class ImportInst extends BlockLocation implements Inst {
         } else if (this.importType == ImportType.ClassType) {
             //
         }
-        writer.write('"' + this.importName.getValue() + '"');
+        writer.write('"' + StringEscapeUtils.escapeJava(this.importName.getValue()) + '"');
         writer.write(" as " + this.asName.getValue() + ";\n");
     }
 }

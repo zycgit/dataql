@@ -9,6 +9,7 @@ package net.hasor.dataql.kernel.mem;
 import net.hasor.dataql.domain.*;
 import net.hasor.dataql.kernel.InsetProcessContext;
 import net.hasor.dataql.kernel.InstSequence;
+import net.hasor.dataql.kernel.QueryExitException;
 import net.hasor.dataql.kernel.inset.OpcodesPool;
 
 /**
@@ -49,6 +50,10 @@ public class RefLambdaCall implements Udf {
         }
 
         DataModel result = cloneStack.getResult();
+        if (cloneStack.getExitType() == ExitType.Exit) {
+            throw new QueryExitException(instSequence.programLocation(), cloneStack.getResultCode(), result);
+        }
+
         if (cloneStack.getExitType() != ExitType.Throw) {
             return (result != null) ? result.unwrap() : DomainHelper.nullDomain();
         } else {

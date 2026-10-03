@@ -1,21 +1,21 @@
 
 return ${_0} => [
-    name
+    #.name
 ];
 return ${_0} => [
     name
 ];
 return ${_0} => [
     name
+];
+return ${_0} => [
+    @.arg
 ];
 return ${_0} => [
     @arg
 ];
 return ${_0} => [
-    @arg
-];
-return ${_0} => [
-    $min
+    $.min
 ];
 return ${_0} => [
     $min

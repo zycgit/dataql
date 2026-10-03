@@ -7,6 +7,7 @@
  */
 package net.hasor.dataql.parser.ast.value;
 import java.io.IOException;
+import net.hasor.cobble.text.StringEscapeUtils;
 import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.parser.ast.*;
 import net.hasor.dataql.parser.ast.expr.AtomExpression;
@@ -94,7 +95,7 @@ public class SubscriptRouteVariable extends BlockLocation implements Variable, R
         }
         //
         if (subType == SubType.String) {
-            String newValue = subValue.getValue().replace(String.valueOf(quoteChar), "\\" + quoteChar);
+            String newValue = StringEscapeUtils.escapeJava(subValue.getValue());
             writer.write("[" + quoteChar + newValue + quoteChar + "]");
         } else if (subType == SubType.Integer) {
             writer.write("[" + subValue.getValue() + "]");
