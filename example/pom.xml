@@ -23,7 +23,7 @@
     </modules>
 
     <properties>
-        <dataway.version>4.3.0-SNAPSHOT</dataway.version>
+        <dataway.version>5.0.0-SNAPSHOT</dataway.version>
         <spring-boot.version>4.1.1</spring-boot.version>
         <solon.version>4.1.0</solon.version>
         <hasor.version>5.3.0-SNAPSHOT</hasor.version>

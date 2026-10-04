@@ -13,7 +13,7 @@
     <artifactId>dataql-blog-example</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <properties>
-        <dataql.version>4.3.0-SNAPSHOT</dataql.version>
+        <dataql.version>5.0.0-SNAPSHOT</dataql.version>
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -46,7 +46,9 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.5.0</version>
-                <configuration><mainClass>net.hasor.example.blog.BlogExamples</mainClass></configuration>
+                <configuration>
+                    <mainClass>net.hasor.example.blog.BlogExamples</mainClass>
+                </configuration>
             </plugin>
         </plugins>
     </build>
