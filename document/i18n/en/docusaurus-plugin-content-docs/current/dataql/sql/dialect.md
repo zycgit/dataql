@@ -1,33 +1,54 @@
 ---
 id: dialect
-sidebar_position: 3
-title: c.配置和方言
-description: 在 DataQL 中执行一条SQL，并且使用分页查询。
+title: 6.6 Pagination and dialects
 ---
 
-# 配置和方言
+With pagination enabled, a select fragment returns `PageQuery`. Set a page number and positive page size, then fetch its data.
 
-## 配置数据源
+## Query a page
 
-下例是初始化 Hasor 数据源的模块代码，如果你是基于 Spring 生态，那么请参考与 **[Spring 整合](../../integration/with-springboot.md)** 内容。
-
-:::tip
-如果 Hasor 环境中已经初始化了数据源那么无需二次初始化。
-:::
-
-```js
-public class ExampleModule implements Module {
-    public void loadModule(ApiBinder apiBinder) throws Throwable {
-        // .创建数据源
-        DataSource dataSource = null;
-        // .初始化Hasor Jdbc 模块，并配置数据源
-        apiBinder.installModule(new JdbcModule(Level.Full, this.dataSource));
-    }
-}
+```javascript
+hint FRAGMENT_SQL_QUERY_BY_PAGE = true;
+hint FRAGMENT_SQL_QUERY_BY_PAGE_NUMBER_OFFSET = 1;
+hint FRAGMENT_SQL_COLUMN_CASE = 'lower';
+var find = @@selectSql()<% SELECT id, name FROM people ORDER BY id %>;
+var page = find();
+run page.setPageInfo({'currentPage':2, 'pageSize':1});
+var rows = page.data();
+var info = page.pageInfo();
+return {'rows':rows, 'total':info.totalCount};
 ```
 
-## SQL方言
+The result contains Bob and a total of 2. `data()` executes count and page queries; the following `pageInfo()` reuses the total. Another `data()` call queries again. Use a stable ORDER BY for pagination.
 
-提示：在 `4.2.1` 版本之后，SQL 执行器会根据使用的数据库连接自动推断对应的方言。通常情况下无需特意通过 [hint FRAGMENT_SQL_PAGE_DIALECT](../hints/hint_sql.md#FRAGMENT_SQL_PAGE_DIALECT) 来设置方言。
+## Page controls
 
-方言是可选项，但如果使用分页查询那么就会用到方言。
+The page-number offset defaults to 0; set it to 1 for one-based page numbers. `setPageInfo` accepts `currentPage`, `pageSize` and optionally `totalCount`. Current script pagination still refreshes the count; supplying a total does not disable the count query.
+
+| Method | Purpose |
+| --- | --- |
+| `setPageInfo({...})` | Set page parameters |
+| `data()` | Fetch the current page |
+| `pageInfo()` | Read metadata, fetching when the total is not yet known |
+| `firstPage()`, `previousPage()` | Move to first or previous page |
+| `nextPage()`, `lastPage()` | Move to next or last page |
+
+Obtain the total before calling `lastPage()`.
+
+## Dialects
+
+Selection uses the JDBC URL and driver. Override it with `FRAGMENT_SQL_PAGE_DIALECT`.
+
+| Database | Aliases |
+| --- | --- |
+| MySQL, MariaDB | `mysql`, `mariadb` |
+| PostgreSQL, Kingbase | `postgresql`, `kingbase` |
+| H2, HSQLDB | `h2`, `hsql` |
+| Oracle, DB2 | `oracle`, `db2` |
+| SQL Server | `sqlserver`, `jtds` |
+| SQLite, Derby | `sqlite`, `derby` |
+| DM, Impala, Informix, XuGu | `dm`, `impala`, `informix`, `xugu` |
+
+A dialect rewrites count and page SQL. Validate complex queries on the target database.
+
+See [SQL dialects](../../dataway/engine/sql-dialects.md) for custom implementation and registration.

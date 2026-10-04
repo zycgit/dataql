@@ -1,131 +1,65 @@
 ---
 id: expression
-sidebar_position: 5
-title: e.表达式
-description: DataQL 具备完整的表达式计算能力，这使得数据在转换过程中在需要数值计算的情况上变得非常好用。
+title: 2.5 Expressions and operators
+description: DataQL 表达式的语法与用法。
 ---
-# 表达式
 
-DataQL 具备完整的表达式计算能力，这使得数据在转换过程中在需要数值计算的情况上变得非常好用。这会节省大量精力很多的精力来编写 UDF 的操作。
+表达式用于计算数值、比较数据和选择结果。相同运算符的优先级与结合顺序遵循 Java、JavaScript 的共同规则；DataQL 的类型转换与数值精度规则见[数值](./numbers.md)。
 
-```js title='一个典型的场景就是是货币和汇率的转换'
-return orderByUser({'id': 4}) => {
-    'orderID',
-    'price_rmb' : '¥' + (price_rmb * 6.9) + '元' ,
-    'buyTime'
-}
-```
+## 运算符优先级
 
-## 一元运算
+下表从高到低排列，同一行优先级相同。二元运算从左向右结合，一元运算和三元选择从右向左结合；括号可改变顺序。
 
-```js title='对一个 bool 值进行取反'
-var bool = true;
-return !bool;
-```
+| 优先级 | 运算符 | 用途 |
+| --- | --- | --- |
+| 1 | `+`、`-`、`!`（一元） | 数值正负、布尔取反 |
+| 2 | `*`、`/`、`\`、`%` | 乘、除、整除、求余 |
+| 3 | `+`、`-`（二元） | 加、减；`+` 也用于字符串拼接 |
+| 4 | `<<`、`>>`、`>>>` | 左移、有符号右移、无符号右移 |
+| 5 | `<`、`<=`、`>`、`>=` | 大小比较 |
+| 6 | `==`、`!=` | 相等与不等 |
+| 7 | `&` | 按位与 |
+| 8 | `^` | 按位异或 |
+| 9 | `\|` | 按位或 |
+| 10 | `&&` | 逻辑与 |
+| 11 | `\|\|` | 逻辑或 |
+| 12 | `? :` | 条件选择 |
 
-可以被一元运算的类型有：`boolean`、`number`
-
-| 一元运算 | 针对的类型   | 语意          |
-|------|---------|-------------|
-| !    | boolean | 对Boolean 取非 |
-| -    | number  | 数值的相反数      |
-
-## 二元运算
-
-```js title='例如 1 + 2 等于 3'
-var a = 1;
-var b = 2;
-return a + b;
-```
-
-<table><tbody>
-<tr>
-    <th colspan="2">数学运算</th>
-    <th colspan="2">位运算</th>
-    <th colspan="2">比较运算</th>
-    <th colspan="2">逻辑运算</th>
-</tr>
-<tr>
-    <td><strong>+</strong></td>
-    <td>加法</td>
-    <td><strong>&amp;</strong></td>
-    <td>按位于运算</td>
-    <td><strong>&gt;</strong></td>
-    <td>大于</td>
-    <td><strong>||</strong></td>
-    <td>逻辑或</td>
-</tr>
-<tr>
-    <td><strong>-</strong></td>
-    <td>减法</td>
-    <td><strong>|</strong></td>
-    <td>按位或运算</td>
-    <td><strong>&gt;=</strong></td>
-    <td>大于等于</td>
-    <td><strong>&amp;&amp;</strong></td>
-    <td>逻辑与</td>
-</tr>
-<tr>
-    <td><strong>*</strong></td>
-    <td>乘法</td>
-    <td><strong>!</strong></td>
-    <td>按位取反</td>
-    <td><strong>&lt;</strong></td>
-    <td>小于</td>
-    <td><br/></td>
-    <td><br/></td>
-</tr>
-<tr>
-    <td><strong>/</strong></td>
-    <td>除法</td>
-    <td><strong>^</strong></td>
-    <td>异或</td>
-    <td><strong>&lt;=</strong></td>
-    <td>小于等于</td>
-    <td><br/></td>
-    <td><br/></td>
-</tr>
-<tr>
-    <td><strong>\</strong></td>
-    <td>整除</td>
-    <td><strong>&lt;&lt;</strong></td>
-    <td>左位移</td>
-    <td><strong>==</strong></td>
-    <td>等于</td>
-    <td><br/></td>
-    <td><br/></td>
-</tr>
-<tr>
-    <td><strong>%</strong></td>
-    <td>取摸</td>
-    <td><strong>&gt;&gt;</strong></td>
-    <td>有符号右位移</td>
-    <td><strong>!=</strong></td>
-    <td>不等于</td>
-    <td><br/></td>
-    <td><br/></td>
-</tr>
-<tr>
-    <td><br/></td>
-    <td><br/></td>
-    <td><strong>&gt;&gt;&gt;</strong></td>
-    <td>无符号右位移</td>
-    <td><br/></td>
-    <td><br/></td>
-    <td><br/></td>
-    <td><br/></td>
-</tr>
-</tbody></table>
-
-:::tip
-二元运算主要还是面向 `number`。但加法运算是比较特殊的，它可以对任意类型做加法。执行结果就是两个数据字符串拼接。
-:::
-
-## 三元运算
-
-语法为：`testExpr ? expr1 : expr2`
+`\` 是 DataQL 的整除运算符。语言未提供 `++`、`--`、`~`、`===` 或赋值表达式。
 
 ```js
-var bool = true;
-return (bool ? 1 : 2) ;
+return [1 + 2 * 3, (1 + 2) * 3, 8 - 3 - 1, 1 << 2 + 1];
+```
+
+结果为 `[7, 9, 4, 8]`。
+
+## 一元与二元运算
+
+一元 `+` 保留数值，一元 `-` 取相反数；`!` 接收布尔值。位运算不使用 `!`。
+
+```js
+var amount = 12;
+return [+amount, -amount, !true, 'amount=' + amount];
+```
+
+## 短路求值
+
+`&&`、`||` 接收布尔值。`&&` 左侧为 `false` 时跳过右侧，`||` 左侧为 `true` 时跳过右侧。`&&` 的优先级高于 `||`。
+
+```js
+var fail = () -> {
+    throw "must not be called";
+};
+return [false && fail(), true || fail(), true || false && false];
+```
+
+结果为 `[false, true, true]`，`fail()` 不会执行。
+
+## 三元选择
+
+`condition ? value1 : value2` 只执行选中的分支。嵌套选择建议加括号。
+
+```js
+var score = 85;
+return score >= 90 ? 'A' : (score >= 60 ? 'B' : 'C');
 ```

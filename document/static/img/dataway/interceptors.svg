@@ -1,0 +1,80 @@
+<!--
+  Copyright 2015-2026 the original author or authors.
+
+  Licensed under the Apache License, Version 2.0.
+  See the LICENSE.txt file for the full license.
+  https://www.apache.org/licenses/LICENSE-2.0
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="470" viewBox="0 0 1020 470" role="img" aria-labelledby="title description">
+  <title id="title">Management and API interceptors</title>
+  <desc id="description">AdminInterceptor surrounds Controller calls after authorization and receives the operation and identity. ApiInterceptor surrounds DataQL execution after parameter preparation and receives the API definition, parameters, operation and identity. Solid arrows show calls through proceed; dashed arrows show results returning through the interceptors.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#202020"/>
+    </marker>
+    <marker id="context-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#888888"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: Arial, Helvetica, sans-serif; fill: #202020; }
+    .label { font-size: 20px; font-weight: 600; text-anchor: middle; }
+    .detail { font-size: 18px; fill: #777777; text-anchor: middle; }
+    .icon { fill: #ffffff; stroke: #202020; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .flow { fill: none; stroke: #202020; stroke-width: 2; marker-end: url(#arrow); }
+    .context { fill: none; stroke: #888888; stroke-width: 2; stroke-dasharray: 8 7; marker-end: url(#context-arrow); }
+    .result { fill: none; stroke: #202020; stroke-width: 2; stroke-dasharray: 8 7; marker-end: url(#arrow); }
+  </style>
+  <rect width="1020" height="470" fill="#ffffff"/>
+
+  <!-- Administration chain -->
+  <rect x="151" y="85" width="45" height="61" rx="5" class="icon"/>
+  <rect x="159" y="81" width="29" height="9" rx="3" class="icon"/>
+  <g fill="#202020">
+    <circle cx="161" cy="102" r="2"/>
+    <circle cx="161" cy="115" r="2"/>
+    <circle cx="161" cy="128" r="2"/>
+  </g>
+  <path d="M 169 102 H 188 M 169 115 H 188 M 169 128 H 183" fill="none" stroke="#202020" stroke-width="2.5" stroke-linecap="round"/>
+  <text x="174" y="196" class="label">Admin request</text>
+  <path d="M 235 110 H 438" class="flow"/>
+  <path d="M 438 146 H 235" class="result"/>
+
+  <text x="514" y="32" class="detail">Operation / Identity</text>
+  <path d="M 514 45 V 66" class="context"/>
+  <path d="M 480 78 H 525 L 548 101 V 164 H 480 Z" fill="#ffffff" stroke="#d4b300" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M 523 86 L 540 103 M 505 115 L 493 128 L 505 141 M 521 115 L 533 128 L 521 141" fill="none" stroke="#d4b300" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="514" y="196" class="label">AdminInterceptor</text>
+
+  <text x="680" y="94" class="detail">proceed()</text>
+  <path d="M 591 110 H 770" class="flow"/>
+  <path d="M 770 146 H 591" class="result"/>
+  <text x="680" y="173" class="detail">result</text>
+  <rect x="806" y="89" width="68" height="60" class="icon"/>
+  <path d="M 806 102 H 874 M 827 114 L 817 125 L 827 136 M 853 114 L 863 125 L 853 136 M 844 113 L 836 137" fill="none" stroke="#202020" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="840" y="196" class="label">Controller</text>
+
+  <!-- Script execution chain -->
+  <rect x="153" y="335" width="42" height="66" rx="4" class="icon"/>
+  <path d="M 161 343 H 187 V 389 H 161 Z" class="icon"/>
+  <circle cx="174" cy="395" r="2" fill="#202020"/>
+  <rect x="142" y="352" width="64" height="29" rx="2" fill="#333333"/>
+  <text x="174" y="373" style="fill: #ffffff" font-size="20" font-weight="600" text-anchor="middle">API</text>
+  <text x="174" y="446" class="label">API call / Debug</text>
+  <path d="M 235 360 H 438" class="flow"/>
+  <path d="M 438 396 H 235" class="result"/>
+
+  <text x="514" y="282" class="detail">API / Parameters / Operation / Identity</text>
+  <path d="M 514 295 V 316" class="context"/>
+  <path d="M 480 328 H 525 L 548 351 V 414 H 480 Z" fill="#ffffff" stroke="#d4b300" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M 523 336 L 540 353 M 505 365 L 493 378 L 505 391 M 521 365 L 533 378 L 521 391" fill="none" stroke="#d4b300" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="514" y="446" class="label">ApiInterceptor</text>
+
+  <text x="680" y="344" class="detail">proceed(context)</text>
+  <path d="M 591 360 H 770" class="flow"/>
+  <path d="M 770 396 H 591" class="result"/>
+  <text x="680" y="423" class="detail">result</text>
+  <rect x="806" y="339" width="68" height="60" class="icon"/>
+  <path d="M 827 357 L 817 369 L 827 381 M 853 357 L 863 369 L 853 381 M 845 356 L 835 382" fill="none" stroke="#202020" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="840" y="446" class="label">DataQL</text>
+</svg>

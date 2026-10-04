@@ -1,13 +1,15 @@
-//const analyticsPlugin = require('./apush');
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 
-module.exports = function (context, options) {
+module.exports = function () {
     return {
         name: 'docusaurus-plugin',
-        getClientModules() {
-            return [];
-            //return [analyticsPlugin];
-        },
-        injectHtmlTags({content}) {
+        injectHtmlTags() {
             return {
                 postBodyTags: [`
 <!-- 百度统计 -->
@@ -40,7 +42,6 @@ function trackView(){
 
 function setTitle(){
     trackView();
-    //document.title = 'dbVisitor Project';
     window.setTimeout(setTitle,100);
 }
 window.setTimeout(setTitle,100);

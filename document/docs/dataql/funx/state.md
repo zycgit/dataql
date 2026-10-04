@@ -1,59 +1,55 @@
 ---
 id: state
-sidebar_position: 6
-title: f.状态函数库
-description: DataQL FunctionX库函数，状态函数库
+title: 7.8 状态函数
 ---
-# 状态函数库
 
-引入状态函数库的方式为：`import 'net.hasor.dataql.fx.basic.StateUdfSource' as state;`
+:::info 依赖模块
+本页函数由 `dataql-engine` 提供。
+:::
+
+导入 `net.hasor.dataql.host.function.basic.StateUdfSource` 后，可以创建计数器或生成随机标识符。
+
+计数器的初值 `initValue` 是整数，计数使用 64 位整数。`decNumber` 实际递增，`incNumber` 实际递减，名称与通常的 inc/dec 缩写含义相反。两者返回可调用的函数；保存返回值后调用，才会推进同一个计数器。
 
 ## decNumber
-函数定义：`UDF decNumber(initValue)`
-- 参数定义：`initValue` 类型：`Number`，起始数字
-- 返回类型：`UDF`
-- 作用：返回一个 `UDF`，每次调用这个 `UDF`，都会返回一个 `Number`。Number 值较上一次会自增 1。
 
-```js title='例子'
-var decNum = state.decNumber(0);
-var next = decNum() // next = 1
-var next = decNum() // next = 2
-var next = decNum() // next = 3
+`state.decNumber(initValue)` 创建递增计数器。返回的函数不需要参数；第一次调用返回 `initValue + 1`，后续每次加 1。每次创建的计数器相互独立。
+
+```javascript
+import 'net.hasor.dataql.host.function.basic.StateUdfSource' as state;
+var next = state.decNumber(10);
+var other = state.decNumber(10);
+return [next(), next(), other(), next()];
+// [11, 12, 11, 13]
 ```
 
 ## incNumber
-函数定义：`UDF incNumber(initValue)`
-- 参数定义：`initValue` 类型：`Number`，起始数字
-- 返回类型：`UDF`
-- 作用：返回一个 `UDF`，每次调用这个 `UDF`，都会返回一个 `Number`。Number值较上一次会自减 1。
 
-```js title='例子'
-var decNum = state.incNumber(0);
-var next = decNum() // next = -1
-var next = decNum() // next = -2
-var next = decNum() // next = -3
+`state.incNumber(initValue)` 创建递减计数器。返回的函数不需要参数；第一次调用返回 `initValue - 1`，后续每次减 1，可以减到负数。
+
+```javascript
+import 'net.hasor.dataql.host.function.basic.StateUdfSource' as state;
+var previous = state.incNumber(2);
+return [previous(), previous(), previous()];
+// [1, 0, -1]
 ```
 
 ## uuid
-函数定义：`String uuid()`
-- 参数定义：无
-- 返回类型：`String`
-- 作用：返回一个完整格式的 `UUID` 字符串。
 
-```js title='例子'
-state.uuid() = "bc4b0433-0427-4d0f-9f0b-5e9b7a0a281e"
-state.uuid() = "f573a2dd-5dd3-41c8-8bf6-f5e794b7d3f4"
-state.uuid() = "dcae141d-2e1e-4079-8cd2-ded2cfa7d9d8"
+`state.uuid()` 不接收参数，返回随机 UUID 字符串，长度为 36，包含 4 个连字符。结果随调用变化，下面只展示格式。
+
+```javascript
+import 'net.hasor.dataql.host.function.basic.StateUdfSource' as state;
+return state.uuid();
+// 可能的结果："bc4b0433-0427-4d0f-9f0b-5e9b7a0a281e"
 ```
 
 ## uuidToShort
-函数定义：`String uuidToShort()`
-- 参数定义：无
-- 返回类型：`String`
-- 作用：返回一个不含 `-` 符号的 `UUID` 字符串。
 
-```js title='例子'
-state.uuidToShort() = "bc4b043304274d0f9f0b5e9b7a0a281e"
-state.uuidToShort() = "f573a2dd5dd341c88bf6f5e794b7d3f4"
-state.uuidToShort() = "dcae141d2e1e40798cd2ded2cfa7d9d8"
+`state.uuidToShort()` 不接收参数，生成新的随机 UUID，返回移除连字符后的 32 位十六进制字符串。它不会读取或缩短上一次 `uuid()` 的结果。
+
+```javascript
+import 'net.hasor.dataql.host.function.basic.StateUdfSource' as state;
+return state.uuidToShort();
+// 可能的结果："9023d8de0ce54b8382e5ec1748e6c1a9"
 ```

@@ -1,51 +1,66 @@
 ---
 id: json
-sidebar_position: 4
-title: d.Json函数库
-description: DataQL FunctionX库函数，Json函数库
+title: 7.5 JSON 函数
 ---
-# Json函数库
 
-引入 Json 函数库的方式为：`import 'net.hasor.dataql.host.function.encryt.JsonUdfSource' as json;`
+:::info 依赖模块
+本库由 `dataql-engine` 提供，导入 `net.hasor.dataql.host.function.encryt.JsonUdfSource` 后使用。
+:::
+
+本库在 DataQL 数据和 JSON 字符串之间转换。
 
 ## toJson
-函数定义：`String toJson(target)`
-- 参数定义：`target` 类型：`任意`
-- 返回类型：`String`
-- 作用：把对象序列化为 Json 格式。
 
-```js title='例子'
-json.toJson([])          = "[]"
-json.toJson({})          = "{}"
-json.toJson([0,1,2])     = "[0,1,2]"
-json.toJson({'key':123}) = "{\"key\":123}"
-json.toJson(null)        = "null"
+`json.toJson(value)` 接收对象、列表或基本值，返回 JSON 字符串。对象中的空值字段省略，列表中的空值保留，根值 `null` 返回字符串 `"null"`。
+
+```js
+import 'net.hasor.dataql.host.function.encryt.JsonUdfSource' as json;
+return json.toJson({'name':'Alice', 'nickname':null, 'tags':[null, 'dataql']});
+```
+
+返回字符串，其内容为：
+
+```json
+{"name":"Alice","tags":[null,"dataql"]}
 ```
 
 ## toFmtJson
-函数定义：`String toFmtJson(target)`
-- 参数定义：`target` 类型：`任意`
-- 返回类型：`String`
-- 作用：把对象 JSON 序列化（带格式）
 
-```js title='例子'
-json.toFmtJson([])          = "[]"
-json.toFmtJson({})          = "{}"
-json.toFmtJson([0,1,2])     = "[\n\t0,\n\t1,\n\t2\n]"
-json.toFmtJson({'key':123}) = "{\n\t\"key\":123\n}"
-json.toFmtJson(null)        = "null"
+`json.toFmtJson(value)` 接收与 `toJson` 相同的数据，返回带缩进和换行的 JSON 字符串。
+
+```js
+import 'net.hasor.dataql.host.function.encryt.JsonUdfSource' as json;
+return json.toFmtJson({'name':'Alice', 'enabled':true});
+```
+
+返回字符串，其内容为：
+
+```json
+{
+  "name" : "Alice",
+  "enabled" : true
+}
 ```
 
 ## fromJson
-函数定义：`Object fromJson(jsonString)`
-- 参数定义：`jsonString` 类型：`String`
-- 返回类型：`Object`
-- 作用：把 JSON 格式的字符串解析成对象。
 
-```js title='例子'
-json.fromJson("[]")                     = []
-json.fromJson("{}")                     = {}
-json.fromJson("[\n\t0,\n\t1,\n\t2\n]")  = [0,1,2]
-json.fromJson("{\n\t\"key\":123\n}")    = {'key':123}
-json.fromJson("null")                   = null
+`json.fromJson(text)` 接收 JSON 字符串，返回对应的对象、列表或基本值，可继续取值和转换。`null` 和空白输入返回 `null`，非法 JSON 抛出异常；JSON 中的空值字段会保留，小数按十进制数解析。
+
+```js
+import 'net.hasor.dataql.host.function.encryt.JsonUdfSource' as json;
+var person = json.fromJson('{"name":"Alice","age":25,"nickname":null}');
+var values = json.fromJson('[1,2,3]');
+return {
+    'name': person.name,
+    'nextAge': person.age + 1,
+    'nicknameIsNull': person.nickname == null,
+    'first': values[0],
+    'enabled': json.fromJson('true')
+};
 ```
+
+```json
+{"name":"Alice","nextAge":26,"nicknameIsNull":true,"first":1,"enabled":true}
+```
+
+函数和二进制值需先转换为适合 JSON 的数据，二进制编码见[类型转换函数](convert.md)。

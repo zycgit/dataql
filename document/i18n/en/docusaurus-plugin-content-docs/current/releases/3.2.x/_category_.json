@@ -1,6 +1,6 @@
 {
   "label": "v3.2.x",
-  "position": 99,
+  "position": 999,
   "className": "red",
   "link": {
     "type": "generated-index",

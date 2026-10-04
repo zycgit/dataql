@@ -1,528 +1,353 @@
 ---
 id: string
-sidebar_position: 5
-title: e.字符串函数库
-description: DataQL FunctionX库函数，字符串函数库
+title: 7.1 String functions
 ---
-# 字符串函数库
 
-引入字符串函数库的方式为：`import 'net.hasor.dataql.fx.basic.StringUdfSource' as string;`
+:::info Module dependency
+This library is provided by `net.hasor:dataql-engine`. Add the dependency to your application, then import the library in your DataQL script.
+:::
+
+```javascript
+import 'net.hasor.dataql.host.function.basic.StringUdfSource' as string;
+return string.join(string.split('Alice,Bob', ','), ' / ');
+// Alice / Bob
+```
+
+All examples below use DataQL syntax. Prepend the import above when running an individual example. In the signatures, `text` is the input text and `search` is the substring to find. String indices are zero-based; indices and lengths use Java UTF-16 code units. Square brackets denote optional arguments and are not written in calls.
 
 ## startsWith
-函数定义：`boolean startsWith(str, prefix)`
-- 参数定义：`str` 类型：`String`；`prefix` 类型：`String`
-- 返回类型：`Boolean`
-- 作用：Check if a String starts with a specified prefix.
 
-```js title='例子'
-string.startsWith(null, null)      = true
-string.startsWith(null, "abc")     = false
-string.startsWith("abcdef", null)  = false
-string.startsWith("abcdef", "abc") = true
-string.startsWith("ABCDEF", "abc") = false
+`boolean startsWith(text, prefix)`: Checks whether text starts with prefix, respecting case. An empty prefix matches any non-null text. Two null arguments return true; exactly one null returns false.
+
+```javascript
+return string.startsWith('DataQL', 'Data');
+// true
 ```
 
 ## startsWithIgnoreCase
-函数定义：`boolean startsWithIgnoreCase(str, prefix)`
-- 参数定义：`str` 类型：`String`；`prefix` 类型：`String`
-- 返回类型：`Boolean`
-- 作用：Case insensitive check if a String starts with a specified prefix.
 
-```js title='例子'
-string.startsWithIgnoreCase(null, null)      = true
-string.startsWithIgnoreCase(null, "abc")     = false
-string.startsWithIgnoreCase("abcdef", null)  = false
-string.startsWithIgnoreCase("abcdef", "abc") = true
-string.startsWithIgnoreCase("ABCDEF", "abc") = true   <- different startsWith
+`boolean startsWithIgnoreCase(text, prefix)`: Checks whether text starts with prefix, ignoring case. Empty-prefix and null handling match startsWith.
+
+```javascript
+return string.startsWithIgnoreCase('DataQL', 'data');
+// true
 ```
 
 ## endsWith
-函数定义：`boolean endsWith(str, prefix)`
-- 参数定义：`str` 类型：`String`；`prefix` 类型：`String`
-- 返回类型：`Boolean`
-- 作用：check if a String ends with a specified suffix.
 
-```js title='例子'
-string.endsWith(null, null)      = true
-string.endsWith(null, "def")     = false
-string.endsWith("abcdef", null)  = false
-string.endsWith("abcdef", "def") = true
-string.endsWith("ABCDEF", "def") = false
-string.endsWith("ABCDEF", "cde") = false
+`boolean endsWith(text, suffix)`: Checks whether text ends with suffix, respecting case. An empty suffix matches any non-null text; null handling matches startsWith.
+
+```javascript
+return string.endsWith('DataQL', 'QL');
+// true
 ```
 
 ## endsWithIgnoreCase
-函数定义：`boolean endsWithIgnoreCase(str, prefix)`
-- 参数定义：`str` 类型：`String`；`prefix` 类型：`String`
-- 返回类型：`Boolean`
-- 作用：Case insensitive check if a String ends with a specified suffix.
 
-```js title='例子'
-string.endsWithIgnoreCase(null, null)      = true
-string.endsWithIgnoreCase(null, "def")     = false
-string.endsWithIgnoreCase("abcdef", null)  = false
-string.endsWithIgnoreCase("abcdef", "def") = true
-string.endsWithIgnoreCase("ABCDEF", "def") = true   <- different startsWith
-string.endsWithIgnoreCase("ABCDEF", "cde") = false
+`boolean endsWithIgnoreCase(text, suffix)`: Checks whether text ends with suffix, ignoring case. Empty-suffix and null handling match endsWith.
+
+```javascript
+return string.endsWithIgnoreCase('DataQL', 'ql');
+// true
 ```
 
 ## lineToHump
-函数定义：`String lineToHump(str)`
-- 参数定义：`str` 类型：`String`；
-- 返回类型：`String`
-- 作用：下划线转驼峰，规则为遇到下划线后字母转为大写并删除下划线。
 
-```js title='例子'
-string.lineToHump(null)      = null
-string.lineToHump("def")     = "def"
-string.lineToHump("_def")    = "Def"
-string.lineToHump("ABC")     = "abc"
-string.lineToHump("_ABC")    = "Abc"
-string.lineToHump("ABC_ABC") = "abcAbc"
+`String lineToHump(text)`: Lowercases text, then removes an underscore before an English letter, digit, or another underscore, uppercasing the following letter. Intended for identifiers such as USER_NAME. A lone trailing underscore is retained; null returns null.
+
+```javascript
+return string.lineToHump('USER_NAME');
+// userName
 ```
 
 ## humpToLine
-函数定义：`String humpToLine(str)`
-- 参数定义：`str` 类型：`String`；
-- 返回类型：`String`
-- 作用：驼峰转下划线，规则为遇到大写字母后，转为小写并前面加下滑线。
 
-```js title='例子'
-string.humpToLine(null)      = null
-string.humpToLine("def")     = "def"
-string.humpToLine("defAbc")  = "def_abc"
-string.humpToLine("ABC")     = "_a_b_c"
-string.humpToLine("_ABC")    = "__a_b_c"
-string.humpToLine("ABC_ABC") = "_a_b_c__a_b_c"
+`String humpToLine(text)`: Inserts an underscore before each uppercase English letter in text and lowercases it, collapses repeated underscores, then removes a leading underscore. Null returns null; an empty string stays empty.
+
+```javascript
+return string.humpToLine('UserName');
+// user_name
 ```
 
 ## firstCharToUpperCase
-函数定义：`String firstCharToUpperCase(str)`
-- 参数定义：`str` 类型：`String`；
-- 返回类型：`String`
-- 作用：转换首字母大写。
 
-```js title='例子'
-string.firstCharToUpperCase(null)     = null
-string.firstCharToUpperCase("def")    = "Def"
-string.firstCharToUpperCase("defAbc") = "DefAbc"
-string.firstCharToUpperCase("ABC")    = "ABC"
+`String firstCharToUpperCase(text)`: Uppercases the first letter of text that starts with an English letter, leaving the remainder unchanged. Null, empty, and whitespace-only strings are unchanged. The implementation uses a character-code offset; ensure the first character is an English letter.
+
+```javascript
+return string.firstCharToUpperCase('dataQL');
+// DataQL
 ```
 
 ## firstCharToLowerCase
-函数定义：`String firstCharToLowerCase(str)`
-- 参数定义：`str` 类型：`String`；
-- 返回类型：`String`
-- 作用：转换首字母小写。
 
-```js title='例子'
-string.firstCharToLowerCase(null)     = null
-string.firstCharToLowerCase("def")    = "def"
-string.firstCharToLowerCase("defAbc") = "defAbc"
-string.firstCharToLowerCase("ABC")    = "aBC"
+`String firstCharToLowerCase(text)`: Lowercases the first letter of text that starts with an English letter, leaving the remainder unchanged. Input restrictions and null/blank handling match firstCharToUpperCase.
+
+```javascript
+return string.firstCharToLowerCase('DataQL');
+// dataQL
 ```
 
 ## toUpperCase
-函数定义：`String toUpperCase(str)`
-- 参数定义：`str` 类型：`String`；
-- 返回类型：`String`
-- 作用：转换大写。
 
-```js title='例子'
-string.toUpperCase(null)     = null
-string.toUpperCase("def")    = "DEF"
-string.toUpperCase("defAbc") = "DEFABC"
-string.toUpperCase("ABC")    = "ABC"
+`String toUpperCase(text)`: Uppercases all of text using the Java default locale. Null returns null; an empty string stays empty.
+
+```javascript
+return string.toUpperCase('DataQL');
+// DATAQL
 ```
 
 ## toLowerCase
-函数定义：`String toLowerCase(str)`
-- 参数定义：`str` 类型：`String`；
-- 返回类型：`String`
-- 作用：转换小写。
 
-```js title='例子'
-string.toLowerCase(null)     = null
-string.toLowerCase("def")    = "def"
-string.toLowerCase("defAbc") = "defabc"
-string.toLowerCase("ABC")    = "abc"
+`String toLowerCase(text)`: Lowercases all of text using the Java default locale. Null returns null; an empty string stays empty.
+
+```javascript
+return string.toLowerCase('DataQL');
+// dataql
 ```
 
 ## indexOf
-函数定义：`String indexOf(str, searchStr)`
-- 参数定义：`str` 类型：`String`；`searchStr` 类型：`String`；
-- 返回类型：`String`
-- 作用：Finds the first index within a String, handling null. This method uses `String.indexOf(String)`.
 
-```js title='例子'
-string.indexOf(null, *)         = -1
-string.indexOf("", *)           = -1
-string.indexOf("aabaabaa", 'a') = 0
-string.indexOf("aabaabaa", 'b') = 2
+`int indexOf(text, search)`: Returns the zero-based position of the first occurrence of search in text. Returns -1 when no match exists or either argument is null; an empty search returns 0.
+
+```javascript
+return string.indexOf('abcabc', 'bc');
+// 1
 ```
 
 ## indexOfWithStart
-函数定义：`String indexOfWithStart(str, searchStr, startPos)`
-- 参数定义：`str` 类型：`String`；`searchStr` 类型：`String`；`startPos` 类型：`Number`；
-- 返回类型：`String`
-- 作用：Finds the first index within a String from a start position, handling null. This method uses `String#indexOf(String, int)`.
 
-```js title='例子'
-string.indexOfWithStart(null,"", 1)         = -1
-string.indexOfWithStart("","", 2)           = -1
-string.indexOfWithStart("aabaabaa", 'a', 3) = 3
-string.indexOfWithStart("aabaabaa", 'b' , 3)= 5
+`int indexOfWithStart(text, search, start)`: Searches forward for search from the inclusive zero-based start position. The result is relative to the whole text. Negative start values act as 0; a missing match or null text argument returns -1.
+
+```javascript
+return string.indexOfWithStart('abcabc', 'bc', 2);
+// 4
 ```
 
 ## indexOfIgnoreCase
-函数定义：`String indexOfIgnoreCase(str, searchStr)`
-- 参数定义：`str` 类型：`String`；`searchStr` 类型：`String`；
-- 返回类型：`String`
-- 作用：Case in-sensitive find of the first index within a String.
 
-```js title='例子'
-string.indexOfWithStart(null,"", 1)          = -1
-string.indexOfWithStart("","", 2)            = -1
-string.indexOfWithStart("aabaabaa", 'a', 3)  = 3
-string.indexOfWithStart("aabaabaa", 'b' , 3) = 5
-string.indexOfWithStart("aabaabaa", 'B' , 3) = -1
+`int indexOfIgnoreCase(text, search)`: Finds the first occurrence of search, ignoring case. Returns -1 when no match exists or either argument is null.
+
+```javascript
+return string.indexOfIgnoreCase('AbCaBc', 'bc');
+// 1
 ```
 
 ## indexOfIgnoreCaseWithStart
-函数定义：`String indexOfIgnoreCaseWithStart(str, searchStr, startPos)`
-- 参数定义：`str` 类型：`String`；`searchStr` 类型：`String`；`startPos` 类型：`Number`；
-- 返回类型：`String`
-- 作用：Case in-sensitive find of the first index within a String from the specified position.
 
-```js title='例子'
-string.indexOfIgnoreCaseWithStart(null,"", 1)          = -1
-string.indexOfIgnoreCaseWithStart("","", 2)            = -1
-string.indexOfIgnoreCaseWithStart("aabaabaa", 'a', 3)  = 3
-string.indexOfIgnoreCaseWithStart("aabaabaa", 'b' , 3) = 5
-string.indexOfIgnoreCaseWithStart("aabaabaa", 'B' , 3) = 5
+`int indexOfIgnoreCaseWithStart(text, search, start)`: Searches forward for search from the inclusive start position, ignoring case. Negative start values act as 0; failure returns -1.
+
+```javascript
+return string.indexOfIgnoreCaseWithStart('AbCaBc', 'bc', 2);
+// 4
 ```
 
 ## lastIndexOf
-函数定义：`String lastIndexOf(str, searchStr)`
-- 参数定义：`str` 类型：`String`；`searchStr` 类型：`String`；
-- 返回类型：`String`
-- 作用：Finds the last index within a String, handling null. This method uses `String#lastIndexOf(String)`.
 
-```js title='例子'
-string.lastIndexOf(null, *)         = -1
-string.lastIndexOf("", *)           = -1
-string.lastIndexOf("aabaabaa", 'a') = 7
-string.lastIndexOf("aabaabaa", 'b') = 5
+`int lastIndexOf(text, search)`: Returns the starting index of the last occurrence of search. Returns -1 when no match exists or either argument is null; an empty search returns the text length.
+
+```javascript
+return string.lastIndexOf('abcabc', 'bc');
+// 4
 ```
 
 ## lastIndexOfWithStart
-函数定义：`String lastIndexOfWithStart(str, searchStr, startPos)`
-- 参数定义：`str` 类型：`String`；`searchStr` 类型：`String`；`startPos` 类型：`Number`；
-- 返回类型：`String`
-- 作用：Finds the last index within a String from a start position, handling null. This method uses `String#lastIndexOf(String, int)`.
 
-```js title='例子'
-string.lastIndexOf(null, *, *)          = -1
-string.lastIndexOf("", *,  *)           = -1
-string.lastIndexOf("aabaabaa", 'b', 8)  = 5
-string.lastIndexOf("aabaabaa", 'b', 4)  = 2
-string.lastIndexOf("aabaabaa", 'b', 0)  = -1
-string.lastIndexOf("aabaabaa", 'b', 9)  = 5
-string.lastIndexOf("aabaabaa", 'b', -1) = -1
-string.lastIndexOf("aabaabaa", 'a', 0)  = 0
+`int lastIndexOfWithStart(text, search, start)`: Searches backward for search whose starting index is at most start. Start is zero-based; a negative start returns -1, while a start beyond the text searches from the end.
+
+```javascript
+return string.lastIndexOfWithStart('abcabc', 'bc', 3);
+// 1
 ```
 
 ## lastIndexOfIgnoreCase
-函数定义：`String lastIndexOf(str, searchStr)`
-- 参数定义：`str` 类型：`String`；`searchStr` 类型：`String`；
-- 返回类型：`String`
-- 作用：Case in-sensitive find of the last index within a String from the specified position.
 
-```js title='例子'
-string.lastIndexOf(null, *)         = -1
-string.lastIndexOf("", *)           = -1
-string.lastIndexOf("aabaabaa", 'a') = 7
-string.lastIndexOf("aabaabaa", 'b') = 5
+`int lastIndexOfIgnoreCase(text, search)`: Returns the starting index of the last occurrence of search, ignoring case. A missing match or null argument returns -1.
+
+```javascript
+return string.lastIndexOfIgnoreCase('AbCaBc', 'ab');
+// 3
 ```
 
 ## lastIndexOfIgnoreCaseWithStart
-函数定义：`String lastIndexOfIgnoreCaseWithStart(str, searchStr)`
-- 参数定义：`str` 类型：`String`；`searchStr` 类型：`String`；`startPos` 类型：`Number`；
-- 返回类型：`String`
-- 作用：Case in-sensitive find of the last index within a String from the specified position.
 
-```js title='例子'
-string.lastIndexOfIgnoreCase(null, *, *)          = -1
-string.lastIndexOfIgnoreCase(*, null, *)          = -1
-string.lastIndexOfIgnoreCase("aabaabaa", "A", 8)  = 7
-string.lastIndexOfIgnoreCase("aabaabaa", "B", 8)  = 5
-string.lastIndexOfIgnoreCase("aabaabaa", "AB", 8) = 4
-string.lastIndexOfIgnoreCase("aabaabaa", "B", 9)  = 5
-string.lastIndexOfIgnoreCase("aabaabaa", "B", -1) = -1
-string.lastIndexOfIgnoreCase("aabaabaa", "A", 0)  = 0
-string.lastIndexOfIgnoreCase("aabaabaa", "B", 0)  = -1
+`int lastIndexOfIgnoreCaseWithStart(text, search, start)`: Searches backward from start for search, ignoring case. Start-position and return-value rules match lastIndexOfWithStart.
+
+```javascript
+return string.lastIndexOfIgnoreCaseWithStart('AbCaBc', 'ab', 2);
+// 0
 ```
 
 ## contains
-函数定义：`String contains(str, searchStr)`
-- 参数定义：`str` 类型：`String`；`searchStr` 类型：`String`；
-- 返回类型：`String`
-- 作用：Checks if String contains a search String, handling null. This method uses String#indexOf(String).
 
-```js title='例子'
-string.contains(null, *)    = false
-string.contains("", *)      = false
-string.contains("abc", 'a') = true
-string.contains("abc", 'z') = false
+`boolean contains(text, search)`: Checks whether text contains the entire search substring, respecting case. A null argument returns false; an empty search matches any non-null text.
+
+```javascript
+return string.contains('DataQL', 'Data');
+// true
 ```
 
 ## containsIgnoreCase
-函数定义：`String containsIgnoreCase(str, searchStr)`
-- 参数定义：`str` 类型：`String`；`searchStr` 类型：`String`；
-- 返回类型：`String`
-- 作用：Checks if String contains a search String irrespective of case, handling null. Case-insensitivity is defined as by String#equalsIgnoreCase(String).
 
-```js title='例子'
-string.contains(null, *)    = false
-string.contains(*, null)    = false
-string.contains("", "")     = true
-string.contains("abc", "")  = true
-string.contains("abc", "a") = true
-string.contains("abc", "z") = false
-string.contains("abc", "A") = true
-string.contains("abc", "Z") = false
+`boolean containsIgnoreCase(text, search)`: Checks whether text contains search, ignoring case. Null and empty-substring handling match contains.
+
+```javascript
+return string.containsIgnoreCase('DataQL', 'data');
+// true
 ```
 
 ## containsAny
-函数定义：`String containsAny(str, searchStrArray)`
-- 参数定义：`str` 类型：`String`；`searchStrArray` 类型：`List`；
-- 返回类型：`String`
-- 作用：Checks if the String contains any character in the given set of string.
 
-```js title='例子'
-string.containsAny(null, *)                = false
-string.containsAny("", *)                  = false
-string.containsAny(*, null)                = false
-string.containsAny(*, [])                  = false
-string.containsAny("zzabyycdxx",['z','a']) = true
-string.containsAny("zzabyycdxx",['b','y']) = true
-string.containsAny("aba", ['z'])           = false
-string.containsAny("zzabyycdxx",['Z','A']) = false
-string.containsAny("zzabyycdxx",['B','Y']) = false
+`boolean containsAny(text, searches)`: Searches is a list of strings; returns true if any entire substring matches. Empty/null text and a null/empty list return false. Null list elements do not match.
+
+```javascript
+return string.containsAny('DataQL', ['SQL', 'Data']);
+// true
 ```
 
 ## containsAnyIgnoreCase
-函数定义：`String containsAnyIgnoreCase(str, searchStrArray)`
-- 参数定义：`str` 类型：`String`；`searchStrArray` 类型：`List`；
-- 返回类型：`String`
-- 作用：Case in-sensitive Checks if the String contains any character in the given set of string.
 
-```js title='例子'
-string.containsAnyIgnoreCase(null, *)                = false
-string.containsAnyIgnoreCase("", *)                  = false
-string.containsAnyIgnoreCase(*, null)                = false
-string.containsAnyIgnoreCase(*, [])                  = false
-string.containsAnyIgnoreCase("zzabyycdxx",['z','a']) = true
-string.containsAnyIgnoreCase("zzabyycdxx",['b','y']) = true
-string.containsAnyIgnoreCase("aba", ['z'])           = false
-string.containsAnyIgnoreCase("zzabyycdxx",['Z','A']) = true
-string.containsAnyIgnoreCase("zzabyycdxx",['B','Y']) = true
+`boolean containsAnyIgnoreCase(text, searches)`: Matches any entire substring in searches, ignoring case. Empty and null input rules match containsAny.
+
+```javascript
+return string.containsAnyIgnoreCase('DataQL', ['sql', 'data']);
+// true
 ```
 
 ## trim
-函数定义：`String trim(str)`
-- 参数定义：`str` 类型：`String`；
-- 返回类型：`String`
-- 作用：截断两边空格，如果为空返回为空。
 
-```js title='例子'
-string.trim(null)          = null
-string.trim("")            = ""
-string.trim("     ")       = ""
-string.trim("abc")         = "abc"
-string.trim("    abc    ") = "abc"
+`String trim(text)`: Removes leading and trailing characters with codes at most U+0020, including spaces, tabs, and line breaks. Interior whitespace is preserved; null returns null.
+
+```javascript
+return string.trim(' DataQL ');
+// DataQL
 ```
 
 ## sub
-函数定义：`String sub(str, start, end)`
-- 参数定义：`str` 类型：`String`；`start` 类型：`Number`；`end` 类型：`Number`；
-- 返回类型：`String`
-- 作用：Gets a substring from the specified String avoiding exceptions.
 
-```js title='例子'
-string.sub(null, *, *)    = null
-string.sub("", * ,  *)    = "";
-string.sub("abc", 0, 2)   = "ab"
-string.sub("abc", 2, 0)   = ""
-string.sub("abc", 2, 4)   = "c"
-string.sub("abc", 4, 6)   = ""
-string.sub("abc", 2, 2)   = ""
-string.sub("abc", -2, -1) = "b"
-string.sub("abc", -4, 2)  = "ab"
+`String sub(text, start, end)`: Extracts the interval including start and excluding end. Indices are zero-based; negative indices count from the end (-1 is the last character position). Out-of-range bounds are clamped; start greater than end returns an empty string, and null text returns null.
+
+```javascript
+return string.sub('DataQL', 0, 4);
+// Data
+```
+
+```javascript
+return string.sub('DataQL', -2, 6);
+// QL
 ```
 
 ## left
-函数定义：`String left(str, len)`
-- 参数定义：`str` 类型：`String`；`len` 类型：`Number`；
-- 返回类型：`String`
-- 作用：Gets the leftmost len characters of a String. 
 
-```js title='例子'
-string.left(null, *)    = null
-string.left(*, -ve)     = ""
-string.left("", *)      = ""
-string.left("abc", 0)   = ""
-string.left("abc", 2)   = "ab"
-string.left("abc", 4)   = "abc"
+`String left(text, length)`: Returns at most length characters from the left of text. A nonpositive length returns an empty string; a length beyond the text returns the whole text. Null text returns null.
+
+```javascript
+return string.left('DataQL', 4);
+// Data
 ```
 
 ## right
-函数定义：`String right(str, len)`
-- 参数定义：`str` 类型：`String`；`len` 类型：`Number`；
-- 返回类型：`String`
-- 作用：Gets the rightmost len characters of a String.
 
-```js title='例子'
-string.right(null, *)    = null
-string.right(*, -ve)     = ""
-string.right("", *)      = ""
-string.right("abc", 0)   = ""
-string.right("abc", 2)   = "bc"
-string.right("abc", 4)   = "abc"
+`String right(text, length)`: Returns at most length characters from the right of text. A nonpositive length returns an empty string; a length beyond the text returns the whole text. Null text returns null.
+
+```javascript
+return string.right('DataQL', 2);
+// QL
 ```
 
 ## alignRight
-函数定义：`String alignRight(str, padChar, len)`
-- 参数定义：`str` 类型：`String``padChar` 类型：`String`；`len` 类型：`Number`；
-- 返回类型：`String`
-- 作用：字符串在指定长度下进行右对齐，空出来的字符使用 `padChar` 补齐。如果传入多个字符将会取第一个字符。
 
-```js title='例子'
-string.alignRight(null, *, *)     = null
-string.alignRight("", 'z', 3)     = "zzz"
-string.alignRight("bat", 'z', 3)  = "bat"
-string.alignRight("bat", 'z', 5)  = "batzz"
-string.alignRight("bat", 'z', 1)  = "bat"
-string.alignRight("bat", 'z', -1) = "bat"
+`String alignRight(text, padding, length)`: Pads the right side of text to a total length of length. Padding must be a non-null string; only its first character is used, or a space if it is empty. Text already at or beyond the target length is not truncated. With valid padding, null text returns null.
+
+```javascript
+return string.alignRight('ab', '0', 4);
+// ab00
 ```
 
 ## alignLeft
-函数定义：`String alignLeft(str, padChar, len)`
-- 参数定义：`str` 类型：`String`；`padChar` 类型：`String`；`len` 类型：`Number`；
-- 返回类型：`String`
-- 作用：字符串在指定长度下进行左对齐，空出来的字符使用 `padChar` 补齐。如果传入多个字符将会取第一个字符。
 
-```js title='例子'
-string.alignLeft(null, *, *)     = null
-string.alignLeft("", 'z', 3)     = "zzz"
-string.alignLeft("bat", 'z', 3)  = "bat"
-string.alignLeft("bat", 'z', 5)  = "zzbat"
-string.alignLeft("bat", 'z', 1)  = "bat"
-string.alignLeft("bat", 'z', -1) = "bat"
+`String alignLeft(text, padding, length)`: Pads the left side of text to a total length of length. Padding, overlong-text, and null-text rules match alignRight.
+
+```javascript
+return string.alignLeft('ab', '0', 4);
+// 00ab
 ```
 
 ## alignCenter
-函数定义：`String alignCenter(str, padChar, len)`
-- 参数定义：`str` 类型：`String`；`padChar` 类型：`String`；`len` 类型：`Number`；
-- 返回类型：`String`
-- 作用：字符串在指定长度下进行剧中对齐，空出来的字符使用 `padChar` 补齐。如果传入多个字符将会取第一个字符。
 
-```js title='例子'
-string.alignCenter(null, *, *)     = null
-string.alignCenter("", ' ', 4)     = "    "
-string.alignCenter("ab", ' ', -1)  = "ab"
-string.alignCenter("ab", ' ', 4)   = " ab"
-string.alignCenter("abcd", ' ', 2) = "abcd"
-string.alignCenter("a", ' ', 4)    = " a  "
-string.alignCenter("a", 'y', 4)    = "yayy"
+`String alignCenter(text, padding, length)`: Pads both sides of text to a total length of length. If an odd number of padding characters is needed, the right receives one more. Other padding, overlong-text, and null-text rules match alignRight.
+
+```javascript
+return string.alignCenter('ab', '0', 4);
+// 0ab0
+```
+
+```javascript
+return string.alignCenter('ab', '0', 5);
+// 0ab00
 ```
 
 ## compareString
-函数定义：`int compareString(str1, str2)`
-- 参数定义：`str1` 类型：`String`，`str2` 类型：`String`
-- 返回类型：`Number`
-- 作用：比较两个字符串，使用Java原生的字符串 `compareTo` 比较方法来实现。
 
-说明：
-- 比较两个字符串大小，主要用作排序场景。
+`int compareString(left, right)`: Compares the two texts lexicographically. Returns a negative number, 0, or a positive number when left is less than, equal to, or greater than right; results are not limited to -1, 0, and 1. Null is treated as an empty string.
 
-```js title='例子'
-compare.compareString("A","a")      = -32
-compare.compareString("a","A")      = 32
-compare.compareString("abd","abc")  = 1
-compare.compareString("abc","abd")  = -1
+```javascript
+return string.compareString('a', 'b');
+// -1
 ```
 
 ## compareStringIgnoreCase
-函数定义：`int compareStringIgnoreCase(str1, str2)`
-- 参数定义：`str1` 类型：`String`，`str2` 类型：`String`
-- 返回类型：`Number`
-- 作用：忽略大小写比较两个字符串，使用 Java 原生的字符串 `compareToIgnoreCase` 比较方法来实现。
 
-说明：
-- 比较两个字符串大小，主要用作排序场景。
+`int compareStringIgnoreCase(left, right)`: Compares two texts while ignoring case. Return-value meaning and null handling match compareString.
 
-```js title='例子'
-compare.compareStringIgnoreCase("a","A")      = 0
-compare.compareStringIgnoreCase("A","a")      = 0
-compare.compareStringIgnoreCase("abd","abc")  = 1
-compare.compareStringIgnoreCase("abc","abd")  = -1
+```javascript
+return string.compareStringIgnoreCase('A', 'a');
+// 0
 ```
 
 ## split
-函数定义：`List split(str, separatorChars)`
-- 参数定义：`str` 类型：`String`；`separatorChars` 类型：`String`
-- 返回类型：`List`
-- 作用：Splits the provided text into an array, separators specified. This is an alternative to using StringTokenizer.
 
-```js title='例子'
-string.split(null, *)         = null
-string.split("", *)           = []
-string.split("abc def", null) = ["abc", "def"]
-string.split("abc def", " ")  = ["abc", "def"]
-string.split("abc  def", " ") = ["abc", "def"]
-string.split("ab:cd:ef", ":") = ["ab", "cd", "ef"]
+`List split(text[, separators])`: Splits text into a list of strings. Each character in separators is a delimiter; it is neither a regular expression nor a complete delimiter string. Adjacent delimiters collapse, and leading/trailing delimiters add no empty items. Omitted/null separators split on whitespace. Null text returns null; empty text returns an empty list.
+
+```javascript
+return string.split('a,,b;c', ',;');
+// ["a", "b", "c"]
+```
+
+```javascript
+return string.split('  Alice  Bob  ');
+// ["Alice", "Bob"]
 ```
 
 ## join
-函数定义：`String join(str, padChar, len)`
-- 参数定义：`array` 类型：`List`；`separator` 类型：`String`；
-- 返回类型：`String`
-- 作用：Joins the elements of the provided array into a single String containing the provided list of elements.
 
-```js title='例子'
-string.join(null, *)               = null
-string.join([], *)                 = ""
-string.join([null], *)             = ""
-string.join(["a", "b", "c"], ';')  = "a;b;c"
-string.join(["a", "b", "c"], null) = "abc"
-string.join([null, "", "a"], ';')  = ";;a"
+`String join(values[, separator])`: Converts each element of values to text and joins them with separator. Omitted/null separator means an empty string. A null list returns null; an empty list returns an empty string. Null elements contribute empty text while retaining their delimiter positions.
+
+```javascript
+return string.join(['a', null, 'b'], ',');
+// a,,b
+```
+
+```javascript
+return string.join(['a', 'b']);
+// ab
 ```
 
 ## isEmpty
-函数定义：`boolean isEmpty(str)`
-- 参数定义：`str` 类型：`String`；
-- 返回类型：`Boolean`
-- 作用：Checks if a String is empty `("")` or `null`.
 
-```js title='例子'
-string.isEmpty(null)      = true
-string.isEmpty("")        = true
-string.isEmpty(" ")       = false
-string.isEmpty("bob")     = false
-string.isEmpty("  bob  ") = false
+`boolean isEmpty(text)`: Returns true if text is null or an empty string. A whitespace-only string returns false.
+
+```javascript
+return string.isEmpty(' ');
+// false
 ```
 
 ## equalsIgnoreCase
-函数定义：`boolean equalsIgnoreCase(str1, str2)`
-- 参数定义：`str1` 类型：`String`；`str2` 类型：`String`；
-- 返回类型：`Boolean`
-- 作用：忽略大小写比较相等
 
-```js title='例子'
-string.equalsIgnoreCase(null, null)   = true
-string.equalsIgnoreCase(null, "abc")  = false
-string.equalsIgnoreCase("abc", null)  = false
-string.equalsIgnoreCase("abc", "abc") = true
-string.equalsIgnoreCase("abc", "ABC") = true
+`boolean equalsIgnoreCase(left, right)`: Checks whether the two texts are equal, ignoring case. Two nulls return true; exactly one null returns false.
+
+```javascript
+return string.equalsIgnoreCase('DataQL', 'dataql');
+// true
 ```
+
+CompareUdfSource is deprecated. Use this library's `compareString` and `compareStringIgnoreCase` for string comparisons.

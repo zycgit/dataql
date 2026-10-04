@@ -1,33 +1,58 @@
 ---
 id: dialect
-sidebar_position: 3
-title: c.配置和方言
-description: 在 DataQL 中执行一条SQL，并且使用分页查询。
+title: 6.6 分页与方言
 ---
 
-# 配置和方言
+启用分页后，`selectSql` 或 `selectXml` 返回 `PageQuery`。设置页码和每页条数，再调用 `data()` 获取列表。
 
-## 配置数据源
+## 分页查询
 
-下例是初始化 Hasor 数据源的模块代码，如果你是基于 Spring 生态，那么请参考与 **[Spring 整合](../../integration/with-springboot.md)** 内容。
-
-:::tip
-如果 Hasor 环境中已经初始化了数据源那么无需二次初始化。
-:::
-
-```js
-public class ExampleModule implements Module {
-    public void loadModule(ApiBinder apiBinder) throws Throwable {
-        // .创建数据源
-        DataSource dataSource = null;
-        // .初始化Hasor Jdbc 模块，并配置数据源
-        apiBinder.installModule(new JdbcModule(Level.Full, this.dataSource));
-    }
-}
+```javascript
+hint FRAGMENT_SQL_QUERY_BY_PAGE = true;
+hint FRAGMENT_SQL_QUERY_BY_PAGE_NUMBER_OFFSET = 1;
+hint FRAGMENT_SQL_COLUMN_CASE = 'lower';
+var find = @@selectSql()<% SELECT id, name FROM people ORDER BY id %>;
+var page = find();
+run page.setPageInfo({'currentPage':2, 'pageSize':1});
+var rows = page.data();
+var info = page.pageInfo();
+return {'rows':rows, 'total':info.totalCount};
 ```
 
-## SQL方言
+示例返回 Bob 和总记录数 2。`data()` 执行总数查询和当前页查询，随后 `pageInfo()` 读取已取得的总数，不重复执行 SQL。再次调用 `data()` 会重新查询；列表翻页应使用稳定的 `ORDER BY`。
 
-提示：在 `4.2.1` 版本之后，SQL 执行器会根据使用的数据库连接自动推断对应的方言。通常情况下无需特意通过 [hint FRAGMENT_SQL_PAGE_DIALECT](../hints/hint_sql.md#FRAGMENT_SQL_PAGE_DIALECT) 来设置方言。
+## 页码与导航
 
-方言是可选项，但如果使用分页查询那么就会用到方言。
+`FRAGMENT_SQL_QUERY_BY_PAGE_NUMBER_OFFSET` 默认 0，设为 1 后第一页为 1。`setPageInfo` 接受 `currentPage`、`pageSize`，并可附带 `totalCount`；当前脚本分页仍会刷新总数，不能将传入 `totalCount` 当作关闭 count 查询的开关。
+
+| 方法 | 用途 |
+| --- | --- |
+| `setPageInfo({...})` | 设置页码和正整数页大小 |
+| `data()` | 查询当前页 |
+| `pageInfo()` | 读取分页信息；尚未取得总数时触发查询 |
+| `firstPage()`、`previousPage()` | 移到第一页、上一页 |
+| `nextPage()`、`lastPage()` | 移到下一页、最后一页 |
+
+先取得总记录数再调用 `lastPage()`。分页信息包含当前页、页大小、总记录数和页码范围等字段。
+
+## 方言选择
+
+默认按 JDBC URL 和驱动信息选择方言。可显式指定：
+
+```javascript
+hint FRAGMENT_SQL_PAGE_DIALECT = 'postgresql';
+```
+
+| 数据库 | 别名 |
+| --- | --- |
+| MySQL、MariaDB | `mysql`、`mariadb` |
+| PostgreSQL、Kingbase | `postgresql`、`kingbase` |
+| H2、HSQLDB | `h2`、`hsql` |
+| Oracle、DB2 | `oracle`、`db2` |
+| SQL Server | `sqlserver`、`jtds` |
+| SQLite、Derby | `sqlite`、`derby` |
+| DM、Impala、Informix、XuGu | `dm`、`impala`、`informix`、`xugu` |
+
+方言负责生成 count SQL 和分页 SQL。复杂查询应结合目标数据库验证重写后的语句。
+
+自定义方言的实现与注册见 [SQL 方言](../../dataway/engine/sql-dialects.md)。

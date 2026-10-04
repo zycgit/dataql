@@ -1,0 +1,94 @@
+<!--
+  Copyright 2015-2026 the original author or authors.
+
+  Licensed under the Apache License, Version 2.0.
+  See the LICENSE.txt file for the full license.
+  https://www.apache.org/licenses/LICENSE-2.0
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="500" viewBox="0 0 1020 500" role="img" aria-labelledby="title description">
+  <title id="title">Dataway technical architecture</title>
+  <desc id="description">Application requests pass through the request context to Dataway. Dataway executes published APIs with DataQL, obtains data through UDFs and fragment processors, and returns a response. UDFs connect to HTTP, RPC and application services. Fragment processors support SQL queries and custom implementations.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#202020"/>
+    </marker>
+    <marker id="extension-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#888888"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: Arial, Helvetica, sans-serif; fill: #202020; }
+    .label { font-size: 20px; font-weight: 600; text-anchor: middle; }
+    .detail { font-size: 18px; fill: #777777; }
+    .icon { fill: #ffffff; stroke: #202020; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .flow { fill: none; stroke: #202020; stroke-width: 2; marker-end: url(#arrow); }
+    .extension { fill: none; stroke: #888888; stroke-width: 2; stroke-dasharray: 8 7; marker-end: url(#extension-arrow); }
+    .brace { fill: none; stroke: #999999; stroke-width: 2.5; stroke-linecap: round; }
+  </style>
+  <rect width="1020" height="500" fill="#ffffff"/>
+
+  <!-- Application -->
+  <rect x="21" y="292" width="42" height="66" rx="4" class="icon"/>
+  <path d="M 29 300 H 55 V 346 H 29 Z" class="icon"/>
+  <circle cx="42" cy="352" r="2" fill="#202020"/>
+  <rect x="10" y="309" width="64" height="29" rx="2" fill="#333333"/>
+  <text x="42" y="330" fill="#ffffff" style="fill: #ffffff" font-size="20" font-weight="600" text-anchor="middle">APP</text>
+  <path d="M 80 238 H 191" class="flow"/>
+  <path d="M 205 428 H 80" class="flow"/>
+
+  <!-- Request context -->
+  <text x="251" y="115" class="detail" text-anchor="middle">Identity / Parameters</text>
+  <text x="251" y="141" class="detail" text-anchor="middle">Header / Cookie</text>
+  <path d="M 251 157 V 198" class="extension"/>
+  <path d="M 222 247 L 251 264 L 280 247 L 251 230 Z" class="icon"/>
+  <path d="M 222 235 L 251 252 L 280 235 L 251 218 Z" class="icon"/>
+  <path d="M 222 223 L 251 240 L 280 223 L 251 206 Z" class="icon"/>
+  <text x="251" y="295" class="label">Context</text>
+  <path d="M 306 238 H 393" class="flow"/>
+
+  <!-- Published API definitions -->
+  <rect x="428" y="24" width="45" height="61" rx="5" class="icon"/>
+  <rect x="436" y="20" width="29" height="9" rx="3" class="icon"/>
+  <g fill="#202020">
+    <circle cx="438" cy="41" r="2"/>
+    <circle cx="438" cy="54" r="2"/>
+    <circle cx="438" cy="67" r="2"/>
+  </g>
+  <path d="M 446 41 H 465 M 446 54 H 465 M 446 67 H 460" fill="none" stroke="#202020" stroke-width="2.5" stroke-linecap="round"/>
+  <text x="450" y="113" class="label">Published APIs</text>
+  <path d="M 450 136 V 180" class="flow"/>
+
+  <!-- Dataway -->
+  <path d="M 417 199 H 462 L 484 221 V 285 H 417 Z" fill="#ffffff" stroke="#d4b300" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M 460 207 L 476 223 M 442 238 L 431 251 L 442 264 M 458 238 L 469 251 L 458 264" fill="none" stroke="#d4b300" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="450" y="313" class="label">Dataway</text>
+  <text x="450" y="339" class="detail" text-anchor="middle">DataQL Engine</text>
+
+  <!-- UDF integrations -->
+  <text x="657" y="169" style="font-family: Georgia, serif; font-size: 68px; font-style: italic;" text-anchor="middle">ƒx</text>
+  <text x="657" y="207" class="label">UDF</text>
+  <path d="M 609 188 L 521 231" class="flow"/>
+  <path d="M 753 151 H 711" class="extension"/>
+  <path d="M 785 83 Q 770 83 770 108 V 132 Q 770 151 758 151 Q 770 151 770 170 V 194 Q 770 219 785 219" class="brace"/>
+  <text x="803" y="98" class="detail">HTTP Client</text>
+  <text x="803" y="157" class="detail">RPC Service</text>
+  <text x="803" y="214" class="detail">Application Service</text>
+
+  <!-- Fragment integrations -->
+  <rect x="635" y="306" width="66" height="62" class="icon"/>
+  <path d="M 655 325 L 645 337 L 655 349 M 680 325 L 690 337 L 680 349 M 673 324 L 663 350" fill="none" stroke="#202020" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="668" y="396" class="label">FragmentProcess</text>
+  <path d="M 609 299 L 521 260" class="flow"/>
+  <path d="M 753 337 H 718" class="extension"/>
+  <path d="M 785 278 Q 770 278 770 303 V 318 Q 770 337 758 337 Q 770 337 770 356 V 381 Q 770 406 785 406" class="brace"/>
+  <text x="803" y="291" class="detail">SQL Query</text>
+  <text x="803" y="343" class="detail">Custom Fragment</text>
+  <text x="803" y="398" class="detail">...</text>
+
+  <!-- Response -->
+  <path d="M 450 355 V 428 H 296" class="flow"/>
+  <path d="M 227 393 H 264 L 280 409 V 458 H 227 Z" fill="#333333" stroke="#202020" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M 264 394 V 409 H 279 M 234 415 H 268 M 234 423 H 268" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
+  <text x="253" y="448" style="fill: #ffffff" font-size="15" font-weight="600" text-anchor="middle">JSON</text>
+  <text x="253" y="486" class="detail" text-anchor="middle">Response</text>
+</svg>

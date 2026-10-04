@@ -1,65 +1,79 @@
 ---
 id: MyBatis
-sidebar_position: 4
-title: d.MyBatis执行器
-description: DataQL的 MyBatis执行器，@@MyBatis 扩展可以执行部分 MyBatis标签、DataQL 动态SQL执行器
+title: 6.4 XML 动态 SQL
 ---
 
-# MyBatis 执行器
+`selectXml`、`insertXml`、`updateXml` 等片段直接包含 SQL 和动态标签。正文不需要 `mapper` 或 `select` 外层标签。
 
-在 4.1.8 版本后加入了 `@@MyBatis` 执行器(非常感谢 社区小东的贡献 https://gitee.com/jmxd )，MyBatis 执行器是对 [`@@sql`](./execute.md) 执行器的一个扩展，它会继承所有 `@@sql` 的能力。
-同时提供类似 MyBatis 的配置方式，并提供了动态 SQL 的能力。
+## 条件和集合
 
-对比 `@@sql` 的优势
-- 继承 @@sql 全部能力
-- 动态SQL能力，提供 SQL 层面的 `if` 和 `for`
-- 类似 MyBatis 的工作方式，比起 DataQL 拼接字符串注入更加安全可靠。
-
-```js title='用法'
-var dimSQL = @@MyBatis(userName)<%
-    <select>
-        select * from user_info where `name` like concat('%',#{userName},'%') order by id asc
-    </select>
+```javascript
+hint FRAGMENT_SQL_OPEN_PACKAGE = 'off';
+hint FRAGMENT_SQL_COLUMN_CASE = 'lower';
+var find = @@selectXml(minAge, ids)<%
+    SELECT id, name FROM people
+    <where>
+        <if test="minAge != null">AND age &gt;= #{minAge}</if>
+        <if test="ids != null and ids.size() > 0">
+            AND id IN
+            <foreach collection="ids" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+    </where>
+    ORDER BY id
 %>;
+return find(25, [1,2]);
 ```
 
-## 可用的根标签
+`where` 在有条件时添加 `WHERE`，并去掉开头的 `AND` 或 `OR`。`foreach` 将集合元素绑定为独立参数，`item` 是循环变量。
 
-| 根标签      | 含义          |
-|----------|-------------|
-| `select` | `Select` 语句 |
-| `update` | `Update` 语句 |
-| `insert` | `Insert` 语句 |
-| `delete` | `Delete` 语句 |
+## 动态更新
 
-**foreach 标签**
-
-与 MyBatis 的用法一致，用来循环拼接SQL。下面是可用的标签属性。
-
-| 属性           | 含义         |
-|--------------|------------|
-| `collection` | 集合，必填项     |
-| `item`       | item，必填项   |
-| `open`       | 拼接起始SQL，选填 |
-| `close`      | 拼接结束SQL，选填 |
-| `separator`  | 分隔符，选填     |
-
-```js
-<foreach collection="userIds.split(',')" item="userId" open="(" close=")" separator=",">
-    #{userId}
-</foreach>
+```javascript
+var change = @@updateXml(id, name, age)<%
+    UPDATE people
+    <set>
+        <if test="name != null">name = #{name},</if>
+        <if test="age != null">age = #{age},</if>
+    </set>
+    WHERE id = #{id}
+%>;
+return change(1, null, 26);
 ```
 
-**if 标签**
+`set` 添加 `SET` 并去掉末尾逗号。调用方应至少提供一个更新字段；全部字段为空会形成无效更新语句。
 
-与 MyBatis 一致,用来判断，当条件成立时拼接if标签里的内容
+## 分支和变量
 
-| 属性     | 含义       |
-|--------|----------|
-| `test` | 判断条件，必填项 |
-
-```js
-<if test="userId != null and userId != ''">
-    and user_id = #{userId}
-</if>
+```javascript
+var find = @@selectXml(name)<%
+    <bind name="pattern" value="'%' + name + '%'"/>
+    SELECT count(*) FROM people
+    <where>
+        <choose>
+            <when test="name != null and name != ''">name LIKE #{pattern}</when>
+            <otherwise>age &gt;= 30</otherwise>
+        </choose>
+    </where>
+%>;
+return find('Ali');
 ```
+
+`bind` 将表达式结果保存为后续 SQL 可使用的变量，`choose` 选择第一个成立的 `when`，其余情况执行 `otherwise`。
+
+## 标签参考
+
+| 标签 | 主要属性 | 作用 |
+| --- | --- | --- |
+| `if` | `test` | 按 OGNL 条件输出内容 |
+| `choose`、`when`、`otherwise` | `when.test` | 多分支选择 |
+| `foreach` | `collection`、`item`、`open`、`close`、`separator` | 遍历集合并连接内容 |
+| `trim` | `prefix`、`suffix`、`prefixOverrides`、`suffixOverrides` | 添加或裁剪前后缀；多个裁剪值用 `\|` 分隔 |
+| `where` | 无 | 添加 WHERE，裁剪首个逻辑连接词 |
+| `set` | 无 | 添加 SET，裁剪末尾逗号 |
+| `bind` | `name`、`value` | 定义表达式变量 |
+| `include` | `refid` | 引入[SQL 片段](../../dataway/engine/sql-macros.md) |
+| `selectKey` | `keyProperty`、`keyColumn`、`order` | 插入前后执行[主键查询](results.md#select-key) |
+
+XML 中的小于号使用 `&lt;`，包含复杂比较符时可将 SQL 文本放入 CDATA。标签属性中的条件使用 OGNL；`foreach` 当前没有 `index` 属性。MyBatis 的 Mapper 接口、`resultMap` 等机制不在此入口范围内。

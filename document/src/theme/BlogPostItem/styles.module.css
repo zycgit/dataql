@@ -1,0 +1,26 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
+.listItem {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+}
+
+.listItem:not(:last-of-type) {
+    border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.listItem > :global(.markdown) > :last-child {
+    margin-bottom: 0;
+}
+
+.readMore {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--ifm-color-primary);
+}

@@ -1,352 +1,204 @@
 ---
 id: web
-sidebar_position: 7
-title: g.Web函数库
-description: DataQL FunctionX库函数，Web函数库
+title: 7.9 Web functions
 ---
-# Web函数库
 
-引入Web函数库的方式为：`import 'net.hasor.dataql.fx.web.WebUdfSource' as webData;`
+:::info Module dependency
+This library is supplied by `dataway-embedded`; it is not built into `dataql-engine`. Add that module and execute body, Header, and Cookie functions within a Dataway HTTP request.
 
-## cookieMap
-函数定义：`Map cookieMap()`
-- 参数定义：无
-- 返回类型：`Map`
-- 作用：获取 Cookie 并且以 `Map` 形式返回。
+Importing the library does not create an HTTP context. Without a request context, body and single-value reads return `null`, while list and Map reads return empty collections. Response writes require the current HTTP response to be available and not yet started. `uploadFileInfo(file)` also requires an actual uploaded file object.
+:::
 
-```js title='例子'
-var cookie = webData.cookieMap() // 例如：JSESSIONID
-// 结果：
-// {
-//   "JSESSIONID": "EA23D2E1AC1CAE5F8BD17191EF80EE7C"
-// }
+Import the library with this DataQL statement:
+
+```javascript
+import 'net.hasor.dataway.function.WebUdfSource' as web;
+return {"body": web.jsonBody()};
 ```
 
-## cookieArrayMap
-函数定义：`Map cookieArrayMap()`
-- 参数定义：无
-- 返回类型：`Map`
-- 作用：获取 Cookie 并且以数组形式返回。
+## Function list {#函数列表}
 
-```js title='例子'
-var cookie = webData.cookieMap() // 例如：JSESSIONID
-// 结果：
-// {
-//   "JSESSIONID": [
-//     "EA23D2E1AC1CAE5F8BD17191EF80EE7C"
-//   ]
-// }
+The table omits the import alias `web.`. `name` is a name string and `map` is an object keyed by names. All response-writing functions return `true` on success and throw an exception for invalid arguments or an unwritable response.
+
+| DataQL call | Arguments and result |
+| --- | --- |
+| `jsonBody()` | No arguments; returns the parsed business body object, not a JSON string |
+| `uploadFileInfo(file)` | Takes an uploaded file object; returns its name, size, content type, and SHA-256 |
+| `header(name)` | First request-header value, or `null` when absent |
+| `headerArray(name)` | List of all request-header values, or `[]` when absent |
+| `headerMap()` | No arguments; returns a Map from request-header names to first values |
+| `headerArrayMap()` | No arguments; returns a Map from request-header names to value lists |
+| `cookie(name)` | First Cookie value, or `null` when absent |
+| `cookieArray(name)` | List of all same-name Cookie values, or `[]` when absent |
+| `cookieMap()` | No arguments; returns a Map from Cookie names to first values |
+| `cookieArrayMap()` | No arguments; returns a Map from Cookie names to value lists |
+| `setHeader(name, value)` | Converts non-null `value` to a string and replaces all values of that response header |
+| `setHeaderAll(map)` | Replaces response headers using each Map entry |
+| `addHeader(name, value)` | Converts non-null `value` to a string and appends one response-header value |
+| `addHeaderAll(map)` | Appends response headers in bulk; list values are appended one item at a time |
+| `setCookie(name, value)` / `setCookie(name, value, options)` | Writes a response Cookie; `value` must be non-null and `options` is an optional attribute Map |
+| `removeCookie(name)` / `removeCookie(name, options)` | Writes an empty Cookie with `Max-Age=0`; `options` specifies scope and other attributes |
+
+### Reading the body
+
+Suppose the URL contains `?page=2` and the JSON body is `{"name":"Ada","tags":["java","dataql"]}`:
+
+```javascript
+import 'net.hasor.dataway.function.WebUdfSource' as web;
+return {
+    "body": web.jsonBody(),
+    "page": ${page}
+};
 ```
 
-## getCookie
-函数定义：`String getCookie(cookieName)`
-- 参数定义：`cookieName` 类型：`String`
-- 返回类型：`String`
-- 作用：获取 Cookie。
+Returns `{"body":{"name":"Ada","tags":["java","dataql"]},"page":"2"}`. `jsonBody()` does not merge query parameters; read ordinary parameters with `${name}`. In Perform and Smoke, it returns the simulated business body. Headers and Cookies come from the current debugging request, and writes affect its response.
 
-```js title='例子'
-// 例如：JSESSIONID = "EA23D2E1AC1CAE5F8BD17191EF80EE7C"
-webData.getCookie("JSESSIONID") = "EA23D2E1AC1CAE5F8BD17191EF80EE7C"
-webData.getCookie("dddd")       =  null
+### Reading Headers
+
+Suppose the request contains `X-Tag: java` and `X-Tag: dataql`:
+
+```javascript
+import 'net.hasor.dataway.function.WebUdfSource' as web;
+var headers = web.headerMap();
+var headerArrays = web.headerArrayMap();
+return {
+    "first": web.header('X-TAG'),
+    "all": web.headerArray('x-tag'),
+    "fromMap": headers['x-tag'],
+    "fromArrayMap": headerArrays['x-tag'],
+    "missing": web.header('X-Missing')
+};
 ```
 
-## getCookieArray
-函数定义：`List getCookieArray(cookieName)`
-- 参数定义：`cookieName` 类型：`String`
-- 返回类型：`List`
-- 作用：获取 Cookie 数组形态。
+Returns `{"first":"java","all":["java","dataql"],"fromMap":"java","fromArrayMap":["java","dataql"],"missing":null}`. Names are case-insensitive; Map keys from the HTTP entry point are lowercase. Maps also contain other visible request headers. The HTTP entry point hides raw Authorization and Cookie headers; use the Cookie functions instead.
 
-```js title='例子'
-// 例如：JSESSIONID = "EA23D2E1AC1CAE5F8BD17191EF80EE7C"
-webData.getCookieArray("JSESSIONID") = [ "EA23D2E1AC1CAE5F8BD17191EF80EE7C" ]
-webData.getCookieArray("dddd")       =  null
+### Writing Headers
+
+```javascript
+import 'net.hasor.dataway.function.WebUdfSource' as web;
+run web.setHeader('X-Tag', 'java');
+run web.addHeader('X-Tag', 'dataql');
+run web.setHeaderAll({'X-Count': 2, 'X-Ready': true});
+var written = web.addHeaderAll({'X-Count': [3, 4], 'X-Source': 'script'});
+return {"written": written};
 ```
 
-## tempCookie
-函数定义：`Boolean tempCookie(cookieName, cookieValue)`
-- 参数定义：`cookieName` 类型：`String`，`cookieValue` 类型：`String`
-- 返回类型：`Boolean`
-- 作用：临时 Cookie，临时 Cookie 的 `MaxAge = -1`。
+Returns `{"written":true}`. The response contains `X-Tag` values `java` and `dataql`, `X-Count` values `2`, `3`, and `4`, `X-Ready: true`, and `X-Source: script`. A later `setHeader` replaces all previous values with that name. `setHeaderAll` does not expand lists; use `addHeaderAll` for multiple values.
 
-```js title='例子'
-// 第一次执行获取 不存在的 Cookie 返回为空
-webData.getCookie("dddd")           =  null
+### Reading Cookies
 
-// 设置新 Cookie
-webData.tempCookie("dddd","aaaa")   = true
+Suppose the request contains `Cookie: theme=dark; theme=light; token=a%2Bb`:
 
-// 第二次查询 Cookie，可以得到上一次设置的值
-webData.getCookie("dddd")           =  "aaaa"
+```javascript
+import 'net.hasor.dataway.function.WebUdfSource' as web;
+return {
+    "first": web.cookie('theme'),
+    "all": web.cookieArray('theme'),
+    "map": web.cookieMap(),
+    "arrayMap": web.cookieArrayMap()
+};
 ```
 
-## tempCookieAll
-函数定义：`Boolean tempCookieAll(cookieMap)`
-- 参数定义：`cookieMap` 类型：`Map`
-- 返回类型：`Boolean`
-- 作用：批量设置临时 Cookie。临时 Cookie 的 `MaxAge = -1`。
+Returns:
 
-```js title='例子'
-// 第一次执行获取 不存在的 Cookie 返回为空
-webData.getCookie("dddd")    =  null
-
-// 批量设置临时 Cookie
-webData.tempCookieAll({
-    "dddd","aaaa"
-})
-
-// 第二次查询 Cookie，可以得到上一次设置的值
-webData.getCookie("dddd")   =  "aaaa"
+```json
+{
+    "first": "dark",
+    "all": ["dark", "light"],
+    "map": {"theme": "dark", "token": "a%2Bb"},
+    "arrayMap": {"theme": ["dark", "light"], "token": ["a%2Bb"]}
+}
 ```
 
-## storeCookie
-函数定义：`Boolean storeCookie(cookieName, cookieValue, maxAge)`
-- 参数定义：`cookieName` 类型：`String`，`cookieValue` 类型：`String`，`maxAge` 类型：`Number`
-- 返回类型：`Boolean`
-- 作用：存储 Cookie，Cookie 的有效期通过 maxAge 参数指定。
+Lookup prefers an exact name, then falls back to a case-insensitive match. Names with different casing are not merged. Values are not automatically URL-decoded.
 
-```js title='例子'
-// 第一次执行获取 不存在的 Cookie 返回为空
-webData.getCookie("dddd")               = null
+### Writing and removing Cookies
 
-// 设置新 Cookie
-webData.storeCookie("dddd","aaaa", 10)  = true
-
-// 第二次查询 Cookie，可以得到上一次设置的值
-webData.getCookie("dddd")               = "aaaa"
+```javascript
+import 'net.hasor.dataway.function.WebUdfSource' as web;
+run web.setCookie('theme', 'dark', {
+    'path': '/', 'maxAge': 3600, 'httpOnly': true, 'sameSite': 'Lax'
+});
+var removed = web.removeCookie('oldTheme', {'path': '/settings'});
+return {"removed": removed};
 ```
 
-## storeCookieAll
-函数定义：`Boolean storeCookieAll(cookieMap, maxAge)`
-- 参数定义：`cookieMap` 类型：`Map`
-- 返回类型：`Boolean`
-- 作用：批量设置临时 Cookie。临时 Cookie 的 `MaxAge = -1`。
+Returns `{"removed":true}` and adds these response headers:
 
-```js title='例子'
-// 第一次执行获取 不存在的 cookie 返回为空
-webData.getCookie("dddd")    =  null
-
-// 批量设置 Cookie
-webData.storeCookieAll({
-    "dddd","aaaa"
-}, 10)
-
-// 第二次查询 Cookie，可以得到上一次设置的值
-webData.getCookie("dddd")   =  "aaaa"
+```http
+Set-Cookie: theme=dark; Path=/; Max-Age=3600; HttpOnly; SameSite=Lax
+Set-Cookie: oldTheme=; Path=/settings; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT
 ```
 
-## removeCookie
-函数定义：`Boolean removeCookie(cookieName)`
-- 参数定义：`cookieMap` 类型：`Map`
-- 返回类型：`Boolean`
-- 作用：删除 Cookie。
+You can omit attributes with `web.setCookie('theme', 'dark')` or `web.removeCookie('oldTheme')`; the default path is `/`. Writing a response Cookie does not change what `cookie()` reads from the current request.
 
-```js title='例子'
-webData.removeCookie("dddd")    =  null
+## Cookie options {#cookie-选项}
+
+`setCookie` and `removeCookie` share these `options`:
+
+| Option | Type, default, and effect |
+| --- | --- |
+| `path` | String, default `/`; `null` omits Path |
+| `domain` | String; Domain is omitted by default |
+| `maxAge` | Integer in seconds; omitted by default for a session Cookie; `0` deletes it, and a negative value omits Max-Age |
+| `secure` | Boolean, default `false`; `true` adds Secure |
+| `httpOnly` | Boolean, default `false`; `true` adds HttpOnly |
+| `sameSite` | String, omitted by default; accepts `Lax`, `Strict`, or `None` |
+
+Option keys and `sameSite` values are case-insensitive. Unsupported options cause an error. `SameSite=None` requires `secure=true`. To remove a Cookie, use its original `path` and `domain`; `removeCookie` always sets `maxAge` to `0`.
+
+Cookie values are not automatically encoded. Values containing spaces, semicolons, non-ASCII characters, or other unsupported characters must be encoded before writing, otherwise the write fails.
+
+## Uploaded files {#file-info}
+
+`uploadFileInfo(file)` accepts a file object from a multipart upload, not a filename or local path. It returns:
+
+| Field | Meaning |
+| --- | --- |
+| `name` | Filename supplied by the client |
+| `size` | File size in bytes |
+| `contentType` | File content type, or `null` if unspecified |
+| `sha256` | SHA-256 of the file contents in lowercase hexadecimal |
+
+For example, upload `upload.txt` in the `file` field, with content type `text/plain` and content `upload bytes` (12 bytes, no newline):
+
+```javascript title="Inspect an uploaded file"
+import 'net.hasor.dataway.function.WebUdfSource' as web;
+return {"file": web.uploadFileInfo(${file})};
 ```
 
-## headerMap
-函数定义：`Map headerMap()`
-- 参数定义：无
-- 返回类型：`Map`
-- 作用：获取请求 Header 并且以 `Map` 形式返回。
+Returns:
 
-```js title='例子'
-var header = webData.headerMap() // 例如
-// 结果：
-// {
-//   "sec-fetch-mode": "cors",
-//   "content-length": "603",
-//   "referer": "http://127.0.0.1:8080/interface-ui/",
-//   "sec-fetch-site": "same-origin",
-//   "accept-language": "zh-CN,zh;q=0.9",
-//   "cookie": "dddd=aaaa; JSESSIONID=EA23D2E1AC1CAE5F8BD17191EF80EE7C",
-//   "origin": "http://127.0.0.1:8080",
-//   "accept": "application/json",
-//   "host": "127.0.0.1:8080",
-//   "connection": "keep-alive",
-//   "content-type": "application/json; charset=UTF-8",
-//   "accept-encoding": "gzip, deflate, br",
-//   "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.122 Safari/537.36",
-//   "sec-fetch-dest": "empty"
-// }
+```json
+{
+    "file": {
+        "name": "upload.txt",
+        "size": 12,
+        "contentType": "text/plain",
+        "sha256": "011364cdc7994ee7dfb266fd36a73e175b125f76292bb8ca47351e33086be044"
+    }
+}
 ```
 
-## headerArrayMap
-函数定义：`Map headerArrayMap()`
-- 参数定义：无
-- 返回类型：`Map`
-- 作用：获取请求 Header 并且以 `数组` 形式返回。
+When two files share the same field name, the parameter is a list. Inspect each item separately:
 
-```js title='例子'
-var header = webData.headerArrayMap() // 例如
-// 结果：
-// {
-//   "sec-fetch-mode": [ "cors" ],
-//   "content-length": [ "608" ],
-//   "referer": [ "http://127.0.0.1:8080/interface-ui/" ],
-//   "sec-fetch-site": [ "same-origin" ],
-//   "accept-language": [ "zh-CN,zh;q=0.9" ],
-//   "cookie": [ "dddd=aaaa; JSESSIONID=EA23D2E1AC1CAE5F8BD17191EF80EE7C" ],
-//   "origin": [ "http://127.0.0.1:8080" ],
-//   "accept": [ "application/json" ],
-//   "host": [ "127.0.0.1:8080" ],
-//   "connection": [ "keep-alive" ],
-//   "content-type": [ "application/json; charset=UTF-8" ],
-//   "accept-encoding": [ "gzip, deflate, br" ],
-//   "user-agent": [ "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.122 Safari/537.36" ],
-//   "sec-fetch-dest": [ "empty" ]
-// }
+```javascript
+import 'net.hasor.dataway.function.WebUdfSource' as web;
+var files = ${files};
+return {"files": [web.uploadFileInfo(files[0]), web.uploadFileInfo(files[1])]};
 ```
 
-## getHeader
-函数定义：`String getHeader(headerName)`
-- 参数定义：`headerName` 类型：`String`
-- 返回类型：`String`
-- 作用：获取 Header。
+The function reads the full contents to compute the digest. The file remains usable during the current request and is cleaned up when the request ends. See [request parameters: file uploads](../../dataway/capabilities/development/request.md#file-upload) for submission examples. Use `return ${file};` to return its original bytes and download metadata; see [binary responses](../../dataway/capabilities/development/response.md#binary-response).
 
-```js title='例子'
-webData.getHeader("origin")         = "http://127.0.0.1:8080"
-webData.getHeader("content-type")   = "application/json; charset=UTF-8"
+## Binary content {#binary}
+
+The conversion library's [`textToByte(text[, charset])`](convert.md#texttobyte) converts text to binary content, using UTF-8 by default. Conversion itself needs no HTTP context. This Dataway script returns a downloadable text file:
+
+```javascript title="Download text"
+import 'net.hasor.dataway.function.WebUdfSource' as web;
+import 'net.hasor.dataql.host.function.basic.ConvertUdfSource' as convert;
+run web.setHeader('Content-Disposition', 'attachment; filename=hello.txt');
+return convert.textToByte('Hello Dataway');
 ```
 
-## getHeaderArray
-函数定义：`List getHeaderArray(headerName)`
-- 参数定义：`headerName` 类型：`String`
-- 返回类型：`List`
-- 作用：获取所有名字相同的 Header。
-
-```js title='例子'
-webData.getHeaderArray("origin")       = [ "http://127.0.0.1:8080" ]
-webData.getHeaderArray("content-type") = [ "application/json; charset=UTF-8" ]
-```
-
-## setHeader
-函数定义：`Boolean setHeader(headerName, headerValue)`
-- 参数定义：`headerName` 类型：`String`，`headerValue` 类型：`String`
-- 返回类型：`Boolean`
-- 作用：设置 response Header。
-
-```js title='例子'
-webData.setHeader("abc", "ss")
-```
-
-## setHeaderAll
-函数定义：`Boolean setHeaderAll(headerMap)`
-- 参数定义：`headerMap` 类型：`Map`
-- 返回类型：`Boolean`
-- 作用：批量设置 Header。
-
-```js title='例子'
-webData.setHeaderAll({
-    "abc1", "ss",
-    "abc2", "ss"
-})
-```
-
-## addHeader
-函数定义：`Boolean addHeader(headerName, headerValue)`
-- 参数定义：`headerName` 类型：`String`，`headerValue` 类型：`String`
-- 返回类型：`Boolean`
-- 作用：添加 Header。
-
-```js title='例子'
-webData.addHeader("abc", "ss")
-```
-
-## addHeaderAll
-函数定义：`Boolean addHeaderAll(headerMap)`
-- 参数定义：`headerMap` 类型：`Map`
-- 返回类型：`Boolean`
-- 作用：批量添加 Header。
-
-```js title='例子'
-webData.addHeaderAll({
-    "abc1", "ss",
-    "abc2", "ss"
-})
-```
-
-## sessionKeys
-函数定义：`List sessionKeys()`
-- 参数定义：无
-- 返回类型：`List`
-- 作用：获得 session Keys。
-
-```js title='例子'
-webData.sessionKeys()
-```
-
-## getSession
-函数定义：`Object getSession(key)`
-- 参数定义：`key` 类型：`String`
-- 返回类型：`Object`
-- 作用：获取 Session 中的属性
-
-```js title='例子'
-webData.getSession("xx")  // 相当于 httpSession.getAttribute("xx")
-```
-
-## setSession
-函数定义：`Object setSession(key, newValue)`
-- 参数定义：`key` 类型：`String`，`newValue` 类型：`Object`
-- 返回类型：`Object`
-- 作用：设置 Session 属性
-
-说明：
-- setSession 在把 `newValue` 设置到对应的 Session 中时。会事先把已经存在的同名属性先拿出来，然后在更新 session 中的值。当把 Session 更新好之后会返回之前 session 中已经存在的值。
-
-```js title='例子'
-// 例如：xx = null 的前提下
-var res = webData.setSession("xx", "abc")  // res = null
-var res = webData.setSession("xx", "abc")  // res = abc
-```
-
-## removeSession
-函数定义：`Boolean removeSession(key)`
-- 参数定义：`key` 类型：`String`
-- 返回类型：`Boolean`
-- 作用：根据 key 值删除 Session
-
-```js title='例子'
-webData.removeSession("xx")  // return true or false
-```
-
-## cleanSession
-函数定义：`Boolean cleanSession()`
-- 参数定义：无
-- 返回类型：`Boolean`
-- 作用：删除所有 Key
-
-```js title='例子'
-webData.cleanSession()
-```
-
-## sessionInvalidate
-函数定义：`Boolean sessionInvalidate()`
-- 参数定义：无
-- 返回类型：`Boolean`
-- 作用：Invalidates this session then unbinds any objects bound to it.
-
-```js title='例子'
-webData.sessionInvalidate()
-```
-
-## sessionId
-函数定义：`String sessionId()`
-- 参数定义：无
-- 返回类型：`String`
-- 作用：获取 Session ID
-
-```js title='例子'
-webData.sessionId()
-```
-
-## sessionLastAccessedTime
-函数定义：`Number sessionLastAccessedTime()`
-- 参数定义：无
-- 返回类型：`Number`
-- 作用：返回客户端发送与之关联的请求的最后一次时间。
-
-```js title='例子'
-webData.sessionLastAccessedTime()
-```
+The response body contains the 13 UTF-8 bytes of `Hello Dataway`, with download filename `hello.txt`.

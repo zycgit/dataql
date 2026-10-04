@@ -1,107 +1,102 @@
 ---
 id: convert
-sidebar_position: 1
-title: a.转换函数库
-description: DataQL FunctionX库函数，转换函数库
+title: 7.6 Conversion functions
 ---
-# 转换函数库
 
-引入转换函数库的方式为：`import 'net.hasor.dataql.fx.basic.ConvertUdfSource' as convert;`
+:::info Module dependency
+Provided by `dataql-engine`. Import `net.hasor.dataql.host.function.basic.ConvertUdfSource` to use this library.
+:::
+
+Convert values to numbers, strings, booleans or binary data. Each example runs independently. Square brackets in signatures denote optional parameters.
 
 ## toInt
-函数定义：`Number toInt(target)`
-- 参数定义：`target` 类型：`Object`
-- 返回类型：`Number`
-- 作用：将参数转换为 `Number`
 
-```js title='例子'
-convert.toInt("12")     = 12
-convert.toInt(12)       = 12
-convert.toInt("0x12")   = 18
-convert.toInt("1.2e10") = 12000000000
-convert.toInt("")       = 0
-convert.toInt(null)     = 0
-convert.toInt("abc")    = throw Error
+`convert.toInt(target)` accepts a number or numeric string and returns a number, preserving fractions. `null`, blank strings and other types return `0`; invalid numeric strings throw an error.
+
+```js
+import 'net.hasor.dataql.host.function.basic.ConvertUdfSource' as convert;
+return [convert.toInt('12.5'), convert.toInt('42'), convert.toInt(null), convert.toInt(' ')];
 ```
+
+Returns `[12.5, 42, 0, 0]`.
 
 ## toString
-函数定义：`String toString(target)`
-- 参数定义：`target` 类型：`Object`
-- 返回类型：`String`
-- 作用：将参数转换为 `String`
-- 内部实现逻辑为：`String.valueOf(target)`
 
-```js title='例子'
-convert.toString("12")        = "12"
-convert.toString(12)          = "12"
-convert.toString("0x12")      = "0x12"
-convert.toString("1.2e10")    = "1.2e10"
-convert.toString("")          = ""
-convert.toString(null)        = "null"
-convert.toString("abc")       = "abc"
-convert.toString([1,2,3,4])   = "[1, 2, 3, 4]"
-convert.toString({"tet":123}) = "{tet=123}"
+`convert.toString(target)` returns a string representation; `null` becomes the string `"null"`. Use [json.toJson](json.md#tojson) for JSON objects.
+
+```js
+import 'net.hasor.dataql.host.function.basic.ConvertUdfSource' as convert;
+return [convert.toString(12), convert.toString(true), convert.toString(null)];
 ```
+
+Returns `["12", "true", "null"]`.
 
 ## toBoolean
-函数定义：`Boolean toBoolean(target)`
-- 参数定义：`target` 类型：`Object`
-- 返回类型：`Boolean`
-- 作用：将参数转换为 `Boolean`
 
-```js title='例子'
-convert.toBoolean(null)    = null
-convert.toBoolean("true")  = Boolean.TRUE
-convert.toBoolean("false") = Boolean.FALSE
-convert.toBoolean("on")    = Boolean.TRUE
-convert.toBoolean("ON")    = Boolean.TRUE
-convert.toBoolean("off")   = Boolean.FALSE
-convert.toBoolean("oFf")   = Boolean.FALSE
-convert.toBoolean("blue")  = null
+`convert.toBoolean(target)` preserves booleans and accepts case-insensitive boolean strings including `true/false`, `on/off` and `yes/no`. Unrecognized strings return `null`; null, numbers and other types return `false`.
+
+```js
+import 'net.hasor.dataql.host.function.basic.ConvertUdfSource' as convert;
+return [convert.toBoolean('ON'), convert.toBoolean('off'),
+        convert.toBoolean('blue'), convert.toBoolean(null), convert.toBoolean(1)];
 ```
 
-## byteToHex
-函数定义：`String byteToHex(target)`
-- 参数定义：`target` 类型：`List<Byte>`
-- 返回类型：`String`
-- 作用：将二进制数据转换为十六进制字符串
+Returns `[true, false, null, false, false]`.
 
-```js title='例子'
-convert.byteToHex([123]) = '7B'
-convert.byteToHex([])    = ''
-convert.byteToHex(null)  = null
+## textToByte
+
+`convert.textToByte(text[, charset])` encodes a string as binary data. `charset` is a charset name and defaults to `UTF-8`. Null and empty strings produce empty binary values.
+
+```js
+import 'net.hasor.dataql.host.function.basic.ConvertUdfSource' as convert;
+var content = convert.textToByte('你好', 'UTF-16LE');
+return {'hex': convert.byteToHex(content), 'text': convert.byteToString(content, 'UTF-16LE')};
 ```
 
-## hexToByte
-函数定义：`List<Byte> hexToByte(target)`
-- 参数定义：`target` 类型：`String`
-- 返回类型：`List<Byte>`
-- 作用：将十六进制字符串转换为二进制数据
-
-```js title='例子'
-convert.hexToByte('7B7B') = [123,123]
-convert.hexToByte('')     = []
-convert.hexToByte(null)   = null
-```
+Returns `{"hex":"604F7D59","text":"你好"}`. Pass binary values directly to other functions; this example decodes them to show their contents.
 
 ## stringToByte
-函数定义：`List<Byte> stringToByte(target, charset)`
-- 参数定义：`target` 类型：`String`；`charset` 类型：`String`，字符集
-- 返回类型：`List<Byte>`
-- 作用：字符串转换为二进制数据。
 
-```js title='例子'
-convert.stringToByte('1234','utf-8')  = [49,50,51,52]
-convert.stringToByte('1234','utf-16') = [-2,-1,0,49,0,50,0,51,0,52]
+`convert.stringToByte(text[, charset])` returns binary data with the same behavior as `textToByte`.
+
+```js
+import 'net.hasor.dataql.host.function.basic.ConvertUdfSource' as convert;
+return convert.byteToHex(convert.stringToByte('AB'));
 ```
+
+Returns `"4142"`.
+
+## hexToByte
+
+`convert.hexToByte(text)` parses an even-length hexadecimal string as binary data. Hex letters are case-insensitive. Null returns null; an empty string returns empty binary data.
+
+```js
+import 'net.hasor.dataql.host.function.basic.ConvertUdfSource' as convert;
+return convert.byteToHex(convert.hexToByte('007fff'));
+```
+
+Returns `"007FFF"`.
+
+## byteToHex
+
+`convert.byteToHex(content)` returns uppercase hex from binary data or a numeric byte list. Null returns null; empty content returns an empty string.
+
+```js
+import 'net.hasor.dataql.host.function.basic.ConvertUdfSource' as convert;
+return [convert.byteToHex([0, 127, -1]), convert.byteToHex([]), convert.byteToHex(null)];
+```
+
+Returns `["007FFF", "", null]`. Numbers are converted to signed bytes; for example, `-1` becomes `FF`.
 
 ## byteToString
-函数定义：`String byteToString(target, charset)`
-- 参数定义：`target` 类型：`List<Byte>`；`charset` 类型：`String`，字符集
-- 返回类型：`String`
-- 作用：二进制数据转换为字符串。
 
-```js title='例子'
-convert.byteToString([49,50,51,52], 'UTF-8')                = '1234'
-convert.byteToString([-2,-1,0,49,0,50,0,51,0,52], 'UTF-16') = '1234'
+`convert.byteToString(content[, charset])` decodes binary data or a numeric byte list. The charset defaults to `UTF-8`. Null returns null; empty content returns an empty string.
+
+```js
+import 'net.hasor.dataql.host.function.basic.ConvertUdfSource' as convert;
+return [convert.byteToString([65, 66]), convert.byteToString([]), convert.byteToString(null)];
 ```
+
+Returns `["AB", "", null]`.
+
+Binary reads close the stream they open. In-memory bytes support repeated reads; a single-use stream can be consumed only once. Uploaded temporary files are cleaned up after the request. See [Binary responses](../../dataway/capabilities/development/response.md#binary-response) for HTTP output.

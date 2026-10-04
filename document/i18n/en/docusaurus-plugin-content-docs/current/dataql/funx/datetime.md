@@ -1,176 +1,145 @@
 ---
 id: datetime
-sidebar_position: 3
-title: c.时间日历函数库
-description: DataQL FunctionX库函数，时间日历函数库
+title: 7.4 Date and time functions
 ---
-# 时间日历函数库
 
-引入时间日历函数库的方式为：`import 'net.hasor.dataql.fx.basic.DateTimeUdfSource' as time;`
+:::info Module dependency
+These functions are provided by `dataql-engine`.
+:::
+
+Import `net.hasor.dataql.host.function.basic.DateTimeUdfSource` and call its functions through an alias. Except for `now()` and `parser()`, the `time` argument is a timestamp in milliseconds. `now()` and `parser()` also return millisecond timestamps.
+
+Date fields, formatting, and parsing of dates without an explicit time zone use the JVM default time zone. Week numbers and names such as month names also depend on the default locale. Fixed results on this page assume the `Asia/Shanghai` time zone and `en-US` locale. The timestamp `1767337445000` represents local time `2026-01-02 15:04:05`.
 
 ## now
-函数定义：`long now()`
-- 参数定义：无
-- 返回类型：`Number`
-- 作用：返回当前系统时间戳。
 
-说明：
-- 获取当前时间，类似 JAVA 中的 `System.currentTimeMillis()`
+`time.now()` takes no arguments and returns the current timestamp in milliseconds. Save the result once to derive multiple fields from the same instant.
 
-```js title='例子'
-time.now() = 1588040924445
+```javascript
+import 'net.hasor.dataql.host.function.basic.DateTimeUdfSource' as time;
+var current = time.now();
+return [current, time.format(current, 'yyyy-MM-dd HH:mm:ss')];
+// For example: [1767337445000, "2026-01-02 15:04:05"]. Values change with execution time.
 ```
 
 ## year
-函数定义：`Number year(time)`
-- 参数定义：`timeNumber` 类型：`Number`
-- 返回类型：`Number`
-- 作用：返回当前系统时区的：`年`。
 
-说明：
-- `timeNumber` 代表一个时间戳，`year` 函数可以获取这个时间戳中的年份。
+`time.year(time)` returns the year.
 
-```js title='例子'
-time.year(1588040924445) = 2020 // 将三个集合合并成一个集合。
-time.year(time.now())    = 2020 // 系统时间中，当前的年份
+```javascript
+import 'net.hasor.dataql.host.function.basic.DateTimeUdfSource' as time;
+return time.year(1767337445000);
+// 2026
 ```
 
 ## month
-函数定义：`Number month(time)`
-- 参数定义：`timeNumber` 类型：`Number`
-- 返回类型：`Number`
-- 作用：返回当前系统时区的：`月`。
 
-说明：
-- `timeNumber` 代表一个时间戳，`month` 函数可以获取这个时间戳中的月份。
+`time.month(time)` returns the month, from 1 to 12.
 
-```js title='例子'
-time.month(1588040924445) = 4 // 将三个集合合并成一个集合。
-time.month(time.now())    = 4 // 系统时间中，当前的月份（从 1 开始）
+```javascript
+import 'net.hasor.dataql.host.function.basic.DateTimeUdfSource' as time;
+return time.month(1767337445000);
+// 1
 ```
 
 ## day、dayOfMonth
-函数定义：`Number dayOfMonth(time)` 或 `Number day(time)`
-- 参数定义：`timeNumber` 类型：`Number`
-- 返回类型：`Number`
-- 作用：这个日期在这一月中是第几天，起始数为：`1`
 
-说明：
-- `timeNumber` 代表一个时间戳，`dayOfMonth/day` 函数可以获取这个时间戳中当前日。
+`time.day(time)` and `time.dayOfMonth(time)` both return the day of the month, starting at 1.
 
-```js title='例子'
-time.dayOfMonth(1588040924445) = 28
-time.dayOfMonth(time.now())    = ...
-time.day(1588040924445)        = 28
-time.day(time.now())           = ...
+```javascript
+import 'net.hasor.dataql.host.function.basic.DateTimeUdfSource' as time;
+return [time.day(1767337445000), time.dayOfMonth(1767337445000)];
+// [2, 2]
 ```
 
 ## hour
-函数定义：`Number hour(time)`
-- 参数定义：`timeNumber` 类型：`Number`
-- 返回类型：`Number`
-- 作用：返回当前系统时区的：`小时`。
 
-说明：
-- `timeNumber` 代表一个时间戳，`hour` 函数可以获取这个时间戳中的小时数。
+`time.hour(time)` returns the hour on a 12-hour clock, from 0 to 11, without distinguishing AM from PM. For a 24-hour value, use `format(time, 'HH')`, which returns a string.
 
-```js title='例子'
-time.hour(1588040924445) = 10
-time.hour(time.now())    = ...
+```javascript
+import 'net.hasor.dataql.host.function.basic.DateTimeUdfSource' as time;
+return [time.hour(1767337445000), time.format(1767337445000, 'HH')];
+// [3, "15"]
 ```
 
 ## minute
-函数定义：`Number minute(time)`
-- 参数定义：`timeNumber` 类型：`Number`
-- 返回类型：`Number`
-- 作用：返回当前系统时区的：`分钟`。
 
-说明：
-- `timeNumber` 代表一个时间戳，`minute` 函数可以获取这个时间戳中的分钟数。
+`time.minute(time)` returns the minute, from 0 to 59.
 
-```js title='例子'
-time.minute(1588040924445) = 28
-time.minute(time.now())    = ...
+```javascript
+import 'net.hasor.dataql.host.function.basic.DateTimeUdfSource' as time;
+return time.minute(1767337445000);
+// 4
 ```
 
 ## second
-函数定义：`Number second(time)`
-- 参数定义：`timeNumber` 类型：`Number`
-- 返回类型：`Number`
-- 作用：返回当前系统时区的：`秒`。
 
-说明：
-- `timeNumber` 代表一个时间戳，`second` 函数可以获取这个时间戳中的秒数。
+`time.second(time)` returns the second, from 0 to 59.
 
-```js title='例子'
-time.second(1588040924445) = 44
-time.second(time.now())    = ...
+```javascript
+import 'net.hasor.dataql.host.function.basic.DateTimeUdfSource' as time;
+return time.second(1767337445000);
+// 5
 ```
 
 ## dayOfYear
-函数定义：`Number dayOfYear(time)`
-- 参数定义：`timeNumber` 类型：`Number`
-- 返回类型：`Number`
-- 作用：这个日期在这一年中是第几天，起始数为：`1`。
 
-说明：
-- `timeNumber` 代表一个时间戳，`dayOfYear` 函数可以获取这个时间戳中在全年的第几天数。
+`time.dayOfYear(time)` returns the day of the year, starting at 1 and reaching 366 in a leap year.
 
-```js title='例子'
-time.dayOfYear(1588040924445)                           = 119
-time.dayOfYear(time.parser('2020-01-01','yyyy-MM-dd'))  = 1
+```javascript
+import 'net.hasor.dataql.host.function.basic.DateTimeUdfSource' as time;
+return time.dayOfYear(time.parser('2024-03-01', 'yyyy-MM-dd'));
+// 61
 ```
 
 ## dayOfWeek
-函数定义：`Number dayOfWeek(time)`
-- 参数定义：`timeNumber` 类型：`Number`
-- 返回类型：`Number`
-- 作用：这个日期在这一周中是第几天：`1`。
 
-说明：
-- `timeNumber` 代表一个时间戳，`dayOfWeek` 函数可以获取这个时间戳中在其所在周的第几天。
+`time.dayOfWeek(time)` returns a weekday number: Sunday is 1, Monday is 2, and so on through Saturday, which is 7.
 
-```js title='例子'
-time.dayOfWeek(1588040924445)                           = 3 // 周二
-time.dayOfWeek(time.parser('2020-01-01','yyyy-MM-dd'))  = 4 // 周三
+```javascript
+import 'net.hasor.dataql.host.function.basic.DateTimeUdfSource' as time;
+return time.dayOfWeek(1767337445000);
+// 6, meaning Friday.
 ```
 
-返回值和星期数表
+## weekOfMonth
 
-| Name        | Value |
-|-------------|-------|
-| `SUNDAY`    | `1`   |
-| `MONDAY`    | `2`   |
-| `TUESDAY`   | `3`   |
-| `WEDNESDAY` | `4`   |
-| `THURSDAY`  | `5`   |
-| `FRIDAY`    | `6`   |
-| `SATURDAY`  | `7`   |
+`time.weekOfMonth(time)` returns the week number within the month. The default locale determines the first day of a week and the minimum number of days in the first week. Some locales can return 0 for an incomplete week at the start of a month.
+
+```javascript
+import 'net.hasor.dataql.host.function.basic.DateTimeUdfSource' as time;
+return time.weekOfMonth(time.parser('2021-01-01', 'yyyy-MM-dd'));
+// 1 with the en-US default locale; 0 with de-DE.
+```
 
 ## format
-函数定义：`String format(time, pattern)`
-- 参数定义：`time` 类型：`Number`，待处理的数据；`pattern` 类型：`String`
-- 返回类型：`String`
-- 作用：格式化指定时间。
 
-说明：
-- 对 `Number` 类型的时间戳进行时间日期格式化。
+`time.format(time, pattern)` formats a millisecond timestamp as a string. The `pattern` follows `SimpleDateFormat` rules: `MM` is the month, `mm` the minute, `HH` a 24-hour clock, and `hh` a 12-hour clock.
 
-```js title='例子'
-time.format(1588040924445, "yyyy-MM-dd hh:mm:ss")
-// result 2020-04-28 10:28:44
+```javascript
+import 'net.hasor.dataql.host.function.basic.DateTimeUdfSource' as time;
+return [
+    time.format(1767337445000, 'yyyy-MM-dd HH:mm:ss'),
+    time.format(1767337445000, 'yyyy/MM/dd hh:mm:ss a')
+];
+// ["2026-01-02 15:04:05", "2026/01/02 03:04:05 PM"]
 ```
 
 ## parser
-函数定义：`Number parser(time, pattern)`
-- 参数定义：`time` 类型：`Number`，待处理的数据；`pattern` 类型：`String`
-- 返回类型：`String`
-- 作用：解析一个时间日期数据为 `long`。
 
-说明：
-- 对 `Number` 类型的时间戳进行时间日期格式化。
+`time.parser(text, pattern)` parses a date string with the given pattern and returns a millisecond timestamp. The `pattern` uses the same rules as `format`.
 
-```js title='例子'
-time.parser("2020-04-28 10:28:44", "yyyy-MM-dd hh:mm:ss")
-// 1588040924000
+```javascript
+import 'net.hasor.dataql.host.function.basic.DateTimeUdfSource' as time;
+return time.parser('2026-01-02 15:04:05', 'yyyy-MM-dd HH:mm:ss');
+// 1767337445000
+```
+
+Parsing is lenient and normalizes out-of-range dates, so it is not a strict input validator. Unparseable input throws an exception.
+
+```javascript
+import 'net.hasor.dataql.host.function.basic.DateTimeUdfSource' as time;
+var instant = time.parser('2026-02-30', 'yyyy-MM-dd');
+return time.format(instant, 'yyyy-MM-dd');
+// "2026-03-02"
 ```

@@ -1,60 +1,82 @@
 ---
 id: hint_core
-sidebar_position: 1
-title: 引擎 HINT
-description: DataQL 引擎相关的 Hint。
+title: 5.1 Engine hints
 ---
-# 引擎 HINT
 
-## INDEX_OVERFLOW
+以下选项用于 DataQL 执行过程。设置方法和作用域见 [Hint 参考手册](index.md)。
 
-设置索引溢出的行为，可选的行为有：`throw`、`null`、`near`，默认为：`near`
+## INDEX_OVERFLOW {#INDEX_OVERFLOW}
 
-| 选项值     | 默认  | 含义                                                                        |
-|---------|-----|---------------------------------------------------------------------------|
-| `throw` |     | 当遇到索引溢出情况时严格的抛出 `ArrayIndexOutOfBoundsException` 异常                       |
-| `null`  |     | 当遇到索引溢出情况时返回 `null`。                                                      |
-| `near`  | 是   | 当遇到索引溢出情况时取最近的元素。<br/>例：正向索引溢出：`list[100]`，取最后一个、反向索引溢出：`list[-100]`，取第一个 |
+控制脚本列表索引越界，默认 `near`。索引从 0 开始，负索引从尾部计算；长度为 n 时，`-n` 仍是合法的首元素位置。
 
-## MAX_DECIMAL_DIGITS
+| 值 | 越界行为 |
+| --- | --- |
+| `near` | 取最近的边界元素；空列表返回 null |
+| `null` | 返回 null |
+| `throw` | 抛出索引越界异常，由查询运行异常向调用方传播 |
 
-最大保留的小数位数，默认为：`20`
+```javascript
+hint INDEX_OVERFLOW = 'near';
+var values = [10,20,30];
+return [values[-3], values[-1], values[-9], values[9]];
+// [10,30,10,30]
+```
 
-超出该范围将会根据 `NUMBER_ROUNDING` 选项指定的舍入模式进行舍入，默认是：`四舍五入`。
+本选项作用于脚本取元素，不改变 Java ListModel 的索引规则。
 
-## MIN_DECIMAL_WIDTH
+## MIN_INTEGER_WIDTH {#MIN_INTEGER_WIDTH}
 
-浮点数计算使用的最小数值宽度，可选值有：`float`、`double`、`big`。默认为：`double`
+整数的最小类型宽度，可选 `byte`、`short`、`int`、`long`、`big`，其中 big 表示 BigInteger。未设置时不额外提升宽度，最小为 byte；较大字面量按实际值选择更宽类型。
 
-| 选项值      | 默认  | 含义                                     |
-|----------|-----|----------------------------------------|
-| `float`  |     | 使用 `float` 类型，作为默认数值宽度。                |
-| `double` | 是   | 使用 `double` 类型，作为默认数值宽度。               |
-| `big`    |     | 使用 `java.math.BigDecimal` 类型，作为默认数值宽度。 |
+```javascript
+hint MIN_INTEGER_WIDTH = 'big';
+return 9223372036854775807 + 1;
+// 9223372036854775808
+```
 
-## MIN_INTEGER_WIDTH
+宽度选项用于数字字面量和数值运算，不会缩窄已有的较宽类型。需要避免固定宽度整数溢出时使用 big。
 
-整数数计算使用的最小数值宽度，可选值有：`byte`、`short`、`int`、`long`、`big`。默认为：`int`
+## MIN_DECIMAL_WIDTH {#MIN_DECIMAL_WIDTH}
 
-| 选项值     | 默认  | 含义                                     |
-|---------|-----|----------------------------------------|
-| `byte`  |     | 使用 `byte` 类型，作为默认数值宽度。                 |
-| `short` |     | 使用 `short` 类型，作为默认数值宽度。                |
-| `int`   | 是   | 使用 `int` 类型，作为默认数值宽度。                  |
-| `long`  |     | 使用 `long` 类型，作为默认数值宽度。                 |
-| `big`   |     | 使用 `java.math.BigInteger` 类型，作为默认数值宽度。 |
+小数的最小类型宽度，可选 `float`、`double`、`big`，其中 big 表示 BigDecimal。未设置时保留解析器或操作数选定的类型，最小为 float。
 
-## NUMBER_ROUNDING
+```javascript
+hint MIN_DECIMAL_WIDTH = 'big';
+return 0.1 + 0.2;
+// 0.3
+```
 
-小数的舍入模式，参考 `RoundingEnum` 定义的舍入模式(一共八种)，默认为：`四舍五入`。详细配置参考：`RoundingEnum` 枚举。
+使用 double 可提高浮点精度，使用 big 可进行十进制计算。该选项不把整数直接改成小数。
 
-| 选项值         | 默认  | 含义                                                                                                                                                                                                                           |
-|-------------|-----|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| UP          |     | 向远离零的方向舍入。舍弃非零部分，并将非零舍弃部分相邻的一位数字加一                                                                                                                                                                                           |
-| DOWN        |     | 向接近零的方向舍入。舍弃非零部分，同时不会非零舍弃部分相邻的一位数字加一，采取截取行为                                                                                                                                                                                  |
-| CEILING     |     | 向正无穷的方向舍入。如果为正数，舍入结果同 `ROUND_UP` 一致；如果为负数，舍入结果同 `ROUND_DOWN` 一致<br/><br/>**注意**：此模式不会减少数值大小                                                                                                                                  |
-| FLOOR       |     | 向负无穷的方向舍入。如果为正数，舍入结果同 `ROUND_DOWN` 一致；如果为负数，舍入结果同 `ROUND_UP` 一致<br/><br/>**注意**：此模式不会增加数值大小                                                                                                                                  |
-| HALF_UP     | 是   | 四舍五入 向 最接近 的数字舍入，如果与两个相邻数字的距离相等，则为向上舍入的舍入模式<br/><br/>**注意**：如果舍弃部分 >= 0.5，则舍入行为与 `ROUND_UP` 相同；否则舍入行为与 `ROUND_DOWN` 相同                                                                                                       |
-| HALF_DOWN   |     | 五舍六入 向 最接近 的数字舍入，如果与两个相邻数字的距离相等，则为向下舍入的舍入模式<br/><br/>**注意**：如果舍弃部分 > 0.5，则舍入行为与 `ROUND_UP` 相同；否则舍入行为与 `ROUND_DOWN` 相同                                                                                                        |
-| HALF_EVEN   |     | 向 最接近 的数字舍入，如果与两个相邻数字的距离相等，则相邻的偶数舍入<br/><br/>如果舍弃部分左边的数字奇数，则舍入行为与 `ROUND_HALF_UP` 相同；<br/>如果为偶数，则舍入行为与 `ROUND_HALF_DOWN` 相同。<br/>注意：在重复进行一系列计算时，此舍入模式可以将累加错误减到最小。此舍入模式也称为 银行家舍入法，主要在美国使用。<br/>四舍六入，五分两种情况，如果前一位为奇数，则入位，否则舍去。 |
-| UNNECESSARY |     | 断言请求的操作具有精确的结果，因此不需要舍入<br/><br/>如果对获得精确结果的操作指定此舍入模式，则抛出 `ArithmeticException`                                                                                                                                                |
+## MAX_DECIMAL_DIGITS {#MAX_DECIMAL_DIGITS}
+
+数值运算结果最多保留的小数位数，默认 20。配合 NUMBER_ROUNDING 舍入；它不修改输入参数，也不规定输出 JSON 的文本宽度。应配置非负整数，精确小数计算同时使用 `MIN_DECIMAL_WIDTH = 'big'`。
+
+```javascript
+hint MIN_DECIMAL_WIDTH = 'big';
+hint MAX_DECIMAL_DIGITS = 2;
+hint NUMBER_ROUNDING = 'HALF_UP';
+return 1 / 6;
+// 0.17
+```
+
+Float、Double 仍受二进制浮点精度限制，增加小数位数不会增加其有效精度。
+
+## NUMBER_ROUNDING {#NUMBER_ROUNDING}
+
+数值舍入模式，默认 HALF_UP，名称忽略大小写。
+
+| 值 | 规则 | 2.5 舍入为整数 | -2.5 舍入为整数 |
+| --- | --- | --- | --- |
+| `UP` | 远离零 | 3 | -3 |
+| `DOWN` | 接近零 | 2 | -2 |
+| `CEILING` | 向正无穷 | 3 | -2 |
+| `FLOOR` | 向负无穷 | 2 | -3 |
+| `HALF_UP` | 取最近值，正好一半时远离零 | 3 | -3 |
+| `HALF_DOWN` | 取最近值，正好一半时接近零 | 2 | -2 |
+| `HALF_EVEN` | 取最近值，正好一半时取偶数 | 2 | -2 |
+| `UNNECESSARY` | 要求无需舍入，否则抛出算术异常 | 异常 | 异常 |
+
+## FRAGMENT_TYPE {#FRAGMENT_TYPE}
+
+调用片段时由引擎传入的注册名，例如 `@@selectSql` 对应 `selectSql`。供 FragmentProcess 识别当前入口，脚本无需设置。片段调用中的值由触发点决定，使用方式见[片段扩展](../../dataway/engine/fragments.md)。

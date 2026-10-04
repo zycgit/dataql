@@ -1,222 +1,215 @@
 {
-  "homepage.feature1_title": {
-    "message": "Full-featured"
+  "site.title": {
+    "message": "DataQL - Data Query Language"
   },
-  "homepage.feature1_desc": {
-    "message": "Entity mapping, TypeHandler, dynamic SQL, Stored procedures, Paging Queries, Transactions, Isolation, multiple DataSource"
+  "site.tagline": {
+    "message": "DataQL and embedded Dataway"
   },
-  "homepage.feature2_title": {
-    "message": "Familiar"
+  "site.keywords": {
+    "message": "DataQL,Dataway,query language,data transformation,Java,Hasor,Solon,Spring,OpenAPI"
   },
-  "homepage.feature2_desc": {
-    "message": "Compatible with Spring JdbcTemplate, Compatible with MyBatis Mapping File, Single Table CRUD"
+  "site.description": {
+    "message": "DataQL provides data queries, transformations, and script extensions. Dataway embeds API editing, debugging, publishing, and OpenAPI documents into Hasor, Solon, and Spring applications."
   },
-  "homepage.feature3_title": {
-    "message": "Feature"
+  "blog.article.published": {
+    "message": "Published: "
   },
-  "homepage.feature3_desc": {
-    "message": "Independent, More TypeHandler, Dialect 20+, Conditional Builder, INSERT Strategy, Multi-Statement/Multi-ResultSet"
+  "blog.article.updated": {
+    "message": "Updated: "
   },
-  "homepage.dataql": {
-    "message": "Quick Start"
+  "blog.article.author": {
+    "message": "Author"
   },
-  "theme.ErrorPageContent.title": {
-    "message": "This page crashed.",
-    "description": "The title of the fallback page when the page crashed"
+  "blog.article.back": {
+    "message": "Back"
   },
-  "theme.ErrorPageContent.tryAgain": {
-    "message": "Try again",
-    "description": "The label of the button to try again when the page crashed"
+  "blog.browse.latest": {
+    "message": "Latest"
   },
-  "theme.NotFound.title": {
-    "message": "Page Not Found",
-    "description": "The title of the 404 page"
+  "blog.browse.archive": {
+    "message": "All"
   },
-  "theme.NotFound.p1": {
-    "message": "We could not find what you were looking for.",
-    "description": "The first paragraph of the 404 page"
+  "blog.browse.tags": {
+    "message": "Columns"
   },
-  "theme.NotFound.p2": {
-    "message": "Please contact the owner of the site that linked you to the original URL and let them know their link is broken.",
-    "description": "The 2nd paragraph of the 404 page"
+  "blog.browse.navigation": {
+    "message": "Blog navigation"
   },
-  "theme.AnnouncementBar.closeButtonAriaLabel": {
-    "message": "Close",
-    "description": "The ARIA label for close button of announcement bar"
+  "homepage.hero.title": {
+    "message": "Your data."
   },
-  "theme.BackToTopButton.buttonAriaLabel": {
-    "message": "Scroll back to top",
-    "description": "The ARIA label for the back to top button"
+  "homepage.hero.accent": {
+    "message": "Ready as APIs."
   },
-  "theme.blog.archive.title": {
-    "message": "Archive",
-    "description": "The page & hero title of the blog archive page"
+  "homepage.hero.description": {
+    "message": "Dataway embeds API editing, debugging, and publishing into your Java application. DataQL expresses data queries, transformations, and aggregation in scripts."
   },
-  "theme.blog.archive.description": {
-    "message": "Archive",
-    "description": "The page & hero description of the blog archive page"
+  "homepage.startDataway": {
+    "message": "Get started with Dataway"
   },
-  "theme.blog.paginator.navAriaLabel": {
-    "message": "Blog list page navigation",
-    "description": "The ARIA label for the blog pagination"
+  "homepage.exploreDataql": {
+    "message": "Explore DataQL"
   },
-  "theme.blog.paginator.newerEntries": {
-    "message": "Newer Entries",
-    "description": "The label used to navigate to the newer blog posts page (previous page)"
+  "homepage.hero.note": {
+    "message": "Embedded in your app · Visual development · Open source"
   },
-  "theme.blog.paginator.olderEntries": {
-    "message": "Older Entries",
-    "description": "The label used to navigate to the older blog posts page (next page)"
+  "homepage.hero.example": {
+    "message": "A script becomes an API"
   },
-  "theme.blog.post.readingTime.plurals": {
-    "message": "One min read|{readingTime} min read",
-    "description": "Pluralized label for \"{readingTime} min read\". Use as much plural forms (separated by \"|\") as your language support (see https://www.unicode.org/cldr/cldr-aux/charts/34/supplemental/language_plural_rules.html)"
+  "homepage.hero.result": {
+    "message": "Response data · value"
   },
-  "theme.blog.post.readMore": {
-    "message": "Read More",
-    "description": "The label used in blog post item excerpts to link to full blog posts"
+  "homepage.hero.guide": {
+    "message": "See the complete setup and publishing steps for this SQL API"
   },
-  "theme.blog.post.paginator.navAriaLabel": {
-    "message": "Blog post page navigation",
-    "description": "The ARIA label for the blog posts pagination"
+  "homepage.integration.strip": {
+    "message": "Works with your Java framework"
   },
-  "theme.blog.post.paginator.newerPost": {
-    "message": "Newer Post",
-    "description": "The blog post button label to navigate to the newer/previous post"
+  "homepage.integration.guide": {
+    "message": "Integration guides"
   },
-  "theme.blog.post.paginator.olderPost": {
-    "message": "Older Post",
-    "description": "The blog post button label to navigate to the older/next post"
+  "homepage.console.details": {
+    "message": "View the guide"
   },
-  "theme.blog.sidebar.navAriaLabel": {
-    "message": "Blog recent posts navigation",
-    "description": "The ARIA label for recent posts in the blog sidebar"
+  "homepage.console.expand": {
+    "message": "Full-size image"
   },
-  "theme.blog.post.plurals": {
-    "message": "One post|{count} posts",
-    "description": "Pluralized label for \"{count} posts\". Use as much plural forms (separated by \"|\") as your language support (see https://www.unicode.org/cldr/cldr-aux/charts/34/supplemental/language_plural_rules.html)"
+  "homepage.console.title": {
+    "message": "An end-to-end workspace for your APIs."
   },
-  "theme.blog.tagTitle": {
-    "message": "{nPosts} tagged with \"{tagName}\"",
-    "description": "The title of the page for a blog tag"
+  "homepage.console.description": {
+    "message": "Write a script, supply parameters, inspect the result, and publish an API. Draft changes take effect when you publish again."
   },
-  "theme.tags.tagsPageLink": {
-    "message": "View All Tags",
-    "description": "The label of the link targeting the tag list page"
+  "homepage.console.overview": {
+    "message": "Meet the Dataway framework"
   },
-  "theme.CodeBlock.copyButtonAriaLabel": {
-    "message": "Copy code to clipboard",
-    "description": "The ARIA label for copy code blocks button"
+  "homepage.console.tab.edit": {
+    "message": "01  Write & debug"
   },
-  "theme.CodeBlock.copied": {
-    "message": "Copied",
-    "description": "The copied button label on code blocks"
+  "homepage.console.edit": {
+    "message": "Edit DataQL or SQL, pass request parameters, and inspect the result."
   },
-  "theme.CodeBlock.copy": {
-    "message": "Copy",
-    "description": "The copy button label on code blocks"
+  "homepage.console.tab.result": {
+    "message": "02  Shape the response"
   },
-  "theme.docs.sidebar.expandButtonTitle": {
-    "message": "Expand sidebar",
-    "description": "The ARIA label and title attribute for expand button of doc sidebar"
+  "homepage.console.result": {
+    "message": "Choose a result handler. Preview JSON, text, tables, and images, or download files."
   },
-  "theme.docs.sidebar.expandButtonAriaLabel": {
-    "message": "Expand sidebar",
-    "description": "The ARIA label and title attribute for expand button of doc sidebar"
+  "homepage.console.tab.publish": {
+    "message": "03  Publish & manage"
   },
-  "theme.docs.paginator.navAriaLabel": {
-    "message": "Docs pages navigation",
-    "description": "The ARIA label for the docs pagination"
+  "homepage.console.publish": {
+    "message": "Browse and call published APIs. Open the editor to manage drafts and release history."
   },
-  "theme.docs.paginator.previous": {
-    "message": "Previous",
-    "description": "The label used to navigate to the previous doc"
+  "homepage.query.script": {
+    "message": "Query script"
   },
-  "theme.docs.paginator.next": {
-    "message": "Next",
-    "description": "The label used to navigate to the next doc"
+  "homepage.query.result": {
+    "message": "Example result"
   },
-  "theme.docs.sidebar.collapseButtonTitle": {
-    "message": "Collapse sidebar",
-    "description": "The title attribute for collapse button of doc sidebar"
+  "homepage.query.syntax": {
+    "message": "Explore the syntax"
   },
-  "theme.docs.sidebar.collapseButtonAriaLabel": {
-    "message": "Collapse sidebar",
-    "description": "The title attribute for collapse button of doc sidebar"
+  "homepage.language.title": {
+    "message": "Data in the shape you need."
   },
-  "theme.DocSidebarItem.toggleCollapsedCategoryAriaLabel": {
-    "message": "Toggle the collapsible sidebar category '{label}'",
-    "description": "The ARIA label to toggle the collapsible sidebar category"
+  "homepage.language.description": {
+    "message": "Compose data with expressions, functions, and transformations. Develop APIs in Dataway or run the engine independently in Java."
   },
-  "theme.docs.tagDocListPageTitle.nDocsTagged": {
-    "message": "One doc tagged|{count} docs tagged",
-    "description": "Pluralized label for \"{count} docs tagged\". Use as much plural forms (separated by \"|\") as your language support (see https://www.unicode.org/cldr/cldr-aux/charts/34/supplemental/language_plural_rules.html)"
+  "homepage.language.guide": {
+    "message": "Write your first script"
   },
-  "theme.docs.tagDocListPageTitle": {
-    "message": "{nDocsTagged} with \"{tagName}\"",
-    "description": "The title of the page for a docs tag"
+  "homepage.query.tab.transform": {
+    "message": "Transform"
   },
-  "theme.docs.versions.unreleasedVersionLabel": {
-    "message": "This is unreleased documentation for {siteTitle} {versionLabel} version.",
-    "description": "The label used to tell the user that he's browsing an unreleased doc version"
+  "homepage.query.transform": {
+    "message": "Select fields and compute new values in a single transformation."
   },
-  "theme.docs.versions.unmaintainedVersionLabel": {
-    "message": "This is documentation for {siteTitle} {versionLabel}, which is no longer actively maintained.",
-    "description": "The label used to tell the user that he's browsing an unmaintained doc version"
+  "homepage.query.tab.group": {
+    "message": "Group"
   },
-  "theme.docs.versions.latestVersionSuggestionLabel": {
-    "message": "For up-to-date documentation, see the {latestVersionLink} ({versionLabel}).",
-    "description": "The label used to tell the user to check the latest version"
+  "homepage.query.group": {
+    "message": "Import a built-in function to group records by a field."
   },
-  "theme.docs.versions.latestVersionLinkLabel": {
-    "message": "latest version",
-    "description": "The label used for the latest version suggestion link label"
+  "homepage.query.tab.sql": {
+    "message": "Query SQL"
   },
-  "theme.common.editThisPage": {
-    "message": "Edit this page",
-    "description": "The link label to edit the current page"
+  "homepage.query.sql": {
+    "message": "Query a database with the SQL executor. This example uses ds1 from the example application."
   },
-  "theme.common.headingLinkTitle": {
-    "message": "Direct link to heading",
-    "description": "Title for link to heading"
+  "homepage.language.engine": {
+    "message": "Run the engine in Java"
   },
-  "theme.lastUpdated.atDate": {
-    "message": " on {date}",
-    "description": "The words used to describe on which date a page has been last updated"
+  "homepage.language.udf": {
+    "message": "Expose Java methods as functions"
   },
-  "theme.lastUpdated.byUser": {
-    "message": " by {user}",
-    "description": "The words used to describe by who the page has been last updated"
+  "homepage.language.sql": {
+    "message": "Connect the SQL executor"
   },
-  "theme.lastUpdated.lastUpdatedAtBy": {
-    "message": "Last updated{atDate}{byUser}",
-    "description": "The sentence used to display when a page has been last updated, and by who"
+  "homepage.feature.sources.title": {
+    "message": "Query multiple data sources"
   },
-  "theme.navbar.mobileSidebarSecondaryMenu.backButtonLabel": {
-    "message": "← Back to main menu",
-    "description": "The label of the back button to return to main menu, inside the mobile navbar sidebar secondary menu (notably used to display the docs sidebar)"
+  "homepage.feature.sources.description": {
+    "message": "Access databases by name, compose queries in scripts, and integrate application transactions."
   },
-  "theme.navbar.mobileVersionsDropdown.label": {
-    "message": "Versions",
-    "description": "The label for the navbar versions dropdown on mobile view"
+  "homepage.feature.auth.title": {
+    "message": "Use your existing identity system"
   },
-  "theme.common.skipToMainContent": {
-    "message": "Skip to main content",
-    "description": "The skip to content label used for accessibility, allowing to rapidly navigate to main content with keyboard tab/enter navigation"
+  "homepage.feature.auth.description": {
+    "message": "Read identities from your login system and control access to APIs and console operations."
   },
-  "theme.TOCCollapsible.toggleButtonLabel": {
-    "message": "On this page",
-    "description": "The label used by the button on the collapsible TOC component"
+  "homepage.feature.docs.title": {
+    "message": "Publish standard API documents"
   },
-  "theme.tags.tagsListLabel": {
-    "message": "Tags:",
-    "description": "The label alongside a tag list"
+  "homepage.feature.docs.description": {
+    "message": "Generate OpenAPI and Swagger documents for published APIs. Browse and call them with Swagger UI."
   },
-  "theme.tags.tagsPageTitle": {
-    "message": "Tags",
-    "description": "The title of the tag list page"
+  "homepage.feature.results.title": {
+    "message": "Return the format you need"
   },
-  "homepage.tagline": {
-    "message": "HasorDB is a Full-featured database access tool, Multiple usage, and compatible with Spring JDBC, MyBatis usage"
+  "homepage.feature.results.description": {
+    "message": "Return JSON, text, CSV, images, or binary files. Add your own result handlers for other formats."
+  },
+  "homepage.application.title": {
+    "message": "Built into your application."
+  },
+  "homepage.application.description": {
+    "message": "Add an integration module to embed API development in Spring, Solon, or Hasor, using your existing data sources and services."
+  },
+  "homepage.application.guide": {
+    "message": "Choose your framework"
+  },
+  "homepage.application.storageLabel": {
+    "message": "API definitions & release history"
+  },
+  "homepage.application.storage": {
+    "message": "JDBC / Nacos / Custom storage"
+  },
+  "homepage.start.eyebrow": {
+    "message": "START BUILDING"
+  },
+  "homepage.start.title": {
+    "message": "Your first API starts here."
+  },
+  "homepage.start.description": {
+    "message": "Publish a SQL API with the Spring example, or begin with a DataQL script."
+  },
+  "homepage.start.quickstart": {
+    "message": "Publish your first API"
+  },
+  "homepage.start.language": {
+    "message": "Learn DataQL"
+  },
+  "homepage.community.examples": {
+    "message": "Example projects"
+  },
+  "homepage.community.contact": {
+    "message": "Contact the author"
+  },
+  "homepage.community.blog": {
+    "message": "Read the blog"
+  },
+  "homepage.description": {
+    "message": "Edit, debug, and publish APIs in Java with Dataway. Query, transform, and combine data with DataQL. Integrates with Spring, Solon, Hasor, multiple data sources, and OpenAPI."
   }
 }

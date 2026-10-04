@@ -1,153 +1,73 @@
 ---
 id: function
-sidebar_position: 10
-title: j.函数
-description: DataQL 语言中定义函数，然后在后续查询中使用它。DataQL函数、DataQL Lambda 函数定义、DataQL 模拟 for 循环
+title: 3.2 函数
+description: DataQL 函数的语法与用法。
 ---
-# 函数
 
-## 定义函数
+函数使用 `(参数列表) -> { 语句 }` 定义，可存入变量、传给其他函数或作为结果返回。导入的 UDF 与代码片段也使用相同的调用方式。
 
-在 DataQL 查询中可以直接通过 DataQL 语言本身定义一个函数，然后在后续查询中使用它。一个典型的场景就是对性别字段的转换：
+## 定义与调用
 
 ```js
-var convertSex = (sex) -> {
-  return (sex == 'F') ? '男' : '女'
+var label = (enabled) -> {
+    return enabled ? 'enabled' : 'disabled';
 };
-
-var data = {
-  "userID" : 1234567890,
-  "age"    : 31,
-  "name"   : "this is name.",
-  "nick"   : "my name is nick.",
-  "sex"    : "F",
-  "status" : true
-};
-
-return data => {
-    "name",
-    "age" : age + "岁",
-    "sex" : convertSex(sex)
-}
+return label(true);
 ```
 
-## 函数的 Lambda写法
-
-:::tip
-Lambda 写法相当于一个匿名的函数。
-:::
-
-例如在使用集合函数的过滤功能时，如果没有 Lambda 写法可能整个查询写出来会比较臃肿。比如我们有如下数据：
+参数按位置传入，缺少的参数为 `null`，多出的参数不会绑定到具名参数。需要限制参数时可以使用 `assert`。
 
 ```js
-// 原始数据
-var dataList = [
-    {"name" : "马一" , "age" : 18 },
-    {"name" : "马二" , "age" : 28 },
-    {"name" : "马三" , "age" : 30 },
-    {"name" : "马四" , "age" : 25 }
-]
-// 过滤后的数据
-// [
-//     {"name" : "马二" , "age" : 28 },
-//     {"name" : "马三" , "age" : 30 },
-//     {"name" : "马四" , "age" : 25 }
-// ]
-```
-
-只保留年龄大于20岁的数据：
-
-```js
-import 'net.hasor.dataql.fx.basic.CollectionUdfSource' as collect;
-// 数据
-var dataList = ...
-// 年龄过滤逻辑
-var filterAge = (dat) -> {
-  return return dat.age > 20;
+var multiply = (value, factor) -> {
+    assert value != null && factor != null;
+    return value * factor;
 };
-// 调用 filter 函数
-return collect.filter(dataList, filterAge);
+return multiply(3, 2);
 ```
 
-换成 Lambda 写法可以省掉一个函数的定义：
+## 匿名函数
+
+函数可以直接作为参数传入，例如筛选列表：
 
 ```js
-import 'net.hasor.dataql.fx.basic.CollectionUdfSource' as collect;
-// 数据
-var dataList = ...
-var result = collect.filter(dataList, (dat) -> { // lambda 写法
-    return dat.age > 20;// 年龄过滤条件
+import 'net.hasor.dataql.host.function.basic.CollectionUdfSource' as collect;
+var people = [{"name": "Alice", "age": 18}, {"name": "Bob", "age": 28}];
+return collect.filter(people, (person) -> {
+    return person.age > 20;
 });
 ```
 
-## 通过Lambda 模拟 for 循环
+结果为 `[{"name":"Bob","age":28}]`。
+
+## 外层变量与函数返回值
+
+函数可以访问外层变量，也可以返回函数。
 
 ```js
-import 'net.hasor.dataql.fx.basic.CollectionUdfSource' as collect;
-
-var map = {
-    "a" : 123,
-    "b" : 321
-}
-var data = [
-    {
-        "name" : "马三",
-        "type" : "a"
-    },
-    {
-        "name" : "n2",
-        "type" : "b"
-    }
-]
-
-var appendData = (data) -> {
-    var newMap = collect.newMap(data);
-    run newMap.put('type',map[data.type])
-    return newMap.data()
+var createPrefix = (prefix) -> {
+    return (value) -> {
+        return prefix + value;
+    };
 };
-
-return data => [
-    appendData(#)
-]
+return createPrefix('Hello, ')('Alice');
 ```
 
-查询结果:
+结果为 `"Hello, Alice"`。
+
+## 递归
+
+函数可以通过名称调用自身。递归需要结束条件，大集合处理宜优先使用集合函数和结果转换。
 
 ```js
-[
-    {
-      "name": "马三",
-      "type": 123
-    },
-    {
-      "name": "n2",
-      "type": 321
+var sum = (n) -> {
+    if (n <= 0) {
+        return 0;
     }
-]
+    return n + sum(n - 1);
+};
+return sum(3);
 ```
 
-## 使用外部函数库
+结果为 `6`。
 
-DataQL 携带了一个官方标准函数库。里面提供了大量不同功能的函数，可以通过 `import` 语句导入然后来使用它们（FunctionX库函数）比如：通过时间函数库获取系统时间：
-
-```js
-import 'net.hasor.dataql.fx.basic.DateTimeUdfSource' as time;
-
-return time.now();
-```
-
-或者使用 json 函数库来生成 JSON 数据：
-
-```js
-import 'net.hasor.dataql.host.function.encryt.JsonUdfSource' as json;
-
-return json.toJson([0,1,2]);// "[0,1,2]"
-```
-
-解析 Json
-
-```js
-import 'net.hasor.dataql.host.function.encryt.JsonUdfSource' as json;
-
-return json.fromJson("{\n\t\"key\":123\n}");// {'key':123}
-```
+函数库和脚本文件通过 [import](imports.md) 导入，完整函数参考见 [内置函数库](../funx/index.md)。

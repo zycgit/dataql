@@ -1,566 +1,277 @@
 ---
 id: collect
-sidebar_position: 2
-title: b.集合函数库
-description: DataQL FunctionX库函数，集合函数库
+title: 7.2 集合函数
 ---
-# 集合函数库
 
-引入集合函数库的方式为：`import 'net.hasor.dataql.fx.basic.CollectionUdfSource' as collect;`
+:::info 依赖模块
+本库由 `net.hasor:dataql-engine` 提供。将该依赖加入应用后，在 DataQL 脚本中导入即可使用。
+:::
+
+```javascript
+import 'net.hasor.dataql.host.function.basic.CollectionUdfSource' as collect;
+return collect.size([{'id':1},{'id':2}]);
+// 2
+```
+
+以下示例均为 DataQL 语法；执行单个示例时，先加入上面的 `import`。`values` 表示列表，`object` 表示字段名与字段值组成的对象；签名中的方括号表示可选参数，调用时不写方括号。回调使用 `(参数) -> { return 结果; }`，其参数顺序见各函数说明。
 
 ## isEmpty
-函数定义：`boolean isEmpty(target)`
-- 参数定义：`target` 类型：`List/Map`
-- 返回类型：`boolean`
-- 作用：判断集合或对象是否为空。
 
-说明：
-- `ObjectModel` 等价于 `Map`
-- `ListModel` 等价于 `List`
-- `数组` 等价于 `List`
+`boolean isEmpty(value)`：value 为列表或对象时，判断是否没有元素或字段；null 和不支持的基本类型返回 false。
 
-如果是一个空 `Map` 那么返回 `true`，否则返回 `false`
-如果是一个空 `List` 那么返回 `true`，否则返回 `false`
-
-```js title='例子'
-collect.isEmpty([])          = true  // 空集合
-collect.isEmpty({})          = true  // 空对象
-collect.isEmpty([0,1,2])     = false // 集合不为空
-collect.isEmpty({'key':123}) = false // 对象含有至少一个属性
-collect.isEmpty(null)        = false // 不支持的基本类型会返回 false
+```javascript
+return [collect.isEmpty([]), collect.isEmpty({}), collect.isEmpty(null)];
+// [true,true,false]
 ```
 
 ## size
-函数定义：`int size(target)`
-- 参数定义：`target` 类型：`任意`
-- 返回类型：`int`
-- 作用：返回对象或数组的长度。
 
-说明：该函数需要在 `4.1.10` 版本及其后续版本中才可以使用。
-- 如果是 `空`：返回 `0`
-- 如果是 `Map`：返回 `字段数量`
-- 如果是 `数组`：返回 `数组长度`
+`int size(value)`：返回 value 的列表元素数或对象字段数；null 返回 0，其他单值按一个元素计算，不用于统计字符串字符数。
 
-```js title='例子'
-collect.size(null)   = 0
-collect.size([]),    = 0
-collect.size([null]) = 1
-collect.size({}),    = 0
-collect.size({"key1":1, "key2":2, "key3":3 }) = 3
+```javascript
+return [collect.size([1,2]), collect.size({'name':'Alice'}), collect.size(null)];
+// [2,1,0]
 ```
 
 ## merge
-函数定义：`List merge(target_1, target_2, target_3, ..., target_n)`
-- 参数定义：`target` 类型：`任意`
-- 返回类型：`List`
-- 作用：将多个 `List` 入参合并成一个集合，或者将多个对象合并成一个集合。
 
-```js title='例子'
-collect.merge([0], [1,2], [3,4,5]) = [0,1,2,3,4,5] // 将三个集合合并成一个集合。
-collect.merge(0,1,2,3,4) = [0,1,2,3,4]             // 将多个对象合并成一个集合
-collect.merge([0,1,2], 3, 4, 5) = [0,1,2,3,4,5]    // 集合和对象混合存在会自动归并。
+`List merge(value...)`：接收任意多个列表或单值，将列表展开一层，按参数顺序组成新列表；null 不添加元素，嵌套列表保留。
+
+```javascript
+return collect.merge([1,2], 3, [4,[5]], null);
+// [1,2,3,4,[5]]
 ```
 
 ## mergeMap
-函数定义：`Map mergeMap(target_1, target_2, target_3, ..., target_n)`
-- 参数定义：`target` 类型：`Map`
-- 返回类型：`Map`
-- 作用：合并多个对象合成为一个新的对象，当 `Key` 冲突会覆盖老数据。
 
-说明：
-- 将多个对象合并成一个对象。或者将多个对象合并成一个集合。
-- 如果入参不是 `Map/ObjectModel`，会引发错误，并终止后续查询的执行。
+`Map mergeMap(object...)`：接收任意多个对象，将字段合并到新对象；同名字段使用后面的值，不递归合并嵌套对象。null、列表等非对象输入抛出异常。
 
-```js title='例子'
-var data1 = {"key1":1, "key2":2, "key3":3 }
-
-var data2 = {"key4":4, "key5":5, "key3":6 }
-var result = collect.mergeMap(data1,data2)
-// result = { "key1":1, "key2":2, "key3":6, "key4":4, "key5":5} // 合并两个Map，由于key3冲突，后面的会覆盖前面的。
-
-collect.mergeMap(data1,data2,[]) // throw "all args must be Map."
+```javascript
+return collect.mergeMap({'name':'Alice','age':18}, {'age':20});
+// {"name":"Alice","age":20}
 ```
 
 ## filter
-函数定义：`List filter(dataList, filterUDF)`
-- 参数定义：`dataList` 类型：`List`，待过滤的原始数据； `filterUDF` 类型：`UDF/Lambda`，过滤的规则函数；
-- 返回类型：`List`
-- 作用：根据规则函数来对集合进行过滤。
 
-```js title='例子'
-var dataList = [
-    {"name" : "马一" , "age" : 18 },
-    {"name" : "马二" , "age" : 28 },
-    {"name" : "马三" , "age" : 30 },
-    {"name" : "马四" , "age" : 25 }
-]
+`List filter(values[, predicate])`：values 是待过滤列表；predicate(value) 对每个元素返回布尔值，保留 true 对应的元素及原顺序。null 或空列表返回 null；有数据但全部被过滤时返回空列表。predicate 省略或为 null 时保留原列表。
 
-var result = collect.filter(dataList, (dat) -> {
-    return dat.age > 20;
-});
-
-// result = [
-//     {"name" : "马二" , "age" : 28 },
-//     {"name" : "马三" , "age" : 30 },
-//     {"name" : "马四" , "age" : 25 }
-// ]
+```javascript
+return collect.filter([1,2,3], (value) -> { return value > 1; });
+// [2,3]
 ```
 
 ## filterMap
-函数定义：`Map filterMap(dataMap, keyFilterUDF)`
-- 参数定义：`dataMap` 类型：`Map`，待过滤的原始数据； `keyFilterUDF` 类型：`UDF/Lambda`，过滤 `Key` 的规则函数；
-- 返回类型：`Map`
-- 作用：根据规则函数来对 `Map` 进行过滤。
 
-```js title='例子'
-var dataMap = {
-    "key1" : "马一",
-    "key2" : "马二",
-    "key3" : "马三",
-    "key4" : "马四"
-}
+`Map filterMap(object[, predicate])`：predicate(key) 接收字段名并返回布尔值，只保留 true 对应的字段及原值；回调省略或为 null 时保留原对象。传入回调时 object 必须是非 null 对象；空对象返回空对象。
 
-var result = collect.filterMap(dataMap, (key) -> {
-    return key == 'key1' || key == 'key3' || key == 'key5'
-});
-
-// result = { "key1": "马一", "key3": "马三" }
+```javascript
+return collect.filterMap({'name':'Alice','age':18}, (key) -> { return key == 'name'; });
+// {"name":"Alice"}
 ```
 
 ## limit
-函数定义：`List limit(dataList, start, limit)`
-- 参数定义：`dataList` 类型：`List`，原始数据；`start` 类型：`Integer`，截取的起始位置； `limit` 类型：`Integer`，截取长度；
-- 返回类型：`List`
-- 作用：截取 `List` 的一部分，返回一个集合。
 
-```js title='例子'
-var dataList = [0,1,2,3,4,5,6,7,8,9]
-var result = collect.limit(dataList, 3,4);
+`List limit(values, start, count)`：从 values 的 start 位置开始，最多取 count 个元素。start 从 0 开始，负数按 0 处理；count 小于等于 0 时保留后续全部元素。null 或空列表返回 null；非空列表的 start 超出末尾时返回空列表。
 
-// result = [3,4,5,6] -> start从0开始
-var result = collect.limit(dataList, 3,0);
-
-// result = [3,4,5,6,7,8,9] -> limit 小于等于0表示全部
+```javascript
+return collect.limit([0,1,2,3,4], 1, 2);
+// [1,2]
 ```
 
-# newList
-函数定义：`Map newList(target)`
-- 参数定义：`target` 类型：任意，初始化数据或集合；
-- 返回类型：`Map`
-- 作用：创建一个带有状态的 `List`。
+## newList
 
-说明：
-- 带有状态的 `List` ，类似于 `ArrayList` 对象。
-- 提供三个子方法来使用：`addFirst(target)`、`addLast(target)`、`data()`、`size()`
-- 提示：由于 DataQL 只能表示无状态的数据，并不能表示有状态的对象。因此为了表示一个带有状态的对象，通常是创建一组 UDF，这些 UDF 内部共享同一个对象。
+`Map newList([initial])`：创建保存列表状态的操作对象；initial 可以是列表或单值，省略或为 null 时创建空列表。返回值包含操作函数，通过 data() 取得实际列表。
 
-```js title='例子'
-// 多维数组打平成为一纬
-var data = [
-    [1,2,3,[4,5]],
-    [6,7,8,9,0]
-]
+| 调用 | 参数与返回效果 |
+| --- | --- |
+| `values.addFirst(value)` | 将单值或展开一层后的列表加入开头，保留列表内部顺序。 |
+| `values.addLast(value)` | 将单值或展开一层后的列表加入末尾。 |
+| `values.size()` | 返回当前元素数。 |
+| `values.data()` | 返回当前列表数据。 |
 
-var foo = (dat, arrayObj) -> {
-    // 无论 dat 是什么都将其转换为数组（符号 '#' 相当于在循环 dat 数组期间的当前元素）
-    var tmpArray = dat => [ # ];
-    // 如果 dat 是最终元素，在将其转换为 List 的时会作为第一个元素存在。这里判断可以断言dat是末级元素。
-    if (tmpArray[0] == dat) {
-        run arrayObj.addLast(dat); // 末级元素直接加到最终的集合中，否则就继续遍历集合
-    } else {
-        run tmpArray => [ foo(#,arrayObj) ]; // 继续递归遍历，直至末级。
-    }
-    return arrayObj;
-}
+两个添加方法都返回同一操作对象，可连续调用；直接传 `null` 不添加元素，传 `[null]` 则会添加一个空元素。
 
-var newList = collect.newList();
-var result = foo(data, newList).data();
-
-// result = [1,2,3,5,6,7,8,9,0]
+```javascript
+var values = collect.newList([2,3]);
+run values.addFirst([0,1]);
+run values.addLast(4);
+run values.addLast(null);
+return {'size':values.size(), 'data':values.data()};
+// {"size":5,"data":[0,1,2,3,4]}
 ```
 
 ## newMap
-函数定义：`Map newMap(target)`
-- 参数定义：`target` 类型：任意，初始化数据或集合；
-- 返回类型：`Map`
-- 作用：创建一个带有状态的 `List`。
 
-说明：
-- 该函数需要在 `4.1.10` 版本及其后续版本中才可以使用。
-- 带有状态的 `Map`，类似于 `LinkedHashMap` 对象。
-- 提供三个子方法来使用：`put(target)`、`putAll(target)`、`data()`、`size()`
-- 提示：由于 DataQL 只能表示无状态的数据，并不能表示有状态的对象。因此为了表示一个带有状态的对象，通常是创建一组UDF，这些 UDF 内部共享同一个对象。
+`Map newMap([initial])`：创建保存对象状态的操作对象；initial 为初始对象，省略或为 null 时创建空对象。返回值包含操作函数，通过 data() 取得实际数据。
 
-```js title='例子'
-var mapData = collect.newMap({'key':123 });
-// 调用 sss.data() 的结果是
-// {
-//     "key": 123
-// }
+| 调用 | 参数与返回效果 |
+| --- | --- |
+| `values.put(key,value)` | key 为字段名；同名字段覆盖旧值，value 可以为 null。 |
+| `values.putAll(object)` | 合并对象字段，同名字段使用新值；null 不产生修改。 |
+| `values.size()` | 返回当前字段数。 |
+| `values.data()` | 返回当前对象数据。 |
 
-var mapData = mapData.put('sss','sss')
-// 调用 sss.data() 的结果是
-// {
-//     "key": 123,
-//     "sss": "sss"
-// }
+两个写入方法都返回同一操作对象，可连续调用。
 
-var mapData = mapData.putAll({'id':1, 'parent_id':null, 'label': 't1'})
-// 调用 sss.data() 的结果是
-// {
-//     "key": 123,
-//     "sss": "sss",
-//     "id": 1,
-//     "parent_id": null,
-//     "label": "t1"
-// }
+```javascript
+var values = collect.newMap({'name':'Alice','age':18});
+run values.put('age',20);
+run values.putAll({'city':'Shanghai'});
+return {'size':values.size(), 'data':values.data()};
+// {"size":3,"data":{"name":"Alice","age":20,"city":"Shanghai"}}
 ```
 
 ## mapJoin
-函数定义：`List mapJoin(data_1, data_2, joinMapping)`
-- 参数定义：`data_1` 类型：`List`，左表数据；`data_2` 类型：`List`，右表数据；`joinMapping` 类型：`Map`，两表的 `join` 关系；
-- 返回类型：`List`
-- 作用：将两个 `Map/List` 进行左链接，行为和 `sql` 中的 `left join` 相同。目前 `mapJoin` 函数只支持一个连接条件。
 
-```js title='左连接形式，连接两个数据集'
-var year2019 = [
-    { "pt":2019, "item_code":"code_1", "sum_price":2234 },
-    { "pt":2019, "item_code":"code_2", "sum_price":234 },
-    { "pt":2019, "item_code":"code_3", "sum_price":12340 },
-    { "pt":2019, "item_code":"code_4", "sum_price":2344 }
-];
+`List mapJoin(left, right, fields)`：left、right 为对象列表；fields 的字段名指定左记录字段，字段值指定右记录字段，例如 `{'id':'owner'}`，多个字段同时参与匹配。按左列表顺序，为每条记录返回包含 data1（左记录）、data2（匹配右记录）的对象。右侧同键多条记录取最后一条，无匹配时 data2 为 null，不展开一对多结果。
 
-var year2018 = [
-    { "pt":2018, "item_code":"code_1", "sum_price":1234.0 },
-    { "pt":2018, "item_code":"code_2", "sum_price":1234.0 },
-    { "pt":2018, "item_code":"code_3", "sum_price":1234.0 },
-    { "pt":2018, "item_code":"code_4", "sum_price":1234.0 }
-];
-
-var result = collect.mapJoin(year2019,year2018, { "item_code":"item_code" }) => [
-    {
-        "商品Code": data1.item_code,
-        "去年同期": data2.sum_price,
-        "今年总额": data1.sum_price,
-        "环比去年增长": ((data1.sum_price - data2.sum_price) / data2.sum_price * 100) + "%"
-    }
-]
-
-// result = [
-//     {"商品Code":"code_1", "去年同期":1234.0, "今年总额":2234, "环比去年增长":"81.04%"},
-//     {"商品Code":"code_2", "去年同期":1234.0, "今年总额":234, "环比去年增长":"-81.04%"},
-//     {"商品Code":"code_3", "去年同期":1234.0, "今年总额":12340,"环比去年增长":"900.0%"},
-//     {"商品Code":"code_4", "去年同期":1234.0, "今年总额":2344, "环比去年增长":"89.95%"}
-// ]
+```javascript
+return collect.mapJoin([{'id':1},{'id':2}], [{'owner':1,'name':'Alice'}], {'id':'owner'});
+// [{"data1":{"id":1},"data2":{"owner":1,"name":"Alice"}},{"data1":{"id":2},"data2":null}]
 ```
 
+关联字段应存在。当前实现把字段值转为字符串组成关联键，因此数字 `1` 与字符串 `"1"` 可匹配，两个 `null` 也可匹配；需要区分类型时应先规范化关联字段。
+
 ## mapKeyToLowerCase
-函数定义：`Map mapKeyToLowerCase(dataMap)`
-- 参数定义：`dataMap` 类型：`Map`，准备要转换的 `Map` 对象；
-- 返回类型：`Map`
-- 作用：将 `Map` 的 Key 全部转为小写，如果 Key 有冲突会产生覆盖。
 
-```js title='例子'
-var mapData = {
-    "abc" : "aa",
-    "ABC" : "bb",
-    "test_abc" : "cc"
-}
+`Map mapKeyToLowerCase(object)`：将 object 的所有字段名转小写，字段值不变；转换后重名使用后值。返回新对象，null 返回空对象。
 
-var result = collect.mapKeyToLowerCase(mapData)
-// result = { "abc": "bb", "test_abc": "cc" }
+```javascript
+return collect.mapKeyToLowerCase({'USER_ID':1});
+// {"user_id":1}
 ```
 
 ## mapKeyToUpperCase
-函数定义：`Map mapKeyToUpperCase(dataMap)`
-- 参数定义：`dataMap` 类型：`Map`，准备要转换的 `Map` 对象；
-- 返回类型：`Map`
-- 作用：将 `Map` 的 Key 全部转为大写，如果 Key 有冲突会产生覆盖。
 
-```js title='例子'
-var mapData = {
-    "abc" : "aa",
-    "ABC" : "bb",
-    "test_abc" : "cc"
-}
+`Map mapKeyToUpperCase(object)`：将 object 的所有字段名转大写，字段值不变；转换后重名使用后值，null 返回空对象。
 
-var result = collect.mapKeyToUpperCase(mapData)
-// result = { "ABC": "bb", "TEST_ABC": "cc" }
+```javascript
+return collect.mapKeyToUpperCase({'user_id':1});
+// {"USER_ID":1}
 ```
 
 ## mapKeyToHumpCase
-函数定义：`Map mapKeyToHumpCase(dataMap)`
-- 参数定义：`dataMap` 类型：`Map`，准备要转换的 `Map` 对象；
-- 返回类型：`Map`
-- 作用：将 `Map` 的 Key 中下划线做驼峰转换。
 
-```js title='例子'
-var mapData = {
-    "abc" : "aa",
-    "ABC" : "bb",
-    "test_abc" : "cc"
-}
+`Map mapKeyToHumpCase(object)`：先将字段名转小写，再将下划线命名转换为小驼峰，字段值不变。因此已有驼峰 userName 会变为 username；转换后重名使用后值，null 返回空对象。
 
-var result = collect.mapKeyToHumpCase(mapData)
-// result = { "ABC": "bb", "testAbc": "cc" }
+```javascript
+return collect.mapKeyToHumpCase({'USER_ID':1});
+// {"userId":1}
 ```
 
 ## mapKeys
-函数定义：`List mapKeys(dataMap)`
-- 参数定义：`dataMap` 类型：`Map`，准备要提取 Keys 的 `Map` 对象；
-- 返回类型：`List`
-- 作用：提取 `Map` 的 Key，并返回数组。
 
-```js title='例子'
-var data = {"key1":1, "key2":2, "key3":3 };
-var result = collect.mapKeys(data);
-// result = [ "key1", "key2", "key3" ]
+`List mapKeys(object)`：按 object 的字段遍历顺序返回字段名列表，null 或空对象返回空列表。
+
+```javascript
+return collect.mapKeys({'name':'Alice','age':18});
+// ["name","age"]
 ```
 
 ## mapValues
-函数定义：`List mapValues(dataMap)`
-- 参数定义：`dataMap` 类型：`Map`，准备要提取 Keys 的 `Map` 对象；
-- 返回类型：`List`
-- 作用：提取 `Map` 的 Values，并返回数组。
 
-```js title='例子'
-var data = {"key1":1, "key2":2, "key3":3 };
-var result = collect.mapValues(data);
-// result = [ 1, 2, 3 ]
+`List mapValues(object)`：按 object 的字段遍历顺序返回字段值列表，与 mapKeys 的位置一一对应；null 或空对象返回空列表。
+
+```javascript
+return collect.mapValues({'name':'Alice','age':18});
+// ["Alice",18]
 ```
 
 ## mapKeyReplace
-函数定义：`Map mapKeyReplace(dataMap, replaceKey)`
-- 参数定义：`dataMap` 类型：`Map`，准备要替换 Key 的 `Map` 对象；`replaceKey` 类型：`UDF`，用于生成新 Key 的函数
-- 返回类型：`Map`
-- 作用：提取 `Map` 的 Key。
 
-说明：
-- 循环遍历每一个 `Map` 元素，并且对 `Map` 的 Key 进行替换。
-- 如果说使用 DataQL 语言来处理 key 值映射是静态方式处理的话，`mapKeyReplace` 函数的最大意义在于提供了动态的能力来决定对象的 key 值。
+`Map mapKeyReplace(object[, callback])`：callback(key,value) 接收原字段名和值，返回新字段名，结果转为字符串；保留原字段值，重名使用后值。回调省略或为 null 时保留原对象；null 或空对象保持原值。
 
-```js title='例子'
-var data = {"key1":1, "key2":2, "key3":3 };
-var result = collect.mapKeyReplace(data, (oldKey,value) -> {
-    return "new_" + oldKey
-});
-// result = {"new_key1":1, "new_key2":2, "new_key3":3 }
+```javascript
+return collect.mapKeyReplace({'name':'Alice'}, (key,value) -> { return 'user_' + key; });
+// {"user_name":"Alice"}
 ```
 
 ## mapValueReplace
-函数定义：`Map mapValueReplace(dataMap, replaceKey)`
-- 参数定义：`dataMap` 类型：`Map`，准备要替换 Key 的 `Map` 对象；`replaceValue` 类型：`UDF`，用于生成新 Key 的函数
-- 返回类型：`Map`
-- 作用：提取 `Map` 的 Key。
 
-说明：
-- 循环遍历每一个 `Map` 元素，并且对 `Map` 的 Value 进行替换。
-- 和 `mapKeyReplace` 函数是相同用法，不同的是 `mapKeyReplace` 专注的是 Key 动态处理。而 `mapValueReplace` 是值的动态处理。
+`Map mapValueReplace(object[, callback])`：callback(key,value) 接收原字段名和值，返回替换后的字段值（可以是基本值、对象、列表或 null），字段名不变；回调省略或为 null 时保留原对象，null 或空对象保持原值。
 
-```js title='例子'
-var data = {"key1":1, "key2":2, "key3":3 };
-var result = collect.mapValueReplace(data, (okdKey,value) -> {
-    return {
-        "new_value" : value
-    }
-});
-
-// result = {
-// {
-//     "key1": {
-//         "new_value": 1
-//     },
-//     "key2": {
-//         "new_value": 2
-//     },
-//     "key3": {
-//         "new_value": 3
-//     }
-// }
+```javascript
+return collect.mapValueReplace({'a':1,'b':2}, (key,value) -> { return value * 10; });
+// {"a":10,"b":20}
 ```
 
 ## list2map
-函数定义：`Map list2map(listData, dataKey, convertUDF)`
-- 参数定义：`listData` 类型：`List`，行转列的数据集；`dataKey` 类型：`String/UDF/Lambda`，行对象中作为 key 的字段或者提取 Key 的函数；`convertUDF` 类型：`UDF/Lambda`，行对象到列转换函数。
-- 返回类型：`Map`
-- 作用：`List` 转为 `Map`。
 
-```js title='通过字符串指明Key字段'
-var yearData = [
-    { "pt":2018, "item_code":"code_1", "sum_price":12.0 },
-    { "pt":2018, "item_code":"code_2", "sum_price":23.0 },
-    { "pt":2018, "item_code":"code_3", "sum_price":34.0 },
-    { "pt":2018, "item_code":"code_4", "sum_price":45.0 }
-];
+`Map list2map(values, key[, convert])`：将 values 列表转换为对象。key 可以是字段名（各行必须是对象且该字段为基本值），也可以是返回基本值的 callback(index,value)。index 从 0 开始，value 是当前元素；convert(index,value) 可转换每个输出值，省略或为 null 时保留原元素。键统一转字符串，重复键后值覆盖前值。
 
-var result = collect.list2map(yearData, "item_code");
-// result = {
-//     "code_1": { "pt":2018, "item_code":"code_1", "sum_price":12.0 },
-//     "code_2": { "pt":2018, "item_code":"code_2", "sum_price":23.0 },
-//     "code_3": { "pt":2018, "item_code":"code_3", "sum_price":34.0 },
-//     "code_4": { "pt":2018, "item_code":"code_4", "sum_price":45.0 }
-// };
+```javascript
+return collect.list2map([{'id':1,'name':'Alice'},{'id':2,'name':'Bob'}], 'id', (index,row) -> { return row.name; });
+// {"1":"Alice","2":"Bob"}
 ```
 
-```js title='使用 Key 提取函数'
-var yearData = [ 1,2,3,4,5];
-var result = collect.list2map(yearData, (idx,dat)-> {
-    // Key 提取函数，直接把数组的数字元素内容作为 key 返回
-    return dat;
-},(idx,dat) -> {
-    // 构造 value
-    return { "index": idx, "value": dat };
-});
-
-// result = {
-//     "1": { "index": 0, "value": 1 },
-//     "2": { "index": 1, "value": 2 },
-//     "3": { "index": 2, "value": 3 },
-//     "4": { "index": 3, "value": 4 },
-//     "5": { "index": 4, "value": 5 }
-// }
+```javascript
+return collect.list2map(['Alice','Bob'], (index,value) -> { return 'user_' + index; });
+// {"user_0":"Alice","user_1":"Bob"}
 ```
+
+单行提取键或转换失败会收集到返回对象的 `errorData.idx_序号`，包含 `errorMsg` 和 `errorData`。若名称已占用，使用 `errorData_1` 等名称。`exit` 仍会结束整个查询。key 为 null 或不是字符串/函数时会直接报错；提供有效 key 后，null 或空列表返回空对象。
 
 ## map2list
-函数定义：`List map2list(dataMap, convert)`
-- 参数定义：`dataMap` 类型：`Map`，准备转换的数据集；`convert` 类型：`UDF/Lambda`，转换成行的转换器；
-- 返回类型：`List`
-- 作用：将 `Map` 转为 `List`。
 
-```js title='不指定转换函数'
-var data = {"key1":1, "key2":2, "key3":3 };
-var result = collect.map2list(data);
-// result = [
-//     { "key": "key1", "value": 1},
-//     { "key": "key2", "value": 2},
-//     { "key": "key3", "value": 3}
-// ]
+`List map2list(object[, callback])`：按对象字段顺序生成列表；省略 callback 时，每个元素为 `{key,value}` 对象；提供 callback(key,value) 时，每个元素为回调返回值。null 或空对象返回空列表。
+
+```javascript
+return collect.map2list({'a':1,'b':2}, (key,value) -> { return key + ':' + value; });
+// ["a:1","b:2"]
 ```
 
-```js title='指定转换函数'
-var data = {"key1":1, "key2":2, "key3":3 };
-var result = collect.map2list(data, (key,value) -> {
-    return { "k" : key, "v" : value };
-});
-// result = [
-//     { "k": "key1", "v": 1},
-//     { "k": "key2", "v": 2},
-//     { "k": "key3", "v": 3}
-// ]
+```javascript
+return collect.map2list({'a':1,'b':2});
+// [{"key":"a","value":1},{"key":"b","value":2}]
 ```
 
 ## map2string
-函数定义：`String map2string(dataMap, joinStr, convert)`
-- 参数定义：`dataMap` 类型：`Map`，准备转换的数据集；`joinStr` 类型：`String`，连接每个 `K/V` 对的连接字符串；`convert` 类型：`UDF/Lambda`，转换器；
-- 返回类型：`String`
-- 作用：`Map` 转为字符串，通常在生成 URL 参数的时候会用到这个函数。
 
-```js title='例子'
-var data = {"key1":1, "key2":2, "key3":3 };
-var result = collect.map2string(data,"&",(key,value) -> {
-     return key + "=" + value;
-});
-// result = "key1=1&key2=2&key3=3"
-// Tips：通常在转换 URL 的时候，还会连同编码函数库的 urlEncode 函数组合使用。以处理URL参数特殊字符问题。
+`String map2string(object, separator, callback)`：callback(key,value) 接收字段名和值，生成该字段的文本；按字段顺序用 separator 连接，末尾不附加分隔符。非空对象需要非 null 的 separator 和 callback；null 或空对象返回空字符串。
+
+```javascript
+return collect.map2string({'a':1,'b':2}, '&', (key,value) -> { return key + '=' + value; });
+// a=1&b=2
 ```
 
 ## mapSort
-函数定义：`Map mapSort(dataMap, sortUdf)`
-- 参数定义：`dataMap` 类型：`Map`，待处理的数据；`sortUdf` 类型：`UDF/Lambda`，排序函数返回值 `-1,0,1`；
-- 返回类型：`Map`
-- 作用：对 `Map` Key进行排序，DataQL 的 `Map` 都是有序 Map，因此可以利用 `mapSort` 进行 key 排序。一个典型的场景是利用 DataQL 生成一个 HMAC 签名串。
 
-```js title='例子'
-import 'net.hasor.dataql.fx.basic.CollectionUdfSource' as collect;
-import 'net.hasor.dataql.fx.basic.CompareUdfSource' as compare; // 通常排序还要引入一个排序的函数库
+`Map mapSort(object[, comparator])`：按字段名排序并返回新对象，字段值不变。comparator(leftKey,rightKey) 返回负数、0 或正数，分别表示左字段名排在前面、顺序相等、排在后面；省略或为 null 时按 hashCode 排序，不是自然顺序。null 返回空对象。
 
-var data = {"key3":1, "key2":2, "key1":3 };
-var result = collect.mapSort(data, (k1, k2) -> {
-    return compare.compareString(k1, k2);//对 key 比大小进行排序
-});
-// result = {"key1": 3, "key2": 2, "key3": 1}
+```javascript
+import 'net.hasor.dataql.host.function.basic.CollectionUdfSource' as collect;
+import 'net.hasor.dataql.host.function.basic.StringUdfSource' as string;
+return collect.mapSort({'b':2,'a':1}, (left,right) -> { return string.compareString(left,right); });
+// {"a":1,"b":2}
 ```
 
 ## listSort
-函数定义：`List listSort(dataList, sortUdf)`
-- 参数定义：`dataList` 类型：`List`，待处理的数据；`sortUdf` 类型：`UDF/Lambda`，排序函数返回值 `-1,0,1`；
-- 返回类型：`List`
-- 作用：对 `List` 进行排序。
 
-```js
-import 'net.hasor.dataql.fx.basic.CollectionUdfSource' as collect;
-import 'net.hasor.dataql.fx.basic.CompareUdfSource' as compare; // 通常排序还要引入一个排序的函数库
+`List listSort(values[, comparator])`：comparator(left,right) 接收两个元素，返回负数、0 或正数，分别表示 left 排在前面、顺序相等、排在后面；省略或为 null 时按 hashCode 排序，其中 null 的 hashCode 按 0 处理。返回排序后的列表，null 输入返回空列表；脚本中应使用返回值取得排序结果。
 
-var data = [
-     { "key": "key1", "value": 1},
-     { "key": "key2", "value": 2},
-     { "key": "key3", "value": 3}
-];
-var result = collect.listSort(data, (dat1, dat2) -> {
-    return compare.compareString(dat1.key, dat2.key) * -1; // 按照 Key 倒序
-});
-// result = [
-//   { "key": "key3", "value": 3},
-//   { "key": "key2", "value": 2},
-//   { "key": "key1", "value": 1}
-// ];
+```javascript
+return collect.listSort([3,1,2], (left,right) -> { return left < right ? -1 : (left == right ? 0 : 1); });
+// [1,2,3]
 ```
 
 ## groupBy
-函数定义：`Map<String,List> groupBy(dataList, groupByKey)`
 
-- 参数定义：`dataList` 类型：`List`，待处理的数据；`groupByKey` 类型：`String`，要分组的字段名
-- 返回类型：`Map<String,List>`
-- 作用：根据公共字段对数据进行分组。
+`Map groupBy(values, fieldName)`：values 为对象列表，fieldName 为每行都存在的基本值字段名。按该字段分组，每个键对应一个保留原行顺序的列表；结果键转为字符串，字段值 null 对应键 "null"。null 或空列表返回空对象。
 
-说明：
-- 该函数需要在 `4.1.10` 版本及其后续版本中才可以使用。
-- 数据集中需要有一个公共字段，并根据公共字段对数据进行分组。
-
-```js title='例子'
-var dataSet = [
-    {'id': 1, 'parent_id':null, 'label' : 't1'},
-    {'id': 2, 'parent_id':1   , 'label' : 't2'},
-    {'id': 3, 'parent_id':1   , 'label' : 't3'},
-    {'id': 4, 'parent_id':2   , 'label' : 't4'},
-    {'id': 5, 'parent_id':null, 'label' : 't5'}
-]
-var result = collect.groupBy(dataSet, "parent_id")
-
-// result = {
-//   "1": [
-//     {'id': 2, 'parent_id':1   , 'label' : 't2'},
-//     {'id': 3, 'parent_id':1   , 'label' : 't3'}
-//   ],
-//   "2": [
-//     {'id': 4, 'parent_id':2   , 'label' : 't4'}
-//   ],
-//   "null": [
-//     {'id': 1, 'parent_id':null, 'label' : 't1'},
-//     {'id': 5, 'parent_id':null, 'label' : 't5'}
-//   ]
-// }
+```javascript
+return collect.groupBy([{'id':1,'team':'A'},{'id':2,'team':'A'}], 'team');
+// {"A":[{"id":1,"team":"A"},{"id":2,"team":"A"}]}
 ```
+
+同一分组字段应使用一致的值类型。分组比较区分类型，但结果键会转为字符串；例如数字 `1` 与字符串 `"1"` 会争用同一结果键，后面的组覆盖前面的组。
 
 ## uniqueBy
-函数定义：`List uniqueBy(dataList, uniqueByKey)`
-- 参数定义：`dataList` 类型：`List`，待处理的数据；`uniqueByKey` 类型：`String`，去重判断的字段名
-- 返回类型：`List`
-- 作用：根据公共字段对数据进行去重，数据集中需要有一个公共字段，并根据公共字段对数据进行去重（4.2.2 版本加入）
 
-```js title='例子'
-var dataSet = [
-    {'id': 1, 'parent_id':null, 'label' : 't1'},
-    {'id': 2, 'parent_id':1   , 'label' : 't2'},
-    {'id': 3, 'parent_id':1   , 'label' : 't3'},
-    {'id': 4, 'parent_id':2   , 'label' : 't4'},
-    {'id': 5, 'parent_id':null, 'label' : 't5'}
-]
-var result = collect.uniqueBy(dataSet, "parent_id")
+`List uniqueBy(values, fieldName)`：values 为对象列表，fieldName 为每行都存在的基本值字段名。按该字段去重，字段值类型一致时保留每组第一条记录及首次出现的顺序；null 或空列表返回空列表。
 
-// result = [
-//   { "id": 1, "parent_id": null, "label": "t1" },
-//   { "id": 2, "parent_id": 1   , "label": "t2" },
-//   { "id": 4, "parent_id": 2   , "label": "t4" }
-// ]
+```javascript
+return collect.uniqueBy([{'id':1,'team':'A'},{'id':2,'team':'A'}], 'team');
+// [{"id":1,"team":"A"}]
 ```
+
+分组和去重都基于 list2map，字段值转为字符串后不可发生键冲突。字段缺失等行级错误在 groupBy 结果中进入 `errorData` 字段；uniqueBy 取其值列表，因此错误对象会作为额外元素混入返回列表。调用前应保证各行包含公共字段。

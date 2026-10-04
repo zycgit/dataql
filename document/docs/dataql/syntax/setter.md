@@ -1,25 +1,30 @@
 ---
 id: setter
-sidebar_position: 8
-title: h.赋值
-description: 在 DataQL 中数据是不可被修改的，如要修改数据集中的数据。则需要重新生成这个数据集，或者利用结果转换在转换的过程中对局部数据进行修改。。
+title: 2.4 变量与赋值
+description: DataQL 赋值的语法与用法。
 ---
-# 赋值
 
-:::caution
-在 DataQL 中数据是不可被修改的，如要修改数据集中的数据。则需要重新生成这个数据集，或者利用结果转换在转换的过程中对局部数据进行修改。
-:::
+`var` 可以定义变量，也可以将已有变量重新绑定到一个值。语言不提供对象字段或列表下标的直接赋值语句。
 
-```js title='重定义：在任何时候都可以通过 var 来重新定义一个已存在的变量'
-var data = [0,1,2,3,4,5,6,7,8,9]
-// 此时 data 是一个数组。
-var data = {}
-// 此时 data 是一个对象
-var data = 123
-// 此时 data 是一个数字
+## 重新绑定变量
+
+```js
+var value = [1, 2, 3];
+var value = {"count": 3};
+var value = value.count + 1;
+return value;
 ```
 
-```js title='在重定义变量的时候，可以访问自身'
-var tmpSql = "select * from user"
-var tmpSql = tmpSql + " where uid = ?"
+结果为 `4`，赋值右侧可以访问该变量之前的值。
+
+## 修改数据结构
+
+通过[结果转换](./transform.md)生成新的结构，保留需要的字段并替换指定值。
+
+```js
+var user = {"name": "Alice", "age": 20};
+var updated = user => {"name", "age": age + 1};
+return [user, updated];
 ```
+
+结果中的两个对象分别包含 `age: 20` 和 `age: 21`。UDF 可以提供修改宿主数据的能力，其副作用由具体函数决定。

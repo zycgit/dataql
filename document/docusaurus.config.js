@@ -1,9 +1,16 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
 // @ts-check
-// Note: type annotations allow type checking and IDEs autocompletion
-
-const lightCodeTheme = require('prism-react-renderer/themes/github');
-const darkCodeTheme = require('prism-react-renderer/themes/dracula');
+const {themes} = require('prism-react-renderer');
 const analyticsPlugin = require('./plugins/analytics.js');
+const projectVars = require('./plugins/projectVars.js');
+const remarkProjectVars = require('./plugins/remark-project-vars.js');
+const {GlobExcludeDefault} = require('@docusaurus/utils');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -12,10 +19,20 @@ const config = {
     url: 'https://www.dataql.net',
     baseUrl: '/',
     onBrokenLinks: 'throw',
-    onBrokenMarkdownLinks: 'warn',
-    favicon: 'img/favicon.ico',
+    markdown: {
+        preprocessor: ({fileContent}) => remarkProjectVars.replaceVariables(fileContent, projectVars),
+        parseFrontMatter: ({filePath, fileContent, defaultParseFrontMatter}) => defaultParseFrontMatter({
+            filePath,
+            fileContent: remarkProjectVars.replaceVariables(fileContent, projectVars),
+        }),
+        hooks: {
+            onBrokenMarkdownLinks: 'throw',
+        },
+    },
+    favicon: 'img/dataway.ico',
     organizationName: 'zycgit', // Usually your GitHub org/user name.
     projectName: 'dataql',   // Usually your repo name.
+    customFields: {project: projectVars},
 
     i18n: {
         defaultLocale: 'zh-cn',
@@ -28,8 +45,24 @@ const config = {
             /** @type {import('@docusaurus/preset-classic').Options} */
             ({
                 docs: {
+                    remarkPlugins: [[remarkProjectVars, projectVars]],
                     sidebarPath: require.resolve('./sidebars.js'),
-                    editUrl: 'https://gitee.com/zycgit/dataql-doc/tree/master/',
+                    editUrl: 'https://gitee.com/zycgit/dataql/blob/dev/document/',
+                },
+                blog: {
+                    exclude: [...GlobExcludeDefault, '**/assets/**'],
+                    remarkPlugins: [[remarkProjectVars, projectVars]],
+                    showReadingTime: true,
+                    blogSidebarCount: 25,
+                    postsPerPage: 10,
+                    feedOptions: {
+                        type: ['rss', 'atom'],
+                        xslt: true,
+                    },
+                    onInlineTags: 'warn',
+                    onInlineAuthors: 'warn',
+                    onUntruncatedBlogPosts: 'warn',
+                    editUrl: 'https://gitee.com/zycgit/dataql/blob/dev/document/',
                 },
                 theme: {
                     customCss: require.resolve('./src/css/custom.css'),
@@ -41,17 +74,25 @@ const config = {
     themeConfig: /** @type {import('@docusaurus/preset-classic').ThemeConfig} */ {
         metadata: [
             {name: 'keywords', content: 'sql,dataway,hasor,dataql,开源,开源软件,java开源,开源项目,开源代码'},
-            {name: 'description', content: 'DataQL（Data Query Language）是一种查询语言。旨在通过提供直观、灵活的语法来描述客户端应用程序的数据需求和交互。'}
+            {name: 'description', content: 'DataQL 提供数据查询、转换和脚本扩展；Dataway 将接口编辑、调试、发布及 OpenAPI 文档内嵌到 Hasor、Solon 和 Spring 应用。'}
         ],
         colorMode: {
             disableSwitch: true,
         },
         navbar: {
             logo: {
-                alt: 'DataQL Logo',
-                src: 'img/logo.svg',
+                alt: 'Dataway / DataQL',
+                src: 'img/dataway.svg',
+                width: 32,
+                height: 32,
             },
             items: [
+                {
+                    type: 'doc',
+                    docId: 'dataway/intro/overview',
+                    position: 'left',
+                    label: 'Dataway 框架',
+                },
                 {
                     type: 'doc',
                     docId: 'dataql/overview',
@@ -60,40 +101,25 @@ const config = {
                 },
                 {
                     type: 'doc',
-                    docId: 'dataway/overview',
-                    position: 'left',
-                    label: 'Dataway 框架',
-                },
-                {
-                    type: 'doc',
-                    docId: 'integration/overview',
-                    position: 'left',
-                    label: '框架整合',
-                },
-                {
-                    type: 'doc',
                     docId: 'releases/latest',
                     position: 'left',
-                    label: '发布版本',
+                    label: '版本记录',
                 },
                 {
-                    type: 'dropdown',
-                    label: '源代码',
+                    to: '/blog/archive',
+                    activeBasePath: '/blog',
                     position: 'left',
-                    items: [
-                        {label: '码云',href: 'https://gitee.com/zycgit/dataql'},
-                        {label: 'Github',href: 'https://github.com/zycgit/dataql'}
-                    ]
+                    label: '博客',
                 },
                 {
                     position: 'right',
-                    label: 'Hasor 框架',
-                    href: 'https://www.hasor.net/'
+                    label: '码云',
+                    href: 'https://gitee.com/zycgit/dataql'
                 },
                 {
                     position: 'right',
-                    label: 'dbVisitor ORM',
-                    href: 'https://www.dbvisitor.net/'
+                    label: 'Github',
+                    href: 'https://github.com/zycgit/dataql'
                 },
                 {
                     type: 'localeDropdown',
@@ -102,13 +128,13 @@ const config = {
             ]
         },
         prism: {
-            theme: lightCodeTheme,
-            darkTheme: darkCodeTheme,
-            additionalLanguages: ['java']
+            theme: themes.github,
+            darkTheme: themes.dracula,
+            additionalLanguages: ['java', 'sql', 'properties', 'bash']
         },
         footer: {
             style: 'dark',
-            copyright: `Copyright © ${new Date().getFullYear()} dbVisitor. Built with Docusaurus.<br/>
+            copyright: `Copyright © ${new Date().getFullYear()} DataQL. Built with Docusaurus.<br/>
 <a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=33011002016704">
 <img src="/img/beian.png" style="display: inline-block;">浙公网安备 33011002016704号
 </a>&nbsp;&nbsp;<a target="_blank" href="https://beian.miit.gov.cn/#/Integrated/index">浙ICP备18034797号-6</a>
@@ -117,16 +143,65 @@ const config = {
     },
     plugins: [
         analyticsPlugin,
+        require.resolve('./plugins/blog-topics.js'),
         [
-            require.resolve("@cmfcmf/docusaurus-search-local"),
+            require.resolve('./plugins/redirects.js'),
             {
-                indexPages: true,
-                // When applying `zh` in language, please install `nodejieba` in your project.
-                language: ["en", "zh"],
-                maxSearchResults: 8
-            }
-        ]
-    ]
+                redirects: {
+                    '/web/dataql/what_is_dataql.html': '/docs/dataql/overview',
+                    '/web/dataway/about.html': '/docs/dataway/intro/overview',
+                },
+            },
+        ],
+        [
+            require.resolve('./plugins/llms.js'),
+            {
+                siteTitle: 'DataQL and Dataway',
+                overview: 'dataql/overview.md',
+                descriptions: {
+                    'zh-cn': `DataQL ${projectVars.docsVersion} 使用文档：查询语言、执行引擎、内嵌 Dataway 和框架集成。`,
+                    en: `DataQL ${projectVars.docsVersion} documentation: query language, execution engine, embedded Dataway, and framework integration.`,
+                },
+                depth: 2,
+                onRouteError: 'throw',
+                content: {
+                    enableMarkdownFiles: false,
+                    enableLlmsFullTxt: false,
+                    includeDocs: true,
+                    includeBlog: true,
+                    includePages: false,
+                    includeGeneratedIndex: false,
+                    excludeRoutes: ['**/tags{,/**}', '**/search', '**/404.html', '**/blog', '**/blog/{archive,authors,page,topics}{,/**}'],
+                },
+            },
+        ],
+    ],
+    themes: [
+        [
+            require.resolve('@easyops-cn/docusaurus-search-local'),
+            {
+                hashed: true,
+                language: ['en', 'zh'],
+            },
+        ],
+    ],
 };
 
-module.exports = config;
+module.exports = function createConfig() {
+    if (process.env.DOCUSAURUS_CURRENT_LOCALE !== 'en') {
+        return config;
+    }
+    const messages = require('./i18n/en/code.json');
+    return {
+        ...config,
+        title: messages['site.title'].message,
+        tagline: messages['site.tagline'].message,
+        themeConfig: {
+            ...config.themeConfig,
+            metadata: config.themeConfig.metadata.map((entry) => ({
+                ...entry,
+                content: messages['site.' + entry.name]?.message ?? entry.content,
+            })),
+        },
+    };
+};

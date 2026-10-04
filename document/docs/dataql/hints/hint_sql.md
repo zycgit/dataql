@@ -1,130 +1,135 @@
 ---
 id: hint_sql
-sidebar_position: 2
-title: SQL HINT
-description: DataQL SQL 执行器相关的 Hint。
+title: 6.10 SQL Hint
 ---
-# SQL 执行器相关
 
-## FRAGMENT_SQL_COLUMN_CASE
+本页列出 `dataql-sqlproc` 支持的 SQL 执行选项。先通过 ConnectionProvider 接入数据源，见[SQL 执行器](../../dataway/dataql-engine/sql.md)。
 
-SqlFragment 返回的列信息大小写模式：`default`、`upper`、`lower`、`hump`
+长名称可在脚本 Hint 中设置；表中列有短名称的选项也接受短名称，同时设置时短名称优先。`selectKey` 可通过其属性指定子查询选项；XML 片段不接受外层 Mapper 语句标签。
 
-| 选项值       | 默认  | 含义                                                        |
-|-----------|-----|-----------------------------------------------------------|
-| `default` | 是   | 全部列名保持大小写敏感，数据库什么样返回就什么样                                  |
-| `upper`   |     | 全部列名保持大写，如果在转换过程中发生冲突，那么会产生覆盖问题                           |
-| `lower`   |     | 全部列名保持小写，如果在转换过程中发生冲突，那么会产生覆盖问题                           |
-| `hump`    |     | 全部列名做一次驼峰转换。如：`goods_id => goodsId`、`GOODS_id => goodsId` |
+## 数据源 {#FRAGMENT_SQL_DATA_SOURCE}
 
-## FRAGMENT_SQL_DATA_SOURCE
+`FRAGMENT_SQL_DATA_SOURCE` 默认空字符串，传给 `ConnectionProvider.findConnection(name, hints)` 选择连接。
 
-SQL执行器使用的数据源名字，默认为：`""`。
-
-```js title='配置多个数据源'
-public class MyModule implements Module {
-    public void loadModule(ApiBinder apiBinder) throws Throwable {
-        DataSource defaultDs = ...;
-        DataSource dsA = ...;
-        DataSource dsB = ...;
-        apiBinder.installModule(new JdbcModule(Level.Full, defaultDs)); // 默认数据源
-        apiBinder.installModule(new JdbcModule(Level.Full, "ds_A", dsA)); // 数据源A
-        apiBinder.installModule(new JdbcModule(Level.Full, "ds_B", dsB)); // 数据源B
-    }
-}
+```javascript
+hint FRAGMENT_SQL_DATA_SOURCE = 'ds1';
+var query = @@selectSql()<% SELECT 1 AS result_value %>;
+return query();
+// 1
 ```
 
-```js title='在DataQL中选择数据源'
-// 如果不设置 FRAGMENT_SQL_DATA_SOURCE 使用的是 defaultDs 数据源。
-// - 设置值为 "ds_A" ，使用的是 dsA 数据源。
-// - 设置值为 "ds_B" ，使用的是 dsB 数据源。
-hint FRAGMENT_SQL_DATA_SOURCE = "ds_A"
+应用按名称提供数据源，配置方式见[数据源接入](../../dataway/capabilities/datasources.md)。
 
-// 声明一个 SQL
-var dataSet = @@sql() <% select * from category limit 10; %>
-// 使用 特定数据源来执行SQL。
-return dataSet();
+## 语句执行
+
+| Hint | 短名称 | 默认值 | 作用 |
+| --- | --- | --- | --- |
+| `FRAGMENT_SQL_STATEMENT` | `statementType` | `prepared` | `statement`、`prepared`、`callable`，分别使用对应 JDBC 语句；call 片段使用 callable |
+| `FRAGMENT_SQL_TIMEOUT` | `timeout` | `-1` | 查询超时，单位秒；-1 不设置 |
+| `FRAGMENT_SQL_FETCH_SIZE` | `fetchSize` | `256` | JDBC 每批获取行数提示，效果由驱动决定 |
+| `FRAGMENT_SQL_RESULT_SET_TYPE` | `resultSetType` | 空 | 结果集类型：`forwardOnly`、`scrollSensitive`、`scrollInsensitive`；空值使用驱动默认 |
+
+```javascript
+hint timeout = 5;
+hint fetchSize = 100;
+var query = @@selectSql(value)<% SELECT #{value} AS result_value %>;
+return query(42);
+// 42
 ```
 
-## FRAGMENT_SQL_MULTIPLE_QUERIES
+## 列名转换 {#FRAGMENT_SQL_COLUMN_CASE}
 
-`dataql-fx` `4.1.14` 之后的新特性，SqlFragment 当遇到多条 SQL 同时执行时，结果集的行为模式：`first`、`last`、`all`
+`FRAGMENT_SQL_COLUMN_CASE` 默认 `default`。
 
-| 选项值     | 默认  | 含义                                |
-|---------|-----|-----------------------------------|
-| `first` |     | 当遇到多条 SQL 同时执行时，结果集的行为是，返回第一个结果。  |
-| `last`  | 是   | 当遇到多条 SQL 同时执行时，结果集的行为是，返回最后一个结果。 |
-| `all`   |     | 当遇到多条 SQL 同时执行时，结果集的行为是，返回所有结果。   |
+| 值 | 结果 |
+| --- | --- |
+| `default` | 保留驱动返回的列标签 |
+| `upper` | 大写 |
+| `lower` | 小写 |
+| `hump` | 下划线转小驼峰，例如 USER_ID 转为 userId |
 
-## FRAGMENT_SQL_OPEN_PACKAGE
+转换后的重名字段保留首次出现的值，应通过 SQL 列别名避免冲突。
 
-SqlFragment 返回值拆包方式。
+## 结果拆包 {#FRAGMENT_SQL_OPEN_PACKAGE}
 
-| 选项值      | 默认  | 含义                                                                            |
-|----------|-----|-------------------------------------------------------------------------------|
-| `off`    |     | 返回值不拆开，无论返回数据，都以 `List/Map` 形式返回。                                             |
-| `row`    |     | 返回值拆分到行，如果返回值是多条记录那么行为和 off 相同。<br/>当返回 0 或 1 条记录时，自动解开最外层的 List，返回一个 Object。 |
-| `column` | 是   | 最小粒度到列。当返回结果只有一行一列数据时。只返回具体值。<br/>例如： `select count(*)` 返回 int 类型             |
+`FRAGMENT_SQL_OPEN_PACKAGE` 默认 `column`，控制普通查询结果的结构。
 
-## FRAGMENT_SQL_PAGE_DIALECT
+| 结果行数 | `off` | `row` | `column` |
+| --- | --- | --- | --- |
+| 0 行 | `[]` | `{}` | null |
+| 1 行 1 列 | 对象列表 | 单个对象 | 单个值 |
+| 1 行多列 | 对象列表 | 单个对象 | 单个对象 |
+| 多行 | 对象列表 | 对象列表 | 对象列表 |
 
-SqlFragment 分页查询在改写分页查询语句时使用的方言（默认：`空`，需要明确指定）
+```javascript
+hint FRAGMENT_SQL_OPEN_PACKAGE = 'off';
+hint FRAGMENT_SQL_COLUMN_CASE = 'lower';
+var query = @@selectSql()<% SELECT 1 AS user_id %>;
+return query();
+// [{"user_id":1}]
+```
 
-通常情况下，一个应用程序的数据库类型是确定的，因此方言参数也通常通过 Hasor 环境变量形式预先设置。
-这个 Hint 的作用是，可以临时改变方言。或者是在全局未指定方言的情况下设置分页方言。
-如果全局已经设置了方言参数，那么也可以通过这个 Hint 来改变默认配置。
+更新类语句返回影响行数。分页的 `data()` 返回当前页列表，不按单行单列拆包。
 
-| 数据库                         | 选项值             | 对应的方言类                                                |
-|-----------------------------|-----------------|-------------------------------------------------------|
-| PostgreSQL                  | `postgresql`    | `net.hasor.dataql.fx.db.dialect.PostgreSqlDialect`    |
-| H2 Database Engine          | `h2`            | `net.hasor.dataql.fx.db.dialect.PostgreSqlDialect`    |
-| HSQLDB(HyperSQL DataBase)   | `hsqldb`        | `net.hasor.dataql.fx.db.dialect.PostgreSqlDialect`    |
-| Apache Phoenix              | `phoenix`       | `net.hasor.dataql.fx.db.dialect.PostgreSqlDialect`    |
-| MySQL                       | `mysql`         | `net.hasor.dataql.fx.db.dialect.MySqlDialect`         |
-| MariaDB                     | `mariadb`       | `net.hasor.dataql.fx.db.dialect.MySqlDialect`         |
-| SQLite                      | `sqlite`        | `net.hasor.dataql.fx.db.dialect.MySqlDialect`         |
-| HerdDB                      | `herddb`        | `net.hasor.dataql.fx.db.dialect.MySqlDialect`         |
-| Microsoft® SQL Server® 2012 | `sqlserver2012` | `net.hasor.dataql.fx.db.dialect.SqlServer2012Dialect` |
-| Apache Derby                | `derby`         | `net.hasor.dataql.fx.db.dialect.SqlServer2012Dialect` |
-| OracleDialect               | `oracle`        | `net.hasor.dataql.fx.db.dialect.OracleDialect`        |
-| IBM DB2                     | `db2`           | `net.hasor.dataql.fx.db.dialect.Db2Dialect`           |
-| IBM Informix                | `informix`      | `net.hasor.dataql.fx.db.dialect.InformixDialect`      |
+## 输出参数与生成键
 
-:::tip
-当 DataQL 中内置分页字典不能满足要求时，可以在项目中重写一个分页方言。然后通过这个 Hint 配置全类路径的方式引用它。
-:::
+| Hint | 短名称 | 默认值 | 作用 |
+| --- | --- | --- | --- |
+| `FRAGMENT_SQL_BIND_OUT` | `bindOut` | 空 | 指定返回的输出名称，多个名称以逗号分隔 |
+| `FRAGMENT_SQL_KEY_GENERATED` | `useGeneratedKeys` | `false` | 生成键开关，当前执行链尚未接通 |
+| `FRAGMENT_SQL_KEY_PROPERTY` | `keyProperty` | 空 | 生成键写回参数的属性名 |
+| `FRAGMENT_SQL_KEY_COLUMN` | `keyColumn` | 空 | 生成键的列名，多列按逗号分隔并与属性顺序对应 |
+| `FRAGMENT_SQL_ORDER` | `order` | `after` | selectKey 执行时机：before 或 after |
 
-## FRAGMENT_SQL_QUERY_BY_PAGE
+`bindOut` 可选取执行参数或 JDBC 返回的结果；结果集名称为 `#result-set-1` 等，更新计数名称为 `#update-count-1` 等，编号按结果顺序递增。`bindOut` 不适用于分页及普通增删改的影响行数返回。当前执行链尚未接通 JDBC 生成键读取；可用的 `selectKey` 配置见[结果与主键](../sql/results.md)。
 
-SqlFragment 查询执行是否使用分页模式（默认：`不使用`）
+```javascript
+hint bindOut = '#result-set-1';
+var query = @@selectSql()<% SELECT 1 AS result_value %>;
+return query();
+// {"#result-set-1":1}
+```
 
-| 选项值     | 默认  | 含义                                         |
-|---------|-----|--------------------------------------------|
-| `TRUE`  |     | 在执行 `select` 语句时采用分页模式执行，分页模式请参考 SQL执行器章节。 |
-| `FALSE` | 是   | 不启用分页模式。                                   |
+## 分页开关 {#FRAGMENT_SQL_QUERY_BY_PAGE}
 
-## FRAGMENT_SQL_QUERY_BY_PAGE_NUMBER_OFFSET
+`FRAGMENT_SQL_QUERY_BY_PAGE` 默认 false。设为 true 后，select 片段返回分页对象，先调用 `setPageInfo`，再调用 `data()` 获取数据。
 
-SqlFragment 在执行分页查询时，设置的当前页码偏移量。原始的 `currentPage` 规定启始页码是从 `0` 开始。在某些场景下 `1` 开始会比较好理解，这时候就可以设施偏移量为 `1`。
-
-当设置偏移量之后，真实的 currentPage 值计算方式为：`yourCurrentPage - FRAGMENT_SQL_QUERY_BY_PAGE_NUMBER_OFFSET` 结果如果小于等于 `0`，那么设置为 `0`
-
-```js
-hint FRAGMENT_SQL_QUERY_BY_PAGE = true
-hint FRAGMENT_SQL_QUERY_BY_PAGE_NUMBER_OFFSET = 1
-
-// 步骤 1：定义分页SQL
-hint FRAGMENT_SQL_QUERY_BY_PAGE = true
-var dimSQL = @@sql(userName)<%
-    select * from user_info where `name` like concat('%',#{userName},'%')
+```javascript
+hint FRAGMENT_SQL_QUERY_BY_PAGE = true;
+hint FRAGMENT_SQL_QUERY_BY_PAGE_NUMBER_OFFSET = 1;
+var query = @@selectSql()<%
+    SELECT 1 AS id UNION ALL SELECT 2 AS id ORDER BY id
 %>;
-
-// 步骤 2：获取分页对象
-var queryPage = dimSQL(${userName});
-
-// 步骤 3：设置分页信息
-run queryPage.setPageInfo({
-    "pageSize" : 5, // 页大小
-    "currentPage" : 1 // 第1页，在设置 FRAGMENT_SQL_QUERY_BY_PAGE_NUMBER_OFFSET 之前 第一页要设置为 0
-});
+var page = query();
+run page.setPageInfo({'currentPage':1, 'pageSize':1});
+return page.data();
+// [{"ID":1}]，列标签大小写由驱动决定
 ```
+
+## 页码偏移 {#FRAGMENT_SQL_QUERY_BY_PAGE_NUMBER_OFFSET}
+
+`FRAGMENT_SQL_QUERY_BY_PAGE_NUMBER_OFFSET` 默认 0，表示第一页的页码。设为 1 后第一页使用 1。内部页码按 `max(传入页码 - 偏移量, 0)` 计算。
+
+## 分页方言 {#FRAGMENT_SQL_PAGE_DIALECT}
+
+`FRAGMENT_SQL_PAGE_DIALECT` 默认空，从 JDBC URL 和驱动信息推断分页方言。需要明确指定时，传入以下别名或 PageDialect 实现类名：
+
+| 数据库 | 别名 |
+| --- | --- |
+| MySQL、MariaDB | `mysql`、`mariadb` |
+| PostgreSQL、Kingbase | `postgresql`、`kingbase` |
+| H2、HSQLDB | `h2`、`hsql` |
+| Oracle、DB2 | `oracle`、`db2` |
+| SQL Server | `sqlserver`、`jtds` |
+| SQLite、Derby | `sqlite`、`derby` |
+| DM、Impala、Informix、XuGu | `dm`、`impala`、`informix`、`xugu` |
+
+## 事务隔离 {#FRAGMENT_SQL_TRANSACTION_ISOLATION}
+
+`FRAGMENT_SQL_TRANSACTION_ISOLATION`，短名称 `isolation`，默认 DEFAULT。支持 READ_UNCOMMITTED、READ_COMMITTED、REPEATABLE_READ、SERIALIZABLE。
+
+此选项由 [TransactionUdfSource](../funx/transactions.md) 交给事务提供者，在创建事务时使用；单独设置不会开启事务。加入已有事务时遵循宿主事务规则。
+
+## 片段格式 {#FRAGMENT_SQL_FORMAT}
+
+当前 SQL 片段按注册名区分格式：`selectSql`、`updateSql` 等使用文本，`selectXml`、`updateXml` 等使用动态 XML。`FRAGMENT_SQL_FORMAT` 虽保留在枚举中，当前片段入口不读取它，设置该 Hint 不会切换格式。

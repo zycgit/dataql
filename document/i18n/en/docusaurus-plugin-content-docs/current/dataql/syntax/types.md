@@ -1,84 +1,43 @@
 ---
 id: types
-sidebar_position: 2
-title: b.类型系统
-description: DataQL 是弱类型定义的查询语言，在DataQL 中所有数据都会被归结到有限的几种类型上。无需定义数据类型结构，在弱类型系统中编写查询会非常方便，它去掉了繁杂的类型定义。。
+title: 2.2 Types and literals
+description: DataQL 类型系统的语法与用法。
 ---
 
-# 类型系统
-
-DataQL 是弱类型定义的查询语言，在DataQL 中所有数据都会被归结到有限的几种类型上。无需定义数据类型结构，在弱类型系统中编写查询会非常方便，它去掉了繁杂的类型定义。
-
-:::tip
-弱类型定义会带来 字段类型不确定 的问题。即：在没有搭配类型转换函数情况下，字段类型可能是 `boolean` 也有可能是 `string`，这具体要看原始数据是什么类型。
-:::
+DataQL 无需声明变量类型，同一变量可以重新绑定不同类型的值。
 
 ## 数据类型
 
-| 数据类型 | 表示方式                    | 详情                                                                                                |
-|------|-------------------------|---------------------------------------------------------------------------------------------------|
-| 布尔   | `true` 或 `false`        | 表示真假值                                                                                             |
-| 数值   | `负无穷大` 或 `0` 或 `正无穷大`   | 浮点数、整数、科学计数法表示的数                                                                                  |
-| 字符串  | `'...'` 或 `"..."`       | 字符串 或 单个字符                                                                                        |
-| 空值   | `null` 或 `NULL`         | 空值                                                                                                |
-| 集合   | `[...]` 数组 或 多维数组       | 带有顺序的多组数据的集合                                                                                      |
-| 对象   | `{'key':...}` 具有键值对的数据体 | DataQL 的对象不支持方法，但是可以具备 UDF 类型的属性                                                                  |
-| UDF  | lambda 函数 或 一个外部的 UDF   | 一个外部的 net.hasor.dataql.Udf 接口函数定义<br/>DataQL 中书写的 lambda 函数也被称作为 UDF。<br/>一个扩展代码片段的定义，也属于 UDF 的范畴 |
+| 类型 | 表示方式 | 说明 |
+| --- | --- | --- |
+| 布尔 | `true`、`false` | 条件结果 |
+| 数值 | `123`、`-1.5`、`1e2` | 整数、小数，详见[数值](./numbers.md) |
+| 字符串 | `'text'`、`"text"` | Unicode 文本 |
+| 空值 | `null` | 关键字只有小写形式；`NULL` 是普通标识符 |
+| 列表 | `[1, 2]`、`[]` | 有序元素，可嵌套 |
+| 对象 | `{"name": "Alice"}`、`{}` | 字符串键与值组成的数据 |
+| 函数 | `(x) -> { return x; }` | 脚本函数、导入的 UDF 和代码片段 |
+| 二进制 | 由函数或宿主返回 | 没有专用字面量，可由函数返回 |
 
-## 数据的表示
+对象键使用引号，列表和对象的元素可以是不同类型。数组形式的数字集合与二进制对象是两种数据。
 
-**布尔类型**
-- 举例：`var bool = true;`
+```js
+return {
+    "enabled": true,
+    "amount": 12.5,
+    "name": "Alice",
+    "tags": ["java", "dataql"],
+    "extra": null
+};
+```
 
-**数值类型**
-- 二进制表示法：`0b01010101100` 或 `0B01010101100`
-- 十进制表示法：`-0000234` 或 `123`
-- 八进制表示法：`0o1234567` 或 `0O1234567`
-- 十六进制表示法：`0x12345` 或 `0X12345`
-- 科学计数法：a * 10的n 次幂的形式，其中 `1 < a ＜ 10`
-- 关于负数：目前只有十进制表示法中提供了负数的表示能力。
+## 类型转换
 
-字符串
-- 举例：`var str = 'abcdefg...';` 或 `var str = "abcdefg...";`
-- 空字符串：`var empty = '';` 或 `var empty = "";`
-- Unicode字符表示：`var unicode = '\u0041';` （拉丁字母 A）
+数值运算会根据参与计算的类型和 Hint 设置选择计算宽度。字符串拼接使用 `+`；需要明确转换时，使用[转换函数](../funx/convert.md)。DataQL 保留自己的数值和类型转换规则，运算符优先级见[表达式](./expression.md)。
 
-空值
-- 举例：`null`
+```js
+import 'net.hasor.dataql.host.function.basic.ConvertUdfSource' as convert;
+return convert.textToByte('Hello');
+```
 
-集合
-- 格式：`[...]`
-- 空集合：`[]`
-- 多维集合：`[[...],[...]]`
-
-对象
-- 格式：`{"k1": ... ,"k2": ...}`
-- 空对象：`{}`
-- 多层结构：`{"k1": { ... }, "k2": { ... } }`
-
-UDF
-- 外部UDF：外部的 UDF 被引入之后，通常以标识符形式表示它。
-- lambda： 中书写的 lambda 表达方式为：`var foo = () -> { /* 代码块 */ }`
-- 外部代码片段：`var a = @@xxx() <% /* 外部代码块 */ %>`
-
-JSON
-- DataQL 可以直接表达 Json 数据（Json 的 Key 必须通过双引号或单引号形式包裹起来）
-
-## 自动类型提升
-
-当两个操作数之间做运算时，其中一个数值类型和另外一个数值的类型不一致情况下。将两个数值的类型统一转换成同一种类型的行为。
-
-类型自动提升行为表：
-
-| •       | bool    | byte    | sort    | int     | long    | float   | double  | BigInt  | Decimal | string |
-|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|--------|
-| bool    | •       | byte    | sort    | int     | long    | float   | double  | BigInt  | Decimal | string |
-| byte    | byte    | •       | sort    | int     | long    | float   | double  | BigInt  | Decimal | string |
-| sort    | sort    | sort    | •       | int     | long    | float   | double  | BigInt  | Decimal | string |
-| int     | int     | int     | int     | •       | long    | double  | double  | BigInt  | Decimal | string |
-| long    | long    | long    | long    | long    | •       | double  | double  | BigInt  | Decimal | string |
-| float   | float   | float   | float   | double  | double  | •       | double  | Decimal | Decimal | string |
-| double  | double  | double  | double  | double  | double  | double  | •       | Decimal | Decimal | string |
-| BigInt  | BigInt  | BigInt  | BigInt  | BigInt  | BigInt  | Decimal | Decimal | •       | Decimal | string |
-| Decimal | Decimal | Decimal | Decimal | Decimal | Decimal | Decimal | Decimal | Decimal | •       | string |
-| string  | string  | string  | string  | string  | string  | string  | string  | string  | string  | •      |
+二进制可作为查询结果返回。Dataway 中的 HTTP 输出方式见[结果响应](../../dataway/capabilities/development/response.md)。

@@ -1,51 +1,66 @@
 ---
 id: json
-sidebar_position: 4
-title: d.Json函数库
-description: DataQL FunctionX库函数，Json函数库
+title: 7.5 JSON functions
 ---
-# Json函数库
 
-引入 Json 函数库的方式为：`import 'net.hasor.dataql.host.function.encryt.JsonUdfSource' as json;`
+:::info Module dependency
+Provided by `dataql-engine`. Import `net.hasor.dataql.host.function.encryt.JsonUdfSource` to use this library.
+:::
+
+Convert between DataQL values and JSON strings.
 
 ## toJson
-函数定义：`String toJson(target)`
-- 参数定义：`target` 类型：`任意`
-- 返回类型：`String`
-- 作用：把对象序列化为 Json 格式。
 
-```js title='例子'
-json.toJson([])          = "[]"
-json.toJson({})          = "{}"
-json.toJson([0,1,2])     = "[0,1,2]"
-json.toJson({'key':123}) = "{\"key\":123}"
-json.toJson(null)        = "null"
+`json.toJson(value)` accepts objects, lists or primitive values and returns a JSON string. Null object fields are omitted, null list elements remain, and a root null produces the string `"null"`.
+
+```js
+import 'net.hasor.dataql.host.function.encryt.JsonUdfSource' as json;
+return json.toJson({'name':'Alice', 'nickname':null, 'tags':[null, 'dataql']});
+```
+
+Returns a string containing:
+
+```json
+{"name":"Alice","tags":[null,"dataql"]}
 ```
 
 ## toFmtJson
-函数定义：`String toFmtJson(target)`
-- 参数定义：`target` 类型：`任意`
-- 返回类型：`String`
-- 作用：把对象 JSON 序列化（带格式）
 
-```js title='例子'
-json.toFmtJson([])          = "[]"
-json.toFmtJson({})          = "{}"
-json.toFmtJson([0,1,2])     = "[\n\t0,\n\t1,\n\t2\n]"
-json.toFmtJson({'key':123}) = "{\n\t\"key\":123\n}"
-json.toFmtJson(null)        = "null"
+`json.toFmtJson(value)` accepts the same values as `toJson` and returns an indented JSON string with line breaks.
+
+```js
+import 'net.hasor.dataql.host.function.encryt.JsonUdfSource' as json;
+return json.toFmtJson({'name':'Alice', 'enabled':true});
+```
+
+Returns a string containing:
+
+```json
+{
+  "name" : "Alice",
+  "enabled" : true
+}
 ```
 
 ## fromJson
-函数定义：`Object fromJson(jsonString)`
-- 参数定义：`jsonString` 类型：`String`
-- 返回类型：`Object`
-- 作用：把 JSON 格式的字符串解析成对象。
 
-```js title='例子'
-json.fromJson("[]")                     = []
-json.fromJson("{}")                     = {}
-json.fromJson("[\n\t0,\n\t1,\n\t2\n]")  = [0,1,2]
-json.fromJson("{\n\t\"key\":123\n}")    = {'key':123}
-json.fromJson("null")                   = null
+`json.fromJson(text)` accepts JSON text and returns its object, list or primitive value for further access and transformation. Null and blank input return null; invalid JSON throws an error. Explicit null fields are retained and decimal numbers use decimal precision.
+
+```js
+import 'net.hasor.dataql.host.function.encryt.JsonUdfSource' as json;
+var person = json.fromJson('{"name":"Alice","age":25,"nickname":null}');
+var values = json.fromJson('[1,2,3]');
+return {
+    'name': person.name,
+    'nextAge': person.age + 1,
+    'nicknameIsNull': person.nickname == null,
+    'first': values[0],
+    'enabled': json.fromJson('true')
+};
 ```
+
+```json
+{"name":"Alice","nextAge":26,"nicknameIsNull":true,"first":1,"enabled":true}
+```
+
+Convert functions and binary values to suitable JSON data first. See [Conversion functions](convert.md) for binary encoding.

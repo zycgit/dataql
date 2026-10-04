@@ -1,0 +1,6 @@
+dataway:
+  label: Dataway 实践
+  description: 将接口配置、调试和发布集成到现有应用。
+dataql-recipes:
+  label: DataQL 数据处理
+  description: 通过可运行脚本完成树转换、分组、关联和报表整理。

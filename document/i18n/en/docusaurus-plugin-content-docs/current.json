@@ -1,30 +1,68 @@
 {
   "version.label": {
-    "message": "Next",
-    "description": "The label for version current"
+    "message": "Current"
   },
-  "sidebar.guides.category.对象映射": {
-    "message": "Entity Mapping",
-    "description": "The label for category 对象映射 in sidebar guides"
+  "sidebar.releases.category.v4.2.x": {
+    "message": "v4.2.x"
   },
-  "sidebar.guides.category.类型": {
-    "message": "Types",
-    "description": "The label for category 类型 in sidebar guides"
+  "sidebar.releases.category.v4.1.x": {
+    "message": "v4.1.x"
   },
-  "sidebar.guides.category.SQL 模式": {
-    "message": "using SQL",
-    "description": "The label for category SQL 模式 in sidebar guides"
+  "sidebar.releases.category.v3.2.x": {
+    "message": "v3.2.x"
   },
-  "sidebar.guides.category.CRUD 模式": {
-    "message": "using CRUD",
-    "description": "The label for category CRUD 模式 in sidebar guides"
+  "sidebar.dataway.category.3. 框架整合": {
+    "message": "3. Framework integration"
   },
-  "sidebar.guides.category.Mapper 模式": {
-    "message": "using Mapper File",
-    "description": "The label for category Mapper 模式 in sidebar guides"
+  "sidebar.dataway.category.5. 核心能力": {
+    "message": "5. Core capabilities"
   },
-  "sidebar.guides.category.资源与事务": {
-    "message": "Transactions",
-    "description": "The label for category 资源与事务 in sidebar guides"
+  "sidebar.dataway.category.5.1 API 管理": {
+    "message": "5.1 API management"
+  },
+  "sidebar.dataway.category.5.2 API 发布": {
+    "message": "5.2 API publication"
+  },
+  "sidebar.dataway.category.5.3 结果处理器": {
+    "message": "5.3 Result handlers"
+  },
+  "sidebar.dataway.category.6. 元数据存储": {
+    "message": "6. Metadata storage"
+  },
+  "sidebar.dataway.category.6.3 提供者": {
+    "message": "6.3 Providers"
+  },
+  "sidebar.dataway.category.7. 身份鉴权": {
+    "message": "7. Authentication and authorization"
+  },
+  "sidebar.dataway.category.8. DataQL 引擎": {
+    "message": "8. DataQL engine"
+  },
+  "sidebar.dataway.category.9. 引擎扩展": {
+    "message": "9. Engine extensions"
+  },
+  "sidebar.dataway.category.10. 框架配置": {
+    "message": "10. Configuration"
+  },
+  "sidebar.engine.category.1. 语言入门": {
+    "message": "1. Getting started"
+  },
+  "sidebar.engine.category.2. 语言基础": {
+    "message": "2. Language basics"
+  },
+  "sidebar.engine.category.3. 流程与函数": {
+    "message": "3. Control flow and functions"
+  },
+  "sidebar.engine.category.4. 数据访问与转换": {
+    "message": "4. Data access and transformation"
+  },
+  "sidebar.engine.category.5. 执行选项": {
+    "message": "5. Execution options"
+  },
+  "sidebar.engine.category.6. SQL 执行器": {
+    "message": "6. SQL executor"
+  },
+  "sidebar.engine.category.7. 内置函数库": {
+    "message": "7. Built-in libraries"
   }
 }

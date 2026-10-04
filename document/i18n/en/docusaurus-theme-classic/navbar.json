@@ -1,26 +1,20 @@
 {
-  "title": {
-    "message": "dbVisitor",
-    "description": "dbVisitor project"
+  "item.label.Dataway 框架": {
+    "message": "Dataway"
   },
-  "item.label.ORM": {
-    "message": "ORM",
-    "description": "ORM"
+  "item.label.DataQL 语言": {
+    "message": "DataQL"
   },
-  "item.label.Integration": {
-    "message": "Integration",
-    "description": "Integration"
+  "item.label.版本记录": {
+    "message": "Version history"
   },
-  "item.label.Faker": {
-    "message": "Faker",
-    "description": "Faker"
+  "item.label.博客": {
+    "message": "Blog"
   },
   "item.label.码云": {
-    "message": "Gitee",
-    "description": "码云"
+    "message": "Gitee"
   },
   "item.label.Github": {
-    "message": "Github",
-    "description": "Github"
+    "message": "GitHub"
   }
 }

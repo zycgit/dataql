@@ -1,0 +1,14 @@
+DataQL:
+  label: DataQL
+  permalink: /data-ql
+  description: Data queries and service aggregation.
+
+Dataway:
+  label: Dataway
+  permalink: /dataway
+  description: API configuration, debugging, and publishing.
+
+SpringBoot:
+  label: Spring Boot
+  permalink: /spring-boot
+  description: Integrating Dataway into Spring Boot applications.

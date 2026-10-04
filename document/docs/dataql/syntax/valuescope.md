@@ -1,174 +1,133 @@
 ---
 id: valuescope
-sidebar_position: 6
-title: f.值域
-description: DataQL 的值域是一种参数隔离机制，例如同样名称的参数可以出现在不同的 域 里。值域参数隔离、表达式访问符、DataQL值域符
+title: 4.2 参数与上下文
+description: DataQL 参数域、转换环境栈与递归取值。
 ---
-# 值域
 
-值域是一种隔离机制。例如：同样名称的参数可以出现在不同的 `域` 里，在 DataQL 中一共有三个可以用的值域符号：
+DataQL 使用 `$`、`@`、`#` 三个符号访问参数或转换中的数据。带花括号的参数访问与不带花括号的环境访问含义不同。
 
-- `$` 值域符
-- `#` 值域符
-- `@` 值域符
+## 参数访问
 
-:::tip
-DataQL 的值域，在没有明确分别它们的时候。三个访问符的值域内容是没有任何区别的。
-:::
+| 写法 | 含义 |
+| --- | --- |
+| `${name}` | 从 `$` 参数域读取 `name` |
+| `@{name}` | 从 `@` 参数域读取 `name` |
+| `#{name}` | 从 `#` 参数域读取 `name` |
 
-值域符的应用场景只有两个
-- 值域参数隔离
-- 表达式访问符
-
-## 值域参数隔离
-
-获取程序传入的参数必须使用：`<访问符>{<参数名>}` 方式来获取。这个特性类似带参的SQL，例如：
-
-```js title='用不同值域隔离同名参数的例子'
-// 创建一个 Map 为每个值域中都放入不同变量，但是变量名都是 'a'
-Map<String, Map<String, Object>> objectMap = new HashMap<>();
-objectMap.put("#", new HashMap<String, Object>() {{
-    put("a", 1);
-}});
-
-objectMap.put("$", new HashMap<String, Object>() {{
-    put("a", 2);
-}});
-
-objectMap.put("@", new HashMap<String, Object>() {{
-    put("a", 3);
-}});
-```
-
-然后通过 Query 接口创建查询并执行查询（通过 `CustomizeScope` 接口来返回不同访问符的数据 Map）
-
-```js title='${abc}、@{abc}、#{abc} 三个值域'
-DataQL dataQL = ...
-Query query = dataQL.createQuery("return [#{a},${a},@{a}];");
-DataModel dataModel = query.execute(new CustomizeScope() {
-    public Map<String, ?> findCustomizeEnvironment(String symbol) {
-        return objectMap.get(symbol);
-    }
-}).getData();
-```
-
-```js title='查询结果'
-[1, 2, 3]
-```
-
-## 表达式访问符
-
-表达式访问符同样使用了 `@`、`#`、`$` 三个符号，在表达式中的访问符是指类似如下的取值表达式：
+同名参数可放在不同域中。假设宿主分别为三个域提供 `name` 值，脚本可直接读取：
 
 ```js
-$ss.sss.sss
-#ss[abc].sss.sss
-@abc.abc(true).sss
+return {"request": ${name}, "application": @{name}, "custom": #{name}};
 ```
 
-表达式中的访问符不同含义如下：
-- `$` 表示环境栈根
-- `#` 表示环境栈顶
-- `@` 表示整个环境栈(数组形态)
+三个参数域的内容由运行脚本的应用提供。Dataway 将请求参数提供给 `$` 域，`@`、`#` 的内容由应用配置，详见[自定义作用域](../../dataway/engine/scope.md)。
 
-要理解这种带有访问符的含义需要理解 DataQL 的运行模式，DataQL 的运行时模型和 JVM 有些类似。
+## 转换中的环境访问
 
-不同的是 DataQL 采用的是两栈一堆。比 JVM 堆栈模型多了一个 `环境栈`。
-- **环境栈**
-- **运行栈**(作用和 JVM 相似)
-- **数据堆**(作用和 JVM 相似)
+结果转换 `=>` 会将当前数据放入环境栈，嵌套转换会建立新的层级。
 
-查询过程中一般情况下环境栈始终是空的，当遇到 `=>` 操作时。
-DataQL 会把 `=>` 符左边的表达式值放入环境栈，当转换结束时 DataQL 会把表达式值从环境栈中删掉。
-如果在转换过程中遇到第二次 `=>` 操作，那么会在环境栈顶中放入新的数据。例如：下面这个查询就会出现双层环境栈
+| 写法 | 含义 |
+| --- | --- |
+| `#`、`#.name` | 当前转换的数据及其字段 |
+| `$`、`$.name` | 最外层转换的数据及其字段 |
+| `@`、`@[0]` | 整个环境栈及指定层级 |
 
-```js title='一个DataQL查询'
+```js
 var data = {
-    "userInfo" : {
-        "username" : "xxxxx",
-        "password" : "pass"
-    },
-    "basicInfo" : {
-        "name" : "马三",
-        "sex"  : "F"
-    },
-    "id" : 12345667
-}
-
-return data => { // 第一次出现
-    "userInfo" : userInfo => { // 第二次出现
-        "username",
-        "password",
-        "userId" : $.id
-    },
-    "name" : basicInfo.name // 这种形式不会出现
-}
+    "id": 10,
+    "user": {"name": "Alice"}
+};
+return data => {
+    "user": user => {
+        "name",
+        "ownerId": $.id
+    }
+};
 ```
 
-```json title='执行结果为'
-{
-    "userInfo":{
-        "username":"xxxxx",
-        "password":"pass",
-        "userId":12345667
-    },
-    "name":"马三"
-}
-```
+结果为 `{"user":{"name":"Alice","ownerId":10}}`。列表转换也会建立遍历层级，访问上层数据时应根据实际嵌套层次选择下标。
 
-:::tip
-所有表达式在编译的时都会有一个访问符，如果用户没有指定那么将会使用 `#` 作为默认访问符。
+### 递归读取父节点
 
-即便所有表达式在编译之后都具有访问符，但这并不代表数据的源头都来自环境栈。编译器会优先在本地变量表中查找。具体逻辑在 `NameRouteVariableInstCompiler` 类中。
-:::
+列表转换会依次将列表和当前元素放入环境栈，完成转换后退出对应层级。`@[0]` 从栈底读取，`@[-1]` 从栈顶读取。下面递归转换一棵树，为每个子节点补充 `parent_id`：
 
-例如：如下例子，在对一颗 `Tree` 进行结构变换时。希望每一层都能带上 `parentID`。
-
-```js title='样本数据'
-[
-  {
-    "id": 1,
-    "label": "t1",
-    "children": [
-      {
-        "id": 2,
-        "label": "t2",
+```js
+var treeData = [
+    {
+        "id": 1,
+        "label": "t1",
         "children": [
-          {
-            "id": 4,
-            "label": "t4",
-            "children": []
-          }
+            {
+                "id": 2,
+                "label": "t2",
+                "children": [
+                    {"id": 4, "label": "t4", "children": []}
+                ]
+            },
+            {"id": 3, "label": "t3", "children": []}
         ]
-      },
-      {
-        "id": 3,
-        "label": "t3",
-        "children": []
-      }
-    ]
-  },
-  {
-    "id": 5,
-    "label": "t5",
-    "children": []
-  }
+    },
+    {"id": 5, "label": "t5", "children": []}
 ]
-```
 
-```js title='DataQL 查询'
-var treeData = ..// 样本数据
 var treeFmt = (dat) -> {
     return {
-        "id"       : dat.id,
-        "parent_id": ((@[-3] !=null)? @[-3].id : null), // 获取整个环境栈然后在倒数第三层上获取
-        "label"    : dat.label,
-        "children" : dat.children => [ treeFmt(#) ]
+        "id": dat.id,
+        "parent_id": ((@[-3] != null) ? @[-3].id : null),
+        "label": dat.label,
+        "children": dat.children => [ treeFmt(#) ]
     }
 }
+
 return treeData => [ treeFmt(#) ]
 ```
 
-参照数据 `@[-3]` 含义如下：
+处理 `id = 4` 的节点时，环境栈包含六层数据：
 
-![Tree](../_img/CC2_F439_1D05_42F7.jpeg)
+| 访问位置 | 对应数据 |
+| --- | --- |
+| `@[-1]`、`#` | 当前节点，`id = 4` |
+| `@[-2]` | 父节点的 `children` 列表 |
+| `@[-3]` | 父节点，`id = 2` |
+| `@[-4]` | `id = 1` 节点的 `children` 列表 |
+| `@[-5]` | `id = 1` 的节点 |
+| `@[-6]`、`$` | 最外层的 `treeData` 列表 |
+
+![嵌套列表转换的环境栈与父节点位置](/img/dataql/CC2_F439_1D05_42F7.jpeg)
+
+本例中，`@[-3].id` 读取父节点的编号。下标取决于转换的嵌套层次，增加一层转换后，应按新的环境栈选择位置。
+
+执行结果如下，根节点的 `parent_id` 为 `null`，在此 JSON 输出中省略：
+
+```json
+[
+    {
+        "id": 1,
+        "label": "t1",
+        "children": [
+            {
+                "id": 2,
+                "parent_id": 1,
+                "label": "t2",
+                "children": [
+                    {"id": 4, "parent_id": 2, "label": "t4", "children": []}
+                ]
+            },
+            {"id": 3, "parent_id": 1, "label": "t3", "children": []}
+        ]
+    },
+    {"id": 5, "label": "t5", "children": []}
+]
+```
+
+## 同名变量与字段
+
+省略访问符时，优先读取可见的本地变量，再读取当前转换对象的字段。需要明确读取字段时使用 `#.字段名`。
+
+```js
+var name = 'local';
+var data = {"name": "Alice"};
+return data => {"variable": name, "field": #.name};
+```
+
+结果为 `{"variable":"local","field":"Alice"}`。`${name}` 始终表示参数访问，不表示转换环境的根字段。

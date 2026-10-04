@@ -1,0 +1,63 @@
+<!--
+  Copyright 2015-2026 the original author or authors.
+
+  Licensed under the Apache License, Version 2.0.
+  See the LICENSE.txt file for the full license.
+  https://www.apache.org/licenses/LICENSE-2.0
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="444" viewBox="0 0 1020 444" role="img" aria-labelledby="title description">
+  <title id="title">Draft, published API and release history</title>
+  <desc id="description">One API retains an editable draft and release snapshots. Saving updates the draft. Publishing creates a snapshot for API calls and documents. In this example v2 is published and v1 is historical. The next publication moves v2 into history. Restoring a historical snapshot copies its content into the draft for publication as a new version.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#202020"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: Arial, Helvetica, sans-serif; fill: #202020; }
+    .label { font-size: 20px; font-weight: 600; text-anchor: middle; }
+    .action { font-size: 18px; fill: #777777; text-anchor: middle; }
+    .version { font-size: 26px; font-weight: 600; text-anchor: middle; }
+    .icon { fill: #ffffff; stroke: #202020; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .flow { fill: none; stroke: #202020; stroke-width: 2; marker-end: url(#arrow); }
+  </style>
+  <rect width="1020" height="444" fill="#ffffff"/>
+
+  <!-- Draft and edit loop -->
+  <path d="M 157 200 H 202 L 224 222 V 279 H 157 Z" class="icon"/>
+  <path d="M 202 201 V 222 H 223 M 169 235 H 211 M 169 247 H 211 M 169 259 H 199" fill="none" stroke="#202020" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="190" y="313" class="label">Draft</text>
+  <path d="M 144 239 H 88 V 158 H 190 V 187" class="flow"/>
+  <text x="140" y="141" class="action">Edit / Save</text>
+
+  <!-- Publishing copies the draft into a release snapshot -->
+  <path d="M 267 239 H 437" class="flow"/>
+  <text x="352" y="217" class="action">Publish snapshot</text>
+  <path d="M 477 200 H 522 L 544 222 V 279 H 477 Z" fill="#ffffff" stroke="#d4b300" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M 520 208 L 536 224" fill="none" stroke="#d4b300" stroke-width="3" stroke-linecap="round"/>
+  <text x="510" y="257" class="version">v2</text>
+  <text x="510" y="313" class="label">Published</text>
+
+  <!-- Requests read the active snapshot -->
+  <rect x="489" y="24" width="42" height="66" rx="4" class="icon"/>
+  <path d="M 497 32 H 523 V 78 H 497 Z" class="icon"/>
+  <circle cx="510" cy="84" r="2" fill="#202020"/>
+  <rect x="478" y="41" width="64" height="29" rx="2" fill="#333333"/>
+  <text x="510" y="62" style="fill: #ffffff" font-size="20" font-weight="600" text-anchor="middle">API</text>
+  <text x="510" y="121" class="label">API calls / API docs</text>
+  <path d="M 510 184 V 143" class="flow"/>
+
+  <!-- Superseded snapshots remain in history -->
+  <path d="M 587 239 H 735" class="flow"/>
+  <text x="661" y="217" class="action">Next publish</text>
+  <path d="M 799 182 H 844 L 866 204 V 261 H 799 Z" class="icon"/>
+  <path d="M 787 194 H 832 L 854 216 V 273 H 787 Z" class="icon"/>
+  <path d="M 775 206 H 820 L 842 228 V 285 H 775 Z" class="icon"/>
+  <path d="M 820 207 V 228 H 841" fill="none" stroke="#202020" stroke-width="2" stroke-linejoin="round"/>
+  <text x="808" y="263" class="version">v1</text>
+  <text x="808" y="313" class="label">History</text>
+
+  <!-- Restore creates draft content for a subsequent publication -->
+  <path d="M 808 334 V 402 H 190 V 334" class="flow"/>
+  <text x="510" y="387" class="action">Restore to draft</text>
+</svg>

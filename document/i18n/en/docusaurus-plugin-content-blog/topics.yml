@@ -1,0 +1,6 @@
+dataway:
+  label: Dataway in practice
+  description: Embed API configuration, debugging, and publishing in an existing application.
+dataql-recipes:
+  label: DataQL recipes
+  description: Executable recipes for trees, grouping, joins, and reports.

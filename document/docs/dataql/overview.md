@@ -1,78 +1,39 @@
 ---
 id: overview
-sidebar_position: 1
-title: 什么是DataQL？
-description: DataQL 全称为 Data Query Language，它是一种查询语言，旨在通过提供直观、灵活的语法来描述获取数据的需求。
+title: 1. 语言入门
 ---
-# 介绍
 
-DataQL 全称为 Data Query Language，它是一种查询语言，旨在通过提供直观、灵活的语法来描述获取数据的需求 。
+{/* llms:start */}
 
-数据的存储根据其业务形式通常是较为简单的，并不适合直接在页面上进行展示。因此开发页面的前端工程师需要为此做大量的工作，这就是 DataQL 极力解决的问题。
+DataQL（Data Query Language）是一门数据查询与转换语言。脚本通过变量、表达式和函数组织计算，用对象、列表及转换模板生成结果。SQL 执行器负责查询数据库，内置函数库提供可导入的数据处理函数；应用可以扩展这两类能力。
 
-例如：下面这个 DataQL 从 `userByID` 函数中查询 id 为 4 的用户相关信息并返回给应用。
+- [第一个脚本](tutorial/first-query.md)：从返回一个值开始，逐步完成计算和列表转换。
+- [语言基础](syntax/lexical.md)：学习书写规则、类型、变量和运算符。
+- [流程与函数](syntax/flow.md)：编写分支、函数、导入和代码片段。
+- [数据访问与转换](syntax/data.md)：读取参数、访问嵌套数据并组织结果。
+- [执行选项](hints/hint_core.md)：查阅索引越界和数值精度等 Hint。
+- [SQL 执行器](sql/execute.md)：使用 SQL 查询、动态规则、分页和事务。
+- [内置函数库](funx/string.md)：查阅字符串、集合、日期、JSON 等函数。
 
-```json title='查询语句'
-return userByID({'id': 4}) => {
-    'name',
-    'sex',
-    'age'
-}
+脚本可在 [Dataway 控制台](../dataway/intro/quickstart.md)中运行，也可由应用[独立使用 DataQL 引擎](../dataway/dataql-engine/execute.md)执行。
+
+{/* llms:end */}
+
+## 一段 DataQL
+
+```js
+var people = [{"name": "Alice", "age": 25}, {"name": "Bob", "age": 30}];
+return people => [{"name", "nextAge": age + 1}];
 ```
 
-```json title='查询结果'
-{
-  'name' : '马三',
-  'sex'  : 'F',
-  'age'  : 25
-}
+```json
+[{"name":"Alice","nextAge":26},{"name":"Bob","nextAge":31}]
 ```
 
-在比如：性别数据的字典映射，为此您可以通过 DataQL 的表达式进行快速的转换。从而无需任何服务端和前端的开发。
+`var` 保存数据，`=>` 按模板转换每一项，`return` 返回查询结果。变量无需声明类型，结果可以是单个值、对象或列表。
 
-```json title='查询语句'
-return userByID({'id': 4}) => {
-    'name',
-    'sex' : (sex == 'F') ? '男' : '女' ,
-    'age' : age + '岁'
-}
-```
+## 阅读顺序
 
-```json title='查询结果'
-{
-  'name' : '马三',
-  'sex'  : '男',
-  'age'  : '25岁'
-}
-```
+初次使用从本章开始，再依次阅读语言基础、流程与函数、数据访问与转换。需要数据库查询时进入 SQL 执行器章节，需要处理字符串或集合时查阅函数库。Hint 参考用于查找具体执行选项。
 
-还可以定义一个查询函数来重用这一逻辑。
-
-```json title='查询语句'
-var sex_str = (sex) -> {
-    return (sex == 'F' ? '男' : '女');
-}
-
-return userByID({'id': 4}) => {
-    'name',
-    'sex' : sex_str(sex),
-    'age' : age + '岁'
-}
-```
-
-# 架构
-
-![架构图](./_img/CC2_5C5A_6D1E_18C4.png)
-
-# 特性
-
-DataQL 有一些设计原则，这也使其成为有一定的特性
-- **层次结构**：多数产品都涉及数据的层次结构，为了保证结构的一致性 DataQL 结果也是分层的
-- **数据为中心**：前端工程是一个比较典型的场景，但是 DataQL 不局限于此（后端友好性）
-- **弱类型定义**：语言中不会要求声明任何形式的类型结构
-- **简单逻辑**：具备简单逻辑处理能力：表达式计算、对象取值、条件分支、lambda和函数
-- **编译运行**：查询的执行是基于编译结果的
-- **混合语言**：允许查询中混合任意的其它语言代码，典型的场景是查询中混合 SQL 查询语句
-- **类 JS 语法**：类JS语法设计，学习成本极低
-
-基于这些原则和特性，DataQL变为构建应用程序的强大而高效的环境。
+完整的数据处理案例见 [DataQL 数据处理专栏](/blog/topics/dataql-recipes)。
