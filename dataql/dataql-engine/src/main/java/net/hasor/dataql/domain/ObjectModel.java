@@ -97,6 +97,9 @@ public class ObjectModel implements DataModel {
         if (dataItem instanceof ListModel) {
             return (ListModel) dataItem;
         }
+        if (dataItem == null) {
+            return null;
+        }
         throw new ClassCastException(dataItem.getClass() + " not Cast to ListModel.");
     }
 
@@ -111,6 +114,9 @@ public class ObjectModel implements DataModel {
         if (dataItem instanceof ObjectModel) {
             return (ObjectModel) dataItem;
         }
+        if (dataItem == null) {
+            return null;
+        }
         throw new ClassCastException(dataItem.getClass() + " not Cast to ObjectModel.");
     }
 
@@ -124,6 +130,9 @@ public class ObjectModel implements DataModel {
         DataModel dataItem = this.dataModel.get(fieldName);
         if (dataItem instanceof UdfModel) {
             return (UdfModel) dataItem;
+        }
+        if (dataItem == null) {
+            return null;
         }
         throw new ClassCastException(dataItem.getClass() + " not Cast to UdfModel.");
     }

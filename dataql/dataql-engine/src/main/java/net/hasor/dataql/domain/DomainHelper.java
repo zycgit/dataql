@@ -37,7 +37,7 @@ public class DomainHelper {
             } else {
                 return ValueModel.FALSE;
             }
-        } else if (object instanceof CharSequence) {
+        } else if (object instanceof CharSequence || object instanceof Character) {
             // 基础类型：字符串
             return new ValueModel(String.valueOf(object));
         } else if (object instanceof Number) {
@@ -49,7 +49,7 @@ public class DomainHelper {
         } else if (object instanceof UUID) {
             // 外部类型：UUID -> String
             return new ValueModel(object.toString());
-        } else if (object.getClass().isEnum()) {
+        } else if (object instanceof Enum<?>) {
             // 外部类型：枚举 -> ValueModel（字符串）
             return new ValueModel(((Enum<?>) object).name());
         } else if (object instanceof Map mapData) {

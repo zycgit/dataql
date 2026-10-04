@@ -105,7 +105,7 @@ public class ValueModel implements DataModel {
         return this.value instanceof Boolean;
     }
 
-    /** 转换为 boolean 值，如果为空值，那么返回false。任何整数非0值都为true */
+    /** 转换为 boolean 值，如果为空值，那么返回false。任何数值非0值都为true */
     public boolean asBoolean() {
         if (this.value == null) {
             return false;
@@ -113,11 +113,17 @@ public class ValueModel implements DataModel {
         if (this.value instanceof Boolean) {
             return (Boolean) this.value;
         }
-        if (this.value instanceof Number) {
-            return ((Number) this.value).intValue() != 0;
+        if (this.value instanceof BigInteger integer) {
+            return integer.signum() != 0;
+        }
+        if (this.value instanceof BigDecimal decimal) {
+            return decimal.signum() != 0;
+        }
+        if (this.value instanceof Number number) {
+            return number.doubleValue() != 0;
         }
         if (this.value instanceof String strVal) {
-            if (strVal.length() == 0 //
+            if (strVal.isEmpty() //
                     || "null".equals(strVal) //
                     || "NULL".equals(strVal)) {
                 return false;

@@ -18,10 +18,10 @@ public enum HintNames {
     MAX_DECIMAL_DIGITS("20"),
     /** 小数的舍入模式，参考 RoundingEnum 定义的舍入模式(一共八种)，默认为：四舍五入。详细配置参考：RoundingEnum 枚举。 */
     NUMBER_ROUNDING(NUMBER_ROUNDING_HALF_UP),
-    /** 浮点数计算使用的最小数值宽度，可选值有：float,double,big。默认为：double */
-    MIN_DECIMAL_WIDTH(MIN_DECIMAL_WIDTH_DOUBLE),
-    /** 整数计算使用的最小数值宽度，可选值有：byte,short,int,long,big。默认为：int */
-    MIN_INTEGER_WIDTH(MIN_INTEGER_WIDTH_INT),
+    /** 浮点数计算使用的最小数值宽度，可选值有：float,double,big。默认为：float */
+    MIN_DECIMAL_WIDTH(MIN_DECIMAL_WIDTH_FLOAT),
+    /** 整数计算使用的最小数值宽度，可选值有：byte,short,int,long,big。默认为：byte */
+    MIN_INTEGER_WIDTH(MIN_INTEGER_WIDTH_BYTE),
     /** 外部片段调用的类型，例如 @@insert 会传递 "insert"，@@select 传递 "select" */
     FRAGMENT_TYPE(null);
     //

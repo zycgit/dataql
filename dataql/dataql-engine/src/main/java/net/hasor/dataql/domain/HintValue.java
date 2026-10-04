@@ -16,9 +16,9 @@ public interface HintValue {
     String MAX_DECIMAL_DIGITS          = "MAX_DECIMAL_DIGITS";
     /** 小数的舍入模式，参考 RoundingEnum 定义的舍入模式(一共八种)，默认为：四舍五入。详细配置参考：RoundingEnum 枚举。 */
     String NUMBER_ROUNDING             = "NUMBER_ROUNDING";
-    /** 浮点数计算使用的最小数值宽度，可选值有：float,double,big。默认为：double */
+    /** 浮点数计算使用的最小数值宽度，可选值有：float,double,big。默认为：float */
     String MIN_DECIMAL_WIDTH           = "MIN_DECIMAL_WIDTH";
-    /** 整数计算使用的最小数值宽度，可选值有：byte,short,int,long,big。默认为：int */
+    /** 整数计算使用的最小数值宽度，可选值有：byte,short,int,long,big。默认为：byte */
     String MIN_INTEGER_WIDTH           = "MIN_INTEGER_WIDTH";
     //
     //
@@ -37,13 +37,13 @@ public interface HintValue {
     String INDEX_OVERFLOW_NEAR         = "near";
     //
     //
-    /** 浮点数计算使用的最小数值宽度，可选值有：float,double,big。默认为：double */
+    /** 浮点数计算使用的最小数值宽度，可选值有：float,double,big。默认为：float */
     String MIN_DECIMAL_WIDTH_FLOAT     = "float";
     String MIN_DECIMAL_WIDTH_DOUBLE    = "double";
     String MIN_DECIMAL_WIDTH_BIG       = "big";
     //
     //
-    /** 整数计算使用的最小数值宽度，可选值有：byte,short,int,long,big。默认为：int */
+    /** 整数计算使用的最小数值宽度，可选值有：byte,short,int,long,big。默认为：byte */
     String MIN_INTEGER_WIDTH_BYTE      = "byte";
     String MIN_INTEGER_WIDTH_SHORT     = "short";
     String MIN_INTEGER_WIDTH_INT       = "int";
