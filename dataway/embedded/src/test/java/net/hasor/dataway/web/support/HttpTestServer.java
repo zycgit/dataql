@@ -57,9 +57,12 @@ public final class HttpTestServer implements AutoCloseable {
         }
     }
 
-    public HttpResponse<String> send(String method, String path, String contentType, byte[] body) throws IOException, InterruptedException {
+    public HttpResponse<String> send(String method, String path, String contentType, byte[] body, String... headers) throws IOException, InterruptedException {
         URI uri = URI.create("http://127.0.0.1:" + this.server.getAddress().getPort() + path);
         HttpRequest.Builder request = HttpRequest.newBuilder(uri).timeout(Duration.ofSeconds(10));
+        if (headers.length > 0) {
+            request.headers(headers);
+        }
         if (contentType != null) {
             request.header("Content-Type", contentType);
         }

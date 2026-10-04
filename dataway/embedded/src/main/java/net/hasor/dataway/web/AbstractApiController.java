@@ -6,6 +6,7 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.web;
+import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
@@ -14,6 +15,7 @@ import java.util.Objects;
 import java.util.concurrent.Callable;
 import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
+import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ResultInfo;
 import net.hasor.dataway.model.WebRequest;
 import net.hasor.dataway.model.WebResponse;
@@ -32,6 +34,31 @@ public abstract class AbstractApiController {
 
     public final Operation getOperation() {
         return this.operation;
+    }
+
+    /** Prepares the operation inputs after authorization and before management interception. */
+    public final Map<String, Object> getParameters(WebRequest request) throws IOException {
+        Map<String, String> query = this.query(request);
+        Map<String, Object> body = request.readBody();
+        Map<String, Object> parameters = new LinkedHashMap<>(query);
+        parameters.putAll(body);
+        if (this.operation != Operation.LIST) {
+            parameters.put("id", this.id(query, body));
+        }
+        return parameters;
+    }
+
+    /** Resolves the stored target before an interceptor can approve or reject the operation. */
+    public ApiDefinition getTargetDefinition(WebRequest request, Map<String, Object> parameters) {
+        if (this.operation == Operation.LIST) {
+            return null;
+        } else {
+            return this.adminService.getDraftByApi(this.id(Map.of(), parameters));
+        }
+    }
+
+    public String getTargetReleaseId(WebRequest request) {
+        return null;
     }
 
     /** Reads request parameters and invokes the selected console operation. */

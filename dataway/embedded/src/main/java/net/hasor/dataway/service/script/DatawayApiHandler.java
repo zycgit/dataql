@@ -8,56 +8,39 @@
 package net.hasor.dataway.service.script;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import net.hasor.dataql.util.JsonUtils;
-import net.hasor.dataway.authorization.AuthorizationCheck;
-import net.hasor.dataway.authorization.Operation;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import net.hasor.cobble.StringUtils;
 import net.hasor.dataway.authorization.UserIdentity;
-import net.hasor.dataway.dal.ApiDataAccessLayer;
-import net.hasor.dataway.dal.EntityType;
-import net.hasor.dataway.dal.FieldDef;
-import net.hasor.dataway.model.*;
+import net.hasor.dataway.model.ResultInfo;
+import net.hasor.dataway.model.WebRequest;
+import net.hasor.dataway.model.WebResponse;
 import net.hasor.dataway.service.BeanContainer;
 import net.hasor.dataway.service.ConvertUtils;
 import net.hasor.dataway.service.DatawayException;
 import net.hasor.dataway.service.WebHandler;
-import tools.jackson.databind.JsonNode;
-import static net.hasor.dataway.dal.FieldDef.*;
 
 /** Invokes published APIs; it exposes neither management operations nor UI assets. */
 public final class DatawayApiHandler extends WebHandler {
-    private final AuthorizationCheck authorizationCheck;
-    private final ApiDataAccessLayer access;
-    private final DatawayEngine      engine;
+    private static final String         SOURCE_HEADER = "x-dataway-source";
+    private final        ApiServiceImpl apiService;
 
     public DatawayApiHandler(BeanContainer beans) {
         super(beans);
-        this.authorizationCheck = beans.getBean(AuthorizationCheck.class);
-        this.access = beans.getBean(ApiDataAccessLayer.class);
-        this.engine = beans.getBean(DatawayEngine.class);
+        this.apiService = beans.getBean(ApiServiceImpl.class);
     }
 
     @Override
     protected ResultInfo handleRequest(WebRequest request, WebResponse response) throws Exception {
-        UserIdentity identity = request.getIdentity();
-        if (!this.authorizationCheck.check(identity, Operation.INVOKE)) {
-            throw new DatawayException(401, "Unauthorized");
-        }
-
+        UserIdentity identity = this.apiService.authorize(request.getIdentity());
         Map<String, Object> body = request.readBody();
         Map<String, Object> parameters = this.parameters(request, body);
         Map<String, ?> metadata = ConvertUtils.convertToWebContext(request, parameters, body);
-        String path = request.getPathInfo();
-        String apiPath = path.isEmpty() ? "/" : path;
-        ApiDefinition definition = this.findApi(request.getMethod(), apiPath);
-        if (definition == null) {
-            throw new DatawayException(404, "Published API not found");
-        }
-
-        Map<String, Object> options = this.options(definition);
-        List<String> parameterNames = this.parameterNames(definition);
-        DatawayQuery query = this.engine.newQuery(definition, parameterNames, options);
-        return query.execute(Operation.INVOKE, identity, parameters, metadata, response);
+        String marker = request.getHeaders().get(SOURCE_HEADER);
+        ApiCallSource source = StringUtils.equalsIgnoreCase(marker, ApiCallSource.UI.name()) ? ApiCallSource.UI : ApiCallSource.HTTP;
+        return this.apiService.invokePublished(request.getMethod(), request.getPathInfo(), parameters, identity, source, metadata, response);
     }
 
     private Map<String, Object> parameters(WebRequest request, Map<String, Object> body) {
@@ -81,59 +64,6 @@ public final class DatawayApiHandler extends WebHandler {
         }
         values.putAll(body);
         return values;
-    }
-
-    private ApiDefinition findApi(String method, String path) {
-        Map<FieldDef, String> conditions = Map.of(METHOD, method.toUpperCase(Locale.ROOT), PATH, path, STATUS, "1");
-        List<Map<FieldDef, String>> releases = this.access.listObjects(EntityType.RELEASE, conditions);
-        Comparator<Map<FieldDef, String>> order = Comparator.comparingLong(row -> Long.parseLong(row.get(RELEASE_TIME)));
-        Map<FieldDef, String> release = releases.stream().max(order).orElse(null);
-        if (release == null) {
-            return null;
-        }
-
-        ApiDefinition definition = new ApiDefinition();
-        definition.setId(release.get(API_ID));
-        definition.setMethod(release.get(METHOD));
-        definition.setPath(release.get(PATH));
-        definition.setType(ApiScriptType.fromName(release.get(TYPE)));
-        definition.setScript(release.get(SCRIPT));
-        definition.setDescription(release.get(COMMENT));
-        definition.setSchema(release.get(SCHEMA));
-        definition.setSample(release.get(SAMPLE));
-        definition.setOptions(release.get(OPTION));
-        return definition;
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> options(ApiDefinition definition) {
-        String document = definition.getOptions();
-        try {
-            String json = document == null || document.isBlank() ? "{}" : document;
-            Map<String, Object> options = JsonUtils.readValue(json, Map.class);
-            return options == null ? Map.of() : options;
-        } catch (RuntimeException e) {
-            throw new DatawayException(400, "Invalid API options: " + e.getMessage(), e);
-        }
-    }
-
-    private List<String> parameterNames(ApiDefinition definition) {
-        String sample = definition.getSample();
-        if (sample == null || sample.isBlank()) {
-            return List.of();
-        }
-
-        JsonNode requestBody = JsonUtils.readTree(sample).path("requestBody");
-        if (requestBody.isString()) {
-            requestBody = JsonUtils.readTree(requestBody.stringValue());
-        }
-        if (requestBody.isMissingNode() || requestBody.isNull()) {
-            return List.of();
-        }
-        if (!requestBody.isObject()) {
-            throw new DatawayException(400, "requestBody must be a JSON object");
-        }
-        return List.copyOf(requestBody.propertyNames());
     }
 
     private static String decode(String value) {

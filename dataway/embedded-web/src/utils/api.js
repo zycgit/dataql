@@ -144,7 +144,9 @@ export class DatawayClient {
                 }
             }
         }
-        return this.send(url, api.select, queryOnly ? undefined : values, requestHeaders(rows));
+        const headers = requestHeaders(rows);
+        headers.set('X-Dataway-Source', 'UI');
+        return this.send(url, api.select, queryOnly ? undefined : values, headers);
     }
 
     async send(url, method, body, suppliedHeaders) {

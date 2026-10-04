@@ -19,14 +19,13 @@ import net.hasor.dataway.model.WebRequest;
 import net.hasor.dataway.service.admin.*;
 import net.hasor.dataway.service.document.DatawayDocumentHandler;
 import net.hasor.dataway.service.document.DocumentService;
-import net.hasor.dataway.service.script.ApiInterceptor;
-import net.hasor.dataway.service.script.DatawayApiHandler;
-import net.hasor.dataway.service.script.DatawayEngine;
+import net.hasor.dataway.service.script.*;
 import net.hasor.dataway.web.body.UploadStorage;
 
 /** Shared execution context with independent HTTP handlers. The host owns their routing. */
 public final class Dataway {
     private final AdminService adminService;
+    private final ApiService   apiService;
     //
     private final WebHandler   apiHandler;
     private final WebHandler   adminHandler;
@@ -70,6 +69,9 @@ public final class Dataway {
         // service
         this.adminService = new AdminServiceImpl(beans);
         beans.setBean(AdminService.class, this.adminService);
+        ApiServiceImpl apiService = new ApiServiceImpl(beans);
+        this.apiService = apiService;
+        beans.setBean(ApiServiceImpl.class, apiService);
         DocumentService documents = new DocumentService(beans, config.getDocumentTitle(), config.getDocumentVersion(), config.getDocumentServer());
         beans.setBean(DocumentService.class, documents);
 
@@ -106,6 +108,11 @@ public final class Dataway {
     /** Returns the shared API management service. */
     public AdminService getAdminService() {
         return this.adminService;
+    }
+
+    /** Returns the shared service for invoking published APIs from Java. */
+    public ApiService getApiService() {
+        return this.apiService;
     }
 
     /** Returns the business API handler. */

@@ -73,8 +73,8 @@ public class DatawayEngine {
         this.wrapParameterName = wrapParameterName;
     }
 
-    /** Creates a query from declared parameter names and options overriding engine defaults. */
-    public DatawayQuery newQuery(ApiDefinition definition, List<String> parameterNames, Map<String, Object> options) throws IOException {
+    /** Creates a query with its publication ID, or null when executing a draft or editor contents. */
+    public DatawayQuery newQuery(ApiDefinition definition, String releaseId, List<String> parameterNames, Map<String, Object> options) throws IOException {
         if (options == null) {
             options = Map.of();
         }
@@ -100,7 +100,7 @@ public class DatawayEngine {
             compiled = builder.compilerQuery(model);
         }
 
-        return new DatawayQuery(definition, compiled, this.interceptors, builder, this.customizeScope, //
+        return new DatawayQuery(definition, releaseId, compiled, this.interceptors, builder, this.customizeScope, //
                 resultOptions, wrapAllParameters, wrapParameterName, resultHandler);
     }
 

@@ -93,12 +93,32 @@ class ApiHandlerTest extends ServiceTestSupport {
         release.put(PATH, "/");
         this.publishRoute(release);
         this.config.defaultResultHandler("raw").identityProvider(request -> identity).apiInterceptor((context, chain) -> {
+            assertEquals(ApiCallSource.HTTP, context.source());
             assertEquals(Operation.INVOKE, context.operation());
             assertSame(identity, context.identity());
             assertEquals("root", context.definition().getId());
             return chain.proceed(context);
         });
         assertEquals("value", this.handle(this.config.createDataway().getApiHandler(), "GET", "").json());
+    }
+
+    @Test
+    void anonymousHttpCallsKeepTheirSourceRegardlessOfBusinessParameters() throws Exception {
+        this.publishRoute(this.release(this.info("api", "1", 1), "release", "1", 1));
+        this.config.defaultResultHandler("raw").identityProvider(request -> UserIdentity.anonymous(Map.of()));
+        this.config.authorizationCheck((identity, operation) -> true);
+        this.config.apiInterceptor((context, chain) -> {
+            assertEquals(ApiCallSource.HTTP, context.source());
+            assertFalse(context.identity().authenticated());
+            assertEquals(Operation.INVOKE, context.operation());
+            assertEquals("PROGRAMMATIC", context.parameters().get("source"));
+            return chain.proceed(context);
+        });
+        MemoryRequest request = this.request("GET", "/api");
+        request.json(Map.of("source", "PROGRAMMATIC"));
+        MemoryResponse response = new MemoryResponse();
+        this.config.createDataway().getApiHandler().handle(request, response);
+        assertEquals("value", response.json());
     }
 
     @ParameterizedTest

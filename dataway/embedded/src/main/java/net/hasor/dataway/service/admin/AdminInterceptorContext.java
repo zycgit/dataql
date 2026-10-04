@@ -11,15 +11,42 @@ import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.model.ApiDefinition;
 
-/** Definition, parameters, operation and identity for API and administration interception. */
-public record AdminInterceptorContext(ApiDefinition definition, Map<String, ?> parameters, Operation operation, UserIdentity identity) {
-    AdminInterceptorContext(ApiDefinition definition, Operation operation, UserIdentity identity, Map<String, ?> parameters) {
-        this(definition, parameters, operation, identity == null ? UserIdentity.anonymous(Map.of()) : identity);
+/** Target and submitted parameters for a management operation. */
+public class AdminInterceptorContext {
+    private final ApiDefinition  definition;
+    private final String         releaseId;
+    private final Map<String, ?> parameters;
+    private final Operation      operation;
+    private final UserIdentity   identity;
+
+    AdminInterceptorContext(ApiDefinition definition, String releaseId, Operation operation, UserIdentity identity, Map<String, ?> parameters) {
+        this.definition = definition;
+        this.releaseId = releaseId;
+        this.parameters = parameters;
+        this.operation = operation;
+        this.identity = identity == null ? UserIdentity.anonymous(Map.of()) : identity;
     }
 
-    /** Null at HTTP entries before service lookup, and for collection or missing-target operations. */
-    @Override
+    /** Stored target, or the submitted definition when creating an API; null for collection operations. */
     public ApiDefinition definition() {
         return this.definition;
+    }
+
+    /** Selected history ID, or null when the operation does not target a publication snapshot. */
+    public String releaseId() {
+        return this.releaseId;
+    }
+
+    /** Decoded query parameters and submitted body fields. */
+    public Map<String, ?> parameters() {
+        return this.parameters;
+    }
+
+    public Operation operation() {
+        return this.operation;
+    }
+
+    public UserIdentity identity() {
+        return this.identity;
     }
 }

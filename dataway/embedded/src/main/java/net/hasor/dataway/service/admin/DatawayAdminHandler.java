@@ -11,6 +11,7 @@ import java.util.Map;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.ref.Tuple;
 import net.hasor.dataway.authorization.AuthorizationCheck;
+import net.hasor.dataway.model.ApiDefinition;
 import net.hasor.dataway.model.ResultInfo;
 import net.hasor.dataway.model.WebRequest;
 import net.hasor.dataway.model.WebResponse;
@@ -68,7 +69,14 @@ public final class DatawayAdminHandler extends WebHandler {
             throw new DatawayException(401, "Unauthorized");
         }
 
-        var context = new AdminInterceptorContext(null, controller.getOperation(), request.getIdentity(), Map.of());
+        if (this.interceptors.isEmpty()) {
+            return controller.handle(request, response);
+        }
+
+        Map<String, Object> parameters = controller.getParameters(request);
+        ApiDefinition definition = controller.getTargetDefinition(request, parameters);
+        String releaseId = controller.getTargetReleaseId(request);
+        AdminInterceptorContext context = new AdminInterceptorContext(definition, releaseId, controller.getOperation(), request.getIdentity(), parameters);
         AdminInterceptorChain chain = () -> controller.handle(request, response);
         for (int i = this.interceptors.size() - 1; i >= 0; i--) {
             AdminInterceptor interceptor = this.interceptors.get(i);

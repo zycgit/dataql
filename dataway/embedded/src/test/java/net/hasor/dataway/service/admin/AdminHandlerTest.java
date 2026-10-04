@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import net.hasor.dataway.authorization.Operation;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.dal.EntityType;
@@ -116,11 +117,20 @@ class AdminHandlerTest extends ServiceTestSupport {
 
     @Test
     void performUsesTheExecutionEngineAndDoesNotSaveTheEditorContents() throws Exception {
+        AtomicInteger intercepted = new AtomicInteger();
+        this.config.adminInterceptor((context, chain) -> {
+            assertEquals("/preview", context.definition().getPath());
+            assertEquals("return 'preview';", context.parameters().get("codeValue"));
+            intercepted.incrementAndGet();
+            return chain.proceed();
+        });
         MemoryRequest request = this.request("POST", "/perform");
         request.json(Map.of("id", "-1", "select", "POST", "apiPath", "/preview", "codeType", "DataQL", "codeValue", "return 'preview';"));
         MemoryResponse response = new MemoryResponse();
         this.config.defaultResultHandler("raw").createDataway().getAdminHandler().handle(request, response);
         assertEquals("preview", response.json());
+        assertEquals(1, intercepted.get());
+        assertEquals(1, request.getReads());
         verify(this.access, never()).write(anyList());
     }
 }

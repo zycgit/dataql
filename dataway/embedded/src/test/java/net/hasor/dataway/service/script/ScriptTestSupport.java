@@ -38,6 +38,6 @@ abstract class ScriptTestSupport extends ServiceTestSupport {
     }
 
     protected Object execute(DatawayQuery query, Map<String, ?> parameters) throws Exception {
-        return query.execute(Operation.INVOKE, null, parameters, Map.of(), new MemoryResponse()).getData();
+        return query.execute(Operation.INVOKE, null, ApiCallSource.PROGRAMMATIC, parameters, Map.of(), new MemoryResponse()).getData();
     }
 }

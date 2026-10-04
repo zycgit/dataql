@@ -38,14 +38,16 @@ public class DatawayQuery {
     private final String               wrapParameterName;
     //
     private final ApiDefinition        definition;
+    private final String               releaseId;
     private final QueryBuilder         queryBuilder;
     private final CustomizeScope       scope;
     private final QIL                  compiled;
     private final ResultHandler        resultHandler;
 
-    DatawayQuery(ApiDefinition definition, QIL compiled, List<ApiInterceptor> interceptors, QueryBuilder queryBuilder, CustomizeScope scope, //
+    DatawayQuery(ApiDefinition definition, String releaseId, QIL compiled, List<ApiInterceptor> interceptors, QueryBuilder queryBuilder, CustomizeScope scope, //
             Map<String, Object> resultOptions, boolean wrapAllParameters, String wrapParameterName, ResultHandler resultHandler) {
         this.definition = definition;
+        this.releaseId = releaseId;
         this.compiled = compiled;
         this.interceptors = interceptors;
         this.queryBuilder = queryBuilder;
@@ -58,7 +60,7 @@ public class DatawayQuery {
     }
 
     /** Prepares parameters, invokes interceptors, and formats results or unhandled execution exceptions. */
-    public ResultInfo execute(Operation operation, UserIdentity identity, Map<String, ?> parameters, Map<String, ?> request, WebResponse response) throws Exception {
+    public ResultInfo execute(Operation operation, UserIdentity identity, ApiCallSource source, Map<String, ?> parameters, Map<String, ?> request, WebResponse response) throws Exception {
         Map<String, Object> options = this.resultHandler.prepareOptions(this.resultOptions);
         long started = System.nanoTime();
 
@@ -92,7 +94,7 @@ public class DatawayQuery {
 
         ResultContext resultContext;
         try {
-            ApiInterceptorContext context = new ApiInterceptorContext(this.definition, operation, identity, parameters);
+            ApiInterceptorContext context = new ApiInterceptorContext(this.definition, this.releaseId, operation, identity, source, parameters);
             Object result = chain.proceed(this.prepareContext(context));
             if (!(result instanceof QueryResult queryResult)) {
                 return ResultInfoUtils.toResult(result);
@@ -125,7 +127,7 @@ public class DatawayQuery {
         if (this.wrapAllParameters) {
             parameters = Map.of(this.wrapParameterName, values);
         }
-        return new ApiInterceptorContext(context.definition(), context.operation(), context.identity(), parameters);
+        return new ApiInterceptorContext(context.definition(), context.releaseId(), context.operation(), context.identity(), context.source(), parameters);
     }
 
     private ResultInfo processResult(ResultContext context) throws Exception {

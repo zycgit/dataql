@@ -22,6 +22,16 @@ public final class SaveApiController extends AbstractApiController {
     }
 
     @Override
+    public ApiDefinition getTargetDefinition(WebRequest request, Map<String, Object> parameters) {
+        String id = this.id(Map.of(), parameters);
+        if (id.equals("-1")) {
+            return ConvertUtils.convertToApiDefinition(id, parameters);
+        } else {
+            return super.getTargetDefinition(request, parameters);
+        }
+    }
+
+    @Override
     protected ResultInfo execute(WebRequest request, WebResponse response, UserIdentity identity, Map<String, Object> body) throws Exception {
         return this.executeService(() -> {
             String id = this.id(this.query(request), body);

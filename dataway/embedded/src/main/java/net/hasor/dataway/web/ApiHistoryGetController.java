@@ -22,20 +22,35 @@ public final class ApiHistoryGetController extends AbstractApiController {
     }
 
     @Override
+    public ApiDefinition getTargetDefinition(WebRequest request, Map<String, Object> parameters) {
+        String id = this.id(Map.of(), parameters);
+        return this.history(id, this.getTargetReleaseId(request)).getDefinition();
+    }
+
+    private ApiRelease history(String apiID, String historyID) {
+        if (historyID == null || historyID.isBlank()) {
+            throw new DatawayException(404, "Release not found");
+        }
+
+        ApiRelease release = this.adminService.getHistoryById(historyID);
+        if (!apiID.equals(release.getDefinition().getId())) {
+            throw new DatawayException(404, "Release not found");
+        }
+        return release;
+    }
+
+    @Override
+    public String getTargetReleaseId(WebRequest request) {
+        return this.query(request).get("historyId");
+    }
+
+    @Override
     protected ResultInfo execute(WebRequest request, WebResponse response, UserIdentity identity, Map<String, Object> body) throws Exception {
         return this.executeService(() -> {
             Map<String, String> query = this.query(request);
             String id = this.id(query, body);
             ApiState state = this.adminService.getApiById(id);
-            String historyID = query.get("historyId");
-            if (historyID == null || historyID.isBlank()) {
-                throw new DatawayException(404, "Release not found");
-            }
-
-            ApiRelease release = this.adminService.getHistoryById(historyID);
-            if (!id.equals(release.getDefinition().getId())) {
-                throw new DatawayException(404, "Release not found");
-            }
+            ApiRelease release = this.history(id, query.get("historyId"));
 
             this.checkVersion(id, state.getRevision());
             return ResultInfoUtils.buildSuccess(ConvertUtils.convertToApiDetailVO(release.getDefinition(), state));

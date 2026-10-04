@@ -10,6 +10,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -20,14 +21,15 @@ import net.hasor.dataway.dal.EntityType;
 import net.hasor.dataway.dal.FieldDef;
 import net.hasor.dataway.service.Dataway;
 import net.hasor.dataway.service.config.ServiceTestSupport;
+import net.hasor.dataway.service.script.ApiCallSource;
 import net.hasor.dataway.web.support.HttpTestServer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import static net.hasor.dataway.dal.FieldDef.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class AuthorizationHttpTest extends ServiceTestSupport {
@@ -36,6 +38,7 @@ class AuthorizationHttpTest extends ServiceTestSupport {
     void everyPresetCanInvokeAPublishedApiWithItsIdentity(UserIdentity identity) throws Exception {
         AtomicInteger executions = new AtomicInteger();
         this.config.defaultResultHandler("raw").identityProvider(request -> identity).apiInterceptor((context, chain) -> {
+            assertEquals(ApiCallSource.HTTP, context.source());
             assertSame(identity, context.identity());
             assertEquals(Operation.INVOKE, context.operation());
             executions.incrementAndGet();
@@ -52,6 +55,40 @@ class AuthorizationHttpTest extends ServiceTestSupport {
 
     static Stream<UserIdentity> identities() {
         return Stream.of(UserIdentity.authenticated("caller", Map.of()), UserIdentity.consoleReadOnly("reader", Map.of()), UserIdentity.consoleAdmin("developer", Map.of()));
+    }
+
+    @ParameterizedTest
+    @CsvSource({ ", HTTP", "UI, UI", "uI, UI", "HTTP, HTTP", "PROGRAMMATIC, HTTP", "DEBUG, HTTP", "unknown, HTTP" })
+    void publicRequestsOnlyAcceptTheUiSourceMarker(String marker, ApiCallSource expected) throws Exception {
+        AtomicReference<ApiCallSource> source = new AtomicReference<>();
+        this.config.defaultResultHandler("raw").identityProvider(request -> UserIdentity.authenticated("caller", Map.of()));
+        this.config.apiInterceptor((context, chain) -> {
+            source.set(context.source());
+            return chain.proceed(context);
+        });
+        this.publishRoute(this.release(this.info("api", "1", 1), "release", "1", 1));
+        String[] headers = marker == null ? new String[0] : new String[] { "X-Dataway-Source", marker };
+        try (HttpTestServer server = new HttpTestServer("/api", this.config.createDataway().getApiHandler())) {
+            HttpResponse<String> response = server.send("GET", "/api/api", null, new byte[0], headers);
+            assertEquals(200, response.statusCode(), response.body());
+            assertEquals("value", JsonUtils.readValue(response.body(), String.class));
+        }
+        assertEquals(expected, source.get());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "UI", "PROGRAMMATIC", "DEBUG" })
+    void sourceMarkersDoNotBypassHttpAuthorization(String marker) throws Exception {
+        this.config.apiInterceptor((context, chain) -> {
+            return fail("Unauthorized calls must not enter the API interceptor chain");
+        });
+        Dataway dataway = this.config.createDataway();
+        clearInvocations(this.access);
+        try (HttpTestServer server = new HttpTestServer("/api", dataway.getApiHandler())) {
+            HttpResponse<String> response = server.send("GET", "/api/api", null, new byte[0], "X-Dataway-Source", marker);
+            assertEquals(401, response.statusCode());
+        }
+        verifyNoInteractions(this.access);
     }
 
     @Test
@@ -95,6 +132,11 @@ class AuthorizationHttpTest extends ServiceTestSupport {
     void managementRoutesAuthorizeEachRequestBeforeBodyParsingAndInterception(String method, String path, Operation operation, boolean readOnly) throws Exception {
         AtomicReference<UserIdentity> current = new AtomicReference<>();
         AtomicInteger intercepted = new AtomicInteger();
+        Map<FieldDef, String> info = this.info("api", "1", 1);
+        this.storeInfo(info);
+        Map<FieldDef, String> release = this.release(info, "release", "1", 1);
+        this.storeReleases("api", List.of(release));
+        doReturn(Optional.of(release)).when(this.access).getObject(EntityType.RELEASE, "release");
         this.config.identityProvider(request -> current.get()).adminInterceptor((context, chain) -> {
             assertSame(current.get(), context.identity());
             assertEquals(operation, context.operation());
@@ -105,18 +147,22 @@ class AuthorizationHttpTest extends ServiceTestSupport {
             Map<UserIdentity, Boolean> identities = Map.of(UserIdentity.anonymous(Map.of()), false, UserIdentity.authenticated("caller", Map.of()), false, UserIdentity.consoleReadOnly("reader", Map.of()), readOnly, UserIdentity.consoleAdmin("developer", Map.of()), true);
             for (var entry : identities.entrySet()) {
                 current.set(entry.getKey());
-                // A denied request must not reach JSON parsing or the response-replacing interceptor.
-                HttpResponse<String> response = server.send(method, "/console" + path, "application/json", "{broken".getBytes(StandardCharsets.UTF_8));
+                clearInvocations(this.access);
                 boolean allowed = entry.getValue();
+                String body = allowed ? "{\"id\":\"api\",\"version\":1}" : "{broken";
+                // A denied request must not reach JSON parsing or the response-replacing interceptor.
+                HttpResponse<String> response = server.send(method, "/console" + path + "?id=api&historyId=release", "application/json", body.getBytes(StandardCharsets.UTF_8));
                 assertEquals(allowed ? 200 : 401, response.statusCode(), current.get().identityId() + ": " + response.body());
                 if (allowed) {
                     assertEquals(Map.of("operation", operation.name()), JsonUtils.readValue(response.body(), Map.class));
+                } else {
+                    verify(this.access, never()).getObject(any(), anyString());
+                    verify(this.access, never()).listObjects(any(), anyMap());
                 }
+                verify(this.access, never()).write(anyList());
             }
         }
         assertEquals(readOnly ? 2 : 1, intercepted.get());
-        verify(this.access, never()).listObjects(any(), anyMap());
-        verify(this.access, never()).write(anyList());
     }
 
     @ParameterizedTest

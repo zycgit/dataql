@@ -31,6 +31,7 @@ test('management requests retain the host session without fetching configuration
     assert.equal(calls.length, 1);
     assert.equal(calls[0].url, 'https://example.test/gateway/operations/api-detail?id=a+b');
     assert.equal(calls[0].options.credentials, 'same-origin');
+    assert.equal(calls[0].options.headers.has('X-Dataway-Source'), false);
 });
 
 test('version conflicts are surfaced instead of silently retrying a write', async () => {
@@ -62,13 +63,37 @@ test('business invocations use the configured address and correct HTTP body sema
     await client.invoke({path: '/echo', select: 'GET'}, '{"q":"a b"}', []);
     assert.equal(calls[0].url, 'https://example.test/gateway/invoke/echo?q=a+b');
     assert.equal(calls[0].options.body, undefined);
-    await client.invoke({path: '/echo', select: 'POST'}, '{"nested":{"value":1}}', []);
+    assert.equal(calls[0].options.headers.get('X-Dataway-Source'), 'UI');
+    await client.invoke({path: '/echo', select: 'POST'}, '{"nested":{"value":1}}', [
+        {checked: true, name: 'x-dataway-source', value: 'PROGRAMMATIC'},
+        {checked: true, name: 'X-Custom', value: 'value'},
+    ]);
     assert.deepEqual(JSON.parse(calls[1].options.body), {nested: {value: 1}});
+    assert.equal(calls[1].options.headers.get('X-Dataway-Source'), 'UI');
+    assert.equal(calls[1].options.headers.get('X-Custom'), 'value');
     await assert.rejects(client.invoke({path: '/../outside', select: 'POST'}, '{}', []));
     for (const value of ['null', '[]', '"string"']) {
         assert.throws(() => parameters(value));
     }
     assert.throws(() => parameters('{"nested":{}}', 'GET'));
+});
+
+test('debug execution uses the management entry without a UI invocation marker', async () => {
+    const calls = [];
+    globalThis.fetch = async (url, options) => {
+        calls.push({url: url.href, options});
+        return Response.json({success: true, value: 'preview'});
+    };
+    const client = new DatawayClient({adminApi: '../operations/'}, page);
+    for (const action of ['perform', 'smoke']) {
+        await client.execute(action, 'api', {requestBody: {id: 1}});
+    }
+    assert.equal(calls[0].url, 'https://example.test/gateway/operations/perform?id=api');
+    assert.equal(calls[1].url, 'https://example.test/gateway/operations/smoke?id=api');
+    for (const call of calls) {
+        assert.equal(call.options.method, 'POST');
+        assert.equal(call.options.headers.has('X-Dataway-Source'), false);
+    }
 });
 
 test('JSON, text, and binary results preserve the original download bytes and content type', async () => {

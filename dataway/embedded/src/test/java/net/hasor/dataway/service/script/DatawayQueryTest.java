@@ -38,7 +38,7 @@ class DatawayQueryTest extends ScriptTestSupport {
             case "#" -> Map.of("name", "environment");
             default -> throw new AssertionError(symbol);
         };
-        DatawayQuery query = this.engine().newQuery(this.definition("api", "return [${name}, ${fallback}, @{name}, #{name}];"), List.of(), null);
+        DatawayQuery query = this.engine().newQuery(this.definition("api", "return [${name}, ${fallback}, @{name}, #{name}];"), null, List.of(), null);
         Map<String, String> input = Map.of("name", "request");
         assertEquals(List.of("request", "host", "context", "environment"), this.execute(query, input));
         assertEquals(Map.of("name", "request"), input);
@@ -54,6 +54,7 @@ class DatawayQueryTest extends ScriptTestSupport {
             assertEquals("api", context.definition().getId());
             assertEquals(Operation.INVOKE, context.operation());
             assertSame(identity, context.identity());
+            assertEquals(ApiCallSource.PROGRAMMATIC, context.source());
             assertEquals(Map.of("name", "input"), context.parameters());
             events.add("first-before");
             Object result = chain.proceed(context);
@@ -66,8 +67,8 @@ class DatawayQueryTest extends ScriptTestSupport {
             events.add("second-after");
             return result;
         });
-        DatawayQuery query = this.engine().newQuery(this.definition("api", "return ${name};"), List.of(), null);
-        assertEquals("input", query.execute(Operation.INVOKE, identity, Map.of("name", "input"), Map.of(), new MemoryResponse()).getData());
+        DatawayQuery query = this.engine().newQuery(this.definition("api", "return ${name};"), null, List.of(), null);
+        assertEquals("input", query.execute(Operation.INVOKE, identity, ApiCallSource.PROGRAMMATIC, Map.of("name", "input"), Map.of(), new MemoryResponse()).getData());
         assertEquals(List.of("first-before", "second-before", "second-after", "first-after"), events);
     }
 
@@ -76,13 +77,14 @@ class DatawayQueryTest extends ScriptTestSupport {
         ResultInfo response = ResultInfoUtils.json(202, Map.of("queued", true));
         this.interceptors.add((context, chain) -> {
             assertNull(context.identity().identityId());
+            assertEquals(ApiCallSource.PROGRAMMATIC, context.source());
             assertFalse(context.identity().authenticated());
             assertTrue(context.identity().attributes().isEmpty());
             assertTrue(context.identity().operations().isEmpty());
             return response;
         });
-        DatawayQuery query = this.engine().newQuery(this.definition("api", "throw 500, 'must not execute';"), List.of(), null);
-        assertSame(response, query.execute(Operation.INVOKE, null, Map.of(), Map.of(), new MemoryResponse()));
+        DatawayQuery query = this.engine().newQuery(this.definition("api", "throw 500, 'must not execute';"), null, List.of(), null);
+        assertSame(response, query.execute(Operation.INVOKE, null, ApiCallSource.PROGRAMMATIC, Map.of(), Map.of(), new MemoryResponse()));
     }
 
     @ParameterizedTest
@@ -93,8 +95,8 @@ class DatawayQueryTest extends ScriptTestSupport {
         QueryResult result = mock(QueryResult.class);
         when(result.getData()).thenReturn(model);
         this.interceptors.add((context, chain) -> result);
-        DatawayQuery query = this.engine().newQuery(this.definition("api", "return 1;"), List.of(), null);
-        ResultInfo response = query.execute(Operation.INVOKE, null, Map.of(), Map.of(), new MemoryResponse());
+        DatawayQuery query = this.engine().newQuery(this.definition("api", "return 1;"), null, List.of(), null);
+        ResultInfo response = query.execute(Operation.INVOKE, null, ApiCallSource.PROGRAMMATIC, Map.of(), Map.of(), new MemoryResponse());
         if (value instanceof ResultInfo) {
             assertSame(value, response);
         } else {
@@ -109,7 +111,7 @@ class DatawayQueryTest extends ScriptTestSupport {
 
     @Test
     void scriptThrowsRetainTheirCodeValueAndLocation() throws Exception {
-        DatawayQuery query = this.engine().newQuery(this.definition("api", "throw 409, {'reason':'conflict'};"), List.of(), null);
+        DatawayQuery query = this.engine().newQuery(this.definition("api", "throw 409, {'reason':'conflict'};"), null, List.of(), null);
         Map<?, ?> result = (Map<?, ?>) this.execute(query, Map.of());
         assertEquals(false, result.get("success"));
         assertEquals(409, ((Number) result.get("code")).intValue());
@@ -126,7 +128,7 @@ class DatawayQueryTest extends ScriptTestSupport {
         this.interceptors.add((context, chain) -> {
             throw new ExecutionException(new IllegalStateException("storage offline"));
         });
-        DatawayQuery query = this.engine().newQuery(this.definition("api", "return 1;"), List.of(), null);
+        DatawayQuery query = this.engine().newQuery(this.definition("api", "return 1;"), null, List.of(), null);
         Object result = this.execute(query, Map.of());
         if (structured) {
             Map<?, ?> failure = (Map<?, ?>) result;
@@ -146,7 +148,7 @@ class DatawayQueryTest extends ScriptTestSupport {
         this.interceptors.add((context, chain) -> {
             throw new IllegalStateException();
         });
-        DatawayQuery query = this.engine().newQuery(this.definition("api", "return 1;"), List.of(), null);
+        DatawayQuery query = this.engine().newQuery(this.definition("api", "return 1;"), null, List.of(), null);
         Map<?, ?> result = (Map<?, ?>) this.execute(query, Map.of());
         assertEquals(false, result.get("success"));
         assertNull(result.get("value"));
@@ -161,7 +163,7 @@ class DatawayQueryTest extends ScriptTestSupport {
                  "where":"@codeLocation","lifecycle":"@timeLifeCycle","execution":"@timeExecution",
                  "literal":{"list":[{"name":"original"},null]},"text":"@unknown"}
                 """))));
-        DatawayQuery query = engine.newQuery(this.definition("api", "return 'value';"), List.of(), null);
+        DatawayQuery query = engine.newQuery(this.definition("api", "return 'value';"), null, List.of(), null);
         Map<?, ?> first = (Map<?, ?>) this.execute(query, Map.of());
         assertEquals("value", first.get("data"));
         assertEquals(true, first.get("status"));

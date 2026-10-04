@@ -28,18 +28,18 @@ class DatawayEngineTest extends ScriptTestSupport {
     @Test
     void dataqlUsesTheRealCompilerAndQueryCustomizers() throws Exception {
         this.config.defaultResultHandler("raw");
-        DatawayQuery query = this.engine().newQuery(this.definition("api", "return [customized, ${name}];"), List.of("name"), null);
+        DatawayQuery query = this.engine().newQuery(this.definition("api", "return [customized, ${name}];"), null, List.of("name"), null);
         assertEquals(List.of("query", "value"), this.execute(query, Map.of("name", "value")));
-        assertThrows(QueryParseException.class, () -> this.engine().newQuery(this.definition("api", "invalid script !!!"), List.of(), null));
+        assertThrows(QueryParseException.class, () -> this.engine().newQuery(this.definition("api", "invalid script !!!"), null, List.of(), null));
     }
 
     @Test
     void queryOptionsOverrideDefaultsWithoutChangingOtherQueries() throws Exception {
         DatawayEngine engine = this.engine();
         ApiDefinition definition = this.definition("api", "return ${name};");
-        DatawayQuery raw = engine.newQuery(definition, List.of("name"), Map.of("resultHandler", "raw"));
+        DatawayQuery raw = engine.newQuery(definition, null, List.of("name"), Map.of("resultHandler", "raw"));
         assertEquals("value", this.execute(raw, Map.of("name", "value")));
-        Map<?, ?> structured = (Map<?, ?>) this.execute(engine.newQuery(definition, List.of("name"), null), Map.of("name", "value"));
+        Map<?, ?> structured = (Map<?, ?>) this.execute(engine.newQuery(definition, null, List.of("name"), null), Map.of("name", "value"));
         assertEquals(true, structured.get("success"));
         assertEquals("value", structured.get("value"));
         assertEquals(0, ((Number) structured.get("code")).intValue());
@@ -54,12 +54,12 @@ class DatawayEngineTest extends ScriptTestSupport {
         engine.setResultHandlers(Map.of("options", new OptionsResultHandler(Map.of("status", 201, "labels", List.of("default")))));
         List<String> labels = new ArrayList<>(List.of("api"));
         Map<String, Object> options = Map.of("resultHandler", "options", "labels", labels);
-        DatawayQuery query = engine.newQuery(this.definition("api", "return 'value';"), List.of(), options);
+        DatawayQuery query = engine.newQuery(this.definition("api", "return 'value';"), null, List.of(), options);
         labels.clear();
         for (int i = 0; i < 2; i++) {
             assertEquals(Map.of("labels", List.of("api"), "value", "value"), this.execute(query, Map.of()));
         }
-        DatawayQuery other = engine.newQuery(this.definition("other", "return 'other';"), List.of(), Map.of("resultHandler", "options"));
+        DatawayQuery other = engine.newQuery(this.definition("other", "return 'other';"), null, List.of(), Map.of("resultHandler", "options"));
         assertEquals(Map.of("labels", List.of("default"), "value", "other"), this.execute(other, Map.of()));
     }
 
@@ -68,14 +68,14 @@ class DatawayEngineTest extends ScriptTestSupport {
         DatawayEngine engine = this.engine();
         ApiDefinition definition = this.definition("api", "return 'saved';");
         for (Map<String, Object> options : List.<Map<String, Object>>of(Map.of("resultStructure", false), Map.of("resultHandler", "default", "resultStructure", false))) {
-            assertEquals("saved", this.execute(engine.newQuery(definition, List.of(), options), Map.of()));
+            assertEquals("saved", this.execute(engine.newQuery(definition, null, List.of(), options), Map.of()));
         }
-        Map<?, ?> structured = (Map<?, ?>) this.execute(engine.newQuery(definition, List.of(), Map.of("resultStructure", true)), Map.of());
+        Map<?, ?> structured = (Map<?, ?>) this.execute(engine.newQuery(definition, null, List.of(), Map.of("resultStructure", true)), Map.of());
         assertEquals("saved", structured.get("value"));
-        assertEquals("saved", this.execute(engine.newQuery(definition, List.of(), Map.of("resultHandler", "raw", "resultStructure", true)), Map.of()));
+        assertEquals("saved", this.execute(engine.newQuery(definition, null, List.of(), Map.of("resultHandler", "raw", "resultStructure", true)), Map.of()));
         Map<String, Object> invalid = new LinkedHashMap<>();
         invalid.put("resultStructure", null);
-        assertEquals(400, assertThrows(DatawayException.class, () -> engine.newQuery(definition, List.of(), invalid)).status());
+        assertEquals(400, assertThrows(DatawayException.class, () -> engine.newQuery(definition, null, List.of(), invalid)).status());
     }
 
     @ParameterizedTest
@@ -83,7 +83,7 @@ class DatawayEngineTest extends ScriptTestSupport {
     void invalidPerQueryOptionsFailBeforeExecution(String name, Object value) {
         Map<String, Object> options = new LinkedHashMap<>();
         options.put(name, value);
-        DatawayException error = assertThrows(DatawayException.class, () -> this.engine().newQuery(this.definition("api", "return 1;"), List.of(), options));
+        DatawayException error = assertThrows(DatawayException.class, () -> this.engine().newQuery(this.definition("api", "return 1;"), null, List.of(), options));
         assertEquals(400, error.status());
         assertTrue(error.getMessage().contains(name) || name.equals("wrapParameterName"), error.getMessage());
     }
@@ -106,7 +106,7 @@ class DatawayEngineTest extends ScriptTestSupport {
         this.config.defaultResultHandler("raw").wrapAllParameters(wrap).wrapParameterName("args");
         ApiDefinition definition = this.definition("api", "select :id, '<% unchanged %>'");
         definition.setType(ApiScriptType.SQL);
-        DatawayQuery query = this.engine().newQuery(definition, List.of("id"), null);
+        DatawayQuery query = this.engine().newQuery(definition, null, List.of("id"), null);
         Map<String, ?> parameters = Map.of("id", 7, "extra", "not declared");
         Object result = this.execute(query, parameters);
         assertEquals(definition.getScript(), scriptSeen.get());
@@ -125,14 +125,14 @@ class DatawayEngineTest extends ScriptTestSupport {
         this.config.defaultResultHandler("raw");
         ApiDefinition definition = this.definition("api", "select 1");
         definition.setType(ApiScriptType.SQL);
-        DatawayQuery query = this.engine().newQuery(definition, null, Map.of());
+        DatawayQuery query = this.engine().newQuery(definition, null, null, Map.of());
         assertEquals(Map.of(), this.execute(query, Map.of("undeclared", "value")));
     }
 
     @Test
     void dataqlWrappingUsesThePerQueryWrapperAndIncludesScopeDefaults() throws Exception {
         this.scope = symbol -> Map.of("default", "host", "name", "host-name");
-        DatawayQuery query = this.engine().newQuery(this.definition("api", "return ${args};"), List.of("name"), Map.of("resultHandler", "raw", "wrapAllParameters", true, "wrapParameterName", " args "));
+        DatawayQuery query = this.engine().newQuery(this.definition("api", "return ${args};"), null, List.of("name"), Map.of("resultHandler", "raw", "wrapAllParameters", true, "wrapParameterName", " args "));
         assertEquals(Map.of("default", "host", "name", "request"), this.execute(query, Map.of("name", "request")));
     }
 }

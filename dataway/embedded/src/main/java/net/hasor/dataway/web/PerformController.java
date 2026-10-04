@@ -17,6 +17,7 @@ import net.hasor.dataway.model.WebRequest;
 import net.hasor.dataway.model.WebResponse;
 import net.hasor.dataway.service.ConvertUtils;
 import net.hasor.dataway.service.admin.AdminService;
+import net.hasor.dataway.service.script.ApiCallSource;
 import net.hasor.dataway.service.script.DatawayEngine;
 import net.hasor.dataway.service.script.DatawayQuery;
 
@@ -30,6 +31,16 @@ public final class PerformController extends AbstractApiController {
     }
 
     @Override
+    public ApiDefinition getTargetDefinition(WebRequest request, Map<String, Object> parameters) {
+        String id = this.id(Map.of(), parameters);
+        if (id.equals("-1")) {
+            return ConvertUtils.convertToApiDefinition(id, parameters);
+        } else {
+            return super.getTargetDefinition(request, parameters);
+        }
+    }
+
+    @Override
     protected ResultInfo execute(WebRequest request, WebResponse response, UserIdentity identity, Map<String, Object> body) throws Exception {
         return this.executeService(() -> {
             String id = this.id(this.query(request), body);
@@ -38,11 +49,11 @@ public final class PerformController extends AbstractApiController {
             Map<String, Object> parameters = ConvertUtils.convertToApiParameters(body.get("requestBody"));
             List<String> parameterNames = List.copyOf(parameters.keySet());
             Map<String, Object> options = ConvertUtils.convertToApiParameters(definition.getOptions());
-            DatawayQuery query = this.engine.newQuery(definition, parameterNames, options);
+            DatawayQuery query = this.engine.newQuery(definition, null, parameterNames, options);
 
             Map<String, Object> input = new LinkedHashMap<>(parameters);
             Map<String, ?> execution = ConvertUtils.convertToWebContext(request, input, input);
-            return query.execute(this.getOperation(), identity, parameters, execution, response);
+            return query.execute(this.getOperation(), identity, ApiCallSource.DEBUG, parameters, execution, response);
         });
     }
 }

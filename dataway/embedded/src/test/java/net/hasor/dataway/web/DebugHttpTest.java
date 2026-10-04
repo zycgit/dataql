@@ -19,6 +19,7 @@ import net.hasor.dataway.dal.EntityType;
 import net.hasor.dataway.dal.FieldDef;
 import net.hasor.dataway.model.ApiScriptType;
 import net.hasor.dataway.service.config.ServiceTestSupport;
+import net.hasor.dataway.service.script.ApiCallSource;
 import net.hasor.dataway.web.support.HttpTestServer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,6 +51,7 @@ class DebugHttpTest extends ServiceTestSupport {
         UserIdentity identity = UserIdentity.consoleAdmin("editor", Map.of());
         AtomicInteger intercepted = new AtomicInteger();
         this.config.defaultResultHandler("raw").identityProvider(request -> identity).apiInterceptor((context, chain) -> {
+            assertEquals(ApiCallSource.DEBUG, context.source());
             assertSame(identity, context.identity());
             assertEquals(Operation.DEBUG, context.operation());
             assertEquals(Map.of("name", "actual"), context.parameters());
