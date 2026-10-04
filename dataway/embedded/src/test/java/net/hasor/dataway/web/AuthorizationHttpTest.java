@@ -27,9 +27,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import static net.hasor.dataway.dal.FieldDef.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.*;
 
 class AuthorizationHttpTest extends ServiceTestSupport {
@@ -55,40 +55,6 @@ class AuthorizationHttpTest extends ServiceTestSupport {
 
     static Stream<UserIdentity> identities() {
         return Stream.of(UserIdentity.authenticated("caller", Map.of()), UserIdentity.consoleReadOnly("reader", Map.of()), UserIdentity.consoleAdmin("developer", Map.of()));
-    }
-
-    @ParameterizedTest
-    @CsvSource({ ", HTTP", "UI, UI", "uI, UI", "HTTP, HTTP", "PROGRAMMATIC, HTTP", "DEBUG, HTTP", "unknown, HTTP" })
-    void publicRequestsOnlyAcceptTheUiSourceMarker(String marker, ApiCallSource expected) throws Exception {
-        AtomicReference<ApiCallSource> source = new AtomicReference<>();
-        this.config.defaultResultHandler("raw").identityProvider(request -> UserIdentity.authenticated("caller", Map.of()));
-        this.config.apiInterceptor((context, chain) -> {
-            source.set(context.source());
-            return chain.proceed(context);
-        });
-        this.publishRoute(this.release(this.info("api", "1", 1), "release", "1", 1));
-        String[] headers = marker == null ? new String[0] : new String[] { "X-Dataway-Source", marker };
-        try (HttpTestServer server = new HttpTestServer("/api", this.config.createDataway().getApiHandler())) {
-            HttpResponse<String> response = server.send("GET", "/api/api", null, new byte[0], headers);
-            assertEquals(200, response.statusCode(), response.body());
-            assertEquals("value", JsonUtils.readValue(response.body(), String.class));
-        }
-        assertEquals(expected, source.get());
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = { "UI", "PROGRAMMATIC", "DEBUG" })
-    void sourceMarkersDoNotBypassHttpAuthorization(String marker) throws Exception {
-        this.config.apiInterceptor((context, chain) -> {
-            return fail("Unauthorized calls must not enter the API interceptor chain");
-        });
-        Dataway dataway = this.config.createDataway();
-        clearInvocations(this.access);
-        try (HttpTestServer server = new HttpTestServer("/api", dataway.getApiHandler())) {
-            HttpResponse<String> response = server.send("GET", "/api/api", null, new byte[0], "X-Dataway-Source", marker);
-            assertEquals(401, response.statusCode());
-        }
-        verifyNoInteractions(this.access);
     }
 
     @Test

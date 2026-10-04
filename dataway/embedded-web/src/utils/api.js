@@ -94,8 +94,10 @@ export async function readResponse(response, started) {
             // Keep the plain filename when the encoded form is malformed.
         }
     }
-    return {status: response.status, ok: response.ok, kind, contentType, mime, hasJson,
-        data, text, rawText, blob, filename, downloadable: !isText || /attachment/i.test(disposition), elapsed: Math.round(performance.now() - started)};
+    return {
+        status: response.status, ok: response.ok, kind, contentType, mime, hasJson,
+        data, text, rawText, blob, filename, downloadable: !isText || /attachment/i.test(disposition), elapsed: Math.round(performance.now() - started)
+    };
 }
 
 export class DatawayClient {
@@ -144,9 +146,7 @@ export class DatawayClient {
                 }
             }
         }
-        const headers = requestHeaders(rows);
-        headers.set('X-Dataway-Source', 'UI');
-        return this.send(url, api.select, queryOnly ? undefined : values, headers);
+        return this.send(url, api.select, queryOnly ? undefined : values, requestHeaders(rows));
     }
 
     async send(url, method, body, suppliedHeaders) {
@@ -155,8 +155,10 @@ export class DatawayClient {
             headers.set('Content-Type', 'application/json');
         }
         const started = performance.now();
-        const response = await fetch(url, {method, headers, credentials: 'same-origin',
-            body: body === undefined ? undefined : JSON.stringify(body)});
+        const response = await fetch(url, {
+            method, headers, credentials: 'same-origin',
+            body: body === undefined ? undefined : JSON.stringify(body)
+        });
         return readResponse(response, started);
     }
 }

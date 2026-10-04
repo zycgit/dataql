@@ -9,9 +9,12 @@ import {afterEach, test} from 'node:test';
 import assert from 'node:assert/strict';
 import {baseAddress, DatawayClient, parameters, readResponse, requestHeaders} from '../src/utils/api.js';
 import {directories, editInterface} from '../src/utils/model.js';
+
 const originalFetch = globalThis.fetch;
 const page = 'https://example.test/gateway/console/';
-afterEach(() => { globalThis.fetch = originalFetch; });
+afterEach(() => {
+    globalThis.fetch = originalFetch;
+});
 
 test('public endpoints are resolved relative to the page under a rewritten prefix', () => {
     assert.equal(baseAddress('../operations/', page, 'adminApi').href, 'https://example.test/gateway/operations/');
@@ -31,7 +34,6 @@ test('management requests retain the host session without fetching configuration
     assert.equal(calls.length, 1);
     assert.equal(calls[0].url, 'https://example.test/gateway/operations/api-detail?id=a+b');
     assert.equal(calls[0].options.credentials, 'same-origin');
-    assert.equal(calls[0].options.headers.has('X-Dataway-Source'), false);
 });
 
 test('version conflicts are surfaced instead of silently retrying a write', async () => {
@@ -63,14 +65,12 @@ test('business invocations use the configured address and correct HTTP body sema
     await client.invoke({path: '/echo', select: 'GET'}, '{"q":"a b"}', []);
     assert.equal(calls[0].url, 'https://example.test/gateway/invoke/echo?q=a+b');
     assert.equal(calls[0].options.body, undefined);
-    assert.equal(calls[0].options.headers.get('X-Dataway-Source'), 'UI');
+    assert.deepEqual([...calls[0].options.headers], []);
     await client.invoke({path: '/echo', select: 'POST'}, '{"nested":{"value":1}}', [
-        {checked: true, name: 'x-dataway-source', value: 'PROGRAMMATIC'},
         {checked: true, name: 'X-Custom', value: 'value'},
     ]);
     assert.deepEqual(JSON.parse(calls[1].options.body), {nested: {value: 1}});
-    assert.equal(calls[1].options.headers.get('X-Dataway-Source'), 'UI');
-    assert.equal(calls[1].options.headers.get('X-Custom'), 'value');
+    assert.deepEqual(Object.fromEntries(calls[1].options.headers), {'content-type': 'application/json', 'x-custom': 'value'});
     await assert.rejects(client.invoke({path: '/../outside', select: 'POST'}, '{}', []));
     for (const value of ['null', '[]', '"string"']) {
         assert.throws(() => parameters(value));
@@ -78,7 +78,7 @@ test('business invocations use the configured address and correct HTTP body sema
     assert.throws(() => parameters('{"nested":{}}', 'GET'));
 });
 
-test('debug execution uses the management entry without a UI invocation marker', async () => {
+test('debug execution sends POST requests through the management entry', async () => {
     const calls = [];
     globalThis.fetch = async (url, options) => {
         calls.push({url: url.href, options});
@@ -92,7 +92,7 @@ test('debug execution uses the management entry without a UI invocation marker',
     assert.equal(calls[1].url, 'https://example.test/gateway/operations/smoke?id=api');
     for (const call of calls) {
         assert.equal(call.options.method, 'POST');
-        assert.equal(call.options.headers.has('X-Dataway-Source'), false);
+        assert.deepEqual(Object.fromEntries(call.options.headers), {'content-type': 'application/json'});
     }
 });
 
@@ -104,15 +104,23 @@ test('JSON, text, and binary results preserve the original download bytes and co
     result = await readResponse(new Response('plain text', {headers: {'Content-Type': 'text/plain'}}), performance.now());
     assert.equal(result.text, 'plain text');
     assert.equal(result.downloadable, false);
-    result = await readResponse(new Response('id,name\r\n1,Ada\r\n', {headers: {'Content-Type': 'text/csv; charset=UTF-8',
-        'Content-Disposition': 'attachment; filename=results.csv'}}), performance.now());
+    result = await readResponse(new Response('id,name\r\n1,Ada\r\n', {
+        headers: {
+            'Content-Type': 'text/csv; charset=UTF-8',
+            'Content-Disposition': 'attachment; filename=results.csv'
+        }
+    }), performance.now());
     assert.equal(result.kind, 'text');
     assert.equal(result.downloadable, true);
     assert.equal(result.filename, 'results.csv');
     assert.equal(await result.blob.text(), 'id,name\r\n1,Ada\r\n');
     const bytes = new Uint8Array([0, 128, 255, 10]);
-    result = await readResponse(new Response(bytes, {headers: {'Content-Type': 'application/pdf',
-        'Content-Disposition': "attachment; filename*=UTF-8''report%20one.pdf"}}), performance.now());
+    result = await readResponse(new Response(bytes, {
+        headers: {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': "attachment; filename*=UTF-8''report%20one.pdf"
+        }
+    }), performance.now());
     assert.equal(result.kind, 'bytes');
     assert.equal(result.downloadable, true);
     assert.equal(result.filename, 'report one.pdf');
@@ -121,9 +129,11 @@ test('JSON, text, and binary results preserve the original download bytes and co
 });
 
 test('imported metadata and result handlers survive an edit round trip', () => {
-    const detail = {id: 'id', version: 4, select: 'POST', path: '/hello', status: 1, codeType: 'DataQL',
+    const detail = {
+        id: 'id', version: 4, select: 'POST', path: '/hello', status: 1, codeType: 'DataQL',
         codeInfo: {codeValue: 'return 1;', requestBody: '{}', headerData: []},
-        optionData: {resultHandler: 'raw', extra: 123}, schema: {custom: 1}, sample: {custom: 2}};
+        optionData: {resultHandler: 'raw', extra: 123}, schema: {custom: 1}, sample: {custom: 2}
+    };
     const form = editInterface(detail);
     assert.equal(form.version, 4);
     assert.equal(form.optionInfo.resultHandler, 'raw');

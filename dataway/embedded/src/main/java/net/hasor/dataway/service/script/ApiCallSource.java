@@ -13,8 +13,6 @@ public enum ApiCallSource {
     PROGRAMMATIC,
     /** Editor execution or saved-draft smoke testing. */
     DEBUG,
-    /** Invocation of a published API from the console interface list. */
-    UI,
-    /** Invocation through the public business API entry. */
+    /** HTTP invocation of a published API, including calls from the console interface list. */
     HTTP
 }

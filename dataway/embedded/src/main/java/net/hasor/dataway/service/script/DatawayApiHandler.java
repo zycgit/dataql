@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import net.hasor.cobble.StringUtils;
 import net.hasor.dataway.authorization.UserIdentity;
 import net.hasor.dataway.model.ResultInfo;
 import net.hasor.dataway.model.WebRequest;
@@ -24,8 +23,7 @@ import net.hasor.dataway.service.WebHandler;
 
 /** Invokes published APIs; it exposes neither management operations nor UI assets. */
 public final class DatawayApiHandler extends WebHandler {
-    private static final String         SOURCE_HEADER = "x-dataway-source";
-    private final        ApiServiceImpl apiService;
+    private final ApiServiceImpl apiService;
 
     public DatawayApiHandler(BeanContainer beans) {
         super(beans);
@@ -38,9 +36,7 @@ public final class DatawayApiHandler extends WebHandler {
         Map<String, Object> body = request.readBody();
         Map<String, Object> parameters = this.parameters(request, body);
         Map<String, ?> metadata = ConvertUtils.convertToWebContext(request, parameters, body);
-        String marker = request.getHeaders().get(SOURCE_HEADER);
-        ApiCallSource source = StringUtils.equalsIgnoreCase(marker, ApiCallSource.UI.name()) ? ApiCallSource.UI : ApiCallSource.HTTP;
-        return this.apiService.invokePublished(request.getMethod(), request.getPathInfo(), parameters, identity, source, metadata, response);
+        return this.apiService.invokePublished(request.getMethod(), request.getPathInfo(), parameters, identity, ApiCallSource.HTTP, metadata, response);
     }
 
     private Map<String, Object> parameters(WebRequest request, Map<String, Object> body) {
