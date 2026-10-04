@@ -1,221 +1,176 @@
-# DataQL 数据查询引擎
+# Dataway
 
-&emsp;&emsp;DataQL（Data Query Language）DataQL 是一种查询语言。旨在通过提供直观、灵活的语法来描述客户端应用程序的数据需求和交互。
+[中文](README.md) · [English](README.en.md)
 
-&emsp;&emsp;数据的存储根据其业务形式通常是较为简单的，并不适合直接在页面上进行展示。因此开发页面的前端工程师需要为此做大量的工作，这就是 DataQL 极力解决的问题。
+内嵌于 Java 应用的数据 API 开发框架，集数据查询、转换、聚合与接口发布于一体。
 
-&emsp;&emsp;例如：下面这个 DataQL 从 user 函数中查询 id 为 4 的用户相关信息并返回给应用。
+[Website](https://www.dataql.net) · [Documentation](https://www.dataql.net/docs/dataway/intro/overview) · [Blog](https://www.dataql.net/blog) · [AI 文档索引](https://www.dataql.net/llms.txt)
 
-```js
-return userByID({'id': 4}) => {
-    'name',
-    'sex' : (sex == 'F') ? '男' : '女' ,
-    'age' : age + '岁'
-}
-```
+## 📖 简介 | Introduction
 
-返回结果：
-```json
-{
-  'name' : '马三',
-  'sex'  : '男',
-  'age'  : '25岁'
-}
-```
+Dataway 提供从脚本开发到 API 发布的完整能力。开发者使用 SQL 或 DataQL 编写数据处理逻辑，在控制台完成编辑、调试和发布，应用通过 HTTP 或 Java 调用已发布的接口。
 
-----------
-## 特性
-01. **层次结构**：多数产品都涉及数据的层次结构，为了保证结构的一致性 DataQL 结果也是分层的。
-02. **数据为中心**：前端工程是一个比较典型的场景，但是 DataQL 不局限于此（后端友好性）。
-03. **弱类型定义**：语言中不会要求声明任何形式的类型结构。
-04. **简单逻辑**：具备简单逻辑处理能力：表达式计算、对象取值、条件分支、lambda和函数。
-05. **编译运行**：查询的执行是基于编译结果的。
-06. **混合语言**：允许查询中混合任意的其它语言代码，典型的场景是查询中混合 SQL 查询语句。
-07. **类 JS 语法**：类JS语法设计，学习成本极低。
+框架内置 DataQL 语言与执行引擎，支持查询数据库、调用 Java 服务、转换数据结构和聚合多个来源的结果。适用于报表看板、列表与详情查询、表单提交及服务聚合，减少重复的数据访问和接口代码。
 
-## 样例
+![Dataway 连接应用数据、业务服务与前端接口](document/static/img/dataway/application-overview.png)
 
-```java
-public class UserByIdUdf implements Udf {
-    public UserInfo call(Hints readOnly, Object[] params) {
-        ...
-    }
-}
+## ✨ 核心特性 | Features
 
-public class ConsoleDemo {
-    public static void main(String[] args) {
-        AppContext appContext = Hasor.create().build((QueryModule) apiBinder -> {
-            apiBinder.addShareVarInstance("userByID", new UserByIdUdf());
+### ⚙️ 框架特点 (Framework Characteristics)
 
-        });
-        DataQL dataQL = appContext.getInstance(DataQL.class);
-        QueryResult queryResult = dataQL.createQuery("return userByID({'id': 4}) => {" +
-                                                     "    'name'," +
-                                                     "    'sex' : (sex == 'F') ? '男' : '女' ," +
-                                                     "    'age' : age + '岁'" +
-                                                     "}").execute();
-        DataModel dataModel = queryResult.getData();
-    }
-}
-```
+- 内嵌应用：以 JAR 接入现有 Java 项目，支持 Spring、Solon、Hasor。
+- 统一执行：SQL 与 DataQL 共用 API 管理、参数处理、拦截和结果输出流程。
+- 复用宿主：接入应用的数据源、业务服务、登录身份和事务管理。
+- 按需组合：引擎可独立使用，控制台可独立部署，元数据存储和结果处理器均可替换。
 
-----------------
-# 子项目：Dataway 数据接口配置服务
+### 🔋 基础能力 (Capabilities)
 
-&emsp;&emsp;依托 DataQL 服务聚合能力，为应用提供一个 UI 界面。并以 jar 包的方式集成到应用中。
-通过 Dataway 可以直接在界面上配置和发布接口。
+![Dataway 控制台：编辑脚本、设置参数、预览结果和发布接口](document/static/img/dataway/quickstart-published.png)
 
-&emsp;&emsp;这种模式的革新使得开发一个接口不必在编写任何形式的代码，只需要配置一条 DataQL 查询即可完成满足前端对接口的需求。
-从而避免了从数据库到前端之间一系列的开发配置任务，例如：Mapper、DO、DAO、Service、Controller 统统不在需要。
+- API 管理：
+  - [可视化操作](https://www.dataql.net/docs/dataway/capabilities/management)：编辑、调试、测试、发布和停用接口，查看发布历史。
+  - [程序化管理](https://www.dataql.net/docs/dataway/capabilities/programmatic)：通过 Java 接口或管理 HTTP API 维护定义和版本。
+  - 草稿与发布版分离，修改在再次发布后生效；版本检查用于检测并发更新冲突。
+- 数据查询与转换：
+  - [DataQL 语言](https://www.dataql.net/docs/dataql/overview)：使用表达式、函数和转换模板筛选字段、计算值、构造嵌套结果。
+  - [SQL 执行器](https://www.dataql.net/docs/dataway/dataql-engine/sql)：支持查询、更新、动态 SQL、分页、类型处理和事务。
+  - [数据源接入](https://www.dataql.net/docs/dataway/capabilities/datasources)：按名称访问多个数据源，组合数据库与应用服务的结果。
+- 请求与响应：
+  - [请求参数](https://www.dataql.net/docs/dataway/capabilities/development/request)：接收 URL 参数、JSON、表单和上传文件，通过 Web 函数读写 Header 与 Cookie。
+  - [结果处理器](https://www.dataql.net/docs/dataway/capabilities/result-handlers)：输出结构化结果、原始值、CSV、文本和验证码图片，支持二进制响应与自定义处理器。
+  - 控制台按响应类型预览 JSON、文本、表格和图像，并提供文件下载。
+- 接口调用与文档：
+  - 通过 HTTP 访问已发布 API，或使用 [ApiService](https://www.dataql.net/docs/dataway/capabilities/development/java) 从 Java 按路径、标识直接调用。
+  - [文档生成](https://www.dataql.net/docs/dataway/capabilities/document)：生成 OpenAPI 3.x 和 Swagger 2.0 文档，配合 Swagger UI 展示和调用接口。
+- 身份与扩展：
+  - [身份鉴权](https://www.dataql.net/docs/dataway/authorization)：接入应用登录体系，按身份控制 API 访问和管理操作。
+  - [管理拦截器](https://www.dataql.net/docs/dataway/configuration/admin-interceptors)与 [API 拦截器](https://www.dataql.net/docs/dataway/configuration/api-interceptors)：接入审计、校验、缓存等应用逻辑。
+  - [引擎扩展](https://www.dataql.net/docs/dataway/engine)：注册 Java 函数、应用对象、代码片段和自定义作用域。
+- 元数据存储：
+  - [JDBC](https://www.dataql.net/docs/dataway/metadata/providers/jdbc) 或 [Nacos](https://www.dataql.net/docs/dataway/metadata/providers/nacos) 保存接口定义、草稿和发布记录。
+  - 支持表与字段映射、宿主事务整合和自定义存储提供者。
 
-&emsp;&emsp;Dataway特意采用了 jar包集成的方式发布，这使得任意的老项目都可以无侵入的集成 Dataway。
-直接改进老项目的迭代效率，大大减少企业项目研发成本。
+## 💡 为何选择 Dataway？ | Why Dataway
 
-![avatar](https://www.hasor.net/web/_images/CC2_A633_6D5C_MK4L.png)
+- 减少重复开发：通过 SQL 和脚本实现常见数据接口，在控制台完成参数调试与结果预览。
+- 按业务组织结果：一次 API 调用可查询多个数据源、调用应用服务，并按前端需要转换和聚合数据。
+- 接入现有工程：保留应用的登录、数据源和事务配置，通过框架适配器接入现有 Web 容器。
+- 按需扩展能力：使用 UDF、代码片段、拦截器和结果处理器扩展处理流程，Java 引擎也可独立运行。
 
-&emsp;&emsp;如上图所示 Dataway 在开发模式上提供了巨大的便捷。
-虽然工作流程中标识了由后端开发来配置 DataQL 接口，但这主要是出于考虑接口责任人。
-但在实际工作中根据实际情况需要，配置接口的人员可以是产品研发生命周期中任意一名角色。
+## 🚀 使用介绍
 
-----------
-## 主打场景
+### 1. 引入依赖
 
-&emsp;&emsp;主打场景并不是说 Dataway 适用范围仅限于此，而是经过多次项目实践。我们认为下面这些场景会有非常好的预期效果。
-比如说 ``取数据`` 在一些报表、看板项目中即便是取数据逻辑在复杂。我们依然做到了真正的 零 开发，所有取数逻辑全部通过 DataQL + SQL 的方式满足。
-对比往期项目对于后端技术人员的需求从 3～5 人的苦逼通宵加班，直接缩减为 1人配置化搞定。
-
-&emsp;&emsp;再比如，某个内部类 ERP 项目，20多个表单页面，后端部分仅有 1000 行左右的核心代码。其它数据存取逻辑全部配置化完成。
-
-
-01. 取数据
-    - 如果你只想从数据库或者服务中获取某类数据，不需要： VO、BO、Convert、DO、Mapper 这类东西。
-02. 存数据
-    - 如果是从页面表单递交数据到数据库或者服务，免去 BO、FormBean、DO、Mapper 这类东西。
-03. 数据聚合
-    - 基于服务调用结果经过结构转换并响应给前端。
-    - 将数据库和服务等多个结果进行汇聚然后返回给前端。
-
-----------
-## 技术架构
-
-![avatar](https://www.hasor.net/web/_images/CC2_B633_6D5C_MK4L.png)
-
-&emsp;&emsp;刚一接触 DataQL 可能会有一种错觉认为 DataQL 是一个高级别的 ORM 工具。
-这一点需要澄清。DataQL 的竞品应是 GraphQL，而非 ORM 框架。
-
-&emsp;&emsp;ORM 类框架有一个最大的特点是具有 Mapping 过程，然后通过框架在进行 CURD 操作。
-例如：Mybatis、Hibernate。其中有一些甚至做到了更高级的界面化例如： apijson，但其本质依然是 ORM。
-
-&emsp;&emsp;而 DataQL 有很大不同。虽然 DataQL 提供了非常出色的基于 SQL 数据存取能力。但从技术架构上来审视它并不是 ORM 框架。
-它没有 ORM 中最关键的 Mapping 过程。DataQL 专注的是：结果转换、数据和服务的聚合查询。
-
-&emsp;&emsp;造成 ORM 错觉的是由于 DataQL 充分利用 UDF 和 Fragment 组合，提供了更便捷的数据库访问配置化而已。
-
-----------
-## Spring 中使用 Dataway
-
-&emsp;&emsp;Dataway 是 Hasor 生态中的一员，使用 Dataway 第一步需要通过 [hasor-spring](https://www.hasor.net/web/spring/index.html) 打通两个生态。
+以 Spring Boot 项目为例，引入框架整合、JDBC 元数据存储和 SQL 执行扩展：
 
 ```xml
-<!-- 引入依赖 -->
+<!-- Spring 框架整合，包含核心与控制台资源 -->
 <dependency>
     <groupId>net.hasor</groupId>
-    <artifactId>hasor-spring</artifactId>
-    <version>4.2.2</version>
+    <artifactId>dataway-spring</artifactId>
+    <version>5.0.0</version>
 </dependency>
+<!-- 保存接口定义和发布记录 -->
 <dependency>
     <groupId>net.hasor</groupId>
-    <artifactId>hasor-dataway</artifactId>
-    <version>4.2.2</version>
+    <artifactId>dataway-meta-jdbc</artifactId>
+    <version>5.0.0</version>
+</dependency>
+<!-- SQL 执行能力 -->
+<dependency>
+    <groupId>net.hasor</groupId>
+    <artifactId>dataql-sqlproc</artifactId>
+    <version>5.0.0</version>
 </dependency>
 ```
 
+通过 `DatawayConfig` 配置身份识别、数据库连接和脚本扩展，通过 `ApiDataAccessLayer` 接入元数据存储。完整配置见[快速开始](https://www.dataql.net/docs/dataway/intro/quickstart)；[Spring 示例](example/dataway-spring-example)提供数据初始化、登录、控制台和 Swagger UI。
+
+### 2. 实战代码
+
+#### SQL 查询接口
+
+创建 `POST /person-query`，选择 DataQL 脚本类型。以下脚本使用 `ds1` 数据源，将请求参数 `id` 绑定到 SQL：
+
+```javascript
+hint FRAGMENT_SQL_DATA_SOURCE = "ds1"
+var query = @@selectSql(id)<%
+    SELECT id AS "id", name AS "name", balance AS "balance"
+    FROM example_people
+    WHERE id = #{id}
+%>;
+return query(${id});
+```
+
+保存并发布后，使用 Spring 示例的登录接口获取 Cookie，再调用 API：
+
+```bash
+curl -c cookies.txt -X POST http://127.0.0.1:8080/session/login \
+  -d 'username=admin&password=example-password'
+
+curl -b cookies.txt http://127.0.0.1:8080/api/person-query \
+  -H 'Content-Type: application/json' \
+  -d '{"id":1}'
+```
+
+默认使用 Structure 处理器包装响应，`value` 中包含查询结果：
+
+```json
+{"id": 1, "name": "Alice", "balance": 100}
+```
+
+#### 数据结构转换
+
+使用 DataQL 转换模板选取字段、计算新值。`people` 也可以替换为 SQL 查询或应用函数的返回结果：
+
+```javascript
+var people = [
+    {"name": "Alice", "age": 25},
+    {"name": "Bob", "age": 30}
+];
+
+return people => [{
+    "name",
+    "nextAge": age + 1
+}];
+```
+
+脚本返回：
+
+```json
+[
+    {"name": "Alice", "nextAge": 26},
+    {"name": "Bob", "nextAge": 31}
+]
+```
+
+#### Java 调用接口
+
+从框架容器获取 `Dataway` 实例后，使用 `ApiService` 调用已发布且启用的 API。路径使用定义中的路径，不包含 HTTP 入口的 `/api` 前缀：
+
 ```java
-@EnableHasor()      // 在Spring 中启用 Hasor
-@EnableHasorWeb()   // 将 hasor-web 配置到 Spring 环境中，Dataway 的 UI 是通过 hasor-web 提供服务。
+import java.util.Map;
+import net.hasor.dataway.model.ResultInfo;
+import net.hasor.dataway.service.script.ApiService;
+
+ApiService api = dataway.getApiService();
+Map<String, Object> parameters = Map.of("id", 1);
+ResultInfo result = api.invokeByPath("POST", "/person-query", parameters);
+
+System.out.println(result.getData());
 ```
 
-&emsp;&emsp;然后第二步，在应用的 `application.properties` 配置文件中启用 Dataway
+Java 调用共用 API 拦截器、参数处理和结果处理器，也可通过 `invokeById` 按 API 标识调用。
 
-```properties
-# 启用 Dataway 功能（默认不启用）
-HASOR_DATAQL_DATAWAY=true
-# 开启 ui 管理功能（注意生产环境必须要设置为 false，否则会造成严重的生产安全事故）
-HASOR_DATAQL_DATAWAY_ADMIN=true
+## 📚 文档与资源 | Resources
 
-# （可选）API工作路径
-HASOR_DATAQL_DATAWAY_API_URL=/api/
-# （可选）ui 的工作路径，只有开启 ui 管理功能后才有效
-HASOR_DATAQL_DATAWAY_UI_URL=/interface-ui/
-```
+- [官方网站](https://www.dataql.net)、[快速开始](https://www.dataql.net/docs/dataway/intro/quickstart)、[文档指南](https://www.dataql.net/docs/dataway/intro/overview)。
+- 框架整合：[Spring](https://www.dataql.net/docs/dataway/integration/spring)、[Solon](https://www.dataql.net/docs/dataway/integration/solon)、[Hasor](https://www.dataql.net/docs/dataway/integration/hasor)。
+- 示例工程：[Spring + JDBC](example/dataway-spring-example)、[Solon + JDBC](example/dataway-solon-example)、[Hasor + JDBC](example/dataway-hasor-example)、[Spring + Nacos](example/dataway-spring-nacos-example)。
+- 语言与引擎：[DataQL 语言手册](https://www.dataql.net/docs/dataql/overview)、[独立使用引擎](https://www.dataql.net/docs/dataway/dataql-engine)、[数据处理样例](example/dataql-blog-example)。
+- [博客文章](https://www.dataql.net/blog)、[AI 文档索引](https://www.dataql.net/llms.txt)。
+- [开发指南](community/README.md)：仓库结构、环境准备、编译测试与文档维护。
 
-&emsp;&emsp;第三步，初始化 dataway 的必要数据库表。
+## 📄 许可证 | License
 
-```sql
-CREATE TABLE interface_info (
-    api_id          varchar(64)  NOT NULL COMMENT 'ID',
-    api_method      varchar(12)  NOT NULL COMMENT 'HttpMethod：GET、PUT、POST',
-    api_path        varchar(512) NOT NULL COMMENT '拦截路径',
-    api_status      varchar(4)   NOT NULL COMMENT '状态：-1-删除, 0-草稿，1-发布，2-有变更，3-禁用',
-    api_comment     varchar(255) NOT NULL COMMENT '注释',
-    api_type        varchar(24)  NOT NULL COMMENT '脚本类型：SQL、DataQL',
-    api_script      mediumtext   NOT NULL COMMENT '查询脚本：xxxxxxx',
-    api_schema      mediumtext   NOT NULL COMMENT '接口的请求/响应数据结构',
-    api_sample      mediumtext   NOT NULL COMMENT '请求/响应/请求头样本数据',
-    api_option      mediumtext   NOT NULL COMMENT '扩展配置信息',
-    api_create_time varchar(32)  NOT NULL COMMENT '创建时间',
-    api_gmt_time    varchar(32)  NOT NULL COMMENT '修改时间',
-    PRIMARY KEY (api_id),
-    UNIQUE KEY uk_interface_info (api_path)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Dataway 中的API';
-
-CREATE TABLE interface_release (
-  pub_id           varchar(64)  NOT NULL COMMENT 'Publish ID',
-  pub_api_id       varchar(64)  NOT NULL COMMENT '所属API ID',
-  pub_method       varchar(12)  NOT NULL COMMENT 'HttpMethod：GET、PUT、POST',
-  pub_path         varchar(512) NOT NULL COMMENT '拦截路径',
-  pub_status       varchar(4)   NOT NULL COMMENT '状态：-1-删除, 0-草稿，1-发布，2-有变更，3-禁用',
-  pub_comment      varchar(255) NOT NULL COMMENT '注释',
-  pub_type         varchar(24)  NOT NULL COMMENT '脚本类型：SQL、DataQL',
-  pub_script       mediumtext   NOT NULL COMMENT '查询脚本：xxxxxxx',
-  pub_script_ori   mediumtext   NOT NULL COMMENT '原始查询脚本，仅当类型为SQL时不同',
-  pub_schema       mediumtext   NOT NULL COMMENT '接口的请求/响应数据结构',
-  pub_sample       mediumtext   NOT NULL COMMENT '请求/响应/请求头样本数据',
-  pub_option       mediumtext   NOT NULL COMMENT '扩展配置信息',
-  pub_release_time varchar(32)  NOT NULL COMMENT '发布时间（下线不更新）',
-  PRIMARY KEY (pub_id),
-  KEY idx_interface_release_api  (pub_api_id),
-  KEY idx_interface_release_path (pub_path)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Dataway API 发布历史。'
-```
-
-&emsp;&emsp;最后一步，将 Spring 使用的数据源导入到 Hasor 环境共 Dataway 使用。
-
-```java
-@DimModule
-@Component
-public class ExampleModule implements SpringModule {
-    @Autowired
-    private DataSource dataSource = null;
-
-    @Override
-    public void loadModule(ApiBinder apiBinder) throws Throwable {
-        // .DataSource form Spring boot into Hasor
-        apiBinder.installModule(new JdbcModule(Level.Full, this.dataSource));
-        // .custom DataQL
-        //apiBinder.tryCast(QueryApiBinder.class).loadUdfSource(apiBinder.findClass(DimUdfSource.class));
-        //apiBinder.tryCast(QueryApiBinder.class).bindFragment("sql", SqlFragment.class);
-    }
-}
-```
-
-----------
-## 使用UI配置接口
-
-&emsp;&emsp;启动工程，访问 http://127.0.0.1:8080/interface-ui/ 就可以看到下面页面了。
-
-![avatar](https://www.hasor.net/web/_images/CC2_C633_6D5C_MK4L.png)
-
-![avatar](https://www.hasor.net/web/_images/CC2_D633_6D5C_MK4L.png)
-
-发布接口需要先进行冒烟测试，冒烟通过之后就可以点亮发布按钮。接口只有在发布之后才能在 Api List 页面中调用，前端才可以正常访问。
+Dataway 使用 [Apache License 2.0](LICENSE.txt) 许可协议。

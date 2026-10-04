@@ -111,6 +111,19 @@ function HomepageHero() {
                         <p className={styles.heroNote}>
                             <Translate id="homepage.hero.note">内嵌应用 · 可视化开发 · 开源免费</Translate>
                         </p>
+                        <div className={styles.communityLinks}>
+                            <span><Translate id="homepage.community.title">社区交流</Translate></span>
+                            <a href="https://qm.qq.com/cgi-bin/qm/qr?k=o4Ue0lHqdr7oLq8ga0vvauXuw41nudbo&jump_from=webapi"
+                                target="_blank" rel="noopener noreferrer">
+                                <img src="https://img.shields.io/badge/QQ%E7%BE%A41-193943114-orange" height="20"
+                                    alt={`${translate({id: 'homepage.community.qq1', message: 'QQ 群 1'})}: 193943114`}/>
+                            </a>
+                            <a href="https://qm.qq.com/cgi-bin/qm/qr?k=wMahYnxpVZPjrJp0ghQQLJmwM2Lmpmjl&jump_from=webapi"
+                                target="_blank" rel="noopener noreferrer">
+                                <img src="https://img.shields.io/badge/QQ%E7%BE%A42-641341864-orange" height="20"
+                                    alt={`${translate({id: 'homepage.community.qq2', message: 'QQ 群 2'})}: 641341864`}/>
+                            </a>
+                        </div>
                     </div>
                     <div className={styles.heroExample}>
                         <div className={styles.exampleHeading}>

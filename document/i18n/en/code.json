@@ -200,6 +200,15 @@
   "homepage.start.language": {
     "message": "Learn DataQL"
   },
+  "homepage.community.title": {
+    "message": "Community"
+  },
+  "homepage.community.qq1": {
+    "message": "QQ Group 1"
+  },
+  "homepage.community.qq2": {
+    "message": "QQ Group 2"
+  },
   "homepage.community.examples": {
     "message": "Example projects"
   },
