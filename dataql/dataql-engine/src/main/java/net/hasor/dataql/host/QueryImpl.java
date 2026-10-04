@@ -30,6 +30,7 @@ class QueryImpl extends HintsSet implements Query {
     public Query clone() {
         QueryImpl query = new QueryImpl(this.qil, this.finder);
         query.shareVarMap.putAll(this.shareVarMap);
+        query.setHints(this);
         return query;
     }
 

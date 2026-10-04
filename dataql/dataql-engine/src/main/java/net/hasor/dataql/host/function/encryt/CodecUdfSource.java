@@ -20,7 +20,7 @@ import net.hasor.cobble.ArrayUtils;
 import net.hasor.dataql.host.function.AbstractUdfSource;
 
 /**
- * 签名/编码函数库。函数库引入 <code>import 'net.hasor.dataql.fx.encryt.CodecUdfSource' as codec;</code>
+ * 签名/编码函数库。函数库引入 <code>import 'net.hasor.dataql.host.function.encryt.CodecUdfSource' as codec;</code>
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2020-03-31
  */
@@ -129,7 +129,7 @@ public class CodecUdfSource extends AbstractUdfSource {
         }
         //
         Mac mac = Mac.getInstance(hmacType.getHmacType());//Mac 算法对象
-        mac.init(new SecretKeySpec(signKey.getBytes(), HmacType.HmacMD5.getHmacType()));//初始化 Mac 对象
+        mac.init(new SecretKeySpec(signKey.getBytes(), hmacType.getHmacType()));//初始化 Mac 对象
         //
         Byte[] bytes = content.toArray(new Byte[0]);
         byte[] rawHmac = mac.doFinal(ArrayUtils.toPrimitive(bytes));
@@ -146,7 +146,7 @@ public class CodecUdfSource extends AbstractUdfSource {
             return null;
         }
         Mac mac = Mac.getInstance(hmacType.getHmacType());//Mac 算法对象
-        mac.init(new SecretKeySpec(signKey.getBytes(), HmacType.HmacMD5.getHmacType()));//初始化 Mac 对象
+        mac.init(new SecretKeySpec(signKey.getBytes(), hmacType.getHmacType()));//初始化 Mac 对象
         //
         byte[] rawHmac = mac.doFinal(content.getBytes());
         return Base64.getEncoder().encodeToString(rawHmac);

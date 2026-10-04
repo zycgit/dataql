@@ -12,7 +12,7 @@ import net.hasor.dataql.domain.Udf;
 import net.hasor.dataql.host.function.AbstractUdfSource;
 
 /**
- * 状态函数 <code>import 'net.hasor.dataql.fx.basic.StateUdfSource' as state;</code>
+ * 状态函数 <code>import 'net.hasor.dataql.host.function.basic.StateUdfSource' as state;</code>
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2019-12-12
  */

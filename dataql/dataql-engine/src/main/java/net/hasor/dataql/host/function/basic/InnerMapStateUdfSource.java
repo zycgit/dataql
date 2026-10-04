@@ -14,7 +14,7 @@ import net.hasor.dataql.host.function.AbstractUdfSource;
 import net.hasor.dataql.kernel.Finder;
 
 /**
- * 带有状态的集合。函数库引入 <code>import 'net.hasor.dataql.fx.basic.CollectionUdfSource' as collect; var arr = collect.newList()</code>
+ * 带有状态的集合。函数库引入 <code>import 'net.hasor.dataql.host.function.basic.CollectionUdfSource' as collect; var arr = collect.newList()</code>
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2019-12-12
  */

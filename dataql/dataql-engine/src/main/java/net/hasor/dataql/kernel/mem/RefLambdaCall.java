@@ -38,15 +38,22 @@ public class RefLambdaCall implements Udf {
         InstSequence instSequence = this.instSequence.clone();
         OpcodesPool opcodesPool = OpcodesPool.defaultOpcodesPool();
         DataHeap dataHeap = new DataHeap(this.dataHeap);
-        while (instSequence.hasNext()) {
-            opcodesPool.doWork(     //
-                    instSequence,   //
-                    dataHeap,       //
-                    cloneStack,     //
-                    this.envStack,  //
-                    this.context    //
-            );
-            instSequence.doNext(1);
+        Hints callerHints = this.context.currentHints();
+        try {
+            while (instSequence.hasNext()) {
+                opcodesPool.doWork(     //
+                        instSequence,   //
+                        dataHeap,       //
+                        cloneStack,     //
+                        this.envStack,  //
+                        this.context    //
+                );
+                instSequence.doNext(1);
+            }
+        } finally {
+            while (this.context.currentHints() != callerHints) {
+                this.context.dropHintStack();
+            }
         }
 
         DataModel result = cloneStack.getResult();

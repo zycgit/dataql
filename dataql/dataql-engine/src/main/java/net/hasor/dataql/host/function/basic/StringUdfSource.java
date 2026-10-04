@@ -14,7 +14,7 @@ import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.host.function.AbstractUdfSource;
 
 /**
- * 字符串函数 <code>import 'net.hasor.dataql.fx.basic.StringUdfSource' as string;</code>
+ * 字符串函数 <code>import 'net.hasor.dataql.host.function.basic.StringUdfSource' as string;</code>
  * @version : 2019-12-12
  */
 public class StringUdfSource extends AbstractUdfSource {
@@ -96,7 +96,7 @@ public class StringUdfSource extends AbstractUdfSource {
         //
         String strString = sb.toString();
         strString = strString.replaceAll("_{2,}", "_");
-        if (strString.charAt(0) == '_') {
+        if (strString.startsWith("_")) {
             strString = strString.substring(1);
         }
         return strString;
@@ -136,7 +136,7 @@ public class StringUdfSource extends AbstractUdfSource {
 
     /** Finds the first index within a String from a start position, handling <code>null</code>. This method uses {@link String#indexOf(String, int)}. */
     public static int indexOfWithStart(String str, String searchStr, int startPos) {
-        if (StringUtils.isEmpty(str)) {
+        if (str == null || searchStr == null) {
             return StringUtils.INDEX_NOT_FOUND;
         }
         return str.indexOf(searchStr, startPos);
@@ -154,7 +154,7 @@ public class StringUdfSource extends AbstractUdfSource {
 
     /** Finds the last index within a String, handling <code>null</code>. This method uses {@link String#lastIndexOf(String)}. */
     public static int lastIndexOf(String str, String searchStr) {
-        if (StringUtils.isEmpty(str)) {
+        if (str == null || searchStr == null) {
             return StringUtils.INDEX_NOT_FOUND;
         }
         return str.lastIndexOf(searchStr);
@@ -162,7 +162,7 @@ public class StringUdfSource extends AbstractUdfSource {
 
     /** Finds the last index within a String from a start position, handling <code>null</code>. This method uses {@link String#lastIndexOf(String, int)}. */
     public static int lastIndexOfWithStart(String str, String searchChar, int startPos) {
-        if (StringUtils.isEmpty(str)) {
+        if (str == null || searchChar == null) {
             return StringUtils.INDEX_NOT_FOUND;
         }
         return str.lastIndexOf(searchChar, startPos);
@@ -170,7 +170,7 @@ public class StringUdfSource extends AbstractUdfSource {
 
     /** Case in-sensitive find of the last index within a String from the specified position. */
     public static int lastIndexOfIgnoreCase(String str, String searchStr) {
-        return StringUtils.lastIndexOfIgnoreCase(str, searchStr, 0);
+        return StringUtils.lastIndexOfIgnoreCase(str, searchStr, str == null ? 0 : str.length());
     }
 
     /** Case in-sensitive find of the last index within a String from the specified position. */
@@ -371,7 +371,8 @@ public class StringUdfSource extends AbstractUdfSource {
      * @return an array of parsed Strings, <code>null</code> if null String input
      */
     public static List<String> split(String str, String separatorChars) {
-        return Arrays.asList(StringUtils.split(str, separatorChars));
+        String[] parts = StringUtils.split(str, separatorChars);
+        return parts == null ? null : Arrays.asList(parts);
     }
 
     /** Joins the elements of the provided array into a single String containing the provided list of elements. */

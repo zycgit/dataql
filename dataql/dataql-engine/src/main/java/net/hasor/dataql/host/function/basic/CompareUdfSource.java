@@ -9,7 +9,7 @@ package net.hasor.dataql.host.function.basic;
 import net.hasor.dataql.host.function.AbstractUdfSource;
 
 /**
- * 比较函数。函数库引入 <code>import 'net.hasor.dataql.fx.basic.CompareUdfSource' as compare;</code>
+ * 比较函数。函数库引入 <code>import 'net.hasor.dataql.host.function.basic.CompareUdfSource' as compare;</code>
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2020-03-31
  */

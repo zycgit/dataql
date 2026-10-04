@@ -13,7 +13,7 @@ import java.util.Date;
 import net.hasor.dataql.host.function.AbstractUdfSource;
 
 /**
- * 时间函数。函数库引入 <code>import 'net.hasor.dataql.fx.basic.DateTimeUdfSource' as time;</code>
+ * 时间函数。函数库引入 <code>import 'net.hasor.dataql.host.function.basic.DateTimeUdfSource' as time;</code>
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2019-12-12
  */

@@ -79,7 +79,7 @@ public enum SqlHintNames {
     }
 
     SqlHintNames(String defaultVal) {
-        this(null, defaultVal);
+        this(defaultVal, null);
     }
 
     SqlHintNames(String defaultVal, String shortName) {
@@ -88,7 +88,8 @@ public enum SqlHintNames {
     }
 
     public static String getValue(Hints hint, SqlHintNames hintName) {
-        Object value = hint.getHint(hintName.getShortName());
+        String shortName = hintName.getShortName();
+        Object value = shortName == null ? null : hint.getHint(shortName);
         if (value == null) {
             value = hint.getOrDefault(hintName.name(), hintName.getDefaultVal());
         }

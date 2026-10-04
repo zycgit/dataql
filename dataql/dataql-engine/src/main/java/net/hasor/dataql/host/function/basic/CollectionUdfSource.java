@@ -13,9 +13,10 @@ import java.util.stream.Collectors;
 import net.hasor.cobble.ExceptionUtils;
 import net.hasor.dataql.domain.*;
 import net.hasor.dataql.host.function.AbstractUdfSource;
+import net.hasor.dataql.kernel.QueryExitException;
 
 /**
- * 集合函数。函数库引入 <code>import 'net.hasor.dataql.fx.basic.CollectionUdfSource' as collect;</code>
+ * 集合函数。函数库引入 <code>import 'net.hasor.dataql.host.function.basic.CollectionUdfSource' as collect;</code>
  * @author 赵永春 (zyc@hasor.net)
  * @version : 2019-12-12
  */
@@ -215,7 +216,7 @@ public class CollectionUdfSource extends AbstractUdfSource {
         } else {
             listData.sort((o1, o2) -> {
                 try {
-                    return (Integer) sortUdf.call(hints, () -> new Object[] { o1, o2 });
+                    return ((Number) sortUdf.call(hints, () -> new Object[] { o1, o2 })).intValue();
                 } catch (Throwable e) {
                     throw ExceptionUtils.toRuntime(e);
                 }
@@ -267,6 +268,9 @@ public class CollectionUdfSource extends AbstractUdfSource {
     }
 
     private static Map<String, Object> list2map_udf(List<Object> valueList, Udf extractKey, Udf convert, Hints hints) throws Throwable {
+        if (valueList == null) {
+            return Collections.emptyMap();
+        }
         ListModel convertTo = (ListModel) DomainHelper.convertTo(valueList);
         if (convertTo == null || convertTo.size() == 0) {
             return Collections.emptyMap();
@@ -293,6 +297,9 @@ public class CollectionUdfSource extends AbstractUdfSource {
 
                 mapData.put(String.valueOf(keyData.unwrap()), valueData);
             } catch (Exception e) {
+                if (ExceptionUtils.getRootCause(e) instanceof QueryExitException exit) {
+                    throw exit;
+                }
                 LinkedHashMap<String, Object> hashMap = new LinkedHashMap<>();
                 hashMap.put("errorMsg", e.getMessage());
                 hashMap.put("errorData", valueData);

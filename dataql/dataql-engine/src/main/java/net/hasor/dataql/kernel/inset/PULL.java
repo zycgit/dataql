@@ -52,7 +52,7 @@ class PULL implements InsetProcess {
             }
         }
         Object data = dataStack.pop();
-        //
+
         if (data == null) {
             dataStack.push(null);
             return;
@@ -61,47 +61,39 @@ class PULL implements InsetProcess {
         } else if (data.getClass().isArray()) {
             data = Arrays.asList((Object[]) data);
         }
-        //
+
         String indexOverflow = context.currentHints().getOrMap(INDEX_OVERFLOW.name(), val -> {
             return (val == null) ? INDEX_OVERFLOW_NEAR : val.toString();
         });
-        //
+
         if (!(data instanceof Collection)) {
             throw new QueryRuntimeException(sequence.programLocation(), "output data error, target type must be Collection.");
         }
         int size = ((Collection) data).size();
         if (point < 0) {
+            // Resolve negative indexes first; -size points to the first element.
             point = size + point;
-            if (point <= 0) {
-                if (INDEX_OVERFLOW_THROW.equalsIgnoreCase(indexOverflow)) {
-                    throw new ArrayIndexOutOfBoundsException(point + " out of " + size);
-                }
-                if (INDEX_OVERFLOW_NULL.equalsIgnoreCase(indexOverflow)) {
-                    dataStack.push(null);// 不使用溢出能力，以 null 代替
-                    return;
-                } else {
-                    point = 0;//反向溢出，索引位置归零
-                }
-            }
-        } else if (point >= size) {
+        }
+        if (point < 0 || point >= size) {
             if (INDEX_OVERFLOW_THROW.equalsIgnoreCase(indexOverflow)) {
                 throw new ArrayIndexOutOfBoundsException(point + " out of " + size);
             }
-            if (INDEX_OVERFLOW_NULL.equalsIgnoreCase(indexOverflow)) {
-                dataStack.push(null);// 不使用溢出能力，以 null 代替
+            if (INDEX_OVERFLOW_NULL.equalsIgnoreCase(indexOverflow) || size == 0) {
+                // Return null as requested, or when no nearest element exists in an empty collection.
+                dataStack.push(null);
                 return;
-            } else {
-                point = size - 1;//正向溢出，索引位置归到最大
             }
+            // The near policy selects the first or last element when the index is out of bounds.
+            point = Math.max(0, Math.min(point, size - 1));
         }
-        //
+
         Object pullData = null;
         if (data instanceof List) {
             pullData = ((List) data).get(point);
         } else {
             pullData = ((Collection) data).toArray()[point];
         }
-        //
+
         dataStack.push(pullData);
     }
 }

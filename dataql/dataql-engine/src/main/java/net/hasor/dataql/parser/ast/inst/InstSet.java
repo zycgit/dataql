@@ -51,6 +51,7 @@ public class InstSet extends ArrayList<Inst> implements Inst {
 
     /** 批量添加指令集 */
     public void addInstSet(InstSet inst) {
+        this.optionSet.addAll(inst.getOptionSet());
         this.addAll(inst);
     }
 
