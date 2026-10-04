@@ -14,6 +14,7 @@ import net.hasor.dataway.service.Dataway;
 import net.hasor.dataway.service.DatawayConfig;
 import net.hasor.dataway.spring.SpringTransactionProvider;
 import net.hasor.dataway.spring.example.config.auth.LoginInterceptor;
+import net.hasor.dataway.spring.example.service.BlogApiService;
 import net.hasor.dataway.spring.example.service.ExampleApiService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -46,5 +47,10 @@ public class DatawayConfiguration {
     @Bean(initMethod = "initialize")
     public ExampleApiService exampleApis(Dataway dataway) {
         return new ExampleApiService(dataway.getAdminService());
+    }
+
+    @Bean(initMethod = "initialize")
+    public BlogApiService blogApis(Dataway dataway) {
+        return new BlogApiService(dataway.getAdminService());
     }
 }

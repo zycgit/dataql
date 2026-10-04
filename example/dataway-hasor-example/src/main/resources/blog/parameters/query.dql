@@ -1,0 +1,9 @@
+hint FRAGMENT_SQL_DATA_SOURCE = 'ds1';
+hint FRAGMENT_SQL_COLUMN_CASE = 'lower';
+hint FRAGMENT_SQL_OPEN_PACKAGE = 'off';
+var findPeople = @@selectSql(name)<%
+    SELECT id, name FROM example_people
+    WHERE name LIKE CONCAT('%', #{name}, '%') ORDER BY id
+%>;
+var rows = findPeople(${name});
+return {'users': rows => [{'userId': id, 'userName': name}]};

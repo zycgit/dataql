@@ -1,0 +1,2 @@
+import 'net.hasor.dataql.host.function.basic.CollectionUdfSource' as collect;
+return collect.groupBy(${rows}, 'team');

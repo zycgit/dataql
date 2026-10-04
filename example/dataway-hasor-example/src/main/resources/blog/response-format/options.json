@@ -1,0 +1,4 @@
+{
+  "resultHandler": "structure",
+  "responseFormat": "{\"ok\":\"@resultStatus\",\"code\":\"@resultCode\",\"message\":\"@resultMessage\",\"data\":\"@resultData\"}"
+}

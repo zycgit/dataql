@@ -1,0 +1,24 @@
+{
+  "rows": [
+    {
+      "id": 1,
+      "parent_id": null,
+      "label": "总部"
+    },
+    {
+      "id": 2,
+      "parent_id": 1,
+      "label": "研发"
+    },
+    {
+      "id": 3,
+      "parent_id": 1,
+      "label": "销售"
+    },
+    {
+      "id": 4,
+      "parent_id": 2,
+      "label": "平台组"
+    }
+  ]
+}

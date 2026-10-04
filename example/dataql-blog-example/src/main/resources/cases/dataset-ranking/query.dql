@@ -1,0 +1,7 @@
+import 'net.hasor.dataql.host.function.basic.CollectionUdfSource' as collect;
+import 'net.hasor.dataql.host.function.basic.StateUdfSource' as state;
+var rows = collect.listSort(${rows}, (left,right) -> {
+    return left.score > right.score ? -1 : (left.score == right.score ? 0 : 1);
+});
+var nextRank = state.decNumber(0);
+return rows => [collect.mergeMap(#, {'rank': nextRank()})];

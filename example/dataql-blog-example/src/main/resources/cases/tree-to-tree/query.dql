@@ -1,0 +1,8 @@
+var convert = (node) -> {
+    return {
+        'id': node.value,
+        'text': node.text,
+        'children': node.ChildNodes => [convert(#)]
+    };
+};
+return ${nodes} => [convert(#)];

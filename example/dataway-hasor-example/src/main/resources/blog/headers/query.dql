@@ -1,0 +1,6 @@
+import 'net.hasor.dataway.function.WebUdfSource' as web;
+var trace = web.header('X-Trace-Id');
+if (trace != null) {
+    run web.setHeader('X-Trace-Id', trace);
+}
+return {'traceId': trace, 'message': ${message}};

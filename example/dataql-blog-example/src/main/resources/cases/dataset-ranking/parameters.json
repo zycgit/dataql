@@ -1,0 +1,16 @@
+{
+  "rows": [
+    {
+      "name": "Alice",
+      "score": 85
+    },
+    {
+      "name": "Bob",
+      "score": 96
+    },
+    {
+      "name": "Carol",
+      "score": 90
+    }
+  ]
+}

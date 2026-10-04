@@ -1,0 +1,23 @@
+{
+  "columns": [
+    "jan",
+    "feb"
+  ],
+  "rows": [
+    {
+      "key": "east",
+      "jan": 10,
+      "feb": 20
+    },
+    {
+      "key": "west",
+      "jan": 30,
+      "feb": 40
+    },
+    {
+      "key": "north",
+      "jan": 50,
+      "feb": 60
+    }
+  ]
+}

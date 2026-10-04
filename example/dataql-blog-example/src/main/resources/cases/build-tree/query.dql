@@ -1,0 +1,11 @@
+import 'net.hasor.dataql.host.function.basic.CollectionUdfSource' as collect;
+var rows = ${rows};
+var children = (parentId) -> {
+    var matches = collect.filter(rows, (row) -> { return row.parent_id == parentId; });
+    return matches => [{
+        'id': id,
+        'label': label,
+        'children': children(id)
+    }];
+};
+return children(null);

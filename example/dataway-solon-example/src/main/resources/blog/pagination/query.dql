@@ -1,0 +1,13 @@
+hint FRAGMENT_SQL_DATA_SOURCE = 'ds1';
+hint FRAGMENT_SQL_COLUMN_CASE = 'lower';
+hint FRAGMENT_SQL_QUERY_BY_PAGE = true;
+hint FRAGMENT_SQL_QUERY_BY_PAGE_NUMBER_OFFSET = 1;
+var findPeople = @@selectSql()<%
+    SELECT id, name FROM example_people ORDER BY id
+%>;
+assert ${page} >= 1;
+assert ${size} >= 1 && ${size} <= 100;
+var query = findPeople();
+run query.setPageInfo({'currentPage': ${page}, 'pageSize': ${size}});
+var rows = query.data();
+return {'items': rows, 'pagination': query.pageInfo()};

@@ -1,0 +1,18 @@
+[
+  {
+    "column": "jan",
+    "values": {
+      "east": 10,
+      "west": 30,
+      "north": 50
+    }
+  },
+  {
+    "column": "feb",
+    "values": {
+      "east": 20,
+      "west": 40,
+      "north": 60
+    }
+  }
+]

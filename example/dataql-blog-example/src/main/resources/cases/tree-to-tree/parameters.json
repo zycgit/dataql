@@ -1,0 +1,15 @@
+{
+  "nodes": [
+    {
+      "value": "root",
+      "text": "总部",
+      "ChildNodes": [
+        {
+          "value": "team",
+          "text": "研发",
+          "ChildNodes": []
+        }
+      ]
+    }
+  ]
+}

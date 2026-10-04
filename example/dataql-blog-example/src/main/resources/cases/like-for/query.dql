@@ -1,0 +1,9 @@
+import 'net.hasor.dataql.host.function.basic.CollectionUdfSource' as collect;
+var append = (rows, output, index) -> {
+    if (index < collect.size(rows)) {
+        run output.addLast(collect.mergeMap(rows[index], {'seq_no': index}));
+        run append(rows, output, index + 1);
+    }
+    return output;
+};
+return append(${rows}, collect.newList(), 0).data();

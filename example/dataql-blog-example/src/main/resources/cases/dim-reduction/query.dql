@@ -1,0 +1,14 @@
+import 'net.hasor.dataql.host.function.basic.CollectionUdfSource' as collect;
+var flatten = (value, output) -> {
+    var items = value => [#];
+    if (collect.size(items) == 0) {
+        return output;
+    }
+    if (items[0] == value) {
+        run output.addLast(value);
+    } else {
+        run items => [flatten(#, output)];
+    }
+    return output;
+};
+return flatten(${values}, collect.newList()).data();

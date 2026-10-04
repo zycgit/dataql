@@ -1,0 +1,17 @@
+[
+  {
+    "code": "A",
+    "amount": 150,
+    "previous": 100,
+    "growthPercent": 50.0
+  },
+  {
+    "code": "B",
+    "amount": 40,
+    "previous": 0
+  },
+  {
+    "code": "C",
+    "amount": 10
+  }
+]

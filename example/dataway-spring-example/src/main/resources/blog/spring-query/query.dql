@@ -1,0 +1,7 @@
+hint FRAGMENT_SQL_DATA_SOURCE = 'ds1';
+hint FRAGMENT_SQL_COLUMN_CASE = 'lower';
+hint FRAGMENT_SQL_OPEN_PACKAGE = 'off';
+var people = @@selectSql()<%
+    SELECT id, name FROM example_people ORDER BY id
+%>;
+return people();

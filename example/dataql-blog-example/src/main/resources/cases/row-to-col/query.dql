@@ -1,0 +1,9 @@
+import 'net.hasor.dataql.host.function.basic.CollectionUdfSource' as collect;
+var rows = ${rows};
+var transpose = (column) -> {
+    return {
+        'column': column,
+        'values': collect.list2map(rows, 'key', (index,row) -> { return row[column]; })
+    };
+};
+return ${columns} => [transpose(#)];

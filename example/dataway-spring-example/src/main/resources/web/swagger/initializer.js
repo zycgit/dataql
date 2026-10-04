@@ -8,8 +8,9 @@
 async function initializeSwagger() {
     const response = await fetch('../example/config', {method: 'POST', credentials: 'same-origin'});
     const configuration = await response.json();
+    const specification = new URLSearchParams(window.location.search).get('spec');
     SwaggerUIBundle({
-        url: configuration.openapi,
+        url: specification === 'swagger2' ? configuration.swagger : configuration.openapi,
         dom_id: '#swagger-ui',
         deepLinking: true,
         withCredentials: true,

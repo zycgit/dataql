@@ -1,0 +1,16 @@
+{
+  "rows": [
+    {
+      "name": "Alice",
+      "team": "研发"
+    },
+    {
+      "name": "Bob",
+      "team": "销售"
+    },
+    {
+      "name": "Carol",
+      "team": "研发"
+    }
+  ]
+}

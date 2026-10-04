@@ -1,0 +1,4 @@
+if (${fail}) {
+    throw 400, 'message rejected';
+}
+return {'message': ${message}};

@@ -1,0 +1,13 @@
+[
+  {
+    "id": "root",
+    "text": "总部",
+    "children": [
+      {
+        "id": "team",
+        "text": "研发",
+        "children": []
+      }
+    ]
+  }
+]

@@ -1,0 +1,11 @@
+hint MIN_DECIMAL_WIDTH = 'big';
+hint MAX_DECIMAL_DIGITS = 2;
+import 'net.hasor.dataql.host.function.basic.CollectionUdfSource' as collect;
+var joined = collect.mapJoin(${current}, ${previous}, {'code':'code'});
+return joined => [{
+    'code': data1.code,
+    'amount': data1.amount,
+    'previous': data2 == null ? null : data2.amount,
+    'growthPercent': data2 == null || data2.amount == 0 ? null :
+        (data1.amount - data2.amount) * 100 / data2.amount
+}];

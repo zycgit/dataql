@@ -1,0 +1,26 @@
+{
+  "current": [
+    {
+      "code": "A",
+      "amount": 150
+    },
+    {
+      "code": "B",
+      "amount": 40
+    },
+    {
+      "code": "C",
+      "amount": 10
+    }
+  ],
+  "previous": [
+    {
+      "code": "A",
+      "amount": 100
+    },
+    {
+      "code": "B",
+      "amount": 0
+    }
+  ]
+}

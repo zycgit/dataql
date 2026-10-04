@@ -15,6 +15,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>dataql-blog-example</module>
         <module>dataway-spring-example</module>
         <module>dataway-spring-nacos-example</module>
         <module>dataway-solon-example</module>
