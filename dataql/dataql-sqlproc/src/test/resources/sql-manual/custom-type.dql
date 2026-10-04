@@ -1,0 +1,6 @@
+var add = @@insertSql(name)<%
+    INSERT INTO people(name, age) VALUES (#{name, typeHandler=net.hasor.dataql.sqlproc.documentation.UpperTextHandler}, 20)
+%>;
+var find = @@selectSql()<% SELECT name FROM people WHERE age = 20 %>;
+run add('carol');
+return find();

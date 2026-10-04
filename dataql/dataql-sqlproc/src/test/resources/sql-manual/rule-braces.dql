@@ -1,0 +1,5 @@
+var find = @@selectSql(id)<%
+    SELECT name FROM people WHERE 1 = 1
+    @{if, id != null, AND id = #{id} AND '}' = '}'}
+%>;
+return find(1);

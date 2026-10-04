@@ -135,10 +135,7 @@ public class DynamicParsed {
                         segment.appendString(statement, pos, i - pos);
                     }
 
-                    int j = i + 1;
-                    while (j < statement.length && statement[j] != '}') {
-                        j++;
-                    }
+                    int j = findRuleEnd(statement, i + 2);
 
                     if (j - i > 1) {
                         String ruleContent = originalSql.substring(i + 2, j);
@@ -205,6 +202,26 @@ public class DynamicParsed {
         if (i != pos) {
             segment.appendString(statement, pos, i - pos);
         }
+    }
+
+    /** Nested placeholders belong to the rule body, not to its closing delimiter. */
+    private static int findRuleEnd(char[] statement, int start) {
+        int depth = 1;
+        for (int index = start; index < statement.length; index++) {
+            int next = statement[index] == '\'' || statement[index] == '"' ? skipCommentsAndQuotes(statement, index) : index;
+            if (next != index) {
+                index = next - 1;
+                continue;
+            }
+            if (statement[index] == '\\') {
+                index++;
+            } else if (statement[index] == '{') {
+                depth++;
+            } else if (statement[index] == '}' && --depth == 0) {
+                return index;
+            }
+        }
+        throw new RuntimeSQLException("Unclosed SQL rule at position " + (start - 2));
     }
 
     /** Skip over comments and quoted names present in an SQL statement */

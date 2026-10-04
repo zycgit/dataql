@@ -1,0 +1,9 @@
+var add = @@insertXml(name, age)<%
+    <selectKey keyProperty="newId" order="before">
+        SELECT NEXT VALUE FOR people_ids
+    </selectKey>
+    INSERT INTO people(id, name, age) VALUES (#{newId}, #{name}, #{age})
+%>;
+var find = @@selectSql(name)<% SELECT id FROM people WHERE name = #{name} %>;
+run add('Carol', 20);
+return find('Carol');

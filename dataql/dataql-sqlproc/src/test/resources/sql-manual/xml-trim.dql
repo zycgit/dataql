@@ -1,0 +1,7 @@
+var find = @@selectXml(id)<%
+    SELECT name FROM people
+    <trim prefix="WHERE" prefixOverrides="and" suffixOverrides="or">
+        AnD id = #{id} OR
+    </trim>
+%>;
+return find(1);

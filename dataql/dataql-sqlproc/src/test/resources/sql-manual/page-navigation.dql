@@ -1,0 +1,10 @@
+hint FRAGMENT_SQL_QUERY_BY_PAGE = true;
+hint FRAGMENT_SQL_QUERY_BY_PAGE_NUMBER_OFFSET = 1;
+hint FRAGMENT_SQL_COLUMN_CASE = 'lower';
+var find = @@selectSql()<% SELECT name FROM people ORDER BY id %>;
+var page = find();
+run page.setPageInfo({'currentPage':1,'pageSize':1});
+var first = page.data();
+run page.lastPage();
+var last = page.data();
+return {'first':first,'last':last,'total':page.pageInfo().totalCount};

@@ -1,0 +1,9 @@
+hint FRAGMENT_SQL_QUERY_BY_PAGE = true;
+hint FRAGMENT_SQL_QUERY_BY_PAGE_NUMBER_OFFSET = 1;
+hint FRAGMENT_SQL_COLUMN_CASE = 'lower';
+var find = @@selectSql()<% SELECT id, name FROM people ORDER BY id %>;
+var page = find();
+run page.setPageInfo({'currentPage':2, 'pageSize':1});
+var rows = page.data();
+var info = page.pageInfo();
+return {'rows':rows, 'total':info.totalCount};

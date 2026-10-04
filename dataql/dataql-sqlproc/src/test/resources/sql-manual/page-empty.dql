@@ -1,0 +1,8 @@
+hint FRAGMENT_SQL_QUERY_BY_PAGE = true;
+var find = @@selectSql()<% SELECT id FROM people WHERE id < 0 %>;
+var page = find();
+run page.setPageInfo({'currentPage':0, 'pageSize':10});
+var rows = page.data();
+var first = page.pageInfo();
+var second = page.pageInfo();
+return {'rows':rows, 'total':second.totalCount};

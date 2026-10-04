@@ -1,0 +1,6 @@
+hint FRAGMENT_SQL_OPEN_PACKAGE = 'off';
+hint FRAGMENT_SQL_COLUMN_CASE = 'lower';
+var find = @@selectSql(ids)<%
+    SELECT name FROM people WHERE 1 = 1 @{in, AND id IN #{ids}} ORDER BY id
+%>;
+return find([1,2]);

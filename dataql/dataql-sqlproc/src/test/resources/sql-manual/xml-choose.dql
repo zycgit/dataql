@@ -1,0 +1,11 @@
+var find = @@selectXml(name)<%
+    <bind name="pattern" value="'%' + name + '%'"/>
+    SELECT count(*) FROM people
+    <where>
+        <choose>
+            <when test="name != null and name != ''">name LIKE #{pattern}</when>
+            <otherwise>age &gt;= 30</otherwise>
+        </choose>
+    </where>
+%>;
+return find('Ali');

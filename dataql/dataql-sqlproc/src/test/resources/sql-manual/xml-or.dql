@@ -1,0 +1,4 @@
+var find = @@selectXml(id)<%
+    SELECT name FROM people <where>OR id = #{id}</where>
+%>;
+return find(2);

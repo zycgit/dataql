@@ -1,0 +1,2 @@
+var find = @@selectSql()<% SELECT count(*) FROM people WHERE @{manualEnabled} %>;
+return find();

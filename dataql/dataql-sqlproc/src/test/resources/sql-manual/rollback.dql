@@ -1,0 +1,6 @@
+import 'net.hasor.dataql.sqlproc.execute.transaction.TransactionUdfSource' as tran;
+var change = @@updateSql(id, amount)<% UPDATE accounts SET balance = balance + #{amount} WHERE id = #{id} %>;
+return tran.required(() -> {
+    run change(1, -10);
+    throw 'cancel transfer';
+});

@@ -1,0 +1,9 @@
+var add = @@insertSql(name, age)<% INSERT INTO people(name, age) VALUES (#{name}, #{age}) %>;
+var change = @@updateSql(name, age)<% UPDATE people SET age = #{age} WHERE name = #{name} %>;
+var find = @@selectSql(name)<% SELECT age FROM people WHERE name = #{name} %>;
+var remove = @@deleteSql(name)<% DELETE FROM people WHERE name = #{name} %>;
+var inserted = add('Carol', 20);
+var updated = change('Carol', 21);
+var age = find('Carol');
+var deleted = remove('Carol');
+return {'inserted': inserted, 'updated': updated, 'age': age, 'deleted': deleted};

@@ -1,0 +1,4 @@
+var find = @@selectXml()<%
+    SELECT count(*) FROM people WHERE <include refid="adult"/>
+%>;
+return find();

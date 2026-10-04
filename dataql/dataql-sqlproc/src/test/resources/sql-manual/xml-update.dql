@@ -1,0 +1,9 @@
+var change = @@updateXml(id, name, age)<%
+    UPDATE people
+    <set>
+        <if test="name != null">name = #{name},</if>
+        <if test="age != null">age = #{age},</if>
+    </set>
+    WHERE id = #{id}
+%>;
+return change(1, null, 26);

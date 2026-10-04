@@ -1,0 +1,4 @@
+var add = @@insertSql[](person)<%
+    INSERT INTO people(name, age) VALUES (#{person.name}, #{person.age})
+%>;
+return add([{'name':'Carol','age':20}, {'name':'Dave','age':22}]);

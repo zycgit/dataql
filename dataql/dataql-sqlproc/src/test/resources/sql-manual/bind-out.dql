@@ -1,0 +1,3 @@
+hint bindOut = '#result-set-1';
+var find = @@selectSql()<% SELECT count(*) FROM people %>;
+return find();

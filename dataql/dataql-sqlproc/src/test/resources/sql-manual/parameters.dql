@@ -1,0 +1,5 @@
+var find = @@selectSql(filter)<%
+    SELECT name FROM people
+    WHERE id = #{filter.id, jdbcType=BIGINT} AND age >= :filter.minAge
+%>;
+return find({'id':1, 'minAge':20});

@@ -81,9 +81,8 @@ public class PageQuery extends AbstractUdfSource {
 
     /** 获取分页信息（首次调用时自动执行 count 查询获取总记录数） */
     public Map<String, Object> pageInfo() throws SQLException {
-        if (this.pageInfo.getTotalCount() <= 0) {
-            fetchData();
-            this.pageInfo.setTotalCount(this.pageResult.getTotalCount());
+        if (this.pageResult == null && this.pageInfo.getTotalCount() <= 0) {
+            this.fetchData();
         }
         return this.pageInfo.toPageInfo();
     }
@@ -117,7 +116,7 @@ public class PageQuery extends AbstractUdfSource {
 
     /** 获取当前页数据（触发实际 SQL 执行） */
     public Object data() throws SQLException {
-        fetchData();
+        this.fetchData();
         return this.pageResult.getData();
     }
 
@@ -125,6 +124,8 @@ public class PageQuery extends AbstractUdfSource {
         String sourceName = SqlHintNames.getValue(hints, SqlHintNames.FRAGMENT_SQL_DATA_SOURCE);
         try (Connection conn = this.context.findConnection(sourceName, this.hints)) {
             this.pageResult = (PageResult<Object>) this.rootStatement.execute(conn, this.hints, this.sqlConfig.config(), this.params, this.pageInfo, true, this.sqlConfig.interceptors());
+            // Keep metadata in sync so pageInfo() does not execute the page again.
+            this.pageInfo.setTotalCount(this.pageResult.getTotalCount());
         }
     }
 }

@@ -1,0 +1,2 @@
+var find = @@selectSql(arg0)<% SELECT name FROM people WHERE id = ? %>;
+return find(1);

@@ -1,0 +1,9 @@
+hint FRAGMENT_SQL_OPEN_PACKAGE = 'off';
+hint FRAGMENT_SQL_COLUMN_CASE = 'lower';
+var find = @@selectSql(name, minAge)<%
+    SELECT name FROM people WHERE 1 = 1
+    @{ifand, name != null and name != '', name = #{name}}
+    @{ifand, minAge != null, age >= #{minAge}}
+    ORDER BY id
+%>;
+return find(null, 30);

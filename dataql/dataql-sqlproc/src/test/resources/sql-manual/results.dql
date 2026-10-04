@@ -1,0 +1,4 @@
+hint FRAGMENT_SQL_OPEN_PACKAGE = 'off';
+hint FRAGMENT_SQL_COLUMN_CASE = 'hump';
+var find = @@selectSql()<% SELECT id AS user_id, name AS user_name FROM people ORDER BY id %>;
+return find();

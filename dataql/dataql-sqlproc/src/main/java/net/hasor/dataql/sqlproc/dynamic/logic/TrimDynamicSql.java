@@ -11,8 +11,8 @@ import java.util.Arrays;
 import net.hasor.cobble.ArrayUtils;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
-import net.hasor.dataql.sqlproc.types.SqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
+import net.hasor.dataql.sqlproc.types.SqlArgSource;
 
 /**
  * 对应XML中 <trim>
@@ -66,14 +66,14 @@ public class TrimDynamicSql extends ArrayDynamicSql {
                     continue;
                 }
                 if (startsWith(childrenSql, override)) {
-                    childrenSql = childrenSql.substring(childrenSql.indexOf(override) + override.length());
+                    childrenSql = childrenSql.substring(override.length());
                     break;
                 }
             }
             // 去掉 suffixOverrides
             for (String override : this.suffixOverrides) {
                 if (endsWith(childrenSql, override)) {
-                    childrenSql = childrenSql.substring(0, childrenSql.lastIndexOf(override));
+                    childrenSql = childrenSql.substring(0, childrenSql.length() - override.length());
                     break;
                 }
             }

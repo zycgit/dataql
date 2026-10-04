@@ -1,0 +1,2 @@
+var absolute = @@callSql(value)<% {call ABS(#{value})} %>;
+return absolute(-7);
