@@ -13,12 +13,12 @@ import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
 import net.hasor.dataql.sqlproc.dynamic.args.ArraySqlArgSource;
+import net.hasor.dataql.sqlproc.dynamic.internal.OgnlUtils;
 import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
 import net.hasor.dataql.sqlproc.types.SqlArg;
 import net.hasor.dataql.sqlproc.types.SqlArgSource;
 import net.hasor.dataql.sqlproc.types.SqlMode;
 import net.hasor.dataql.sqlproc.types.TypeHandler;
-import static net.hasor.dataql.sqlproc.dynamic.internal.OgnlUtils.evalOgnl;
 
 /**
  * in 规则，用于自动生成 in 语句后的多重参数，例如： where col in (?,?,?,?)。
@@ -36,7 +36,7 @@ public class InRule implements SqlRule {
     @Override
     public boolean test(SqlArgSource data, QueryContext context, String activeExpr) {
         if (this.usingIf) {
-            return StringUtils.isBlank(activeExpr) || Boolean.TRUE.equals(evalOgnl(activeExpr, data));
+            return StringUtils.isBlank(activeExpr) || Boolean.TRUE.equals(OgnlUtils.evalOgnl(activeExpr, data));
         } else {
             return true;
         }
@@ -91,7 +91,7 @@ public class InRule implements SqlRule {
 
     private static void buildIn(final SqlBuilder sqlBuilder, final Object value) {
         String name = null;
-        Object tmpValue = null;
+        Object tmpValue = value;
         Integer jdbcType = null;
         SqlMode sqlMode = null;
         TypeHandler typeHandler = null;

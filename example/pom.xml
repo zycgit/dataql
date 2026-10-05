@@ -23,11 +23,11 @@
     </modules>
 
     <properties>
-        <dataway.version>5.0.0-SNAPSHOT</dataway.version>
+        <dataway.version>5.0.0</dataway.version>
         <spring-boot.version>4.1.1</spring-boot.version>
         <solon.version>4.1.0</solon.version>
-        <hasor.version>5.3.0-SNAPSHOT</hasor.version>
-        <dbvisitor.version>6.8.2-SNAPSHOT</dbvisitor.version>
+        <hasor.version>5.3.0</hasor.version>
+        <dbvisitor.version>6.8.2</dbvisitor.version>
         <jackson.version>3.2.2</jackson.version>
         <swagger-ui.version>5.32.15</swagger-ui.version>
         <maven.compiler.release>17</maven.compiler.release>

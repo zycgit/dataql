@@ -36,11 +36,11 @@ public class SqlServerDialect extends AbstractDialect {
         StringBuilder pagingBuilder = new StringBuilder();
         String orderby = getOrderByPart(sqlString);
         String distinctStr = "";
-        String loweredString = sqlString.toLowerCase();
-        String sqlPartString = sqlString;
-        if (loweredString.trim().toLowerCase().startsWith("select")) {
+        String sqlPartString = removeOrderByPart(sqlString).trim();
+        String loweredPartString = sqlPartString.toLowerCase();
+        if (loweredPartString.startsWith("select")) {
             int index = 6;
-            if (loweredString.toLowerCase().startsWith("select distinct")) {
+            if (loweredPartString.startsWith("select distinct")) {
                 distinctStr = "DISTINCT ";
                 index = 15;
             }
@@ -54,12 +54,22 @@ public class SqlServerDialect extends AbstractDialect {
         long firstParam = start + 1;
         long secondParam = start + limit;
         sqlString = "WITH selectTemp AS (SELECT " + distinctStr + "TOP 100 PERCENT " + //
-                " ROW_NUMBER() OVER (" + orderby + ") as __row_number__, " + pagingBuilder + ") SELECT * FROM selectTemp WHERE __row_number__ BETWEEN " +
-                //FIX#299：原因：mysql 中 limit 10(offset,size) 是从第10开始（不包含10）,；而这里用的BETWEEN是两边都包含，所以改为offset+1
-                firstParam + " AND " + secondParam + " ORDER BY __row_number__";
-        //
-        paramArrays.add(firstParam);
-        paramArrays.add(secondParam);
+                " ROW_NUMBER() OVER (" + orderby + ") as __row_number__, " + pagingBuilder + ") SELECT * FROM selectTemp WHERE __row_number__ BETWEEN " + firstParam + " AND " + secondParam + " ORDER BY __row_number__";
         return new BoundSql.BoundSqlObj(sqlString, paramArrays.toArray());
+    }
+
+    @Override
+    public BoundSql countSql(BoundSql boundSql) {
+        return new BoundSql.BoundSqlObj("SELECT COUNT(*) FROM (" + removeOrderByPart(boundSql.getSqlString()) + ") as TEMP_T", boundSql.getArgs());
+    }
+
+    private static String removeOrderByPart(String sql) {
+        String loweredString = sql.toLowerCase();
+        int orderByIndex = loweredString.indexOf("order by");
+        if (orderByIndex != -1) {
+            return sql.substring(0, orderByIndex);
+        } else {
+            return sql;
+        }
     }
 }

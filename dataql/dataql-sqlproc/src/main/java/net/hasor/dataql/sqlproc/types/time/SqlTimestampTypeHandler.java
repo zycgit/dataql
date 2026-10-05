@@ -6,22 +6,33 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.types.time;
-import java.sql.CallableStatement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
+import java.util.Date;
 import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
 
-/**
- * 读写 jdbc {@link Timestamp} 数据。
- * @author Clinton Begin
- * @author 赵永春 (zyc@hasor.net)
- */
-public class SqlTimestampTypeHandler extends AbstractTypeHandler {
+/** Binds epoch milliseconds or JDBC TIMESTAMP text; SQL dates become epoch milliseconds in DataQL. */
+public class SqlTimestampTypeHandler extends AbstractTypeHandler<Object> {
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
-        ps.setTimestamp(i, (Timestamp) parameter);
+        ps.setTimestamp(i, this.toJdbcValue(parameter));
+    }
+
+    private Timestamp toJdbcValue(Object value) throws SQLException {
+        if (value instanceof Number number) {
+            return new Timestamp(number.longValue());
+        }
+        if (value instanceof Date date) {
+            return new Timestamp(date.getTime());
+        }
+        if (value instanceof CharSequence) {
+            String text = value.toString().trim();
+            try {
+                return Timestamp.valueOf(text.replace('T', ' '));
+            } catch (IllegalArgumentException e) {
+                throw new SQLException("Invalid TIMESTAMP value: " + text, e);
+            }
+        }
+        throw new SQLException("TIMESTAMP requires epoch milliseconds or text");
     }
 
     @Override

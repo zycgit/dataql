@@ -21,8 +21,8 @@ public class Db2Dialect extends AbstractDialect {
         Object[] paramArray = boundSql.getArgs();
         Object[] destArgs = new Object[paramArray.length + 2];
         System.arraycopy(paramArray, 0, destArgs, 0, paramArray.length);
-        destArgs[paramArray.length] = start;
-        destArgs[paramArray.length + 1] = limit;
+        destArgs[paramArray.length] = start + 1;
+        destArgs[paramArray.length + 1] = start + limit;
         return new BoundSql.BoundSqlObj(sqlBuilder, destArgs);
     }
 }

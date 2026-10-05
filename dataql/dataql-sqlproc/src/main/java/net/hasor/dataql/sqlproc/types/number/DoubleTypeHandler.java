@@ -17,26 +17,26 @@ import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
  * @author Clinton Begin
  * @author 赵永春 (zyc@hasor.net)
  */
-public class DoubleTypeHandler extends AbstractTypeHandler {
+public class DoubleTypeHandler extends AbstractTypeHandler<Double> {
     @Override
-    public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
-        ps.setDouble(i, (Double) parameter);
+    public void setNonNullParameter(PreparedStatement ps, int i, Double parameter, Integer jdbcType) throws SQLException {
+        ps.setDouble(i, parameter);
     }
 
     @Override
-    public Object getNullableResult(ResultSet rs, String columnName) throws SQLException {
+    public Double getNullableResult(ResultSet rs, String columnName) throws SQLException {
         double result = rs.getDouble(columnName);
         return result == 0 && rs.wasNull() ? null : result;
     }
 
     @Override
-    public Object getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+    public Double getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
         double result = rs.getDouble(columnIndex);
         return result == 0 && rs.wasNull() ? null : result;
     }
 
     @Override
-    public Object getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
+    public Double getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
         double result = cs.getDouble(columnIndex);
         return result == 0 && cs.wasNull() ? null : result;
     }

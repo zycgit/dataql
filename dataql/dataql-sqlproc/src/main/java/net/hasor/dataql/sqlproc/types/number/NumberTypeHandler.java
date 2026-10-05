@@ -8,8 +8,8 @@
 package net.hasor.dataql.sqlproc.types.number;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.math.BigDecimal;
 import java.sql.*;
-import java.util.Date;
 import net.hasor.cobble.NumberUtils;
 import net.hasor.cobble.io.IOUtils;
 import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
@@ -19,10 +19,10 @@ import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
  * @author 赵永春 (zyc@hasor.net)
  * @version 2020-11-16
  */
-public class NumberTypeHandler extends AbstractTypeHandler {
+public class NumberTypeHandler extends AbstractTypeHandler<Number> {
     @Override
-    public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
-        throw new UnsupportedOperationException();
+    public void setNonNullParameter(PreparedStatement ps, int i, Number parameter, Integer jdbcType) throws SQLException {
+        ps.setBigDecimal(i, new BigDecimal(parameter.toString()));
     }
 
     @Override
@@ -105,7 +105,7 @@ public class NumberTypeHandler extends AbstractTypeHandler {
 
         Timestamp getTimestamp() throws SQLException;
 
-        Date getDate() throws SQLException;
+        java.sql.Date getDate() throws SQLException;
 
         Object getObject() throws SQLException;
     }
@@ -122,8 +122,8 @@ public class NumberTypeHandler extends AbstractTypeHandler {
             return (Number) obj;
         } else if (obj instanceof Timestamp) {
             return ((Timestamp) obj).getTime();
-        } else if (obj instanceof Date) {
-            return ((Date) obj).getTime();
+        } else if (obj instanceof java.sql.Date) {
+            return ((java.sql.Date) obj).getTime();
         } else if (obj instanceof Time) {
             return ((Time) obj).getTime();
         } else if (("oracle.sql.TIMESTAMP".equals(className) || "oracle.sql.TIMESTAMPTZ".equals(className))) {
@@ -132,13 +132,13 @@ public class NumberTypeHandler extends AbstractTypeHandler {
         } else if (className.startsWith("oracle.sql.DATE")) {
             /*oracle DATE 转换为 Date*/
             String metaDataClassName = rs.getColumnClassName();
-            if ("java.sql.Timestamp".equals(metaDataClassName) || "oracle.sql.TIMESTAMP".equals(metaDataClassName)) {
+            if ("Timestamp".equals(metaDataClassName) || "oracle.sql.TIMESTAMP".equals(metaDataClassName)) {
                 return rs.getTimestamp().getTime();
             } else {
                 return rs.getDate().getTime();
             }
-        } else if (obj instanceof Date) {
-            return ((Date) obj).getTime();
+        } else if (obj instanceof java.util.Date) {
+            return ((java.util.Date) obj).getTime();
         }
         //
         String stringValue = null;

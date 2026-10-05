@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute;
-import java.sql.JDBCType;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -14,7 +13,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import net.hasor.cobble.ResourcesUtils;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.sqlproc.ColumnCaseType;
 import net.hasor.dataql.sqlproc.types.TypeHandler;
@@ -90,35 +88,6 @@ public class MapResultExtractor {
 
     /** 获取读取列用到的那个 TypeHandler */
     public TypeHandler getResultSetTypeHandler(ResultSet rs, int columnIndex) throws SQLException {
-        int jdbcType = rs.getMetaData().getColumnType(columnIndex);
-        String columnTypeName = rs.getMetaData().getColumnTypeName(columnIndex);
-        String columnClassName = rs.getMetaData().getColumnClassName(columnIndex);
-
-        if ("YEAR".equalsIgnoreCase(columnTypeName)) {
-            // TODO with mysql `YEAR` type, columnType is DATE. but getDate() throw Long cast Date failed.
-            jdbcType = JDBCType.INTEGER.getVendorTypeNumber();
-        } else if (StringUtils.isNotBlank(columnClassName) && columnClassName.startsWith("oracle.")) {
-            // TODO with oracle columnClassName is specifically customizes standard types, it specializes process.
-            jdbcType = TypeHandlerRegistry.toSqlType(columnClassName);
-            return this.typeRegistry.getTypeHandler(jdbcType);
-        }
-
-        Class<?> columnTypeClass = null;
-        try {
-            columnTypeClass = ResourcesUtils.classForName(columnClassName);
-        } catch (ClassNotFoundException e) {
-            /**/
-        }
-
-        if (this.typeRegistry.hasTypeHandler(columnTypeClass)) {
-            return this.typeRegistry.getTypeHandler(columnTypeClass);
-        } else {
-            TypeHandler typeHandler = this.typeRegistry.getTypeHandler(columnTypeClass);
-            if (typeHandler == null) {
-                String message = "jdbcType=" + jdbcType + " ,columnTypeClass=" + columnTypeClass;
-                throw new SQLException("no typeHandler is matched to any available " + message);
-            }
-            return typeHandler;
-        }
+        return this.typeRegistry.getResultSetTypeHandler(rs, columnIndex, null);
     }
 }

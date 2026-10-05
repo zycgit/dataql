@@ -8,21 +8,21 @@
 package net.hasor.dataql.sqlproc.types.array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.net.URI;
-import java.net.URL;
 import java.sql.*;
 import java.time.*;
-import java.time.chrono.JapaneseDate;
-import java.util.Calendar;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
+import static java.lang.reflect.Array.*;
 
 /**
  * 读写 jdbc 数组类型
  * @author Clinton Begin
  * @author 赵永春 (zyc@hasor.net)
  */
-public class ArrayTypeHandler extends AbstractTypeHandler {
+public class ArrayTypeHandler extends AbstractTypeHandler<Object> {
     protected static final ConcurrentHashMap<Class<?>, JDBCType> STANDARD_MAPPING;
 
     static {
@@ -41,32 +41,10 @@ public class ArrayTypeHandler extends AbstractTypeHandler {
         STANDARD_MAPPING.put(Float.class, JDBCType.FLOAT);
         STANDARD_MAPPING.put(double.class, JDBCType.DOUBLE);
         STANDARD_MAPPING.put(Double.class, JDBCType.DOUBLE);
-        STANDARD_MAPPING.put(Calendar.class, JDBCType.CHAR);
-        STANDARD_MAPPING.put(char.class, JDBCType.CHAR);
-        // java time
-        STANDARD_MAPPING.put(java.util.Date.class, JDBCType.TIMESTAMP);
-        STANDARD_MAPPING.put(Date.class, JDBCType.TIMESTAMP);
-        STANDARD_MAPPING.put(Timestamp.class, JDBCType.TIMESTAMP);
-        STANDARD_MAPPING.put(Time.class, JDBCType.TIMESTAMP);
-        STANDARD_MAPPING.put(Instant.class, JDBCType.TIMESTAMP);
-        STANDARD_MAPPING.put(LocalDateTime.class, JDBCType.TIMESTAMP);
-        STANDARD_MAPPING.put(LocalDate.class, JDBCType.TIMESTAMP);
-        STANDARD_MAPPING.put(LocalTime.class, JDBCType.TIMESTAMP);
-        STANDARD_MAPPING.put(ZonedDateTime.class, JDBCType.TIMESTAMP);
-        STANDARD_MAPPING.put(JapaneseDate.class, JDBCType.TIMESTAMP);
-        STANDARD_MAPPING.put(YearMonth.class, JDBCType.TIMESTAMP);
-        STANDARD_MAPPING.put(Year.class, JDBCType.TIMESTAMP);
-        STANDARD_MAPPING.put(Month.class, JDBCType.TIMESTAMP);
-        STANDARD_MAPPING.put(OffsetDateTime.class, JDBCType.TIMESTAMP);
-        STANDARD_MAPPING.put(OffsetTime.class, JDBCType.TIMESTAMP);
         // java extensions Types
         STANDARD_MAPPING.put(String.class, JDBCType.VARCHAR);
-        STANDARD_MAPPING.put(BigInteger.class, JDBCType.BIGINT);
+        STANDARD_MAPPING.put(BigInteger.class, JDBCType.NUMERIC);
         STANDARD_MAPPING.put(BigDecimal.class, JDBCType.NUMERIC);
-        STANDARD_MAPPING.put(Byte[].class, JDBCType.VARBINARY);
-        STANDARD_MAPPING.put(byte[].class, JDBCType.VARBINARY);
-        STANDARD_MAPPING.put(URL.class, JDBCType.DATALINK);
-        STANDARD_MAPPING.put(URI.class, JDBCType.DATALINK);
     }
 
     @Override
@@ -75,34 +53,102 @@ public class ArrayTypeHandler extends AbstractTypeHandler {
             // it's the user's responsibility to properly free() the Array instance
             ps.setArray(i, (Array) parameter);
         } else {
-            if (!parameter.getClass().isArray()) {
-                throw new SQLException("ArrayType Handler requires SQL array or java array parameter and does not support type " + parameter.getClass());
+            Object[] elements;
+            if (parameter instanceof Collection<?> values) {
+                elements = values.toArray();
+            } else if (parameter.getClass().isArray()) {
+                elements = new Object[getLength(parameter)];
+                for (int index = 0; index < elements.length; index++) {
+                    elements[index] = get(parameter, index);
+                }
+            } else {
+                throw new SQLException("SQL ARRAY requires a script list");
             }
-            Class<?> componentType = parameter.getClass().getComponentType();
-            String arrayTypeName = resolveTypeName(componentType);
-            Array array = ps.getConnection().createArrayOf(arrayTypeName, (Object[]) parameter);
-            ps.setArray(i, array);
-            array.free();
+            String arrayTypeName = this.elementType(elements);
+            Array array = ps.getConnection().createArrayOf(arrayTypeName, elements);
+            try {
+                ps.setArray(i, array);
+            } finally {
+                array.free();
+            }
         }
     }
 
-    protected String resolveTypeName(Class<?> type) {
-        return STANDARD_MAPPING.getOrDefault(type, JDBCType.JAVA_OBJECT).getName();
+    private String elementType(Object[] elements) throws SQLException {
+        JDBCType type = null;
+        for (Object value : elements) {
+            if (value == null) {
+                continue;
+            }
+            JDBCType current = STANDARD_MAPPING.get(value.getClass());
+            if (current == null) {
+                throw new SQLException("Unsupported SQL ARRAY element: " + value.getClass().getName());
+            }
+            if (type == null || type == current) {
+                type = current;
+            } else if (value instanceof Number && this.numeric(type)) {
+                // A script list can contain mixed integer and decimal representations.
+                if (type == JDBCType.NUMERIC || current == JDBCType.NUMERIC) {
+                    type = JDBCType.NUMERIC;
+                } else if (type == JDBCType.DOUBLE || current == JDBCType.DOUBLE || type == JDBCType.FLOAT || current == JDBCType.FLOAT) {
+                    type = JDBCType.DOUBLE;
+                } else {
+                    type = JDBCType.BIGINT;
+                }
+            } else {
+                throw new SQLException("SQL ARRAY elements must have compatible types");
+            }
+        }
+        return type == null ? JDBCType.JAVA_OBJECT.getName() : type.getName();
+    }
+
+    private boolean numeric(JDBCType type) {
+        return switch (type) {
+            case TINYINT, SMALLINT, INTEGER, BIGINT, FLOAT, DOUBLE, NUMERIC -> true;
+            default -> false;
+        };
     }
 
     @Override
     public Object getNullableResult(ResultSet rs, String columnName) throws SQLException {
-        return extractArray(rs.getArray(columnName));
+        Array array;
+        try {
+            array = rs.getArray(columnName);
+        } catch (SQLException e) {
+            if (rs.getObject(columnName) == null) {
+                return null;
+            }
+            throw e;
+        }
+        return this.extractArray(array);
     }
 
     @Override
     public Object getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
-        return extractArray(rs.getArray(columnIndex));
+        Array array;
+        try {
+            array = rs.getArray(columnIndex);
+        } catch (SQLException e) {
+            if (rs.getObject(columnIndex) == null) {
+                return null;
+            }
+            throw e;
+        }
+        return this.extractArray(array);
     }
 
     @Override
     public Object getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
-        return extractArray(cs.getArray(columnIndex));
+        Array array;
+        try {
+            array = cs.getArray(columnIndex);
+        } catch (SQLException e) {
+            if (cs.getObject(columnIndex) == null) {
+                return null;
+            }
+            throw e;
+        }
+        return this.extractArray(array);
     }
 
     protected Object extractArray(Array array) throws SQLException {
@@ -110,9 +156,77 @@ public class ArrayTypeHandler extends AbstractTypeHandler {
             return null;
         }
         try {
-            return array.getArray();
+            Object result = array.getArray();
+            if (result instanceof Object[] values) {
+                values = this.convertTemporalElements(values);
+                Object[] typed = (Object[]) this.createTypedArrayFromSqlType(array.getBaseTypeName(), values.length);
+                // Keep double precision; only SQL REAL/FLOAT4 arrays need conversion to Float.
+                if (typed.getClass() == Object[].class && values.length > 0) {
+                    for (Object value : values) {
+                        if (value != null) {
+                            typed = (Object[]) newInstance(value.getClass(), values.length);
+                            break;
+                        }
+                    }
+                }
+                for (int i = 0; i < values.length; i++) {
+                    Object value = values[i];
+                    if (typed instanceof Float[] && value instanceof Number) {
+                        value = ((Number) value).floatValue();
+                    }
+                    if (value != null && !typed.getClass().getComponentType().isInstance(value)) {
+                        return values;
+                    }
+                    typed[i] = value;
+                }
+                return typed;
+            }
+            return result;
         } finally {
             array.free();
         }
+    }
+
+    private Object[] convertTemporalElements(Object[] values) {
+        Object[] result = values;
+        for (int i = 0; i < values.length; i++) {
+            Object value = values[i];
+            Object converted = value;
+            if (value instanceof LocalDate date) {
+                converted = Date.valueOf(date).getTime();
+            } else if (value instanceof LocalTime time) {
+                converted = Time.valueOf(time).getTime();
+            } else if (value instanceof LocalDateTime timestamp) {
+                converted = Timestamp.valueOf(timestamp).getTime();
+            } else if (value instanceof OffsetDateTime || value instanceof OffsetTime) {
+                converted = value.toString();
+            } else if (value instanceof Object[] nested) {
+                converted = this.convertTemporalElements(nested);
+            }
+            if (converted != value) {
+                if (result == values) {
+                    result = Arrays.copyOf(values, values.length, Object[].class);
+                }
+                result[i] = converted;
+            }
+        }
+        return result;
+    }
+
+    private Object createTypedArrayFromSqlType(String baseTypeName, int length) {
+        if (baseTypeName == null) {
+            return new Object[length];
+        }
+        return switch (baseTypeName.toUpperCase(Locale.ROOT)) {
+            case "INTEGER", "INT", "INT4" -> new Integer[length];
+            case "BIGINT", "LONG", "INT8" -> new Long[length];
+            case "SMALLINT", "SHORT", "INT2" -> new Short[length];
+            case "REAL", "FLOAT", "FLOAT4" -> new Float[length];
+            case "DOUBLE", "DOUBLE PRECISION", "FLOAT8" -> new Double[length];
+            case "NUMERIC", "DECIMAL" -> new BigDecimal[length];
+            case "BOOLEAN", "BOOL" -> new Boolean[length];
+            case "VARCHAR", "CHAR", "TEXT", "STRING", "BPCHAR" -> new String[length];
+            default -> new Object[length];
+        };
     }
 }

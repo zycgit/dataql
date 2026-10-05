@@ -11,7 +11,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import net.hasor.cobble.codec.HexUtils;
 import net.hasor.dataql.sqlproc.types.NoCache;
 import net.hasor.dataql.sqlproc.types.number.PgMoneyAsBigDecimalTypeHandler;
@@ -37,26 +39,16 @@ public class PgArrayTypeHandler extends ArrayTypeHandler {
     }
 
     protected PostgresReadArrayHandler createPostgresReadArrayHandler(String elementType) {
-        switch (elementType) {
-            case "money": {
-                return rs -> PgMoneyAsBigDecimalTypeHandler.toNumber(rs.getString("VALUE"));
-            }
-            case "bit":
-            case "varbit":
-            case "geometry": {
-                return rs -> rs.getString("VALUE");
-            }
-            case "bytea": {
-                return rs -> rs.getBytes("VALUE");
-            }
-            default: {
-                return rs -> rs.getObject("VALUE");
-            }
-        }
+        return switch (elementType.toLowerCase(Locale.ROOT)) {
+            case "money" -> rs -> PgMoneyAsBigDecimalTypeHandler.toNumber(rs.getString("VALUE"));
+            case "bit", "varbit", "geometry" -> rs -> rs.getString("VALUE");
+            case "bytea" -> rs -> rs.getBytes("VALUE");
+            default -> rs -> rs.getObject("VALUE");
+        };
     }
 
     protected Object[] objects(Object parameter) {
-        Object[] oriData = (Object[]) parameter;
+        Object[] oriData = parameter instanceof Collection<?> values ? values.toArray() : (Object[]) parameter;
 
         List<Object> copy = new ArrayList<>();
         for (Object oriDatum : oriData) {
@@ -71,8 +63,8 @@ public class PgArrayTypeHandler extends ArrayTypeHandler {
 
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
-        if (parameter instanceof Array) {
-            ps.setArray(i, (Array) parameter);// it's the user's responsibility to properly free() the Array instance
+        if (parameter instanceof Array p) {
+            ps.setArray(i, p);// it's the user's responsibility to properly free() the Array instance
         } else {
             Array array = null;
             try {
@@ -99,12 +91,13 @@ public class PgArrayTypeHandler extends ArrayTypeHandler {
                     data.add(this.readArrayHandler.readElement(rs));
                 }
             }
-            array.free();
             return data.toArray();
+        } finally {
+            array.free();
         }
     }
 
-    public interface PostgresReadArrayHandler {
+    public static interface PostgresReadArrayHandler {
         Object readElement(ResultSet rs) throws SQLException;
     }
 }

@@ -56,8 +56,18 @@ public class JdbcHelper {
     public static final String KDB              = "kdb";
     /** Aliyun PolarDB */
     public static final String POLARDB          = "polardb";
+    public static final String REDIS            = "redis";
+    public static final String MONGO            = "mongo";
+    public static final String ELASTIC6         = "elastic6";
+    public static final String ELASTIC7         = "elastic7";
+    public static final String ELASTIC8         = "elastic8";
+    public static final String MILVUS           = "milvus";
 
     public static String getDbType(String rawUrl, String driverClassName) {
+        return getDbType(rawUrl, driverClassName, null);
+    }
+
+    public static String getDbType(String rawUrl, String driverClassName, String dbVersion) {
         if (rawUrl == null) {
             return null;
         }
@@ -157,6 +167,21 @@ public class JdbcHelper {
             return KDB;
         } else if (rawUrl.startsWith("jdbc:polardb")) {
             return POLARDB;
+        } else if (rawUrl.startsWith("jdbc:dbvisitor:jedis")) {
+            return REDIS;
+        } else if (rawUrl.startsWith("jdbc:dbvisitor:mongo")) {
+            return MONGO;
+        } else if (rawUrl.startsWith("jdbc:dbvisitor:elastic")) {
+            if (StringUtils.startsWithAny(dbVersion, new String[] { "8.", "9." })) {
+                return ELASTIC8;
+            } else if (StringUtils.startsWithAny(dbVersion, new String[] { "7." })) {
+                return ELASTIC7;
+            } else {
+                return ELASTIC6;
+            }
+
+        } else if (rawUrl.startsWith("jdbc:dbvisitor:milvus")) {
+            return MILVUS;
         } else {
             return null;
         }
@@ -164,7 +189,7 @@ public class JdbcHelper {
 
     public static String getDbType(Statement c) throws SQLException {
         DatabaseMetaData metaData = c.getConnection().getMetaData();
-        return JdbcHelper.getDbType(metaData.getURL(), metaData.getDriverName());
+        return JdbcHelper.getDbType(metaData.getURL(), metaData.getDriverName(), metaData.getDatabaseProductVersion());
     }
 
     public static Integer getCursorJdbcType(String dbType) {

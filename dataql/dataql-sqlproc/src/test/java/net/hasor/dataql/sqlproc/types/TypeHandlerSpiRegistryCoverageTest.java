@@ -24,8 +24,8 @@ public class TypeHandlerSpiRegistryCoverageTest {
         assert registry.hasTypeHandler(Integer.class);
         assert registry.hasTypeHandler(Date.class);
 
-        // Enum support
-        assert registry.hasTypeHandler(MyEnum.class);
+        // Java enums are normalized to strings by DataQL.
+        assert !registry.hasTypeHandler(MyEnum.class);
 
         // JDBC type mappings
         assert TypeHandlerRegistry.toSqlType(String.class) == Types.VARCHAR;

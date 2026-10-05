@@ -15,7 +15,7 @@ import net.hasor.cobble.ResourcesUtils;
  * @author Clinton Begin
  * @author 赵永春 (zyc@hasor.net)
  */
-public class UnknownTypeHandler extends AbstractTypeHandler {
+public class UnknownTypeHandler extends AbstractTypeHandler<Object> {
     private static final ObjectTypeHandler   OBJECT_TYPE_HANDLER = new ObjectTypeHandler();
     private final        TypeHandlerRegistry typeHandlerRegistry;
 
@@ -59,11 +59,7 @@ public class UnknownTypeHandler extends AbstractTypeHandler {
         if (parameter == null) {
             handler = OBJECT_TYPE_HANDLER;
         } else {
-            if (jdbcType == null) {
-                handler = this.typeHandlerRegistry.getTypeHandler(parameter.getClass());
-            } else {
-                handler = this.typeHandlerRegistry.getTypeHandler(parameter.getClass(), jdbcType);
-            }
+            handler = jdbcType == null ? this.typeHandlerRegistry.getTypeHandler(parameter.getClass()) : this.typeHandlerRegistry.getTypeHandler(parameter.getClass(), jdbcType);
             // check if handler is null (issue #270) <- mybatis
             if (handler == null || handler instanceof UnknownTypeHandler) {
                 handler = OBJECT_TYPE_HANDLER;

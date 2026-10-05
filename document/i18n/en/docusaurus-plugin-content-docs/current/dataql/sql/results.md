@@ -14,6 +14,27 @@ Query rows are converted to objects using column labels. Unpacking determines wh
 | One row, several columns | Object list | Object | Object |
 | Several rows | Object list | Object list | Object list |
 
+```javascript
+hint FRAGMENT_SQL_OPEN_PACKAGE = 'off';
+hint FRAGMENT_SQL_COLUMN_CASE = 'lower';
+var find = @@selectSql(id)<%
+    SELECT id, name FROM people WHERE id = #{id}
+%>;
+return find(1);
+```
+
+With the [people table](execute.md#sample-data), this returns `[{"id":1,"name":"Alice"}]`. Set `row` to return `{"id":1,"name":"Alice"}`. With `column`, this two-column query still returns an object.
+
+A single-column query can return the value directly:
+
+```javascript
+hint FRAGMENT_SQL_OPEN_PACKAGE = 'column';
+var find = @@selectSql(id)<% SELECT name FROM people WHERE id = #{id} %>;
+return find(1);
+```
+
+This returns `Alice`; an ID with no matching row returns null.
+
 Set `FRAGMENT_SQL_OPEN_PACKAGE = 'off'` for a stable list shape. Page data always remains a list.
 
 ## Column names
@@ -61,4 +82,16 @@ var find = @@selectSql()<% SELECT count(*) FROM people %>;
 return find();
 ```
 
+The example returns `{"#result-set-1":2}`. The selected output retains its name, while its value follows the unpacking setting.
+
 Queries and general execution can select named results with `bindOut`. See [Procedures](procedures.md) for numbering and output parameters. Pagination cannot be combined with `bindOut`.
+
+## Choose result processing
+
+- Lists, objects and scalar values: `FRAGMENT_SQL_OPEN_PACKAGE`.
+- Column-name case: `FRAGMENT_SQL_COLUMN_CASE`; use SQL aliases for explicit names.
+- Date, JSON, array and binary columns: [type handlers](types.md).
+- Procedure outputs, result sets and update counts: select named outputs with `bindOut`; see [stored procedures](procedures.md).
+- Reshaping or computing query results: DataQL [structure transformations](../syntax/transform.md).
+
+These settings process SQL results. Dataway [HTTP result handlers](../../dataway/capabilities/result-handlers.md) run at the API response stage. The SQL executor does not register `resultSet`, `resultUpdate` or `defaultResult` dynamic rules.

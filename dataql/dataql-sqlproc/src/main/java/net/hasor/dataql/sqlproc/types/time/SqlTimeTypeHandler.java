@@ -6,22 +6,33 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.types.time;
-import java.sql.CallableStatement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Time;
+import java.sql.*;
+import java.util.Date;
 import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
 
-/**
- * 读写 jdbc {@link Time} 数据。
- * @author Clinton Begin
- * @author 赵永春 (zyc@hasor.net)
- */
-public class SqlTimeTypeHandler extends AbstractTypeHandler {
+/** Binds epoch milliseconds or JDBC TIME text; SQL dates become epoch milliseconds in DataQL. */
+public class SqlTimeTypeHandler extends AbstractTypeHandler<Object> {
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
-        ps.setTime(i, (Time) parameter);
+        ps.setTime(i, this.toJdbcValue(parameter));
+    }
+
+    private Time toJdbcValue(Object value) throws SQLException {
+        if (value instanceof Number number) {
+            return new Time(number.longValue());
+        }
+        if (value instanceof Date date) {
+            return new Time(date.getTime());
+        }
+        if (value instanceof CharSequence) {
+            String text = value.toString().trim();
+            try {
+                return Time.valueOf(text);
+            } catch (IllegalArgumentException e) {
+                throw new SQLException("Invalid TIME value: " + text, e);
+            }
+        }
+        throw new SQLException("TIME requires epoch milliseconds or text");
     }
 
     @Override

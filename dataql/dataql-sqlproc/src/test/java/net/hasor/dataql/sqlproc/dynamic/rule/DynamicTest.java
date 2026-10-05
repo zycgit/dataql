@@ -227,7 +227,7 @@ public class DynamicTest {
                 "abc = #{name}",         //
                 "abc = ?");
         assertRule(List.of("eventType"),//
-                "abc = #{eventType,javaType=" + Integer.class.getName() + "}",//
+                "abc = #{eventType,jdbcType=INTEGER}",//
                 "abc = ?");
 
         //arg2

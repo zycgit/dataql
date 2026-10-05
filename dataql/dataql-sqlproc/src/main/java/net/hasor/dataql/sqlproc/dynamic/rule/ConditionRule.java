@@ -10,10 +10,11 @@ import java.sql.SQLException;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
+import net.hasor.dataql.sqlproc.dynamic.internal.OgnlUtils;
 import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
 import net.hasor.dataql.sqlproc.dynamic.segment.PlanDynamicSql;
+import net.hasor.dataql.sqlproc.types.SqlArg;
 import net.hasor.dataql.sqlproc.types.SqlArgSource;
-import static net.hasor.dataql.sqlproc.dynamic.internal.OgnlUtils.evalOgnl;
 
 /**
  * 如果参数不为空，则生成 'and column = ?' 或者 'column = ?' 。
@@ -41,15 +42,13 @@ public abstract class ConditionRule implements SqlRule {
     @Override
     public boolean test(SqlArgSource data, QueryContext context, String activeExpr) {
         if (this.usingIf) {
-            return StringUtils.isBlank(activeExpr) || Boolean.TRUE.equals(evalOgnl(activeExpr, data));
+            return StringUtils.isBlank(activeExpr) || Boolean.TRUE.equals(OgnlUtils.evalOgnl(activeExpr, data));
         } else {
             return true;
         }
     }
 
     protected abstract boolean allowNullValue();
-
-    protected abstract boolean allowMultipleValue();
 
     @Override
     public void executeRule(SqlArgSource data, QueryContext context, SqlBuilder sqlBuilder, String activeExpr, String ruleValue) throws SQLException {
@@ -59,7 +58,7 @@ public abstract class ConditionRule implements SqlRule {
         } else {
             if (activeExpr != null) {
                 expr += activeExpr;
-                if (ruleValue != null) {
+                if (StringUtils.isNotBlank(ruleValue)) {
                     expr += ",";
                 }
             }
@@ -81,14 +80,12 @@ public abstract class ConditionRule implements SqlRule {
             return;
         }
 
-        if (!this.allowNullValue() && testNullValue(sqlArgs)) {
-            if (!parsedSql.isHaveInjection()) {
+        // Fix: Ensure we properly check nulls
+        boolean allNulls = testNullValue(sqlArgs);
+        if (!this.allowNullValue() && allNulls) {
+            if (parsedSql.getInjectionList().isEmpty()) {
                 return;
             }
-        }
-
-        if (!this.allowMultipleValue() && sqlArgs.length > 1) {
-            throw new SQLException("rule " + this.name() + " multiple values not allowed.");
         }
 
         String sql = sqlBuilder.getSqlString().toLowerCase();
@@ -118,7 +115,14 @@ public abstract class ConditionRule implements SqlRule {
     private static boolean testNullValue(Object[] args) {
         if (args != null) {
             for (Object arg : args) {
-                if (arg != null) {
+                if (arg == null) {
+                    continue;
+                }
+                if (arg instanceof SqlArg) {
+                    if (((SqlArg) arg).getValue() != null) {
+                        return false;
+                    }
+                } else {
                     return false;
                 }
             }

@@ -1,0 +1,106 @@
+/*
+ * Copyright 2015-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0.
+ * See the LICENSE.txt file for the full license.
+ * https://www.apache.org/licenses/LICENSE-2.0
+ */
+package net.hasor.dataql.sqlproc.dynamic.rule;
+import java.sql.SQLException;
+import net.hasor.cobble.StringUtils;
+import net.hasor.dataql.sqlproc.dynamic.QueryContext;
+import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
+import net.hasor.dataql.sqlproc.dynamic.internal.OgnlUtils;
+import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
+import net.hasor.dataql.sqlproc.dynamic.segment.PlanDynamicSql;
+import net.hasor.dataql.sqlproc.types.SqlArgSource;
+
+public class WhenRule extends AbstractCaseRule {
+    public static final SqlRule INSTANCE_WHEN = new WhenRule(false);
+    public static final SqlRule INSTANCE_ELSE = new WhenRule(true);
+    private final       boolean isElse;
+
+    public WhenRule(boolean isElse) {
+        this.isElse = isElse;
+    }
+
+    @Override
+    public boolean test(SqlArgSource data, QueryContext context, String activeExpr) {
+        return true;// always true
+    }
+
+    @Override
+    public void executeRule(SqlArgSource data, QueryContext context, SqlBuilder sqlBuilder, String activeExpr, String ruleValue) throws SQLException {
+        String caseId = (String) data.getValue(INNER_KEY_CURRENT_CASE_ID);
+        if (!data.hasValue(INNER_KEY_CURRENT_CASE_ID) || caseId == null) {
+            throw new SQLException("The '" + (isElse ? "else" : "when") + "' rule must be used within the 'case' rule.");
+        }
+
+        // check previous WHEN has already matched
+        Boolean matched = (Boolean) data.getValue(caseId);
+        if (matched != null && matched) {
+            return;
+        }
+
+        if (this.isElse) {
+            this.executeElse(data, context, sqlBuilder, activeExpr, ruleValue, caseId);
+        } else {
+            this.executeWhen(data, context, sqlBuilder, activeExpr, ruleValue, caseId);
+        }
+    }
+
+    private void executeElse(SqlArgSource data, QueryContext context, SqlBuilder sqlBuilder, String activeExpr, String ruleValue, String caseId) throws SQLException {
+        data.putValue(caseId, Boolean.TRUE);
+
+        StringBuilder contentToExecute = new StringBuilder();
+        if (StringUtils.isNotBlank(activeExpr)) {
+            contentToExecute.append(activeExpr);
+        }
+        if (StringUtils.isNotBlank(ruleValue)) {
+            if (!contentToExecute.isEmpty()) {
+                contentToExecute.append(",");
+            }
+            contentToExecute.append(ruleValue);
+        }
+
+        PlanDynamicSql parser = DynamicParsed.getParsedSql(contentToExecute.toString());
+        parser.buildQuery(data, context, sqlBuilder);
+    }
+
+    private void executeWhen(SqlArgSource data, QueryContext context, SqlBuilder sqlBuilder, String activeExpr, String ruleValue, String caseId) throws SQLException {
+        boolean isMatch;
+        if (Boolean.TRUE.equals(data.getValue(caseId + INNER_KEY_HAS_TEST_EXPR_SUFFIX))) {
+            isMatch = this.testInSwitchMode(data, caseId, activeExpr);
+        } else {
+            isMatch = this.testInIfElseMode(data, activeExpr);
+        }
+
+        if (isMatch) {
+            data.putValue(caseId, Boolean.TRUE);
+            PlanDynamicSql parser = DynamicParsed.getParsedSql(ruleValue);
+            parser.buildQuery(data, context, sqlBuilder);
+        }
+    }
+
+    private boolean testInSwitchMode(SqlArgSource data, String caseId, String activeExpr) {
+        Object testVal = data.getValue(caseId + INNER_KEY_TEST_EXPR_SUFFIX);
+        Object whenVal = OgnlUtils.evalOgnl(activeExpr, data);
+
+        // Basic equals check safely handling nulls
+        if (testVal == whenVal) {
+            return true;
+        } else if (testVal != null && testVal.equals(whenVal)) {
+            return true;
+        } else if (whenVal != null && whenVal.equals(testVal)) {
+            return true;
+        } else {
+            // Try string comparison as fallback if types differ but content same
+            return String.valueOf(testVal).equals(String.valueOf(whenVal));
+        }
+    }
+
+    private boolean testInIfElseMode(SqlArgSource data, String activeExpr) {
+        Object result = OgnlUtils.evalOgnl(activeExpr, data);
+        return Boolean.TRUE.equals(result);
+    }
+}

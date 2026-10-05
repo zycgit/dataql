@@ -24,6 +24,7 @@ dependencies {
     compileOnly 'ognl:ognl:3.4.3'
 
     // for test
+    testImplementation 'org.mockito:mockito-core:5.23.0'
     testImplementation "net.hasor:dbvisitor:${property('lib.dbvisitor')}"
     testImplementation 'ognl:ognl:3.4.3'
     testImplementation 'com.alibaba:druid:1.2.11'

@@ -10,17 +10,33 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import net.hasor.cobble.reflect.TypeReference;
 
 /**
  * The base {@link TypeHandler} for references a generic type.
+ * <p>
+ * Important: Since 3.5.0, This class never call the {@link ResultSet#wasNull()} and
+ * {@link CallableStatement#wasNull()} method for handling the SQL {@code NULL} value.
+ * In other words, {@code null} value handling should be performed on subclass.
+ * </p>
+ * @author Clinton Begin
+ * @author Simone Tripodi
+ * @author Kzuki Shimizu
  * @author 赵永春 (zyc@hasor.net)
  */
-public abstract class AbstractTypeHandler implements TypeHandler {
+public abstract class AbstractTypeHandler<T> extends TypeReference<T> implements TypeHandler {
     @Override
+    @SuppressWarnings("unchecked")
     public void setParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
         if (parameter == null) {
+            // Infer the null binding type from the handler's generic argument.
             if (jdbcType == null) {
-                throw new SQLException("JDBC requires that the JdbcType must be specified for all nullable parameters.");
+                Class<?> rawType = getRawType();
+                if (rawType != null) {
+                    jdbcType = TypeHandlerRegistry.toSqlType(rawType);
+                } else {
+                    throw new SQLException("JDBC requires that the JdbcType must be specified for all nullable parameters.");
+                }
             }
             try {
                 ps.setNull(i, jdbcType);
@@ -30,7 +46,7 @@ public abstract class AbstractTypeHandler implements TypeHandler {
             }
         } else {
             try {
-                setNonNullParameter(ps, i, parameter, jdbcType);
+                this.setNonNullParameter(ps, i, (T) parameter, jdbcType);
             } catch (Exception e) {
                 throw new SQLException("Error setting non null for parameter #" + i + " with JdbcType " + jdbcType + "," +//
                         "Try setting a different JdbcType for this parameter or a different configuration property. Cause: " + e.getMessage(), e);
@@ -39,7 +55,7 @@ public abstract class AbstractTypeHandler implements TypeHandler {
     }
 
     @Override
-    public Object getResult(ResultSet rs, String columnName) throws SQLException {
+    public T getResult(ResultSet rs, String columnName) throws SQLException {
         try {
             return getNullableResult(rs, columnName);
         } catch (Exception e) {
@@ -48,7 +64,7 @@ public abstract class AbstractTypeHandler implements TypeHandler {
     }
 
     @Override
-    public Object getResult(ResultSet rs, int columnIndex) throws SQLException {
+    public T getResult(ResultSet rs, int columnIndex) throws SQLException {
         try {
             return getNullableResult(rs, columnIndex);
         } catch (Exception e) {
@@ -57,7 +73,7 @@ public abstract class AbstractTypeHandler implements TypeHandler {
     }
 
     @Override
-    public Object getResult(CallableStatement cs, int columnIndex) throws SQLException {
+    public T getResult(CallableStatement cs, int columnIndex) throws SQLException {
         try {
             return getNullableResult(cs, columnIndex);
         } catch (Exception e) {
@@ -65,12 +81,12 @@ public abstract class AbstractTypeHandler implements TypeHandler {
         }
     }
 
-    public abstract void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException;
+    public abstract void setNonNullParameter(PreparedStatement ps, int i, T parameter, Integer jdbcType) throws SQLException;
 
     /** @param columnName column name, when configuration <code>useColumnLabel</code> is <code>false</code> */
-    public abstract Object getNullableResult(ResultSet rs, String columnName) throws SQLException;
+    public abstract T getNullableResult(ResultSet rs, String columnName) throws SQLException;
 
-    public abstract Object getNullableResult(ResultSet rs, int columnIndex) throws SQLException;
+    public abstract T getNullableResult(ResultSet rs, int columnIndex) throws SQLException;
 
-    public abstract Object getNullableResult(CallableStatement cs, int columnIndex) throws SQLException;
+    public abstract T getNullableResult(CallableStatement cs, int columnIndex) throws SQLException;
 }

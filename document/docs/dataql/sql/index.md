@@ -24,11 +24,12 @@ return find(25) => [{"name", "nextAge": age + 1}];
 ## 使用指引
 
 - [SQL 执行](execute.md)：选择片段入口，执行查询、增删改和批量操作。
-- [参数绑定](parameters.md)：传递值、指定 JDBC 类型和使用文本替换。
-- [动态规则](rules.md)、[XML 动态 SQL](mybaits.md)：按条件构造 SQL。
+- [参数绑定](parameters.md)：位置参数、名称参数、SQL 文本替换、规则传参、参数选项和符号转义。
+- [动态规则](rules.md)：按规则生成语句、展开集合、选择分支和嵌套模板。
+- [XML 动态 SQL](mybaits.md)：查阅各个 SQL 标签的属性、完整用法和生成结果。
 - [结果与主键](results.md)、[分页与方言](dialect.md)：读取查询结果和分页数据。
-- [类型处理](types.md)：选择参数和结果的类型转换方式。
-- [事务](transactions.md)：将多次调用放在同一事务中。
+- [类型处理](types.md)：Java/JDBC 类型关系、基础类型、JSON、流与二进制、数组和向量。
+- [事务](transactions.md)：提交与回滚、七种传播行为、隔离级别和数据源范围。
 - [存储过程与多结果](procedures.md)：调用存储过程并读取输出。
 - [SQL Hint](../hints/hint_sql.md)：查阅全部 SQL 执行选项。
 

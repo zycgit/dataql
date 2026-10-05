@@ -3,15 +3,15 @@ id: rules
 title: 6.3 动态规则
 ---
 
-文本 SQL 使用 `@{规则名, 内容}` 构建动态语句；条件规则使用 `@{规则名, 条件表达式, 内容}`。条件表达式基于 OGNL，参数绑定仍使用 `#{...}`。规则名不区分大小写，SQL 字符串和注释中的规则标记按普通文本保留。
+动态规则根据参数生成 SQL 条件、展开集合或生成绑定值。规则写在 SQL 片段内，适用于 `selectSql`、`insertSql`、`updateSql`、`deleteSql` 和 `executeSql`。
 
-## 条件筛选
+## 从一个查询开始
 
 ```javascript
 hint FRAGMENT_SQL_OPEN_PACKAGE = 'off';
 hint FRAGMENT_SQL_COLUMN_CASE = 'lower';
 var find = @@selectSql(name, minAge)<%
-    SELECT name FROM people WHERE 1 = 1
+    SELECT id, name FROM people WHERE 1 = 1
     @{ifand, name != null and name != '', name = #{name}}
     @{ifand, minAge != null, age >= #{minAge}}
     ORDER BY id
@@ -19,34 +19,26 @@ var find = @@selectSql(name, minAge)<%
 return find(null, 30);
 ```
 
-示例跳过空姓名条件，生成 `AND age >= ?`，返回 Bob。用 `ifand`、`ifor` 明确写出空值判断，避免依赖隐式的空值过滤。
+`name` 为 null，姓名条件被省略；`minAge` 为 30，生成 `AND age >= ?`，并通过 JDBC 绑定 30。示例数据见 [SQL 执行](execute.md)。在 Dataway 中创建 SQL 类型的 API 时，直接填写片段内的 SQL，参数由请求提供。
 
-## 集合展开
+## 语法
 
-```javascript
-hint FRAGMENT_SQL_OPEN_PACKAGE = 'off';
-hint FRAGMENT_SQL_COLUMN_CASE = 'lower';
-var find = @@selectSql(ids)<%
-    SELECT name FROM people WHERE 1 = 1 @{in, AND id IN #{ids}} ORDER BY id
-%>;
-return find([1,2]);
+```sql
+@{规则名, 内容}
+@{规则名, 条件表达式, 内容}
 ```
 
-`in` 将集合展开为多个 `?`。空集合或 null 会省略整个规则内容；查询前应明确空集合的业务含义，必要时直接返回空结果，避免扩大查询范围。
+规则名不区分大小写。条件表达式使用 OGNL，直接写参数名，例如 `age >= 18`；SQL 中的值使用 `#{age}` 绑定。`@{...}` 是 SQL 片段内部语法，DataQL 的函数、表达式仍按 DataQL 语法书写。
 
-## 内置规则
+规则内容可以嵌套其他规则。SQL 单引号、双引号和注释内的标记按普通文本保留，不执行规则。
 
-| 规则 | 用途 |
-| --- | --- |
-| `if` | 条件成立时输出 SQL 片段 |
-| `ifand`、`ifor`、`ifset` | 条件成立时补上 `AND`、`OR` 或赋值逗号 |
-| `in`、`ifin` | 展开一个集合参数，可附加条件 |
-| `text`、`iftext` | 原样输出 SQL 文本，可附加条件 |
-| `macro`、`ifmacro` | 引入已注册的公共 SQL 片段 |
-| `and`、`or`、`set` | 为包含单个绑定参数的内容补分隔符 |
-| `arg` | 创建带 JDBC 选项的参数 |
-| `uuid32`、`uuid36` | 生成 UUID 参数 |
+## 使用指引
 
-`and`、`or`、`set` 对绑定参数数量有限制；复杂条件使用条件规则或 [XML 动态 SQL](mybaits.md)。`text` 输出不经过 JDBC 参数绑定，只应用于可信内容。扩展方式见[SQL 规则](../../dataway/engine/sql-rules.md)和[SQL 片段](../../dataway/engine/sql-macros.md)。
+- [语句生成规则](rules/statements.md)：条件拼接、集合展开、分支、片段引用及参数生成。
+- [规则嵌套](rules/nesting.md)：组合规则，理解条件判断与内部参数的执行顺序。
+- [自定义 SQL 规则](../../dataway/engine/sql-rules.md)：实现 `SqlRule`，并在 Dataway 中注册。
+- [XML 动态 SQL](mybaits.md)：使用标签组织较长的条件和循环。
 
-`md5` 虽已注册，当前计算的是参数包装对象文本的摘要。业务值的摘要应在脚本或应用中预先计算，再绑定到 SQL。
+## 查询结果处理
+
+动态规则在 SQL 执行前生成语句。查询结果通过 [结果与主键](results.md)中的拆包、列名转换和 `bindOut` 设置处理，存储过程见 [存储过程与多结果](procedures.md)。SQL 执行器未注册 dbVisitor 的 `resultSet`、`resultUpdate`、`defaultResult` 规则，不能将这些规则直接写入片段。

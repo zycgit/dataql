@@ -14,7 +14,7 @@ import net.hasor.dataql.sqlproc.types.string.StringTypeHandler;
 /** Converts a bound string to uppercase while keeping standard string reads. */
 public class UpperTextHandler extends StringTypeHandler {
     @Override
-    public void setNonNullParameter(PreparedStatement statement, int index, Object value, Integer jdbcType) throws SQLException {
+    public void setNonNullParameter(PreparedStatement statement, int index, String value, Integer jdbcType) throws SQLException {
         statement.setString(index, value.toString().toUpperCase(Locale.ROOT));
     }
 }

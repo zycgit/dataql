@@ -149,6 +149,10 @@ public class PlanDynamicSql implements Cloneable, DynamicSql {
         return result;
     }
 
+    public List<SqlSegment> getSqlSegments() {
+        return this.queryStringPlan;
+    }
+
     public List<Integer> getPositionList() {
         List<Integer> result = new ArrayList<>();
         for (SqlSegment segment : this.queryStringPlan) {
@@ -200,7 +204,22 @@ public class PlanDynamicSql implements Cloneable, DynamicSql {
         return clone;
     }
 
-    public record NameInfo(String expr, Map<String, String> config) {
+    public static class NameInfo {
+        private final String expr;
+        private final Map<String, String> config;
+
+        public NameInfo(String expr, Map<String, String> config) {
+            this.expr = expr;
+            this.config = config;
+        }
+
+        public String expr() {
+            return this.expr;
+        }
+
+        public Map<String, String> config() {
+            return this.config;
+        }
     }
 
     public static class RuleInfo {

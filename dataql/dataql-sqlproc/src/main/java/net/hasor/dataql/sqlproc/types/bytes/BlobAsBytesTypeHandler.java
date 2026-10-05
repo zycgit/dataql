@@ -8,41 +8,42 @@
 package net.hasor.dataql.sqlproc.types.bytes;
 import java.io.ByteArrayInputStream;
 import java.sql.*;
-import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
+import net.hasor.dataql.domain.BinaryValue;
 
-/**
- * 使用 bytes 类型读写 jdbc blob 数据。
- * @author 赵永春 (zyc@hasor.net)
- */
-public class BlobAsBytesTypeHandler extends AbstractTypeHandler {
+/** Detaches BLOB content before the result set and connection are closed. */
+public class BlobAsBytesTypeHandler extends BytesTypeHandler {
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
-        ps.setBlob(i, new ByteArrayInputStream((byte[]) parameter));
+        ps.setBlob(i, new ByteArrayInputStream(this.toBytes(parameter)));
     }
 
     @Override
-    public byte[] getNullableResult(ResultSet rs, String columnName) throws SQLException {
-        return toBytes(rs.getBlob(columnName));
+    public BinaryValue getNullableResult(ResultSet rs, String columnName) throws SQLException {
+        return this.readBlob(rs.getBlob(columnName));
     }
 
-    @Override
-    public byte[] getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
-        return toBytes(rs.getBlob(columnIndex));
-    }
-
-    @Override
-    public byte[] getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
-        return toBytes(cs.getBlob(columnIndex));
-    }
-
-    private byte[] toBytes(Blob blob) throws SQLException {
+    private BinaryValue readBlob(Blob blob) throws SQLException {
         if (blob == null) {
             return null;
         }
         try {
-            return blob.getBytes(1, (int) blob.length());
+            long size = blob.length();
+            if (size > Integer.MAX_VALUE) {
+                throw new SQLException("BLOB exceeds the supported in-memory binary size");
+            }
+            return new BinaryValue(blob.getBytes(1, (int) size));
         } finally {
             blob.free();
         }
+    }
+
+    @Override
+    public BinaryValue getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+        return this.readBlob(rs.getBlob(columnIndex));
+    }
+
+    @Override
+    public BinaryValue getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
+        return this.readBlob(cs.getBlob(columnIndex));
     }
 }

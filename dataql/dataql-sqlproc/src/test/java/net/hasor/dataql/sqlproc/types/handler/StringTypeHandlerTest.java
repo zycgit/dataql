@@ -12,7 +12,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Map;
-import net.hasor.dataql.sqlproc.types.string.StringAsCharTypeHandler;
 import net.hasor.dataql.sqlproc.types.string.StringTypeHandler;
 import org.junit.Test;
 
@@ -28,18 +27,6 @@ public class StringTypeHandlerTest extends TypeHandlerMockSupport {
         CallableStatement cs = mockCallableStatement(values);
         Object result = handler.getResult(cs, 1);
         assert val.equals(result);
-    }
-
-    @Test
-    public void testStringAsCharTypeHandler_CallableStatement() throws Throwable {
-        StringAsCharTypeHandler handler = new StringAsCharTypeHandler();
-        Map<String, Object> values = new HashMap<>();
-        String val = "abc";
-        values.put("getString", val);
-
-        CallableStatement cs = mockCallableStatement(values);
-        Character result = (Character) handler.getResult(cs, 1);
-        assert result == 'a';
     }
 
     @Test
@@ -63,21 +50,4 @@ public class StringTypeHandlerTest extends TypeHandlerMockSupport {
         }
     }
 
-    @Test
-    public void testStringAsChar() throws Throwable {
-        Character val = 'H';
-        try (PreparedStatement ps = conn.prepareStatement("insert into tb_h2_types (c_varchar) values (?)")) {
-            new StringAsCharTypeHandler().setParameter(ps, 1, val, null);
-            ps.executeUpdate();
-        }
-
-        try (PreparedStatement ps = conn.prepareStatement("select c_varchar from tb_h2_types where c_varchar like ? limit 1")) {
-            ps.setString(1, "H%");
-            try (ResultSet rs = ps.executeQuery()) {
-                rs.next();
-                Character res = (Character) new StringAsCharTypeHandler().getResult(rs, 1);
-                assert val.equals(res);
-            }
-        }
-    }
 }

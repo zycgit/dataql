@@ -18,14 +18,11 @@ title: 版本说明
 
 ## 当前版本
 
-- 最新版本：[v@project.lastReleaseVer@](5.0.x/v5.0.0.md)
-- 正在开发：[v@project.developmentVersion@](5.0.x/v5.0.1.md)
+- 当前正式版本：[v@project.lastReleaseVer@](4.2.x/v4.2.5.md)
+- 即将发布版本：[v@project.upcomingVersion@](5.0.x/v5.0.0.md)
+- 当前开发版本：[v@project.developmentVersion@](5.0.x/v5.0.1.md)
 
 ## 历史版本
-
-### v5.0.x
-
-[v5.0.0](5.0.x/v5.0.0.md)
 
 ### v4.2.x
 

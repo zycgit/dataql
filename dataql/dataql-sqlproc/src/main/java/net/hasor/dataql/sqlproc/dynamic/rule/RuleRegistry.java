@@ -38,6 +38,10 @@ public class RuleRegistry {
         DEFAULT.register("set", SetRule.INSTANCE);
 
         DEFAULT.register("arg", ArgRule.INSTANCE);
+        DEFAULT.register("case", CaseRule.INSTANCE);
+        DEFAULT.register("when", WhenRule.INSTANCE_WHEN);
+        DEFAULT.register("else", WhenRule.INSTANCE_ELSE);
+        DEFAULT.register("pairs", PairsRule.INSTANCE);
     }
 
     public SqlRule findRule(String ruleName) {

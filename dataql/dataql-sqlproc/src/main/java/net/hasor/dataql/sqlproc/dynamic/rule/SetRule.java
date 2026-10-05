@@ -27,9 +27,4 @@ public class SetRule extends ConditionRule {
     protected boolean allowNullValue() {
         return true;
     }
-
-    @Override
-    protected boolean allowMultipleValue() {
-        return false;
-    }
 }

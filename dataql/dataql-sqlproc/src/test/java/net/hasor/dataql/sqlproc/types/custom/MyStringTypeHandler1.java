@@ -34,25 +34,25 @@ public class MyStringTypeHandler1 extends StringTypeHandler {
     }
 
     @Override
-    public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
+    public void setNonNullParameter(PreparedStatement ps, int i, String parameter, Integer jdbcType) throws SQLException {
         this.writeMark = true;
         super.setNonNullParameter(ps, i, parameter, jdbcType);
     }
 
     @Override
-    public Object getNullableResult(ResultSet rs, String columnName) throws SQLException {
+    public String getNullableResult(ResultSet rs, String columnName) throws SQLException {
         this.readMark = true;
         return super.getNullableResult(rs, columnName);
     }
 
     @Override
-    public Object getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+    public String getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
         this.readMark = true;
         return super.getNullableResult(rs, columnIndex);
     }
 
     @Override
-    public Object getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
+    public String getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
         this.readMark = true;
         return super.getNullableResult(cs, columnIndex);
     }

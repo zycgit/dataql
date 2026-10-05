@@ -18,24 +18,24 @@ import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
  * @author Clinton Begin
  * @author 赵永春 (zyc@hasor.net)
  */
-public class BigDecimalTypeHandler extends AbstractTypeHandler {
+public class BigDecimalTypeHandler extends AbstractTypeHandler<BigDecimal> {
     @Override
-    public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
-        ps.setBigDecimal(i, (BigDecimal) parameter);
+    public void setNonNullParameter(PreparedStatement ps, int i, BigDecimal parameter, Integer jdbcType) throws SQLException {
+        ps.setBigDecimal(i, parameter);
     }
 
     @Override
-    public Object getNullableResult(ResultSet rs, String columnName) throws SQLException {
+    public BigDecimal getNullableResult(ResultSet rs, String columnName) throws SQLException {
         return rs.getBigDecimal(columnName);
     }
 
     @Override
-    public Object getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+    public BigDecimal getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
         return rs.getBigDecimal(columnIndex);
     }
 
     @Override
-    public Object getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
+    public BigDecimal getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
         return cs.getBigDecimal(columnIndex);
     }
 }

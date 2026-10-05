@@ -17,26 +17,26 @@ import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
  * @author Clinton Begin
  * @author 赵永春 (zyc@hasor.net)
  */
-public class FloatTypeHandler extends AbstractTypeHandler {
+public class FloatTypeHandler extends AbstractTypeHandler<Float> {
     @Override
-    public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
-        ps.setFloat(i, (Float) parameter);
+    public void setNonNullParameter(PreparedStatement ps, int i, Float parameter, Integer jdbcType) throws SQLException {
+        ps.setFloat(i, parameter);
     }
 
     @Override
-    public Object getNullableResult(ResultSet rs, String columnName) throws SQLException {
+    public Float getNullableResult(ResultSet rs, String columnName) throws SQLException {
         float result = rs.getFloat(columnName);
         return result == 0 && rs.wasNull() ? null : result;
     }
 
     @Override
-    public Object getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+    public Float getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
         float result = rs.getFloat(columnIndex);
         return result == 0 && rs.wasNull() ? null : result;
     }
 
     @Override
-    public Object getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
+    public Float getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
         float result = cs.getFloat(columnIndex);
         return result == 0 && cs.wasNull() ? null : result;
     }

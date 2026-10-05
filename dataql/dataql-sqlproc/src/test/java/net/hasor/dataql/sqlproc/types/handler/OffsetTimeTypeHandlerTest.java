@@ -25,8 +25,8 @@ public class OffsetTimeTypeHandlerTest extends TypeHandlerMockSupport {
         values.put("getObject", val);
 
         CallableStatement cs = mockCallableStatement(values);
-        OffsetTime result = (OffsetTime) handler.getResult(cs, 1);
-        assert val.equals(result);
+        String result = (String) handler.getResult(cs, 1);
+        assert val.toString().equals(result);
     }
 
     @Test
@@ -37,7 +37,7 @@ public class OffsetTimeTypeHandlerTest extends TypeHandlerMockSupport {
         Map<Integer, Object> captured = new HashMap<>();
         PreparedStatement ps = mockPreparedStatement(captured);
         OffsetTime ot = OffsetTime.now();
-        handler.setParameter(ps, 1, ot, null);
+        handler.setParameter(ps, 1, ot.toString(), null);
         assert captured.get(1).equals(ot);
 
         // getResult
@@ -46,7 +46,7 @@ public class OffsetTimeTypeHandlerTest extends TypeHandlerMockSupport {
         values.put("default", ot);
 
         ResultSet rs = mockResultSet(values);
-        OffsetTime res = (OffsetTime) handler.getResult(rs, 1);
-        assert res.equals(ot);
+        String res = (String) handler.getResult(rs, 1);
+        assert res.equals(ot.toString());
     }
 }

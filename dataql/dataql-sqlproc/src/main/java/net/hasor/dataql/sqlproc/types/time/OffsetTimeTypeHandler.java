@@ -10,32 +10,89 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.OffsetTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
 import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
 
-/**
- * 读写 {@link OffsetTime} 类型数据。
- * @author 赵永春 (zyc@hasor.net)
- * @version 2020-10-31
- */
-public class OffsetTimeTypeHandler extends AbstractTypeHandler {
+/** Reads ISO text with its offset intact and accepts ISO text or epoch milliseconds. */
+public class OffsetTimeTypeHandler extends AbstractTypeHandler<Object> {
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
-        ps.setObject(i, (OffsetTime) parameter);
+        if (parameter instanceof Number number) {
+            OffsetDateTime value = Instant.ofEpochMilli(number.longValue()).atOffset(ZoneOffset.UTC);
+            ps.setObject(i, value.toOffsetTime());
+        } else {
+            ps.setObject(i, this.parse(parameter.toString()));
+        }
+    }
+
+    private OffsetTime parse(String value) throws SQLException {
+        if (value == null) {
+            return null;
+        }
+        String text = value.trim().replace(' ', 'T');
+        int offsetIndex = Math.max(text.lastIndexOf('+'), text.lastIndexOf('-'));
+        if (offsetIndex > 0 && text.length() - offsetIndex == 5 && text.charAt(offsetIndex + 3) != ':') {
+            text = text.substring(0, offsetIndex + 3) + ":" + text.substring(offsetIndex + 3);
+        }
+        try {
+            return OffsetTime.parse(text);
+        } catch (DateTimeParseException e) {
+            throw new SQLException("Invalid OffsetTime value: " + value, e);
+        }
     }
 
     @Override
-    public OffsetTime getNullableResult(ResultSet rs, String columnName) throws SQLException {
-        return rs.getObject(columnName, OffsetTime.class);
+    public String getNullableResult(ResultSet rs, String columnName) throws SQLException {
+        OffsetTime value;
+        try {
+            value = rs.getObject(columnName, OffsetTime.class);
+        } catch (SQLException | AbstractMethodError e) {
+            // Older drivers may expose time-zone values only as text.
+            try {
+                value = this.parse(rs.getString(columnName));
+            } catch (SQLException failure) {
+                failure.addSuppressed(e);
+                throw failure;
+            }
+        }
+        return value == null ? null : value.toString();
     }
 
     @Override
-    public OffsetTime getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
-        return rs.getObject(columnIndex, OffsetTime.class);
+    public String getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+        OffsetTime value;
+        try {
+            value = rs.getObject(columnIndex, OffsetTime.class);
+        } catch (SQLException | AbstractMethodError e) {
+            // Older drivers may expose time-zone values only as text.
+            try {
+                value = this.parse(rs.getString(columnIndex));
+            } catch (SQLException failure) {
+                failure.addSuppressed(e);
+                throw failure;
+            }
+        }
+        return value == null ? null : value.toString();
     }
 
     @Override
-    public OffsetTime getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
-        return cs.getObject(columnIndex, OffsetTime.class);
+    public String getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
+        OffsetTime value;
+        try {
+            value = cs.getObject(columnIndex, OffsetTime.class);
+        } catch (SQLException | AbstractMethodError e) {
+            // Older drivers may expose time-zone values only as text.
+            try {
+                value = this.parse(cs.getString(columnIndex));
+            } catch (SQLException failure) {
+                failure.addSuppressed(e);
+                throw failure;
+            }
+        }
+        return value == null ? null : value.toString();
     }
 }

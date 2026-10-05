@@ -17,26 +17,26 @@ import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
  * @author Clinton Begin
  * @author 赵永春 (zyc@hasor.net)
  */
-public class ByteTypeHandler extends AbstractTypeHandler {
+public class ByteTypeHandler extends AbstractTypeHandler<Byte> {
     @Override
-    public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
-        ps.setByte(i, (Byte) parameter);
+    public void setNonNullParameter(PreparedStatement ps, int i, Byte parameter, Integer jdbcType) throws SQLException {
+        ps.setByte(i, parameter);
     }
 
     @Override
-    public Object getNullableResult(ResultSet rs, String columnName) throws SQLException {
+    public Byte getNullableResult(ResultSet rs, String columnName) throws SQLException {
         byte result = rs.getByte(columnName);
         return result == 0 && rs.wasNull() ? null : result;
     }
 
     @Override
-    public Object getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+    public Byte getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
         byte result = rs.getByte(columnIndex);
         return result == 0 && rs.wasNull() ? null : result;
     }
 
     @Override
-    public Object getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
+    public Byte getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
         byte result = cs.getByte(columnIndex);
         return result == 0 && cs.wasNull() ? null : result;
     }

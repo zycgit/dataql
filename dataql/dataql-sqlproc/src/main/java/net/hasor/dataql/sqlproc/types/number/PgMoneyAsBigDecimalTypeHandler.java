@@ -35,8 +35,8 @@ public class PgMoneyAsBigDecimalTypeHandler extends BigDecimalTypeHandler {
     }
 
     @Override
-    public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
-        ps.setString(i, ((BigDecimal) parameter).toPlainString());
+    public void setNonNullParameter(PreparedStatement ps, int i, BigDecimal parameter, Integer jdbcType) throws SQLException {
+        ps.setString(i, parameter.toPlainString());
     }
 
     public static BigDecimal toNumber(String moneyValue) {

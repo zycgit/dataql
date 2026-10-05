@@ -17,26 +17,26 @@ import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
  * @author Clinton Begin
  * @author 赵永春 (zyc@hasor.net)
  */
-public class BooleanTypeHandler extends AbstractTypeHandler {
+public class BooleanTypeHandler extends AbstractTypeHandler<Boolean> {
     @Override
-    public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
-        ps.setBoolean(i, (Boolean) parameter);
+    public void setNonNullParameter(PreparedStatement ps, int i, Boolean parameter, Integer jdbcType) throws SQLException {
+        ps.setBoolean(i, parameter);
     }
 
     @Override
-    public Object getNullableResult(ResultSet rs, String columnName) throws SQLException {
+    public Boolean getNullableResult(ResultSet rs, String columnName) throws SQLException {
         boolean result = rs.getBoolean(columnName);
         return !result && rs.wasNull() ? null : result;
     }
 
     @Override
-    public Object getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+    public Boolean getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
         boolean result = rs.getBoolean(columnIndex);
         return !result && rs.wasNull() ? null : result;
     }
 
     @Override
-    public Object getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
+    public Boolean getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
         boolean result = cs.getBoolean(columnIndex);
         return !result && cs.wasNull() ? null : result;
     }

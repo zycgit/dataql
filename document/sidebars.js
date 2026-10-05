@@ -36,7 +36,30 @@ const sidebars = {
         {
             type: 'category', label: '6. SQL 执行器',
             link: {type: 'doc', id: 'dataql/sql/index'},
-            items: ['dataql/sql/execute', 'dataql/sql/parameters', 'dataql/sql/rules', 'dataql/sql/MyBatis', 'dataql/sql/results', 'dataql/sql/dialect', 'dataql/sql/types', 'dataql/sql/transactions', 'dataql/sql/procedures', 'dataql/hints/hint_sql'],
+            items: [
+                'dataql/sql/execute',
+                {
+                    type: 'category', label: '6.2 参数绑定',
+                    link: {type: 'doc', id: 'dataql/sql/parameters'},
+                    items: ['dataql/sql/parameters/position', 'dataql/sql/parameters/named',
+                        'dataql/sql/parameters/injection', 'dataql/sql/parameters/rule-binding',
+                        'dataql/sql/parameter-options', 'dataql/sql/parameter-escape'],
+                },
+                {
+                    type: 'category', label: '6.3 动态规则',
+                    link: {type: 'doc', id: 'dataql/sql/rules'},
+                    items: ['dataql/sql/rules/statements', 'dataql/sql/rules/nesting'],
+                },
+                'dataql/sql/MyBatis', 'dataql/sql/results', 'dataql/sql/dialect',
+                {
+                    type: 'category', label: '6.7 类型处理',
+                    link: {type: 'doc', id: 'dataql/sql/types'},
+                    items: ['dataql/sql/types/mappings', 'dataql/sql/types/basic',
+                        'dataql/sql/types/json', 'dataql/sql/types/binary',
+                        'dataql/sql/types/arrays', 'dataql/sql/types/vectors'],
+                },
+                'dataql/sql/transactions', 'dataql/sql/procedures', 'dataql/hints/hint_sql',
+            ],
         },
         {
             type: 'category', label: '7. 内置函数库',

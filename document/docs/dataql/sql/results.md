@@ -16,7 +16,24 @@ title: 6.5 结果与主键
 
 ```javascript
 hint FRAGMENT_SQL_OPEN_PACKAGE = 'off';
+hint FRAGMENT_SQL_COLUMN_CASE = 'lower';
+var find = @@selectSql(id)<%
+    SELECT id, name FROM people WHERE id = #{id}
+%>;
+return find(1);
 ```
+
+使用 [people 示例表](execute.md#示例数据)，返回 `[{"id":1,"name":"Alice"}]`。将 `off` 改为 `row`，返回 `{"id":1,"name":"Alice"}`；改为 `column` 时，这个两列查询仍返回对象。
+
+单列查询可以直接取值：
+
+```javascript
+hint FRAGMENT_SQL_OPEN_PACKAGE = 'column';
+var find = @@selectSql(id)<% SELECT name FROM people WHERE id = #{id} %>;
+return find(1);
+```
+
+返回 `Alice`；传入不存在的 ID 时返回 null。
 
 需要稳定的列表结构时使用 `off`。分页的 `data()` 始终返回当前页列表。
 
@@ -65,4 +82,16 @@ var find = @@selectSql()<% SELECT count(*) FROM people %>;
 return find();
 ```
 
+上述示例返回 `{"#result-set-1":2}`；`bindOut` 保留所选输出的名称，具体结果值仍受拆包配置影响。
+
 `bindOut` 可在查询及通用执行中选择指定结果名；存储过程输出和多结果编号见[存储过程与多结果](procedures.md)。分页不支持同时设置 `bindOut`。
+
+## 选择结果处理方式
+
+- 行列表、单对象、单值：设置 `FRAGMENT_SQL_OPEN_PACKAGE`。
+- 列名大小写和驼峰：设置 `FRAGMENT_SQL_COLUMN_CASE`，需要重命名的列直接使用 SQL 别名。
+- 日期、JSON、数组、二进制等字段转换：使用[类型处理器](types.md)。
+- 存储过程输出、多个结果集和更新计数：用 `bindOut` 选择命名输出，详见[存储过程与多结果](procedures.md)。
+- 对查询结果重新筛选、计算或组织层次：使用 DataQL 的[结构转换](../syntax/transform.md)。
+
+这些配置作用于 SQL 执行结果。Dataway 的 [HTTP 结果处理器](../../dataway/capabilities/result-handlers.md)在 API 返回阶段处理响应，属于另一层能力。SQL 执行器没有 `resultSet`、`resultUpdate`、`defaultResult` 动态规则。

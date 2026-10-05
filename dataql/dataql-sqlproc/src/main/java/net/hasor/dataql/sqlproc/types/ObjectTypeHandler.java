@@ -16,7 +16,7 @@ import java.sql.SQLException;
  * @author Clinton Begin
  * @author 赵永春 (zyc@hasor.net)
  */
-public class ObjectTypeHandler extends AbstractTypeHandler {
+public class ObjectTypeHandler extends AbstractTypeHandler<Object> {
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
         ps.setObject(i, parameter);

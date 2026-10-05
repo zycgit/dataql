@@ -13,10 +13,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import net.hasor.dataql.sqlproc.types.bytes.BlobAsBytesTypeHandler;
-import net.hasor.dataql.sqlproc.types.bytes.BlobAsBytesWrapTypeHandler;
 import net.hasor.dataql.sqlproc.types.string.ClobAsStringTypeHandler;
 import net.hasor.dataql.sqlproc.types.string.NClobAsStringTypeHandler;
 import org.junit.Test;
+import net.hasor.dataql.domain.BinaryModel;
 
 public class BlobClobTypeHandlerTest extends TypeHandlerMockSupport {
 
@@ -92,23 +92,7 @@ public class BlobClobTypeHandlerTest extends TypeHandlerMockSupport {
 
         CallableStatement cs = mockCallableStatement(values);
         Object result = handler.getResult(cs, 1);
-        assert Arrays.equals(val, (byte[]) result);
-    }
-
-    @Test
-    public void testBlobAsBytesWrapTypeHandler_CallableStatement() throws Throwable {
-        BlobAsBytesWrapTypeHandler handler = new BlobAsBytesWrapTypeHandler();
-        Map<String, Object> values = new HashMap<>();
-        byte[] val = new byte[] { 1, 2, 3 }; // Blob returns primitive byte[]
-
-        values.put("getBlob", mockBlob(val));
-
-        CallableStatement cs = mockCallableStatement(values);
-        Byte[] result = (Byte[]) handler.getResult(cs, 1);
-        assert result.length == 3;
-        assert result[0] == 1;
-        assert result[1] == 2;
-        assert result[2] == 3;
+        assert Arrays.equals(val, ((BinaryModel) result).openStream().readAllBytes());
     }
 
     @Test
@@ -144,26 +128,10 @@ public class BlobClobTypeHandlerTest extends TypeHandlerMockSupport {
             try (ResultSet rs = ps.executeQuery()) {
                 rs.next();
                 Object res = new BlobAsBytesTypeHandler().getResult(rs, 1);
-                assert res instanceof byte[];
-                assert Arrays.equals(val, (byte[]) res);
+                assert res instanceof BinaryModel;
+                assert Arrays.equals(val, ((BinaryModel) res).openStream().readAllBytes());
             }
         }
     }
 
-    @Test
-    public void testBlobAsBytesWrap() throws Throwable {
-        Byte[] val = new Byte[] { 10, 20, 30 };
-        try (PreparedStatement ps = conn.prepareStatement("insert into tb_h2_types (c_binary_lage) values (?)")) {
-            new BlobAsBytesWrapTypeHandler().setParameter(ps, 1, val, null);
-            ps.executeUpdate();
-        }
-
-        try (PreparedStatement ps = conn.prepareStatement("select c_binary_lage from tb_h2_types limit 1")) {
-            try (ResultSet rs = ps.executeQuery()) {
-                rs.next();
-                Byte[] res = (Byte[]) new BlobAsBytesWrapTypeHandler().getResult(rs, 1);
-                assert Arrays.equals(val, res);
-            }
-        }
-    }
 }

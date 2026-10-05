@@ -6,6 +6,8 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.dynamic.segment;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import net.hasor.cobble.StringUtils;
 import net.hasor.dataql.sqlproc.dynamic.internal.RuntimeSQLException;
@@ -28,18 +30,18 @@ public class DynamicParsed {
     };
 
     /**
-     * Supported parameter syntax:
-     * <pre>{@code
+     * support like them
+     * <pre>
      * select from user where id = ?
      * select from user where id = :id
      * select from user where id = :id.ccc['aaa'][0]
-     * select from user where id = &id
-     * select from user where id = &id.ccc['aaa'][0]
+     * select from user where id = &amp;id
+     * select from user where id = &amp;id.ccc['aaa'][0]
      * select from user where id = @{abc}
      * select from user where id = #{abc}
      * select from user where id = ${abc}
      * select from user where id = @{abc,true, :name}
-     * }</pre>
+     * </pre>
      */
     public static PlanDynamicSql getParsedSql(final String originalSql) {
         PlanDynamicSql segment = new PlanDynamicSql();
@@ -52,18 +54,18 @@ public class DynamicParsed {
     }
 
     /**
-     * Supported parameter syntax:
-     * <pre>{@code
+     * support like them
+     * <pre>
      * select from user where id = ?
      * select from user where id = :id
      * select from user where id = :id.ccc['aaa'][0]
-     * select from user where id = &id
-     * select from user where id = &id.ccc['aaa'][0]
+     * select from user where id = &amp;id
+     * select from user where id = &amp;id.ccc['aaa'][0]
      * select from user where id = @{abc}
      * select from user where id = #{abc}
      * select from user where id = ${abc}
      * select from user where id = @{abc,true, :name}
-     * }</pre>
+     * </pre>
      */
     public static void parsedSqlTo(final String originalSql, PlanDynamicSql segment) {
         if (segment == null) {
@@ -90,6 +92,27 @@ public class DynamicParsed {
 
             //
             char c = statement[i];
+            // An odd trailing backslash escapes a parameter marker; other backslashes remain literal.
+            if (c == '\\') {
+                int marker = i;
+                while (marker < statement.length && statement[marker] == '\\') {
+                    marker++;
+                }
+
+                boolean oddEscape = (marker - i) % 2 != 0;
+                boolean parameterMarker = marker < statement.length//
+                        && (statement[marker] == '?' || statement[marker] == ':' || statement[marker] == '&');
+                if (oddEscape && parameterMarker) {
+                    segment.appendString(statement, pos, marker - pos - 1);
+                    segment.appendString(statement, marker, 1);
+                    i = marker + 1;
+                    pos = i;
+                } else {
+                    i = marker;
+                }
+                continue;
+            }
+
             String c2 = null;
             if (statement.length > i + 1) {
                 c2 = new String(statement, i, 2);
@@ -104,19 +127,27 @@ public class DynamicParsed {
                 pos = i;
             } else if (c == ':' || c == '&') {
                 int j = i + 1;
+                boolean positionMarker = j < statement.length && statement[j] == '?';
+                boolean bracedMarker = j + 1 < statement.length &&//
+                        statement[j + 1] == '{' && //
+                        (statement[j] == '#' || statement[j] == '$' || statement[j] == '@');
+                if (c == ':' && (positionMarker || bracedMarker)) {
+                    i++;
+                    continue;
+                }
                 if (j < statement.length && statement[j] == ':' && c == ':') {
                     i = i + 2;// Postgres-style "::" casting operator - to be skipped.
                     continue;
-                }
-
-                if (i != pos) {
-                    segment.appendString(statement, pos, i - pos);
                 }
 
                 while (j < statement.length && !isParameterSeparator(statement[j])) {
                     j++;
                 }
                 if (j - i > 1) {
+                    if (i != pos) {
+                        segment.appendString(statement, pos, i - pos);
+                    }
+
                     String parameter = originalSql.substring(i + 1, j);
                     if (statement[i + 1] == '#' || statement[i + 1] == '@') {
                         throw new RuntimeSQLException("expr cannot include '#' or '@', the expr is " + parameter);// 禁止可以造成安全隐患的 #,@操作符
@@ -127,7 +158,7 @@ public class DynamicParsed {
                     i = j;
                     pos = j;
                 } else {
-                    i = j - 1;
+                    i++;
                 }
             } else if (c2 != null && c2.equals("@{")) {
                 if ((i > 0 && statement[i - 1] != '\\') || i == 0) {
@@ -135,15 +166,32 @@ public class DynamicParsed {
                         segment.appendString(statement, pos, i - pos);
                     }
 
-                    int j = findRuleEnd(statement, i + 2);
+                    int j = i + 2;
+                    int deep = 1;
+                    while (j < statement.length && deep > 0) {
+                        int ruleSkipToPosition = skipCommentsAndQuotes(statement, j, false);
+                        if (j != ruleSkipToPosition) {
+                            j = ruleSkipToPosition;
+                            continue;
+                        }
 
-                    if (j - i > 1) {
+                        if (statement[j] == '}') {
+                            deep--;
+                        } else if (statement[j] == '{') {
+                            deep++;
+                        }
+                        if (deep > 0) {
+                            j++;
+                        }
+                    }
+
+                    if (deep == 0) {
                         String ruleContent = originalSql.substring(i + 2, j);
                         parserRule(segment, ruleContent);
                         i = j + 1;
                         pos = i;
                     } else {
-                        i = j - 1;
+                        throw new RuntimeSQLException("Unclosed dynamic expression at position " + i);
                     }
                 } else {
                     i++;
@@ -154,19 +202,33 @@ public class DynamicParsed {
                         segment.appendString(statement, pos, i - pos);
                     }
 
-                    int j = i + 1;
-                    while (j < statement.length && statement[j] != '}') {
-                        j++;
+                    int j = i + 2;
+                    int deep = 1;
+                    while (j < statement.length && deep > 0) {
+                        int ruleSkipToPosition = skipCommentsAndQuotes(statement, j, false);
+                        if (j != ruleSkipToPosition) {
+                            j = ruleSkipToPosition;
+                            continue;
+                        }
+
+                        if (statement[j] == '}') {
+                            deep--;
+                        } else if (statement[j] == '{') {
+                            deep++;
+                        }
+                        if (deep > 0) {
+                            j++;
+                        }
                     }
 
-                    if (j - i > 1) {
+                    if (deep == 0) {
                         String ruleContent = originalSql.substring(i + 2, j);
                         positionArgs++;
                         parserValue(segment, ruleContent);
                         i = j + 1;
                         pos = i;
                     } else {
-                        i = j - 1;
+                        throw new RuntimeSQLException("Unclosed dynamic expression at position " + i);
                     }
                 } else {
                     i++;
@@ -177,18 +239,32 @@ public class DynamicParsed {
                         segment.appendString(statement, pos, i - pos);
                     }
 
-                    int j = i + 1;
-                    while (j < statement.length && statement[j] != '}') {
-                        j++;
+                    int j = i + 2;
+                    int deep = 1;
+                    while (j < statement.length && deep > 0) {
+                        int ruleSkipToPosition = skipCommentsAndQuotes(statement, j, false);
+                        if (j != ruleSkipToPosition) {
+                            j = ruleSkipToPosition;
+                            continue;
+                        }
+
+                        if (statement[j] == '}') {
+                            deep--;
+                        } else if (statement[j] == '{') {
+                            deep++;
+                        }
+                        if (deep > 0) {
+                            j++;
+                        }
                     }
 
-                    if (j - i > 1) {
+                    if (deep == 0) {
                         String ruleContent = originalSql.substring(i + 2, j);
                         parserInjection(segment, ruleContent);
                         i = j + 1;
                         pos = i;
                     } else {
-                        i = j - 1;
+                        throw new RuntimeSQLException("Unclosed dynamic expression at position " + i);
                     }
                 } else {
                     i++;
@@ -204,28 +280,12 @@ public class DynamicParsed {
         }
     }
 
-    /** Nested placeholders belong to the rule body, not to its closing delimiter. */
-    private static int findRuleEnd(char[] statement, int start) {
-        int depth = 1;
-        for (int index = start; index < statement.length; index++) {
-            int next = statement[index] == '\'' || statement[index] == '"' ? skipCommentsAndQuotes(statement, index) : index;
-            if (next != index) {
-                index = next - 1;
-                continue;
-            }
-            if (statement[index] == '\\') {
-                index++;
-            } else if (statement[index] == '{') {
-                depth++;
-            } else if (statement[index] == '}' && --depth == 0) {
-                return index;
-            }
-        }
-        throw new RuntimeSQLException("Unclosed SQL rule at position " + (start - 2));
-    }
-
     /** Skip over comments and quoted names present in an SQL statement */
     private static int skipCommentsAndQuotes(final char[] statement, final int position) {
+        return skipCommentsAndQuotes(statement, position, true);
+    }
+
+    private static int skipCommentsAndQuotes(final char[] statement, final int position, boolean skipLineComment) {
         for (int i = 0; i < START_SKIP.length; i++) {
             if (statement[position] == START_SKIP[i].charAt(0)) {
                 boolean match = true;
@@ -252,6 +312,9 @@ public class DynamicParsed {
                     }
                     // -- this is --
                     else if (statement[position] == '-' && statement[position + 1] == '-') {
+                        if (!skipLineComment) {
+                            continue;
+                        }
                         for (int m = position + START_SKIP[i].length(); m < statement.length; m++) {
                             if (statement[m] == '\n') {
                                 return m + 1;
@@ -358,6 +421,8 @@ public class DynamicParsed {
         boolean inSingleQuotes = false;
         boolean inDoubleQuotes = false;
         boolean inEscape = false;
+        int deep = 0;
+
         for (; index < content.length(); index++) {
             char c = content.charAt(index);
 
@@ -388,8 +453,16 @@ public class DynamicParsed {
                     inEscape = true;
                 }
 
-            } else if (',' == c) {
+            } else if ('{' == c) {
                 if (!inDoubleQuotes && !inSingleQuotes) {
+                    deep++;
+                }
+            } else if ('}' == c) {
+                if (!inDoubleQuotes && !inSingleQuotes) {
+                    deep--;
+                }
+            } else if (',' == c) {
+                if (!inDoubleQuotes && !inSingleQuotes && deep == 0) {
                     return index;
                 }
             }
@@ -399,15 +472,63 @@ public class DynamicParsed {
     }
 
     private static void parserValue(PlanDynamicSql fxQuery, String content) {
-        String[] testSplit = StringUtils.split(content, ",");
+        String[] testSplit = splitByComma(content);
         if (testSplit.length > 10 || testSplit.length == 0) {
-            throw new IllegalArgumentException("analysisSQL failed, format error -> '#{valueExpr [,mode= IN|OUT|INOUT] [,jdbcType=INT] [,javaType=java.lang.String] [,typeHandler=YouTypeHandlerClassName]}'");
+            throw new IllegalArgumentException("analysisSQL failed, format error -> '#{valueExpr [,mode= IN|OUT|INOUT] [,jdbcType=INT] [,typeHandler=YouTypeHandlerClassName]}'");
         }
 
-        boolean noExpr = StringUtils.contains(testSplit[0], "=");
+        boolean noExpr = ArgRule.isConfigEntry(testSplit[0]);
         String expr = noExpr ? "" : testSplit[0];
-        Map<String, String> config = ArgRule.parserConfig(testSplit, noExpr ? 0 : 1, testSplit.length);
+        Map<String, String> config = ArgRule.INSTANCE.parserConfig(testSplit, noExpr ? 0 : 1, testSplit.length);
         fxQuery.appendNamedParameter(content, expr, config);
+    }
+
+    public static String[] splitByComma(String content) {
+        List<String> parts = new ArrayList<>();
+        int start = 0;
+        boolean inSingleQuotes = false;
+        boolean inDoubleQuotes = false;
+        boolean inEscape = false;
+        int deep = 0;
+
+        for (int i = 0; i < content.length(); i++) {
+            char c = content.charAt(i);
+
+            if (inEscape) {
+                inEscape = false;
+                continue;
+            }
+
+            if (c == '\\') {
+                if (inSingleQuotes || inDoubleQuotes) {
+                    inEscape = true;
+                }
+                continue;
+            }
+
+            if (!inSingleQuotes && !inDoubleQuotes) {
+                if (c == '\'') {
+                    inSingleQuotes = true;
+                } else if (c == '\"') {
+                    inDoubleQuotes = true;
+                } else if (c == '(' || c == '[' || c == '{') {
+                    deep++;
+                } else if (c == ')' || c == ']' || c == '}') {
+                    deep--;
+                } else if (c == ',' && deep == 0) {
+                    parts.add(content.substring(start, i).trim());
+                    start = i + 1;
+                }
+            } else {
+                if (inSingleQuotes && c == '\'') {
+                    inSingleQuotes = false;
+                } else if (inDoubleQuotes && c == '\"') {
+                    inDoubleQuotes = false;
+                }
+            }
+        }
+        parts.add(content.substring(start).trim());
+        return parts.toArray(new String[0]);
     }
 
     private static void parserInjection(PlanDynamicSql fxQuery, String content) {

@@ -16,24 +16,24 @@ import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
  * @author Clinton Begin
  * @author 赵永春 (zyc@hasor.net)
  */
-public class StringTypeHandler extends AbstractTypeHandler {
+public class StringTypeHandler extends AbstractTypeHandler<String> {
     @Override
-    public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
-        ps.setString(i, (String) parameter);
+    public void setNonNullParameter(PreparedStatement ps, int i, String parameter, Integer jdbcType) throws SQLException {
+        ps.setString(i, parameter);
     }
 
     @Override
-    public Object getNullableResult(ResultSet rs, String columnName) throws SQLException {
+    public String getNullableResult(ResultSet rs, String columnName) throws SQLException {
         return rs.getString(columnName);
     }
 
     @Override
-    public Object getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+    public String getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
         return rs.getString(columnIndex);
     }
 
     @Override
-    public Object getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
+    public String getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
         return cs.getString(columnIndex);
     }
 }

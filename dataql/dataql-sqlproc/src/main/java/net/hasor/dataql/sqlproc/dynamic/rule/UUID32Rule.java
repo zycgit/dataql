@@ -11,7 +11,6 @@ import java.util.UUID;
 import net.hasor.dataql.sqlproc.dynamic.QueryContext;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
 import net.hasor.dataql.sqlproc.types.*;
-import net.hasor.dataql.sqlproc.types.string.StringTypeHandler;
 
 /**
  * 产生一个 32 字符长度的 `UUID`，并加入到 SQL 参数中
@@ -19,8 +18,8 @@ import net.hasor.dataql.sqlproc.types.string.StringTypeHandler;
  * @version 2021-10-31
  */
 public class UUID32Rule implements SqlRule {
-    private static final TypeHandler typeHandler = TypeHandlerRegistry.DEFAULT.getHandlerByHandlerType(StringTypeHandler.class);
-    public static final  UUID32Rule  INSTANCE    = new UUID32Rule();
+    private static final TypeHandler typeHandler = TypeHandlerRegistry.DEFAULT.getTypeHandler(String.class);
+    public static final  UUID32Rule     INSTANCE    = new UUID32Rule();
 
     @Override
     public boolean test(SqlArgSource data, QueryContext context, String activeExpr) {

@@ -15,10 +15,10 @@ import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
  * @author Clinton Begin
  * @author 赵永春 (zyc@hasor.net)
  */
-public class ClobAsStringTypeHandler extends AbstractTypeHandler {
+public class ClobAsStringTypeHandler extends AbstractTypeHandler<String> {
     @Override
-    public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
-        ps.setClob(i, new StringReader((String) parameter));
+    public void setNonNullParameter(PreparedStatement ps, int i, String parameter, Integer jdbcType) throws SQLException {
+        ps.setClob(i, new StringReader(parameter));
     }
 
     @Override

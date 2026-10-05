@@ -27,9 +27,4 @@ public class AndRule extends ConditionRule {
     protected boolean allowNullValue() {
         return this.usingIf;
     }
-
-    @Override
-    protected boolean allowMultipleValue() {
-        return this.usingIf;
-    }
 }

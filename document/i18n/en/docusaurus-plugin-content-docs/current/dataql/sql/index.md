@@ -23,13 +23,14 @@ Using the `people` table in [SQL execution](execute.md), this returns `[{"name":
 
 ## Guide
 
-- [SQL execution](execute.md): entry points, queries, writes and batch calls.
-- [Parameter binding](parameters.md): values, JDBC types and text substitution.
-- [Dynamic rules](rules.md) and [XML dynamic SQL](mybaits.md): conditional SQL construction.
-- [Results and keys](results.md) and [Pagination and dialects](dialect.md): rows and pages.
-- [Type handling](types.md): parameter and result conversions.
-- [Transactions](transactions.md): group calls in a transaction.
-- [Procedures and multiple results](procedures.md): calls and output parameters.
-- [SQL hints](../hints/hint_sql.md): all SQL execution options.
+- [SQL execution](execute.md): query, update and batch fragment calls.
+- [Parameter binding](parameters.md): positional and named parameters, text replacement, rules, options and marker escaping.
+- [Dynamic rules](rules.md): SQL generation, collections, branches and nested templates.
+- [XML dynamic SQL](mybaits.md): tag attributes, complete examples and generated SQL.
+- [Results and keys](results.md), [pagination and dialects](dialect.md): result shapes, keys and page navigation.
+- [Type handling](types.md): Java/JDBC mappings, basic types, JSON, binary streams, arrays and vectors.
+- [Transactions](transactions.md): commit, rollback, seven propagation modes, isolation and data-source scope.
+- [Procedures and multiple results](procedures.md): input/output parameters and named results.
+- [SQL hints](../hints/hint_sql.md): execution options.
 
-See [Engine extensions](../../dataway/engine/index.md) to add rules, dialects and handlers.
+For custom rules, dialects and handlers, see [engine extensions](../../dataway/engine/index.md).

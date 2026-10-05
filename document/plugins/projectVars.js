@@ -8,7 +8,8 @@
 // Guide versions are independent of Java artifacts and the documentation package.
 module.exports = {
     docsVersion: '5.0.0',
+    upcomingVersion: '5.0.0',
     developmentVersion: '5.0.1-SNAPSHOT',
-    lastReleaseVer: '5.0.0',
-    lastReleaseTime: '2026-10-04',
+    lastReleaseVer: '4.2.5',
+    lastReleaseTime: '2021-03-31',
 };

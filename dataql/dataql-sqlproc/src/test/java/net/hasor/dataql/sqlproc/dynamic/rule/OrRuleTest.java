@@ -106,14 +106,14 @@ public class OrRuleTest {
 
     @Test
     public void ruleTest_4() throws SQLException {
-        Map<String, Object> ctx = CollectionUtils.asMap("name", "abc", "arg1", "123");
+        Map<String, Object> ctx = CollectionUtils.asMap("name", "abc", "arg0", "123");
 
         PlanDynamicSql sqlSegment1 = DynamicParsed.getParsedSql("@{or,name = :name} and @{or,age = ?}");
         SqlBuilder sqlBuilder1 = sqlSegment1.buildQuery(ctx, new TestQueryContext());
         assert sqlBuilder1.getSqlString().equals("where name = ? and age = ?");
         assert sqlBuilder1.getArgs().length == 2;
         assert ((SqlArg) sqlBuilder1.getArgs()[0]).getValue().equals("abc");
-        assert ((SqlArg) sqlBuilder1.getArgs()[1]).getValue() == null; // TODO The use of both rule and location parameters is not supported.
+        assert ((SqlArg) sqlBuilder1.getArgs()[1]).getValue().equals("123");
     }
 
     @Test

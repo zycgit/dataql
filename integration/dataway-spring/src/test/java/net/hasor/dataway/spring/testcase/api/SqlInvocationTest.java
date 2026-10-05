@@ -8,11 +8,15 @@
 package net.hasor.dataway.spring.testcase.api;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import net.hasor.dataql.util.JsonUtils;
 import net.hasor.dataway.spring.testcase.HttpClient;
 import net.hasor.dataway.spring.testcase.HttpResult;
 import net.hasor.dataway.spring.testcase.SqlTestApplication;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -285,4 +289,21 @@ class SqlInvocationTest {
         }
     }
 
+    @Test
+    void publishedSqlAcceptsJsonArraysAndUploadedBinaryValues() throws Throwable {
+        try (SqlTestApplication app = new SqlTestApplication(); HttpClient client = new HttpClient(app.baseUrl())) {
+            assertEquals(200, client.login("admin").status);
+            this.publish(client, this.draft("SQL", "/typed-array", "SELECT CAST(#{items,jdbcType=ARRAY} AS BIGINT ARRAY)", Map.of("items", List.of(1, 2))));
+            this.publish(client, this.draft("SQL", "/typed-file", "SELECT CAST(#{file,jdbcType=BLOB} AS BLOB)", Map.of("file", "")));
+            assertEquals(200, client.login("api").status);
+            assertEquals("[1,2,3]", this.result(client.json("/api/typed-array", Map.of("items", List.of(1, 2, 3)))).toString());
+
+            byte[] content = { 0, 1, 2, -1 };
+            MultipartBody body = new MultipartBody.Builder().setType(MultipartBody.FORM).addFormDataPart("file", "data.bin", RequestBody.create(content, MediaType.get("application/octet-stream"))).build();
+            HttpResult response = client.send("POST", "/api/typed-file", body);
+            assertEquals(200, response.status, response.text());
+            assertArrayEquals(content, response.bytes);
+            assertTrue(response.headers.get("Content-Type").startsWith("application/octet-stream"));
+        }
+    }
 }

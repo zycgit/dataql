@@ -19,26 +19,26 @@ import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
  * @author Paul Krause
  * @author 赵永春 (zyc@hasor.net)
  */
-public class BigIntegerTypeHandler extends AbstractTypeHandler {
+public class BigIntegerTypeHandler extends AbstractTypeHandler<BigInteger> {
     @Override
-    public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
-        ps.setBigDecimal(i, new BigDecimal((BigInteger) parameter));
+    public void setNonNullParameter(PreparedStatement ps, int i, BigInteger parameter, Integer jdbcType) throws SQLException {
+        ps.setBigDecimal(i, new BigDecimal(parameter));
     }
 
     @Override
-    public Object getNullableResult(ResultSet rs, String columnName) throws SQLException {
+    public BigInteger getNullableResult(ResultSet rs, String columnName) throws SQLException {
         BigDecimal bigDecimal = rs.getBigDecimal(columnName);
         return bigDecimal == null ? null : bigDecimal.toBigInteger();
     }
 
     @Override
-    public Object getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+    public BigInteger getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
         BigDecimal bigDecimal = rs.getBigDecimal(columnIndex);
         return bigDecimal == null ? null : bigDecimal.toBigInteger();
     }
 
     @Override
-    public Object getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
+    public BigInteger getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
         BigDecimal bigDecimal = cs.getBigDecimal(columnIndex);
         return bigDecimal == null ? null : bigDecimal.toBigInteger();
     }

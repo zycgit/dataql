@@ -64,5 +64,14 @@
   },
   "sidebar.engine.category.7. 内置函数库": {
     "message": "7. Built-in libraries"
+  },
+  "sidebar.engine.category.6.2 参数绑定": {
+    "message": "6.2 Parameter binding"
+  },
+  "sidebar.engine.category.6.3 动态规则": {
+    "message": "6.3 Dynamic rules"
+  },
+  "sidebar.engine.category.6.7 类型处理": {
+    "message": "6.7 Type handling"
   }
 }

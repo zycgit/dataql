@@ -18,14 +18,11 @@ Versions use the **major.minor.patch** format.
 
 ## Current versions
 
-- Latest release: [v@project.lastReleaseVer@](5.0.x/v5.0.0.md)
-- In development: [v@project.developmentVersion@](5.0.x/v5.0.1.md)
+- Current stable release: [v@project.lastReleaseVer@](4.2.x/v4.2.5.md)
+- Upcoming release: [v@project.upcomingVersion@](5.0.x/v5.0.0.md)
+- Current development version: [v@project.developmentVersion@](5.0.x/v5.0.1.md)
 
 ## Previous releases
-
-### v5.0.x
-
-[v5.0.0](5.0.x/v5.0.0.md)
 
 ### v4.2.x
 

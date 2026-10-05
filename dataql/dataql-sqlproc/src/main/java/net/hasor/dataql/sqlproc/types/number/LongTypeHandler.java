@@ -17,26 +17,26 @@ import net.hasor.dataql.sqlproc.types.AbstractTypeHandler;
  * @author Clinton Begin
  * @author 赵永春 (zyc@hasor.net)
  */
-public class LongTypeHandler extends AbstractTypeHandler {
+public class LongTypeHandler extends AbstractTypeHandler<Long> {
     @Override
-    public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, Integer jdbcType) throws SQLException {
-        ps.setLong(i, (Long) parameter);
+    public void setNonNullParameter(PreparedStatement ps, int i, Long parameter, Integer jdbcType) throws SQLException {
+        ps.setLong(i, parameter);
     }
 
     @Override
-    public Object getNullableResult(ResultSet rs, String columnName) throws SQLException {
+    public Long getNullableResult(ResultSet rs, String columnName) throws SQLException {
         long result = rs.getLong(columnName);
         return result == 0 && rs.wasNull() ? null : result;
     }
 
     @Override
-    public Object getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+    public Long getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
         long result = rs.getLong(columnIndex);
         return result == 0 && rs.wasNull() ? null : result;
     }
 
     @Override
-    public Object getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
+    public Long getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
         long result = cs.getLong(columnIndex);
         return result == 0 && cs.wasNull() ? null : result;
     }

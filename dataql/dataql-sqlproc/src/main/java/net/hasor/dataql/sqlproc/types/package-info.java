@@ -6,6 +6,7 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 /**
- * like Mybatis type. but JDBC 4.2 full compatible.
+ * Type handlers.
+ * @author 赵永春 (zyc@hasor.net)
  */
 package net.hasor.dataql.sqlproc.types;

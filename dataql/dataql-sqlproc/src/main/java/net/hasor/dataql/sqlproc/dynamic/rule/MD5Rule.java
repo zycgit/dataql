@@ -18,7 +18,6 @@ import net.hasor.dataql.sqlproc.types.SqlArg;
 import net.hasor.dataql.sqlproc.types.SqlArgSource;
 import net.hasor.dataql.sqlproc.types.TypeHandler;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
-import net.hasor.dataql.sqlproc.types.string.StringTypeHandler;
 
 /**
  * 进行 OGNL 求值，值结果用 MD5 进行编码然后加入到 SQL 参数中
@@ -26,8 +25,8 @@ import net.hasor.dataql.sqlproc.types.string.StringTypeHandler;
  * @version 2021-10-31
  */
 public class MD5Rule implements SqlRule {
-    private static final TypeHandler typeHandler = TypeHandlerRegistry.DEFAULT.getHandlerByHandlerType(StringTypeHandler.class);
-    public static final  SqlRule     INSTANCE    = new MD5Rule();
+    private static final TypeHandler typeHandler = TypeHandlerRegistry.DEFAULT.getTypeHandler(String.class);
+    public static final  SqlRule        INSTANCE    = new MD5Rule();
 
     @Override
     public boolean test(SqlArgSource data, QueryContext context, String activeExpr) {
@@ -50,7 +49,15 @@ public class MD5Rule implements SqlRule {
         }
 
         try {
-            String argValue = args[0] == null ? "" : args[0].toString();
+            Object argObj = args[0];
+            String argValue;
+            if (argObj instanceof SqlArg) {
+                Object val = ((SqlArg) argObj).getValue();
+                argValue = val == null ? "" : val.toString();
+            } else {
+                argValue = argObj == null ? "" : argObj.toString();
+            }
+
             sqlBuilder.appendSql("?", new SqlArg(MD5.getMD5(argValue), Types.VARCHAR, typeHandler));
         } catch (NoSuchAlgorithmException e) {
             throw new SQLException(e);
