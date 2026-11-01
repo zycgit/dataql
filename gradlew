@@ -88,6 +88,13 @@ APP_BASE_NAME=${0##*/}
 # Discard cd standard output in case $CDPATH is set (https://github.com/gradle/gradle/issues/25036)
 APP_HOME=$( cd -P "${APP_HOME:-./}" > /dev/null && printf '%s\n' "$PWD" ) || exit
 
+# Keep launcher temporary files inside the repository.
+TMPDIR=$APP_HOME/.gradle/tmp
+mkdir -p "$TMPDIR" || exit
+TMP=$TMPDIR
+TEMP=$TMPDIR
+export TMPDIR TMP TEMP
+
 # Use the maximum available, or set MAX_FD != -1 to use that value.
 MAX_FD=maximum
 
@@ -172,6 +179,10 @@ fi
 if "$cygwin" || "$msys" ; then
     APP_HOME=$( cygpath --path --mixed "$APP_HOME" )
     CLASSPATH=$( cygpath --path --mixed "$CLASSPATH" )
+    TMPDIR=$( cygpath --path --mixed "$TMPDIR" )
+    TMP=$TMPDIR
+    TEMP=$TMPDIR
+    export TMPDIR TMP TEMP
 
     JAVACMD=$( cygpath --unix "$JAVACMD" )
 
@@ -202,9 +213,6 @@ fi
 
 # Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
 DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
-if [ -n "$JAVA_HOME" ]; then
-    DEFAULT_JVM_OPTS="$DEFAULT_JVM_OPTS \"-Dorg.gradle.java.home=$JAVA_HOME\""
-fi
 
 # Collect all arguments for the java command:
 #   * DEFAULT_JVM_OPTS, JAVA_OPTS, and optsEnvironmentVar are not allowed to contain shell fragments,
@@ -213,6 +221,7 @@ fi
 #     treated as '${Hostname}' itself on the command line.
 
 set -- \
+        "-Djava.io.tmpdir=$TMPDIR" \
         "-Dorg.gradle.appname=$APP_BASE_NAME" \
         -classpath "$CLASSPATH" \
         -jar "$APP_HOME/gradle/wrapper/gradle-wrapper.jar" \
