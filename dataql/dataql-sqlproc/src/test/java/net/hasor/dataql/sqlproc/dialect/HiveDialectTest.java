@@ -17,8 +17,8 @@ import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dialect.provider.HiveDialect;
 import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 

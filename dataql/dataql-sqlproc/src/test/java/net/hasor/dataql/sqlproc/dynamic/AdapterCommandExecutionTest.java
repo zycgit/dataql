@@ -11,8 +11,8 @@ import java.sql.PreparedStatement;
 import net.hasor.dataql.host.HostConfiguration;
 import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 /** Verifies the DataQL-to-JDBC path without running external database servers. */

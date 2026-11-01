@@ -13,11 +13,11 @@ import net.hasor.dataql.AbstractTestResource;
 import net.hasor.dataql.domain.Hints;
 import net.hasor.dataql.domain.HintsSet;
 import net.hasor.dataql.parser.location.LocationUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class BasicSymbolTest extends AbstractTestResource {
-    private final OperatorManager om        = OperatorManager.defaultManager();
-    private final Hints           optionSet = new HintsSet();
+    private final OperatorManager om         = OperatorManager.defaultManager();
+    private final Hints           optionSet  = new HintsSet();
     private final Hints           decimalSet = new HintsSet() {{
         setHint(Hints.MIN_DECIMAL_WIDTH, "big");
     }};

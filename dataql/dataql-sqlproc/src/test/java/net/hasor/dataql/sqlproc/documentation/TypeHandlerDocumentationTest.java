@@ -22,17 +22,17 @@ import net.hasor.dataql.host.HostConfiguration;
 import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
 import org.h2.jdbcx.JdbcDataSource;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 /** Executes the type-reference code blocks through DataQL and a real JDBC connection. */
 public class TypeHandlerDocumentationTest {
     private Connection   keeper;
     private QueryManager manager;
 
-    @Before
+    @BeforeEach
     public void initialize() throws Exception {
         JdbcDataSource source = new JdbcDataSource();
         source.setURL("jdbc:h2:mem:type_docs_" + UUID.randomUUID());
@@ -47,7 +47,7 @@ public class TypeHandlerDocumentationTest {
         this.manager = new QueryManager(host);
     }
 
-    @After
+    @AfterEach
     public void close() throws Exception {
         if (this.keeper != null) {
             this.keeper.close();
@@ -107,7 +107,7 @@ public class TypeHandlerDocumentationTest {
         while (directory != null && !Files.isDirectory(directory.resolve("document/docs"))) {
             directory = directory.getParent();
         }
-        assertNotNull("Repository document directory", directory);
+        assertNotNull(directory, "Repository document directory");
         String document = Files.readString(directory.resolve("document/docs").resolve(relativePath));
         Matcher matcher = Pattern.compile("```(?:javascript|js)(?:[ \t]+[^\\n]*)?\\n([\\s\\S]*?)\\n```").matcher(document);
         for (int found = 0; matcher.find(); found++) {

@@ -18,15 +18,15 @@ import net.hasor.dataql.host.HostConfiguration;
 import net.hasor.dataql.host.HostContext;
 import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataql.kernel.QueryResult;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class Jsr223Test {
     @Test
     public void jar223_engineContextIsHostContext() {
         ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByName("dataql");
 
-        assertTrue(scriptEngine.getContext() instanceof HostContext);
+        assertInstanceOf(HostContext.class, scriptEngine.getContext());
     }
 
     @Test
@@ -129,7 +129,7 @@ public class Jsr223Test {
         context.setBindings(new SimpleBindings(), ScriptContext.GLOBAL_SCOPE);
         context.setAttribute("foo", (Udf) (readOnly, params) -> "from-context", ScriptContext.GLOBAL_SCOPE);
 
-        assertTrue(context instanceof HostContext);
+        assertInstanceOf(HostContext.class, context);
 
         Object eval = scriptEngine.eval("return foo()", context);
 

@@ -20,7 +20,7 @@ import net.hasor.dataql.sqlproc.dynamic.segment.PlanDynamicSql;
 import net.hasor.dataql.sqlproc.dynamic.segment.SqlModifier;
 import net.hasor.dataql.sqlproc.types.SqlArg;
 import net.hasor.dataql.sqlproc.types.SqlMode;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class DynamicTest {
     private static void assertArgCnt(int argCnt, String sql) throws SQLException {

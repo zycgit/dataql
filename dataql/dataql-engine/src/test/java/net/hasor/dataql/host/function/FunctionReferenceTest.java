@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Map;
 import net.hasor.dataql.host.HostConfiguration;
 import net.hasor.dataql.host.QueryManager;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class FunctionReferenceTest {
     private Object execute(String library, String body) throws Exception {

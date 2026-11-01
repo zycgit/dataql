@@ -19,7 +19,7 @@ import net.hasor.dataql.sqlproc.types.bytes.BytesTypeHandler;
 import net.hasor.dataql.sqlproc.types.number.*;
 import net.hasor.dataql.sqlproc.types.string.StringTypeHandler;
 import net.hasor.dataql.sqlproc.types.time.*;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class SpiRegistryTest {
 

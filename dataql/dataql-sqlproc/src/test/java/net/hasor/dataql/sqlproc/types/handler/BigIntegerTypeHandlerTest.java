@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.types.handler;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.CallableStatement;
@@ -15,7 +14,7 @@ import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Map;
 import net.hasor.dataql.sqlproc.types.number.BigIntegerTypeHandler;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class BigIntegerTypeHandlerTest extends TypeHandlerMockSupport {
 

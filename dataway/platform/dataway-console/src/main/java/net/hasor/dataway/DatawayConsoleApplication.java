@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway;
-
 import javax.sql.DataSource;
 import net.hasor.cobble.StringUtils;
 import net.hasor.cobble.loader.providers.PrefixResourceLoader;

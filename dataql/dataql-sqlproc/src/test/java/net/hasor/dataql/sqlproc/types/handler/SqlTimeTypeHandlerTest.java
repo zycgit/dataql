@@ -6,13 +6,12 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.types.handler;
-
 import java.sql.CallableStatement;
 import java.sql.Time;
 import java.util.HashMap;
 import java.util.Map;
 import net.hasor.dataql.sqlproc.types.time.SqlTimeTypeHandler;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class SqlTimeTypeHandlerTest extends TypeHandlerMockSupport {
     @Test

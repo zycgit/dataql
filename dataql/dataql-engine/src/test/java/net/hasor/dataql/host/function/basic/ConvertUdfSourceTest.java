@@ -20,8 +20,8 @@ import net.hasor.dataql.domain.BinaryValue;
 import net.hasor.dataql.domain.DataModel;
 import net.hasor.dataql.host.HostConfiguration;
 import net.hasor.dataql.host.QueryManager;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ConvertUdfSourceTest {
     @Test

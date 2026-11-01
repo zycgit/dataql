@@ -18,7 +18,7 @@ import net.hasor.dataql.domain.ObjectModel;
 import net.hasor.dataql.host.Query;
 import net.hasor.dataql.util.JsonUtils;
 import net.hasor.test.dataql.udfs.DataBean;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class FmtObjRuntimeTest extends AbstractTestResource implements HintValue {
     private final Map<String, Object> object_list_map0 = new HashMap<String, Object>() {{

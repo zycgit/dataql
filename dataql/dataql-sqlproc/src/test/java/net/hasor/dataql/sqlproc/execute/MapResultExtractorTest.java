@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -16,9 +15,9 @@ import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import net.hasor.dataql.sqlproc.ColumnCaseType;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class MapResultExtractorTest extends AbstractSqlProcTest {
 

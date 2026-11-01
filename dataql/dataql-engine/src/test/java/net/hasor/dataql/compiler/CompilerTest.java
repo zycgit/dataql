@@ -14,9 +14,9 @@ import net.hasor.dataql.AbstractTestResource;
 import net.hasor.dataql.compiler.CompilerArguments.CodeLocationEnum;
 import net.hasor.dataql.compiler.qil.QIL;
 import net.hasor.dataql.parser.QueryModel;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * 测试用例

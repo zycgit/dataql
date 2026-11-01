@@ -6,18 +6,18 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute.fragment;
-
 import java.util.*;
 import net.hasor.dataql.domain.HintsSet;
 import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
 import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ExecuteQueryTypeFragmentTest extends AbstractSqlProcTest {
 
@@ -242,7 +242,7 @@ public class ExecuteQueryTypeFragmentTest extends AbstractSqlProcTest {
         hints.setHint("FRAGMENT_SQL_QUERY_BY_PAGE", "true");
 
         Object result = f.runFragment(hints, Collections.emptyMap(), "SELECT * FROM users");
-        assertTrue("paging select should return LazyPageQuery", result instanceof PageQuery);
+        assertTrue(result instanceof PageQuery, "paging select should return LazyPageQuery");
     }
 
     @Test
@@ -252,7 +252,7 @@ public class ExecuteQueryTypeFragmentTest extends AbstractSqlProcTest {
         hints.setHint("FRAGMENT_SQL_QUERY_BY_PAGE", "true");
 
         Object result = f.runFragment(hints, Collections.emptyMap(), "INSERT INTO users (name, age) VALUES ('X', 1)");
-        assertFalse("insert with paging should NOT be lazy", result instanceof PageQuery);
+        assertFalse(result instanceof PageQuery, "insert with paging should NOT be lazy");
         assertEquals(1, ((Integer) result).intValue());
     }
 
@@ -351,9 +351,9 @@ public class ExecuteQueryTypeFragmentTest extends AbstractSqlProcTest {
     // edge cases
     // ----------------------------------------------------------------
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void nullQueryContext() {
-        new ExecuteFragmentProcess(null);
+        assertThrows(NullPointerException.class, () -> new ExecuteFragmentProcess(null));
     }
 
     @Test

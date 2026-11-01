@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute.interceptor;
-
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
@@ -28,8 +27,8 @@ import net.hasor.dataql.sqlproc.execute.fragment.SelectFragmentProcess;
 import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
 import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 import net.hasor.dataql.util.JsonUtils;
-import org.junit.AfterClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
 
 /**
  * 拦截器过滤与 SQL 执行性能基线。
@@ -46,7 +45,7 @@ public class InterceptorFilterPerf extends AbstractSqlProcTest {
 
     private static final Map<String, Long> RESULTS = new ConcurrentHashMap<>();
 
-    @AfterClass
+    @AfterAll
     @SuppressWarnings("unchecked")
     public static void saveBaseline() throws IOException {
         String file = System.getProperty("perf.file", "build/perf/interceptor-filter-baseline.json");

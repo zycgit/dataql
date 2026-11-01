@@ -15,7 +15,7 @@ import net.hasor.dataql.sqlproc.dynamic.args.MapSqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.args.SqlArgDisposer;
 import net.hasor.dataql.sqlproc.utils.AbstractDbTest;
 import net.hasor.dataql.sqlproc.utils.UserInfo;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import static net.hasor.dataql.sqlproc.utils.TestUtils.beanForData1;
 
 /***

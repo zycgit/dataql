@@ -11,16 +11,16 @@ import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TransactionProviderTest {
     private String              jdbcUrl;
     private TransactionProvider connectionProvider;
 
-    @Before
+    @BeforeEach
     public void setupDatabase() throws SQLException {
         this.jdbcUrl = "jdbc:h2:mem:provider_" + UUID.randomUUID().toString().replace("-", "") + ";DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=2000";
         this.connectionProvider = new TransactionProvider((name, hints) -> this.rawConnection());
@@ -33,7 +33,7 @@ public class TransactionProviderTest {
         return DriverManager.getConnection(this.jdbcUrl, "sa", "");
     }
 
-    @After
+    @AfterEach
     public void closeTransactionProvider() throws Exception {
         this.connectionProvider.close();
     }

@@ -15,7 +15,7 @@ import net.hasor.dataql.host.QueryBuilder;
 import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataql.host.function.basic.StateUdfSource;
 import net.hasor.dataql.kernel.QueryRuntimeException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class IdentifierTest {
     @Test

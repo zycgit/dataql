@@ -6,12 +6,11 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.types.handler;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import net.hasor.dataql.sqlproc.types.TypeHandlerRegistry;
 import net.hasor.dataql.sqlproc.types.UnknownTypeHandler;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class UnknownTypeHandlerTest extends TypeHandlerMockSupport {
     @Test

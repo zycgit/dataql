@@ -26,13 +26,14 @@ import net.hasor.dataql.sqlproc.execute.support.ExecuteContextImpl;
 import net.hasor.dataql.sqlproc.execute.transaction.TransactionProvider;
 import net.hasor.dataql.util.JsonUtils;
 import org.h2.jdbcx.JdbcDataSource;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
+import static org.junit.jupiter.api.Assertions.*;
 
 /** Executes the SQL manual's complete scripts against isolated H2 databases. */
-@RunWith(Parameterized.class)
+@ParameterizedClass(name = "{0}", autoCloseArguments = false, quoteTextArguments = false)
+@MethodSource("scenarios")
 public class SqlManualExamplesTest {
     private final String scenario;
 
@@ -40,7 +41,6 @@ public class SqlManualExamplesTest {
         this.scenario = scenario;
     }
 
-    @Parameterized.Parameters(name = "{0}")
     public static Object[] scenarios() {
         return new Object[] { "query", "crud", "batch", "parameters", "position", "rules", "in-rule", "xml", "xml-update", "xml-choose", "results", "page", "select-key", "call", "bind-out", "transaction", "rollback", "custom-type", "custom-rule", "macro", "rule-braces", "xml-trim", "xml-or", "page-empty", "page-navigation" };
     }
@@ -87,9 +87,9 @@ public class SqlManualExamplesTest {
                         assertEquals(110, this.balance(keeper, 2));
                     }
                 }
-                assertFalse("The script must reach JDBC", statements.isEmpty());
+                assertFalse(statements.isEmpty(), "The script must reach JDBC");
                 if ("page".equals(this.scenario) || "page-empty".equals(this.scenario)) {
-                    assertEquals("Count and page SQL are intercepted separately", 2, statements.size());
+                    assertEquals(2, statements.size(), "Count and page SQL are intercepted separately");
                 } else if ("page-navigation".equals(this.scenario)) {
                     assertEquals(4, statements.size());
                 }
@@ -109,7 +109,7 @@ public class SqlManualExamplesTest {
 
     private String resource(String name) throws Exception {
         try (InputStream input = this.getClass().getResourceAsStream("/sql-manual/" + name)) {
-            assertNotNull(name, input);
+            assertNotNull(input, name);
             return new String(input.readAllBytes(), StandardCharsets.UTF_8);
         }
     }

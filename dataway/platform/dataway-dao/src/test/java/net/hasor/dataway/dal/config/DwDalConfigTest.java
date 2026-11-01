@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.dal.config;
-
 import com.zaxxer.hikari.HikariDataSource;
 import net.hasor.cobble.setting.Settings;
 import net.hasor.core.AppContext;
@@ -20,12 +19,12 @@ import net.hasor.dataway.dal.mapper.datasource.DwDsMapper;
 import net.hasor.dbvisitor.hasor.autoconfig.DefaultDataSource;
 import net.hasor.dbvisitor.session.Session;
 import javax.sql.DataSource;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DwDalConfigTest {
     @Test

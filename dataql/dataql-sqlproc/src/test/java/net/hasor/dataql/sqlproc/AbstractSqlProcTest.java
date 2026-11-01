@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -23,8 +22,8 @@ import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 import net.hasor.dataql.sqlproc.execute.support.SqlQueryContextFactory;
 import net.hasor.dataql.sqlproc.utils.DsUtils;
 import net.hasor.dbvisitor.jdbc.core.JdbcTemplate;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 /**
  * 统一的 SQL 相关测试基类，提供：
@@ -34,15 +33,15 @@ import org.junit.Before;
  */
 public abstract class AbstractSqlProcTest {
 
-    /** 通过 {@link DsUtils#h2Conn()} 获取的 H2 连接，包含 tb_h2_types 表。在 @Before 中初始化，@After 中关闭。 */
+    /** 通过 {@link DsUtils#h2Conn()} 获取的 H2 连接，包含 tb_h2_types 表。在 @BeforeEach 中初始化，@AfterEach 中关闭。 */
     protected Connection conn;
 
-    @Before
+    @BeforeEach
     public void setUpConnection() throws SQLException {
         this.conn = DsUtils.h2Conn();
     }
 
-    @After
+    @AfterEach
     public void tearDownConnection() throws SQLException {
         if (this.conn != null && !this.conn.isClosed()) {
             this.conn.close();

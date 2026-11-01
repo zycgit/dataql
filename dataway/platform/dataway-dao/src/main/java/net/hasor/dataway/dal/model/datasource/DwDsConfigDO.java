@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.dal.model.datasource;
-
 import java.util.Date;
 import lombok.Getter;
 import lombok.Setter;

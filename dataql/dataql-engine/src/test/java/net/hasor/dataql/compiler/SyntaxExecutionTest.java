@@ -18,8 +18,8 @@ import net.hasor.dataql.kernel.QueryResult;
 import net.hasor.dataql.kernel.QueryRuntimeException;
 import net.hasor.dataql.kernel.ThrowRuntimeException;
 import net.hasor.dataql.util.JsonUtils;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SyntaxExecutionTest {
     private Object execute(String script) throws Exception {
@@ -32,14 +32,13 @@ public class SyntaxExecutionTest {
         assertEquals("/* data */", this.execute("return '/* data */';"));
         HostConfiguration host = new HostConfiguration();
         host.addFragment("text", () -> (hints, params, text) -> text.trim());
-        assertEquals("/* native comment */", new QueryManager(host).newBuilder()
-                .createQuery("var f=@@text()<% /* native comment */ %>; return f();").execute().getData().unwrap());
+        assertEquals("/* native comment */", new QueryManager(host).newBuilder().createQuery("var f=@@text()<% /* native comment */ %>; return f();").execute().getData().unwrap());
     }
 
     @Test
     public void subtractionDoesNotDependOnWhitespace() throws Exception {
         for (String expression : List.of("3-1", "3 -1", "3- 1", "3 - 1", "3/* gap */-1")) {
-            assertEquals(expression, 2, ((Number) this.execute("return " + expression + ";")).intValue());
+            assertEquals(2, ((Number) this.execute("return " + expression + ";")).intValue(), expression);
         }
         assertEquals(4, ((Number) this.execute("return 3--1;")).intValue());
         assertEquals(-4, ((Number) this.execute("return -3-1;")).intValue());
@@ -66,7 +65,7 @@ public class SyntaxExecutionTest {
         String[] values = { "1e0", "10e2", "1.0e0", "0e0", "1e+02", "1e-2", "-.5E+1", "-10e2" };
         double[] expected = { 1, 1000, 1, 0, 100, 0.01, -5, -1000 };
         for (int i = 0; i < values.length; i++) {
-            assertEquals(values[i], expected[i], ((Number) this.execute("return " + values[i] + ";")).doubleValue(), 0.000001);
+            assertEquals(expected[i], ((Number) this.execute("return " + values[i] + ";")).doubleValue(), 0.000001, values[i]);
         }
     }
 
@@ -131,23 +130,20 @@ public class SyntaxExecutionTest {
                 var f=@@echo(x,y=x+offset)<% ignored %>;
                 return [f(2), f(4)];
                 """).execute().getData().unwrap()));
-        assertEquals(Map.of("x", (byte) 3), builder.createQuery("var f=@@echo(x=3)<% ignored %>; return f();")
-                .execute().getData().unwrap());
-        assertEquals(Map.of("x", (byte) 3), builder.createQuery("var f=@@echo(x=3)<% ignored %>; return f(9);")
-                .execute().getData().unwrap());
-        assertEquals(List.of(Map.of("x", (byte) 1), Map.of("x", (byte) 2)), builder.createQuery("var f=@@echo[](x)<% ignored %>; return f([1,2]);")
-                .execute().getData().unwrap());
+        assertEquals(Map.of("x", (byte) 3), builder.createQuery("var f=@@echo(x=3)<% ignored %>; return f();").execute().getData().unwrap());
+        assertEquals(Map.of("x", (byte) 3), builder.createQuery("var f=@@echo(x=3)<% ignored %>; return f(9);").execute().getData().unwrap());
+        assertEquals(List.of(Map.of("x", (byte) 1), Map.of("x", (byte) 2)), builder.createQuery("var f=@@echo[](x)<% ignored %>; return f([1,2]);").execute().getData().unwrap());
         assertThrows(QueryRuntimeException.class, () -> builder.createQuery("var f=@@echo[](x,y)<% ignored %>; return f([1],[1,2]);").execute());
     }
 
     @Test
     public void formattedQueriesRetainSignsAndPrecedence() throws Exception {
-        for (String script : List.of("return -0x10;", "return -1, -2;", "var a=[1,2]; return a[-1];",
-                "return 1|2^3&1;", "return true||false&&false;", "return 10e2;")) {
+        for (String script : List.of("return -0x10;", "return -1, -2;", "var a=[1,2]; return a[-1];", "return 1|2^3&1;", "return true||false&&false;", "return 10e2;")) {
             String formatted = CompilerHelper.queryParser(script).toQueryString();
-            assertEquals(script, this.execute(script), this.execute(formatted));
+            assertEquals(this.execute(script), this.execute(formatted), script);
         }
     }
+
     @Test
     public void stringsDecodeEscapesAndRemainStableAfterFormatting() throws Exception {
         String script = "return ['\\u0041', 'line1\\nline2', 'C:\\\\temp', 'it\\'s', 'it''s', '\\t\\b\\f\\r'];";

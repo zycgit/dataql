@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute.fragment;
-
 import java.sql.Connection;
 import java.util.Collections;
 import java.util.List;
@@ -27,12 +26,12 @@ import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionInvocation;
 import net.hasor.dataql.sqlproc.execute.interceptor.SqlInfo;
 import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
 import net.hasor.dataql.sqlproc.types.SqlArg;
-import org.junit.After;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SelectQueryTypeInterceptorTest extends AbstractSqlProcTest {
-    @After
+    @AfterEach
     public void clearInterceptor() {
         TestSqlExecutionInterceptor.clear();
     }

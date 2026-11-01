@@ -12,7 +12,7 @@ import java.util.Map;
 import net.hasor.dataql.AbstractTestResource;
 import net.hasor.dataql.domain.*;
 import net.hasor.dataql.host.Query;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class FunRuntimeTest extends AbstractTestResource implements HintValue {
     private final Map<String, Object> object_list_map = new HashMap<String, Object>() {{

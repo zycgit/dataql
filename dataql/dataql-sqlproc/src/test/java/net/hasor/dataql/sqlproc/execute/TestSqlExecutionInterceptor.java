@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute;
-
 import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionInterceptor;
 import net.hasor.dataql.sqlproc.execute.interceptor.SqlExecutionInvocation;
 

@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute.fragment;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -18,9 +17,10 @@ import net.hasor.dataql.domain.HintsSet;
 import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dynamic.config.*;
 import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SelectQueryTypeFragmentTest extends AbstractFragmentProcessTest {
     @Test
@@ -169,9 +169,9 @@ public class SelectQueryTypeFragmentTest extends AbstractFragmentProcessTest {
         assertEquals("reporting", sourceName.get());
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void fragmentTypeWithoutFormatSuffixFails() throws Throwable {
-        fragment().runFragment(fragmentType("select"), Collections.emptyMap(), "SELECT * FROM users");
+        assertThrows(UnsupportedOperationException.class, () -> fragment().runFragment(fragmentType("select"), Collections.emptyMap(), "SELECT * FROM users"));
     }
 
     private SelectFragmentProcess fragment() {

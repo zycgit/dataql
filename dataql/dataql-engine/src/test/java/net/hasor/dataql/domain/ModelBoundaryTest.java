@@ -9,8 +9,8 @@ package net.hasor.dataql.domain;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ModelBoundaryTest {
     @Test
@@ -27,7 +27,7 @@ public class ModelBoundaryTest {
     @Test
     public void nonzeroNumbersDoNotBecomeFalseAfterNarrowing() {
         for (Number value : List.of(4294967296L, BigInteger.ONE.shiftLeft(64), new BigDecimal("1E-1000"), 0.5D)) {
-            assertTrue(value.toString(), ((ValueModel) DomainHelper.convertTo(value)).asBoolean());
+            assertTrue(((ValueModel) DomainHelper.convertTo(value)).asBoolean(), value.toString());
         }
         for (Number value : List.of(0, 0L, -0.0D, BigInteger.ZERO, new BigDecimal("0.00"))) {
             assertFalse(((ValueModel) DomainHelper.convertTo(value)).asBoolean());

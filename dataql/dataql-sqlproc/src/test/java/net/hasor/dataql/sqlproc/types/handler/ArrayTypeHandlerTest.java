@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.types.handler;
-
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -18,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import net.hasor.dataql.sqlproc.types.array.ArrayTypeHandler;
 import net.hasor.dataql.sqlproc.types.array.PgArrayTypeHandler;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ArrayTypeHandlerTest extends TypeHandlerMockSupport {
 

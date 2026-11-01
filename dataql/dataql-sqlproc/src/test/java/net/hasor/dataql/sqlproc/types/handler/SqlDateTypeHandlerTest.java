@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.types.handler;
-
 import java.sql.CallableStatement;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -14,7 +13,7 @@ import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Map;
 import net.hasor.dataql.sqlproc.types.time.SqlDateTypeHandler;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class SqlDateTypeHandlerTest extends TypeHandlerMockSupport {
     @Test

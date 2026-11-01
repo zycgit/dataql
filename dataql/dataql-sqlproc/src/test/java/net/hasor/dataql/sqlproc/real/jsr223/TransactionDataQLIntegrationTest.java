@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.real.jsr223;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -19,9 +18,9 @@ import net.hasor.dataql.host.jsr223.QueryScriptContext;
 import net.hasor.dataql.kernel.QueryResult;
 import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
 import net.hasor.dataql.sqlproc.execute.transaction.TransactionProvider;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TransactionDataQLIntegrationTest {
     private String                   jdbcUrl;
@@ -29,7 +28,7 @@ public class TransactionDataQLIntegrationTest {
     private AtomicReference<Object>  tenantHint;
     private AtomicReference<Integer> isolationHint;
 
-    @Before
+    @BeforeEach
     public void setupDatabase() throws Exception {
         this.jdbcUrl = "jdbc:h2:mem:real_tx_" + UUID.randomUUID().toString().replace("-", "") + ";DB_CLOSE_DELAY=-1";
         this.sourceName = new AtomicReference<>();

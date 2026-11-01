@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.dal.mapper.datasource;
-
 import net.hasor.dataway.dal.model.datasource.DwDsConfigDO;
 import net.hasor.dbvisitor.mapper.BaseMapper;
 import net.hasor.dbvisitor.mapper.SimpleMapper;

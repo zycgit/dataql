@@ -19,7 +19,7 @@ import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataql.host.function.basic.CollectionUdfSource;
 import net.hasor.dataql.kernel.QueryRuntimeException;
 import net.hasor.test.dataql.udfs.UserOrderUdfSource;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class CollectionTest {
     @Test

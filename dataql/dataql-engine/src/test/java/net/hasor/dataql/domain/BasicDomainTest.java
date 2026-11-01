@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import net.hasor.dataql.AbstractTestResource;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class BasicDomainTest extends AbstractTestResource {
     @Test

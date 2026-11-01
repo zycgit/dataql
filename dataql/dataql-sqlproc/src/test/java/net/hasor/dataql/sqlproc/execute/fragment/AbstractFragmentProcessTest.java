@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute.fragment;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;

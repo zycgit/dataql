@@ -16,7 +16,7 @@ import net.hasor.dataql.domain.HintValue;
 import net.hasor.dataql.domain.ListModel;
 import net.hasor.dataql.host.Query;
 import net.hasor.test.dataql.udfs.DataBean;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class FmtListRuntimeTest extends AbstractTestResource implements HintValue {
     @Test

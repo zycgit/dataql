@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.types;
-
 import java.io.StringReader;
 import java.io.ByteArrayInputStream;
 import java.sql.*;
@@ -29,8 +28,8 @@ import net.hasor.dataql.sqlproc.types.json.JsonTypeHandler;
 import net.hasor.dataql.sqlproc.types.string.StringTypeHandler;
 import net.hasor.dataql.sqlproc.types.vector.PgVectorTypeHandler;
 import net.hasor.dataql.sqlproc.types.vector.ChVectorTypeHandler;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class TypeBindingRegressionTest {

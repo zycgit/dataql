@@ -27,8 +27,8 @@ import net.hasor.dataql.sqlproc.execute.support.ExecuteContextImpl;
 import net.hasor.dataql.sqlproc.execute.transaction.TransactionProvider;
 import net.hasor.dataql.util.JsonUtils;
 import org.h2.jdbcx.JdbcDataSource;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 /** Runs complete code blocks from the reference itself, preventing example drift. */
 public class DocumentationReferenceTest {
@@ -159,7 +159,7 @@ public class DocumentationReferenceTest {
             Query query = new QueryManager(host).newBuilder().createQuery(script);
             if (expectedFailure != null) {
                 Exception failure = assertThrows(Exception.class, query::execute);
-                assertTrue(failure.getMessage(), failure.getMessage().contains(expectedFailure));
+                assertTrue(failure.getMessage().contains(expectedFailure), failure.getMessage());
             } else {
                 this.assertData(JsonUtils.readValue(expectedJson, Object.class), query.execute().getData().unwrap());
             }
@@ -228,10 +228,10 @@ public class DocumentationReferenceTest {
         while (root != null && !Files.isDirectory(root.resolve("document/docs/dataql/sql"))) {
             root = root.getParent();
         }
-        assertNotNull("The documentation must be available in the repository", root);
+        assertNotNull(root, "The documentation must be available in the repository");
         String markdown = Files.readString(root.resolve("document/docs/dataql/sql").resolve(file));
         Matcher headings = Pattern.compile("(?m)^#{2,3} " + Pattern.quote(heading) + "(?: [{][^}]+[}])?$").matcher(markdown);
-        assertTrue("Missing section: " + file + " / " + heading, headings.find());
+        assertTrue(headings.find(), "Missing section: " + file + " / " + heading);
         int section = headings.start();
         Matcher nextHeading = Pattern.compile("(?m)^#{2,3} ").matcher(markdown);
         int end = nextHeading.find(headings.end()) ? nextHeading.start() : -1;
@@ -263,7 +263,7 @@ public class DocumentationReferenceTest {
             });
             Object actual = new QueryManager(host).newBuilder().createQuery(script).execute().getData().unwrap();
             this.assertData(JsonUtils.readValue(expectedJson, Object.class), actual);
-            assertFalse("The documented example must execute JDBC", statements.isEmpty());
+            assertFalse(statements.isEmpty(), "The documented example must execute JDBC");
         }
     }
 

@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import net.hasor.dataql.AbstractTestResource;
 import net.hasor.test.dataql.udfs.DataBean;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ObjectDomainTest extends AbstractTestResource {
     private final HashMap hashMap = new HashMap() {{

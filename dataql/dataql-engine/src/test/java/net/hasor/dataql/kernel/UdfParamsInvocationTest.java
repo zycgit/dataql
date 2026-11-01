@@ -16,8 +16,8 @@ import net.hasor.dataql.host.Query;
 import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataql.util.JsonUtils;
 import net.hasor.test.dataql.udfs.ParamsUdfSource;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class UdfParamsInvocationTest {
     @Test
@@ -151,7 +151,7 @@ public class UdfParamsInvocationTest {
     public void returnedCallbacksRemainCallableThroughModels() throws Exception {
         HostConfiguration host = new HostConfiguration();
         host.addImport("identity", () -> (Udf) (hints, params) -> {
-            assertTrue(params.allParams()[0] instanceof Udf);
+            assertInstanceOf(Udf.class, params.allParams()[0]);
             return params.allParams()[0];
         });
         Query query = new QueryManager(host).newBuilder().createQuery("""

@@ -8,7 +8,7 @@
 package net.hasor.dataql.compiler;
 import java.io.IOException;
 import net.hasor.dataql.AbstractTestResource;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * 测试用例

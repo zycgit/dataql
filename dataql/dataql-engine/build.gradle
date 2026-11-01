@@ -22,6 +22,21 @@ dependencies {
     antlr "org.antlr:antlr4:${property('lib.antlr')}"
 }
 
+publishing.publications.named('mavenJava', MavenPublication) {
+    pom.withXml {
+        // ANTLR generates sources during the build and is not a published dependency.
+        def dependenciesNode = asNode().dependencies[0]
+        configurations.antlr.dependencies.each { dep ->
+            def groupId = dep.group ?: project.group
+            dependenciesNode?.dependency?.findAll {
+                it.groupId.text() == groupId.toString() && it.artifactId.text() == dep.name
+            }?.each {
+                dependenciesNode.remove(it)
+            }
+        }
+    }
+}
+
 tasks.named('generateGrammarSource') {
     arguments += ['-visitor', '-package', 'net.hasor.dataql.parser']
 }

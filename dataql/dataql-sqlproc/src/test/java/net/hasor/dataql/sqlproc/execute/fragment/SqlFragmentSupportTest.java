@@ -6,11 +6,11 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute.fragment;
-
 import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
-import org.junit.Test;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SqlFragmentSupportTest extends AbstractSqlProcTest {
     @Test
@@ -18,8 +18,8 @@ public class SqlFragmentSupportTest extends AbstractSqlProcTest {
         assertTrue(newQueryContext() instanceof ExecuteContext);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void nullQueryContextFails() {
-        new SelectFragmentProcess(null);
+        assertThrows(NullPointerException.class, () -> new SelectFragmentProcess(null));
     }
 }

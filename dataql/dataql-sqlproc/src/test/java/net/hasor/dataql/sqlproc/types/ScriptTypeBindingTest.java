@@ -28,10 +28,10 @@ import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
 import net.hasor.dataql.sqlproc.types.json.JsonTypeHandler;
 import net.hasor.dataql.sqlproc.types.vector.ChVectorTypeHandler;
 import org.h2.jdbcx.JdbcDataSource;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /** Exercises type conversion through the real compiler, script model and JDBC execution. */
@@ -40,7 +40,7 @@ public class ScriptTypeBindingTest {
     private Connection keeper;
     private HostConfiguration host;
 
-    @Before
+    @BeforeEach
     public void initialize() throws Exception {
         this.source = new JdbcDataSource();
         this.source.setURL("jdbc:h2:mem:script_types_" + UUID.randomUUID());
@@ -49,7 +49,7 @@ public class ScriptTypeBindingTest {
         this.host.addAttachment(ConnectionProvider.class, (name, hints) -> this.source.getConnection());
     }
 
-    @After
+    @AfterEach
     public void close() throws Exception {
         if (this.keeper != null) {
             this.keeper.close();

@@ -6,20 +6,20 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.types.handler;
-
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import net.hasor.dataql.sqlproc.types.number.NumberTypeHandler;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class NumberTypeHandlerTest extends TypeHandlerMockSupport {
 
-    @Test(expected = SQLException.class)
+    @Test
     public void testSetParameter() throws Throwable {
         NumberTypeHandler handler = new NumberTypeHandler();
-        handler.setParameter(null, 1, 123, null);
+        assertThrows(SQLException.class, () -> handler.setParameter(null, 1, 123, null));
     }
 
     @Test

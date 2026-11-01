@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.dal.config;
-
 import java.util.Date;
 import net.hasor.cobble.setting.Settings;
 import net.hasor.core.AppContext;
@@ -24,11 +23,11 @@ import net.hasor.dataway.dal.model.auth.DwAuthUserDO;
 import net.hasor.dataway.dal.model.datasource.DwDsConfigDO;
 import net.hasor.dataway.dal.model.datasource.DwDsDO;
 import net.hasor.dbvisitor.session.Session;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class DwMapperCrudTest {
     @Test

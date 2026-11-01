@@ -6,15 +6,14 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute.fragment;
-
 import java.util.Collections;
 import java.util.Map;
 import net.hasor.dataql.domain.HintsSet;
 import net.hasor.dataql.sqlproc.SqlHintNames;
 import net.hasor.dataql.sqlproc.dynamic.config.*;
 import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class InsertQueryTypeFragmentTest extends AbstractFragmentProcessTest {
     @Test
@@ -119,9 +118,9 @@ public class InsertQueryTypeFragmentTest extends AbstractFragmentProcessTest {
         assertEquals("after", selectKey.getOrder());
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void fragmentTypeWithoutFormatSuffixFails() throws Throwable {
-        fragment().runFragment(fragmentType("insert"), Collections.emptyMap(), "INSERT INTO users (name, age) VALUES ('X', 1)");
+        assertThrows(UnsupportedOperationException.class, () -> fragment().runFragment(fragmentType("insert"), Collections.emptyMap(), "INSERT INTO users (name, age) VALUES ('X', 1)"));
     }
 
     private InsertFragmentProcess fragment() {

@@ -17,7 +17,7 @@ import net.hasor.dataql.sqlproc.types.SqlArg;
 import net.hasor.dataql.sqlproc.types.SqlMode;
 import net.hasor.dataql.sqlproc.types.number.ShortTypeHandler;
 import net.hasor.dataql.sqlproc.types.string.StringTypeHandler;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ArgRuleTest {
 

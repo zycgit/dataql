@@ -9,7 +9,7 @@ package net.hasor.dataql.sqlproc.dynamic.rule;
 import net.hasor.dataql.sqlproc.dynamic.SqlBuilder;
 import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
 import net.hasor.dataql.sqlproc.dynamic.segment.PlanDynamicSql;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
 import java.util.Collections;

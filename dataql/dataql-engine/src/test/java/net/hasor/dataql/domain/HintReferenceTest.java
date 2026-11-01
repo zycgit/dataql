@@ -11,8 +11,8 @@ import java.util.Arrays;
 import net.hasor.dataql.host.HostConfiguration;
 import net.hasor.dataql.host.Query;
 import net.hasor.dataql.host.QueryManager;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class HintReferenceTest {
     private Query query(String script) throws Exception {

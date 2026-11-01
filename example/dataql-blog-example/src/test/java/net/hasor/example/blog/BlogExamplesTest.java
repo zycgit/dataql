@@ -14,12 +14,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import net.hasor.dataql.util.JsonUtils;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@RunWith(Parameterized.class)
+@ParameterizedClass(name = "{0}", autoCloseArguments = false, quoteTextArguments = false)
+@MethodSource("cases")
 public class BlogExamplesTest {
     private final String name;
 
@@ -27,7 +28,6 @@ public class BlogExamplesTest {
         this.name = name;
     }
 
-    @Parameterized.Parameters(name = "{0}")
     public static Collection<String> cases() {
         return Arrays.asList("tree-to-tree", "dataset-ranking", "like-for", "build-tree", "row-to-col", "left-join", "group-by", "dim-reduction");
     }

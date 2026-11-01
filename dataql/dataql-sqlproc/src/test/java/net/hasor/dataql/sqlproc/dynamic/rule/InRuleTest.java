@@ -16,7 +16,7 @@ import net.hasor.dataql.sqlproc.dynamic.rule.dto.MyTypeHandler;
 import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
 import net.hasor.dataql.sqlproc.dynamic.segment.PlanDynamicSql;
 import net.hasor.dataql.sqlproc.types.SqlArg;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class InRuleTest {
     @Test

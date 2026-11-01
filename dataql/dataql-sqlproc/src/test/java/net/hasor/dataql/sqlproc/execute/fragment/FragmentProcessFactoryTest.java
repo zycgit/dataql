@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute.fragment;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -18,11 +17,11 @@ import net.hasor.dataql.host.spi.FragmentProcessFactory;
 import net.hasor.dataql.kernel.FragmentProcess;
 import net.hasor.dataql.sqlproc.execute.support.SqlQueryContextFactory;
 import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FragmentProcessFactoryTest {
     @Test

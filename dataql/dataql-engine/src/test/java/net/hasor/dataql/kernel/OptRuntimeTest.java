@@ -11,8 +11,8 @@ import java.util.List;
 import net.hasor.dataql.AbstractTestResource;
 import net.hasor.dataql.domain.*;
 import net.hasor.dataql.host.*;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class OptRuntimeTest extends AbstractTestResource implements HintValue {
     @Test

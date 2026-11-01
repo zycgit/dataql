@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.real.jsr223;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -23,15 +22,15 @@ import net.hasor.dataql.host.jsr223.QueryScriptContext;
 import net.hasor.dataql.kernel.QueryResult;
 import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class QueryTypeDataQLHintTest extends AbstractSqlProcTest {
     private String jdbcUrl;
 
-    @Before
+    @BeforeEach
     public void setupUsers() throws Exception {
         this.jdbcUrl = "jdbc:h2:mem:hint_" + UUID.randomUUID().toString().replace("-", "") + ";DB_CLOSE_DELAY=-1";
         try (Connection conn = rawConnection(); Statement stmt = conn.createStatement()) {
@@ -137,7 +136,7 @@ public class QueryTypeDataQLHintTest extends AbstractSqlProcTest {
     }
 
     private void assertNumber(long expected, Object value) {
-        assertTrue("value should be a number but was " + value, value instanceof Number);
+        assertTrue(value instanceof Number, "value should be a number but was " + value);
         assertEquals(expected, ((Number) value).longValue());
     }
 }

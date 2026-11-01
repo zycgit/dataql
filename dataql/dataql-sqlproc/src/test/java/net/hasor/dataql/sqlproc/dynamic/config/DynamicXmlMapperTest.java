@@ -18,7 +18,7 @@ import net.hasor.dataql.sqlproc.dynamic.rule.TestQueryContext;
 import net.hasor.dataql.sqlproc.types.SqlArg;
 import net.hasor.dataql.sqlproc.types.SqlArgSource;
 import net.hasor.dataql.sqlproc.utils.UserInfo;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author 赵永春 (zyc@hasor.net)

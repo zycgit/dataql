@@ -6,13 +6,12 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.types;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Types;
 import java.util.UUID;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 public class TypeHandlerRegistryFallbackTest {

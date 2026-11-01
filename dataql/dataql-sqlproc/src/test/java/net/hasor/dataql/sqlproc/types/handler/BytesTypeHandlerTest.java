@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.types.handler;
-
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,7 +13,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import net.hasor.dataql.sqlproc.types.bytes.BytesTypeHandler;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import net.hasor.dataql.domain.BinaryModel;
 
 public class BytesTypeHandlerTest extends TypeHandlerMockSupport {

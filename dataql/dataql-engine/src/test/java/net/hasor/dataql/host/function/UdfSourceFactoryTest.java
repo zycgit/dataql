@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.host.function;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -15,8 +14,8 @@ import net.hasor.dataql.host.HostConfiguration;
 import net.hasor.dataql.host.Query;
 import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataql.util.JsonUtils;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class UdfSourceFactoryTest {
     @Test

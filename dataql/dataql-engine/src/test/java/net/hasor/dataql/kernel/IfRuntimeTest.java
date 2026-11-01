@@ -13,7 +13,7 @@ import net.hasor.dataql.domain.DataModel;
 import net.hasor.dataql.domain.HintValue;
 import net.hasor.dataql.domain.ValueModel;
 import net.hasor.dataql.host.Query;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class IfRuntimeTest extends AbstractTestResource implements HintValue {
     @Test

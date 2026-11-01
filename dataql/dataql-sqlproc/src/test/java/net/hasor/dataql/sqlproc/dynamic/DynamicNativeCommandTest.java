@@ -13,8 +13,8 @@ import net.hasor.dataql.sqlproc.dynamic.rule.TestQueryContext;
 import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
 import net.hasor.dataql.sqlproc.dynamic.segment.PlanDynamicSql;
 import net.hasor.dataql.sqlproc.types.SqlArg;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DynamicNativeCommandTest {
     private SqlBuilder parse(String command, Map<String, Object> values) throws SQLException {

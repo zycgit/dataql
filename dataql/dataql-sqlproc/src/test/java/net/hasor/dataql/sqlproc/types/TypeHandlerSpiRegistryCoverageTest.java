@@ -6,13 +6,12 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.types;
-
 import java.sql.Types;
 import java.util.Date;
 import net.hasor.dataql.sqlproc.types.bool.BooleanTypeHandler;
 import net.hasor.dataql.sqlproc.types.number.IntegerTypeHandler;
 import net.hasor.dataql.sqlproc.types.string.StringTypeHandler;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TypeHandlerSpiRegistryCoverageTest {
 

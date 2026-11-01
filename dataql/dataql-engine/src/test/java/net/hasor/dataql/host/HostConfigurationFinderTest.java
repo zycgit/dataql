@@ -14,15 +14,15 @@ import net.hasor.dataql.domain.ValueModel;
 import net.hasor.dataql.kernel.Finder;
 import net.hasor.test.dataql.udfs.DataBean;
 import net.hasor.test.dataql.udfs.DemoUdf;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class HostConfigurationFinderTest extends AbstractTestResource {
     @Test
     public void registryIsFinder() {
         Finder finder = new HostConfiguration().getHostContext();
         assertNotNull(finder);
-        assertTrue(finder instanceof HostContext);
+        assertInstanceOf(HostContext.class, finder);
     }
 
     @Test

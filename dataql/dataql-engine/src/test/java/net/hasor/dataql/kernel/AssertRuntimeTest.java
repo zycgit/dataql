@@ -10,7 +10,7 @@ import java.io.IOException;
 import net.hasor.dataql.AbstractTestResource;
 import net.hasor.dataql.domain.HintValue;
 import net.hasor.dataql.host.Query;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class AssertRuntimeTest extends AbstractTestResource implements HintValue {
     @Test

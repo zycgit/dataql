@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.real.jsr223;
-
 import java.lang.reflect.Proxy;
 import java.sql.*;
 import java.util.List;
@@ -21,14 +20,14 @@ import net.hasor.dataql.host.jsr223.QueryScriptContext;
 import net.hasor.dataql.kernel.QueryResult;
 import net.hasor.dataql.sqlproc.AbstractSqlProcTest;
 import net.hasor.dataql.sqlproc.execute.support.ConnectionProvider;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class QueryTypeDataQLIntegrationTest extends AbstractSqlProcTest {
     private String jdbcUrl;
 
-    @Before
+    @BeforeEach
     public void setupRealDatabase() throws Exception {
         this.jdbcUrl = "jdbc:h2:mem:real_" + UUID.randomUUID().toString().replace("-", "") + ";DB_CLOSE_DELAY=-1";
         try (Connection conn = rawConnection(); Statement stmt = conn.createStatement()) {
@@ -284,7 +283,7 @@ public class QueryTypeDataQLIntegrationTest extends AbstractSqlProcTest {
     }
 
     private Number number(Object value) {
-        assertTrue("value should be a number but was " + value, value instanceof Number);
+        assertTrue(value instanceof Number, "value should be a number but was " + value);
         return (Number) value;
     }
 }

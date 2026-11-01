@@ -6,10 +6,9 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.types;
-
 import java.lang.reflect.Proxy;
 import java.sql.*;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class AbstractTypeHandlerCoverageTest {
 

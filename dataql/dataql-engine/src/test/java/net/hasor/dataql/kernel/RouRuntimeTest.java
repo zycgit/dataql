@@ -21,7 +21,7 @@ import net.hasor.dataql.host.Query;
 import net.hasor.dataql.host.QueryManager;
 import net.hasor.dataql.parser.QueryModel;
 import net.hasor.test.dataql.udfs.DataBean;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class RouRuntimeTest extends AbstractTestResource implements HintValue {
     @Test

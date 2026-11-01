@@ -14,7 +14,7 @@ import net.hasor.dataql.sqlproc.dynamic.rule.PairsRule;
 import net.hasor.dataql.sqlproc.dynamic.rule.TestQueryContext;
 import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
 import net.hasor.dataql.sqlproc.types.SqlArg;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class PairsRuleTest {
     @Test

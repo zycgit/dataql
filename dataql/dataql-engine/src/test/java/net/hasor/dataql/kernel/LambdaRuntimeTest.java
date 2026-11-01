@@ -9,7 +9,7 @@ package net.hasor.dataql.kernel;
 import net.hasor.dataql.AbstractTestResource;
 import net.hasor.dataql.domain.*;
 import net.hasor.dataql.host.Query;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class LambdaRuntimeTest extends AbstractTestResource implements HintValue {
     @Test

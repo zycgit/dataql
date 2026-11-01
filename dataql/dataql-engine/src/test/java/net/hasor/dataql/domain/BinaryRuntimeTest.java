@@ -13,8 +13,8 @@ import java.util.Map;
 import net.hasor.dataql.host.HostConfiguration;
 import net.hasor.dataql.host.QueryBuilder;
 import net.hasor.dataql.host.QueryManager;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class BinaryRuntimeTest {
     @Test
@@ -28,7 +28,7 @@ public class BinaryRuntimeTest {
         });
         for (String script : List.of("return file();", "var read = () -> { return file(); }; return read();", "var read = (value) -> { return value; }; return identity(read(file()));", "var box = {'content': [file()]}; return box.content[0];")) {
             DataModel result = builder.createQuery(script).execute().getData();
-            assertSame(script, content, result);
+            assertSame(content, result, script);
             assertTrue(result.isBinary());
             assertSame(content, result.unwrap());
             try (var input = content.openStream()) {

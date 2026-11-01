@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.execute.fragment;
-
 import java.util.Collections;
 import net.hasor.dataql.domain.HintsSet;
 import net.hasor.dataql.sqlproc.SqlHintNames;
@@ -14,8 +13,9 @@ import net.hasor.dataql.sqlproc.dynamic.config.QueryType;
 import net.hasor.dataql.sqlproc.dynamic.config.SqlConfig;
 import net.hasor.dataql.sqlproc.dynamic.config.StatementType;
 import net.hasor.dataql.sqlproc.execute.support.ExecuteContext;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DeleteQueryTypeFragmentTest extends AbstractFragmentProcessTest {
     @Test
@@ -69,9 +69,9 @@ public class DeleteQueryTypeFragmentTest extends AbstractFragmentProcessTest {
         assertEquals(0, ((Integer) result).intValue());
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void fragmentTypeWithoutFormatSuffixFails() throws Throwable {
-        fragment().runFragment(fragmentType("delete"), Collections.emptyMap(), "DELETE FROM users WHERE id = 1");
+        assertThrows(UnsupportedOperationException.class, () -> fragment().runFragment(fragmentType("delete"), Collections.emptyMap(), "DELETE FROM users WHERE id = 1"));
     }
 
     private DeleteFragmentProcess fragment() {

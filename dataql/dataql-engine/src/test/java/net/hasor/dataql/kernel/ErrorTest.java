@@ -15,7 +15,7 @@ import net.hasor.dataql.host.HostConfiguration;
 import net.hasor.dataql.host.QueryBuilder;
 import net.hasor.dataql.host.QueryManager;
 import net.hasor.test.dataql.udfs.ErrorUdf;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ErrorTest extends AbstractTestResource {
     @Test

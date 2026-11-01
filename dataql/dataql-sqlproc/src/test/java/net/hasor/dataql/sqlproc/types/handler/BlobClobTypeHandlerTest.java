@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataql.sqlproc.types.handler;
-
 import java.lang.reflect.Proxy;
 import java.sql.*;
 import java.util.Arrays;
@@ -15,7 +14,7 @@ import java.util.Map;
 import net.hasor.dataql.sqlproc.types.bytes.BlobAsBytesTypeHandler;
 import net.hasor.dataql.sqlproc.types.string.ClobAsStringTypeHandler;
 import net.hasor.dataql.sqlproc.types.string.NClobAsStringTypeHandler;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import net.hasor.dataql.domain.BinaryModel;
 
 public class BlobClobTypeHandlerTest extends TypeHandlerMockSupport {

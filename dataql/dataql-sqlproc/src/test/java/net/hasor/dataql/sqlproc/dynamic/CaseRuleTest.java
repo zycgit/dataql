@@ -8,13 +8,15 @@
 package net.hasor.dataql.sqlproc.dynamic;
 import java.util.HashMap;
 import java.util.Map;
-import junit.framework.TestCase;
 import net.hasor.dataql.sqlproc.dynamic.args.MapSqlArgSource;
 import net.hasor.dataql.sqlproc.dynamic.rule.TestQueryContext;
 import net.hasor.dataql.sqlproc.dynamic.segment.DynamicParsed;
 import net.hasor.dataql.sqlproc.dynamic.segment.PlanDynamicSql;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class CaseRuleTest extends TestCase {
+public class CaseRuleTest {
+    @Test
     public void testDocumentedConditionalBranches() throws Exception {
         String sql = "SELECT * FROM people WHERE 1 = 1\n" + "@{case, ,\n" + "    @{when, name != null, AND name = #{name}}\n" + "    @{when, minAge != null, AND age >= #{minAge}}\n" + "    @{else, AND active = true}\n" + "}";
         SqlBuilder result = DynamicParsed.getParsedSql(sql).buildQuery(Map.of("name", "Alice", "minAge", 20), new TestQueryContext());
@@ -22,6 +24,7 @@ public class CaseRuleTest extends TestCase {
         assertEquals(1, result.getArgs().length);
     }
 
+    @Test
     public void testSwitchMode() throws Exception {
         String sql = "select * from users where @{case, userType, " +//
                 "  @{when, 'admin', role = 'administrator'}, " +     //
@@ -52,6 +55,7 @@ public class CaseRuleTest extends TestCase {
         assertEquals("select * from users where  role = 'guest'", query.trim());
     }
 
+    @Test
     public void testIfElseMode() throws Exception {
         String sql = "update orders set @{case, , " +    //
                 "  @{when, age > 60, discount = 0.5}, " +//
@@ -78,6 +82,7 @@ public class CaseRuleTest extends TestCase {
         assertEquals("update orders set  discount = 1.0", query.trim());
     }
 
+    @Test
     public void testComplexExpressions() throws Exception {
         String mapSql = "select * from items where @{case, item.status.name, " +//
                 "  @{when, 'ACTIVE', state = 1}, " +//
@@ -97,6 +102,7 @@ public class CaseRuleTest extends TestCase {
         assertEquals("select * from items where  state = 1", query.trim());
     }
 
+    @Test
     public void testElseFragmentation() throws Exception {
         String sql = "select type from t where @{case, typeId, " +//
                 "  @{when, 1, type = 'A'}, " +                    //
@@ -113,6 +119,7 @@ public class CaseRuleTest extends TestCase {
         assertEquals("select type from t where  type = 'B', or type = 'C'", query.trim());
     }
 
+    @Test
     public void testWhitespaceRobustness() throws Exception {
         // Lots of spaces
         String sql = "result = @{case , val ,  @{ when , 1 , one } ,  @{ else , other } }";
@@ -127,6 +134,7 @@ public class CaseRuleTest extends TestCase {
         assertEquals("result =  one", query.trim());
     }
 
+    @Test
     public void testVariableVisibility() throws Exception {
         // Variable 'x' and 'y' available
         String sql = "@{case, , @{when, x + y == 10, 'ten'}, @{else, 'not-ten'}}";

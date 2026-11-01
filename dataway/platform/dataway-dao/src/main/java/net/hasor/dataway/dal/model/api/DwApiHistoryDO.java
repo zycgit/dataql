@@ -6,7 +6,6 @@
  * https://www.apache.org/licenses/LICENSE-2.0
  */
 package net.hasor.dataway.dal.model.api;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.hasor.dbvisitor.mapping.Column;
