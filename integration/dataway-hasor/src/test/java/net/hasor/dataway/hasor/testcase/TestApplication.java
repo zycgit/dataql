@@ -36,15 +36,20 @@ public final class TestApplication implements AutoCloseable {
     }
 
     private TestApplication(DatawayConfig config, Module module, ApiDataAccessLayer storage, Properties settings, Class<?>... configurations) throws Exception {
-        Boot boot = new Boot().property("hasor.loadPackages", "net.hasor.dataway.hasor.example.web").property("hasor.boot.web.connectors.http.host", "127.0.0.1").property("hasor.boot.web.connectors.http.port", 0).property("hasor.boot.web.server.contextPath", "/host");
+        Boot boot = new Boot()//
+                .property("hasor.loadPackages", "net.hasor.dataway.hasor.example.web")//
+                .property("hasor.boot.web.connectors.http.host", "127.0.0.1")         //
+                .property("hasor.boot.web.connectors.http.port", 0)                   //
+                .property("hasor.boot.web.server.contextPath", "/host");
         List<Class<?>> sources = new ArrayList<>();
         sources.add(WebConfiguration.class);
         sources.add(TestConfiguration.class);
         sources.addAll(List.of(configurations));
         settings.forEach((key, value) -> boot.property(key.toString(), value));
+        boot.sources(sources.toArray(Class<?>[]::new));
         TestBootstrap.CURRENT.set(new TestBootstrap(config == null ? TestSettings.configuration() : config, storage, module));
         try {
-            this.application = boot.sources(sources.toArray(Class<?>[]::new)).start();
+            this.application = boot.start();
         } finally {
             TestBootstrap.CURRENT.remove();
         }

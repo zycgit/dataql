@@ -31,21 +31,21 @@ import static org.junit.jupiter.api.Assertions.*;
 /** Verifies article examples through a real Hasor Boot HTTP server and H2 databases. */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BlogApiTest {
-    private final OkHttpClient http = new OkHttpClient();
-    private BootApplication application;
-    private String baseUrl;
-    private String cookie;
+    private final OkHttpClient    http = new OkHttpClient();
+    private       BootApplication application;
+    private       String          baseUrl;
+    private       String          cookie;
 
     @BeforeAll
     void start() throws Exception {
         String database = "jdbc:h2:mem:" + UUID.randomUUID();
-        this.application = new Boot().hconfigFile("hconfig.xml")
-                .sources(DatabaseConfiguration.class, MetadataConfiguration.class, DatawayConfiguration.class, WebConfiguration.class)
-                .property("hasor.boot.web.connectors.http.port", 0)
-                .property("example.database.main.url", database + "-main")
-                .property("example.database.ds1.url", database + "-ds1")
-                .property("example.database.ds2.url", database + "-ds2")
-                .start();
+        Boot boot = new Boot().hconfigFile("hconfig.xml")//
+                .sources(DatabaseConfiguration.class, MetadataConfiguration.class, DatawayConfiguration.class, WebConfiguration.class)//
+                .property("hasor.boot.web.connectors.http.port", 0)         //
+                .property("example.database.main.url", database + "-main")  //
+                .property("example.database.ds1.url", database + "-ds1")    //
+                .property("example.database.ds2.url", database + "-ds2");
+        this.application = boot.start();
         int port = this.application.getAppContext().getInstance(WebServer.class).getPort();
         this.baseUrl = "http://127.0.0.1:" + port;
         FormBody form = new FormBody.Builder().add("username", "admin").add("password", "example-password").build();
@@ -129,9 +129,7 @@ class BlogApiTest {
 
     @Test
     void headersAreCaseInsensitiveAndCopiedToTheResponse() throws Exception {
-        Request request = new Request.Builder().url(this.baseUrl + "/api/blog/headers")
-                .header("Cookie", this.cookie).header("x-trace-id", "blog-001")
-                .post(RequestBody.create("{\"message\":\"Hello Header\"}", MediaType.get("application/json"))).build();
+        Request request = new Request.Builder().url(this.baseUrl + "/api/blog/headers").header("Cookie", this.cookie).header("x-trace-id", "blog-001").post(RequestBody.create("{\"message\":\"Hello Header\"}", MediaType.get("application/json"))).build();
         try (Response response = this.http.newCall(request).execute()) {
             assertEquals(200, response.code());
             assertEquals("blog-001", response.header("X-Trace-Id"));

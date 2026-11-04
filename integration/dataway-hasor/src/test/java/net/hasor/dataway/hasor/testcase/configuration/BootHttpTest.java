@@ -39,7 +39,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class BootHttpTest {
     @Test
     void standaloneExampleBootsFromXmlAndScannedApplicationConfiguration() throws Exception {
-        try (BootApplication application = this.exampleBoot().start()) {
+        Boot boot = this.exampleBoot();
+        try (BootApplication application = boot.start()) {
             AppContext context = application.getAppContext();
             this.assertTables(context.getInstance(DataSource.class), Set.of("INTERFACE_INFO", "INTERFACE_RELEASE"));
             this.assertTables(context.findBindingBean("ds1", DataSource.class), Set.of("EXAMPLE_PEOPLE"));
@@ -103,7 +104,12 @@ class BootHttpTest {
 
     private Boot exampleBoot() {
         String database = "jdbc:h2:mem:" + UUID.randomUUID();
-        return new Boot().hconfigFile("example/hconfig.xml").sources(ExampleApplication.class).property("hasor.boot.web.connectors.http.port", 0).property("example.database.main.url", database + "-main").property("example.database.ds1.url", database + "-ds1").property("example.database.ds2.url", database + "-ds2");
+        return new Boot().hconfigFile("example/hconfig.xml")                //
+                .sources(ExampleApplication.class)                          //
+                .property("hasor.boot.web.connectors.http.port", 0)         //
+                .property("example.database.main.url", database + "-main")  //
+                .property("example.database.ds1.url", database + "-ds1")    //
+                .property("example.database.ds2.url", database + "-ds2");
     }
 
     private void assertTables(DataSource source, Set<String> expected) throws Exception {
@@ -123,7 +129,8 @@ class BootHttpTest {
 
     @Test
     void allDataSourcesProvideTheSameJdbcAndTransactionServices() throws Throwable {
-        try (BootApplication application = this.exampleBoot().start()) {
+        Boot boot = this.exampleBoot();
+        try (BootApplication application = boot.start()) {
             AppContext context = application.getAppContext();
             assertEquals(3, context.findBindingRegister(DataSource.class).size());
             ConnectionProvider connections = context.getInstance(ConnectionProvider.class);
@@ -186,7 +193,8 @@ class BootHttpTest {
 
     @Test
     void metadataCommitsIndependentlyOfTheHostTransaction() throws Throwable {
-        try (BootApplication application = this.exampleBoot().start()) {
+        Boot boot = this.exampleBoot();
+        try (BootApplication application = boot.start()) {
             AppContext context = application.getAppContext();
             AdminService admin = context.getInstance(Dataway.class).getAdminService();
             TransactionTemplate transactions = context.getInstance(TransactionTemplate.class);
@@ -224,7 +232,8 @@ class BootHttpTest {
 
     @Test
     void repeatedInitializationPreservesEditedDraftsAndDisabledApis() throws Exception {
-        try (BootApplication application = this.exampleBoot().start()) {
+        Boot boot = this.exampleBoot();
+        try (BootApplication application = boot.start()) {
             AppContext context = application.getAppContext();
             AdminService admin = context.getInstance(Dataway.class).getAdminService();
             var draft = admin.getDraftByApi("example-person");

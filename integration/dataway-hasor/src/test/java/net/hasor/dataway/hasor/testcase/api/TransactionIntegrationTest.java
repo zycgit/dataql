@@ -38,7 +38,13 @@ class TransactionIntegrationTest {
     @BeforeEach
     void start() throws Throwable {
         String database = "jdbc:h2:mem:" + UUID.randomUUID();
-        this.application = new Boot().hconfigFile("example/hconfig.xml").sources(ExampleApplication.class).property("hasor.boot.web.connectors.http.port", 0).property("example.database.main.url", database + "-main").property("example.database.ds1.url", database + "-ds1").property("example.database.ds2.url", database + "-ds2").start();
+        Boot boot = new Boot().hconfigFile("example/hconfig.xml")           //
+                .sources(ExampleApplication.class)                          //
+                .property("hasor.boot.web.connectors.http.port", 0)         //
+                .property("example.database.main.url", database + "-main")  //
+                .property("example.database.ds1.url", database + "-ds1")    //
+                .property("example.database.ds2.url", database + "-ds2");
+        this.application = boot.start();
         var context = this.application.getAppContext();
         this.source = context.findBindingBean("ds1", DataSource.class);
         this.transactions = context.findBindingBean("ds1", TransactionTemplate.class);
